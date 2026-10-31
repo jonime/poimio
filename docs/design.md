@@ -132,7 +132,7 @@ Goal: a rigorous comparison of the recommender against simple baselines. A caref
 
 ### 4.1 Early checks (week 2, [spec 001](specs/001-ingestion.md))
 
-- **Cross-lingual check:** Finnish–English pairs of the same event (Yle News in English vs Finnish Yle feeds) must be clearly more similar than random pairs.
+- **Cross-lingual check** (moved to the evaluation, spec 006): Finnish–English pairs of the same event (Yle News in English vs Finnish Yle feeds) must be clearly more similar than random pairs.
 - **Early ranking experiment:** a fixed bilingual sample of ~300 items; for 2 personas, ~5 hand-picked liked items each (at least one Finnish). Rank the rest with nearest-liked, average-vector, and newest-first, then judge the top 10 of each by hand. The three lists are merged and shuffled before judging, so the method behind each item is not visible.
 - **Gate 1:** if nearest-liked is not at least on par with average-vector and better than newest-first, investigate (embedding input text, $\lambda$, sample) before building the UI around it. Average-vector is the fallback ranking; the rest of the application does not depend on the choice.
 - The sample is small, so the result is indicative only; it is recorded in [ai-log.md](ai-log.md).

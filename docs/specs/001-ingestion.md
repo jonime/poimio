@@ -1,6 +1,6 @@
 # 001 — Project setup, content ingestion, and early checks
 
-**Status:** In progress (task 11 waits for enough Yle English/Finnish pairs; task 13 open)  
+**Status:** Done (task 11 moved to spec 006, evaluation harness)  
 **Milestone:** Prototype (weeks 1–2)  
 **Depends on:** —  
 **Estimate:** 21 h
@@ -103,7 +103,7 @@ Fetch the active feeds, normalize and deduplicate their items, embed them, and s
 7. A failing feed (mocked 404 or timeout) is recorded in `sources.last_error` while other feeds are still ingested.
 8. After a run, every new item has a 512-dimension embedding and `embedding_model` set.
 9. `pnpm ingest` prints a per-source summary: fetched, new, skipped (not modified), errors.
-10. The cross-lingual check reports results for both raw and language-centered vectors. It passes if at least 9 of 10 matched Finnish–English pairs score above the 95th percentile of random-pair similarities for at least one of them. If both fail, a local multilingual embedding model is compared before continuing.
+10. _Moved to spec 006:_ the cross-lingual check reports results for both raw and language-centered vectors. It passes if at least 9 of 10 matched Finnish–English pairs score above the 95th percentile of random-pair similarities for at least one of them. If both fail, a local multilingual embedding model is compared.
 11. The early ranking experiment produces a blind-judging CSV and, after judging, precision@10 for nearest-liked, average-vector, and newest-first per persona; the result and the gate 1 decision are recorded in `docs/ai-log.md`.
 12. The GitHub Actions workflow runs hourly and on manual trigger, uses repository secrets only, never overlaps with itself, and a manual run ingests successfully against the cloud project.
 13. The gate 1 re-run reports precision@10 per persona for nearest-liked and average-vector on raw and centered vectors (plus newest-first), reusing earlier judgments; the result and the final gate 1 decision (method and whether to center) are recorded in `docs/ai-log.md`.
@@ -122,7 +122,7 @@ Fetch the active feeds, normalize and deduplicate their items, embed them, and s
 - [x] 8. `pnpm ingest` command with per-source summary.
 - [x] 9. RLS tests (criterion 2).
 - [x] 10. GitHub Actions workflow for hourly ingestion; add repository secrets; verify with a manual run (criterion 12).
-- [ ] 11. Cross-lingual check script for raw and centered vectors; record the result in `docs/ai-log.md`.
+- [ ] 11. _Moved to spec 006 (evaluation harness):_ cross-lingual check script for raw and centered vectors; record the result in `docs/ai-log.md`.
 - [x] 12. Early ranking experiment scripts (export for blind judging, score judged CSV); record the result and gate 1 decision.
 - [x] 13. Gate 1 re-run with language centering: add centered variants to the ranking script, export only unjudged items for blind judging, score, and record the final gate 1 decision (criterion 13).
 - [x] 14. Exclude YouTube Shorts during ingestion (criterion 15).
@@ -132,6 +132,7 @@ Fetch the active feeds, normalize and deduplicate their items, embed them, and s
 - YouTube Shorts with explicit `/shorts/` URLs are excluded during ingestion; no extra column or duration heuristic. This does not classify Shorts presented as ordinary watch URLs.
 - A local multilingual embedding model is compared only if the cross-lingual check fails for both raw and centered vectors (criterion 10).
 - Gate 1 is decided on the re-run with centered vectors (task 13), not on the first run alone.
+- The cross-lingual check (task 11, criterion 10) moved to spec 006: it needed more Yle Finnish–English pairs than were available when the prototype was finished, and it belongs with the evaluation's cross-lingual retrieval metric ([design.md §4.4](../design.md#44-metrics)).
 
 ## Open questions
 

@@ -69,12 +69,12 @@ Goal: prove the core AI idea. The prototype is a rough first version that the fi
 - Ingestion of the initial feeds ([design.md §1](design.md#1-content-sources-and-representation)), Finnish and English, including YouTube channels; normalization, deduplication, embeddings. Runs hourly via GitHub Actions from week 2, so content accumulates for the evaluation.
 - Google login (Supabase Auth); feedback stored per user and protected by RLS.
 - Automated two-user RLS tests for every per-user table, written together with the table. They must pass before deployment or testing with another person.
-- Early ranking experiment and cross-lingual check ([design.md §4.1](design.md#41-early-checks-week-2-spec-001)).
+- Early ranking experiment with language centering (gate 1, [design.md §4.1](design.md#41-early-checks-week-2-spec-001)).
 - Next.js link list with _Like_ / _Not interested_ / _Seen_ buttons, swipe gestures on touch devices, and undo ([design.md §7](design.md#7-user-interaction)).
 - Recommender ranking ([design.md §2.1](design.md#21-interest-scoring-nearest-liked-item)) with recency and "why recommended" explanations.
 - Deployed on Vercel; production deploys only after CI, including the RLS integration tests, passes; any verified Google user can sign in without an invitation ([spec 004](specs/004-deployment-access.md)).
 
-Not included: exploration slots, interest summary, evaluation harness, source discovery.
+Not included: exploration slots, interest summary, evaluation harness, cross-lingual check (moved to the evaluation), source discovery.
 
 **Video (2–3 min), recorded on the deployed app:**
 
@@ -145,12 +145,12 @@ Specs are written just in time: spec N+1 is drafted when spec N reaches its last
 
 | Spec                                       | Content                                                                                                     | Week | Draft when                      |
 | ------------------------------------------ | ----------------------------------------------------------------------------------------------------------- | ---- | ------------------------------- |
-| [001](specs/001-ingestion.md)              | Project setup, ingestion, hourly GitHub Actions run, cross-lingual check, early ranking experiment (gate 1) | 1–2  | Drafted                         |
+| [001](specs/001-ingestion.md)              | Project setup, ingestion, hourly GitHub Actions run, early ranking experiment (gate 1) | 1–2  | Drafted                         |
 | [002](specs/002-auth-feedback.md)          | Google login, feedback table, two-user RLS tests                                                            | 2    | 001 reaches its embedding tasks |
 | [003](specs/003-feed-ui.md)                | Feed UI (buttons, swipe gestures, Seen, undo), recommender SQL function, recency, explanations              | 3    | After gate 1                    |
 | [004](specs/004-deployment-access.md)      | Vercel deployment from CI, authenticated access with database RLS                                           | 4    | 003 nearly done                 |
 | [005](specs/005-description-enrichment.md) | Enrich missing descriptions from page metadata and article text; backfill existing items                    | 2–3  | Drafted                         |
-| 006                                        | Evaluation harness                                                                                          | 5    | During week 4                   |
+| 006                                        | Evaluation harness, including the cross-lingual check moved from spec 001                                                                                          | 5    | During week 4                   |
 | 007                                        | Exploration slots and diversity; per-user LLM limits; optional interest summary and click tracking          | 6    | During week 5                   |
 | 008                                        | Source discovery: (a) catalog-based, (b) LLM web search                                                     | 6–7  | When gate 2 passes              |
 
@@ -158,26 +158,26 @@ Spec 002 runs alongside the end of 001 because login is independent of ingestion
 
 ## 8. Risks
 
-| Risk                                          | Mitigation                                                                                                                                                       |
-| --------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Scope grows too large                         | Fixed prototype scope; decision gates and cut order (§9); 12 h buffer                                                                                            |
-| Prototype not ready for the video window      | Prototype ready by 15 Nov; week 4 is slack for re-recording                                                                                                      |
-| Final phase is only three weeks               | Ingestion runs from week 2 so evaluation data is ready; gate 2 is criteria-based and can pass early; documentation written continuously; cut order (§9)          |
-| Recommendations do not clearly beat baselines | Early ranking experiment in week 2 (gate 1); a rigorous comparison counts as success either way                                                                  |
-| Evaluation results inflated                   | Time-based splits, identical feedback histories, near-duplicate exclusion, frozen parameters, repeated runs ([design.md §4.3](design.md#43-protocol-safeguards)) |
-| Little real feedback data (few users)         | Persona-based replay evaluation                                                                                                                                  |
-| LLM labels are biased proxies                 | Manual agreement check reported overall and for Finnish vs English; different model family possible                                                              |
-| Poor Finnish embedding quality                | Multilingual model required; tested in week 2                                                                                                                    |
-| Small or noisy content pool                   | Add Finnish topic-specific and non-tech feeds; balance by source                                                                                                 |
-| Some feed items have no usable description    | Spec 005 tries feed text, page metadata, then an AI summary of extracted article text; unresolved items stay hidden from users                                   |
-| RSS feeds unreliable                          | Multiple sources, robust error handling                                                                                                                          |
-| API costs or provider changes                 | Limited LLM use, cached results, model name stored with embeddings                                                                                               |
-| Source discovery too complex                  | Two independent stages, both after gate 2; first cuts                                                                                                            |
-| LLM suggests invented or unsafe URLs          | Every candidate fetched and validated; SSRF safeguards                                                                                                           |
-| Free-tier limits (Vercel, Supabase)           | Jobs on GitHub Actions; 512-dim embeddings; prune old articles                                                                                                   |
-| Supabase free project pauses when idle        | Scheduled jobs keep it active; check before demos                                                                                                                |
-| RLS mistakes leak another user's data         | Functions use `auth.uid()`, no `user_id` parameters; two-user tests written with each per-user table from week 2                                                 |
-| Other users run up LLM costs                  | Allowlist, per-user limits, OAuth in Testing mode                                                                                                                |
+| Risk                                          | Mitigation                                                                                                                                                                                           |
+| --------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Scope grows too large                         | Fixed prototype scope; decision gates and cut order (§9); 12 h buffer                                                                                                                                |
+| Prototype not ready for the video window      | Prototype ready by 15 Nov; week 4 is slack for re-recording                                                                                                                                          |
+| Final phase is only three weeks               | Ingestion runs from week 2 so evaluation data is ready; gate 2 is criteria-based and can pass early; documentation written continuously; cut order (§9)                                              |
+| Recommendations do not clearly beat baselines | Early ranking experiment in week 2 (gate 1); a rigorous comparison counts as success either way                                                                                                      |
+| Evaluation results inflated                   | Time-based splits, identical feedback histories, near-duplicate exclusion, frozen parameters, repeated runs ([design.md §4.3](design.md#43-protocol-safeguards))                                     |
+| Little real feedback data (few users)         | Persona-based replay evaluation                                                                                                                                                                      |
+| LLM labels are biased proxies                 | Manual agreement check reported overall and for Finnish vs English; different model family possible                                                                                                  |
+| Poor Finnish embedding quality                | Multilingual model required; tested in week 2                                                                                                                                                        |
+| Small or noisy content pool                   | Add Finnish topic-specific and non-tech feeds; balance by source                                                                                                                                     |
+| Some feed items have no usable description    | Spec 005 tries feed text, page metadata, then an AI summary of extracted article text; unresolved items stay hidden from users                                                                       |
+| RSS feeds unreliable                          | Multiple sources, robust error handling                                                                                                                                                              |
+| API costs or provider changes                 | Limited LLM use, cached results, model name stored with embeddings                                                                                                                                   |
+| Source discovery too complex                  | Two independent stages, both after gate 2; first cuts                                                                                                                                                |
+| LLM suggests invented or unsafe URLs          | Every candidate fetched and validated; SSRF safeguards                                                                                                                                               |
+| Free-tier limits (Vercel, Supabase)           | Jobs on GitHub Actions; 512-dim embeddings; prune old articles                                                                                                                                       |
+| Supabase free project pauses when idle        | Scheduled jobs keep it active; check before demos                                                                                                                                                    |
+| RLS mistakes leak another user's data         | Functions use `auth.uid()`, no `user_id` parameters; two-user tests written with each per-user table from week 2                                                                                     |
+| Other users run up LLM costs                  | Shared ingestion AI work (descriptions, embeddings) does not grow with users and has per-run budgets; per-user limits come with the first user-triggered LLM feature; no LLM in request-time ranking |
 
 ## 9. Decision gates and cut order
 

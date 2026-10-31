@@ -282,7 +282,9 @@ function FeedCard({
               return (
                 <Button
                   key={kind}
-                  variant={pressed ? "secondary" : "ghost"}
+                  variant={
+                    pressed ? (kind === "like" ? "success" : "secondary") : "ghost"
+                  }
                   size="sm"
                   type="button"
                   aria-label={label}
@@ -290,7 +292,7 @@ function FeedCard({
                   onClick={() => chooseAction(kind)}
                 >
                   <Icon data-icon="inline-start" aria-hidden="true" />
-                  {label}
+                  {pressed && kind === "like" ? "Liked" : label}
                 </Button>
               );
             })}

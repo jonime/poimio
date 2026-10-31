@@ -19,7 +19,7 @@ export function AppNav() {
         return (
           <Button
             key={item.href}
-            variant={current ? "secondary" : "ghost"}
+            variant={current ? "default" : "ghost"}
             nativeButton={false}
             render={
               <Link

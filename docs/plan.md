@@ -1,7 +1,7 @@
 # Poimio — Personal Content Discovery
 
 **Version:** 1.1 — Project plan  
-**Status:** Planning complete — ready for submission  
+**Status:** Planning complete — submitted  
 **Project type:** Solo AI course assignment  
 **Duration:** 7 weeks (26 Oct – 13 Dec 2026)  
 **Estimated workload:** 135 hours (course definition)  
@@ -114,12 +114,12 @@ About 19 hours per week over 7 weeks. Most code is written by AI agents, so impl
 
 ### Phase 1 — Prototype
 
-| Week | Dates          | Focus                                                                                                                                                                                                                    | AI tool support                                       | Hours |
-| ---- | -------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ----------------------------------------------------- | ----- |
-| 1    | 26 Oct – 1 Nov | Project setup (Next.js, Supabase CLI, pgvector), Google OAuth configuration, start ingestion (fetch, parse, fixtures), LLM model choice, plan polish                                                                     | Research, scaffolding, parser drafts                  | 16    |
-| 2    | 2 – 8 Nov      | Finish ingestion and embeddings, **hourly ingestion with GitHub Actions**, cross-lingual check, **early ranking experiment (gate 1)**, Google login, feedback table with RLS and two-user tests; **submit plan (8 Nov)** | SQL and test drafts, workflow file, experiment script | 21    |
-| 3    | 9 – 15 Nov     | Link list and feedback UI, recommender SQL function, recency, explanations, demo data — **prototype ready**                                                                                                              | SQL review, component generation                      | 19    |
-| 4    | 16 – 22 Nov    | **Record and submit prototype video (22 Nov)**; deployment was finished early, so the remaining time starts the evaluation harness                                                                                       | Deployment configuration                              | 13    |
+| Week | Dates          | Focus                                                                                                                                                                                           | AI tool support                                       | Hours |
+| ---- | -------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------- | ----- |
+| 1    | 26 Oct – 1 Nov | Project setup (Next.js, Supabase CLI, pgvector), Google OAuth configuration, start ingestion (fetch, parse, fixtures), LLM model choice, plan polish; **plan submitted** (deadline 8 Nov)       | Research, scaffolding, parser drafts                  | 16    |
+| 2    | 2 – 8 Nov      | Finish ingestion and embeddings, **hourly ingestion with GitHub Actions**, cross-lingual check, **early ranking experiment (gate 1)**, Google login, feedback table with RLS and two-user tests | SQL and test drafts, workflow file, experiment script | 21    |
+| 3    | 9 – 15 Nov     | Link list and feedback UI, recommender SQL function, recency, explanations, demo data — **prototype ready**                                                                                     | SQL review, component generation                      | 19    |
+| 4    | 16 – 22 Nov    | **Record and submit prototype video (22 Nov)**; deployment was finished early, so the remaining time starts the evaluation harness                                                              | Deployment configuration                              | 13    |
 
 ### Phase 2 — Final application
 
@@ -143,16 +143,16 @@ About 19 hours per week over 7 weeks. Most code is written by AI agents, so impl
 
 Specs are written just in time: spec N+1 is drafted when spec N reaches its last few tasks, so it reflects what was learned. Workflow and rules are in [AGENTS.md](../AGENTS.md); the template is [specs/\_template.md](specs/_template.md).
 
-| Spec                                       | Content                                                                                                     | Week | Draft when                      |
-| ------------------------------------------ | ----------------------------------------------------------------------------------------------------------- | ---- | ------------------------------- |
-| [001](specs/001-ingestion.md)              | Project setup, ingestion, hourly GitHub Actions run, early ranking experiment (gate 1) | 1–2  | Drafted                         |
-| [002](specs/002-auth-feedback.md)          | Google login, feedback table, two-user RLS tests                                                            | 2    | 001 reaches its embedding tasks |
-| [003](specs/003-feed-ui.md)                | Feed UI (buttons, swipe gestures, Seen, undo), recommender SQL function, recency, explanations              | 3    | After gate 1                    |
-| [004](specs/004-deployment-access.md)      | Vercel deployment from CI, authenticated access with database RLS                                           | 4    | 003 nearly done                 |
-| [005](specs/005-description-enrichment.md) | Enrich missing descriptions from page metadata and article text; backfill existing items                    | 2–3  | Drafted                         |
-| 006                                        | Evaluation harness, including the cross-lingual check moved from spec 001                                                                                          | 5    | During week 4                   |
-| 007                                        | Exploration slots and diversity; per-user LLM limits; optional interest summary and click tracking          | 6    | During week 5                   |
-| 008                                        | Source discovery: (a) catalog-based, (b) LLM web search                                                     | 6–7  | When gate 2 passes              |
+| Spec                                       | Content                                                                                            | Week | Draft when                      |
+| ------------------------------------------ | -------------------------------------------------------------------------------------------------- | ---- | ------------------------------- |
+| [001](specs/001-ingestion.md)              | Project setup, ingestion, hourly GitHub Actions run, early ranking experiment (gate 1)             | 1–2  | Drafted                         |
+| [002](specs/002-auth-feedback.md)          | Google login, feedback table, two-user RLS tests                                                   | 2    | 001 reaches its embedding tasks |
+| [003](specs/003-feed-ui.md)                | Feed UI (buttons, swipe gestures, Seen, undo), recommender SQL function, recency, explanations     | 3    | After gate 1                    |
+| [004](specs/004-deployment-access.md)      | Vercel deployment from CI, authenticated access with database RLS                                  | 4    | 003 nearly done                 |
+| [005](specs/005-description-enrichment.md) | Enrich missing descriptions from page metadata and article text; backfill existing items           | 2–3  | Drafted                         |
+| 006                                        | Evaluation harness, including the cross-lingual check moved from spec 001                          | 5    | During week 4                   |
+| 007                                        | Exploration slots and diversity; per-user LLM limits; optional interest summary and click tracking | 6    | During week 5                   |
+| 008                                        | Source discovery: (a) catalog-based, (b) LLM web search                                            | 6–7  | When gate 2 passes              |
 
 Spec 002 runs alongside the end of 001 because login is independent of ingestion.
 

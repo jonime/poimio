@@ -42,15 +42,15 @@ What works in the prototype:
 
 Implementation ran well ahead of the original plan: all prototype features were finished in week 1, mostly by AI coding agents following specs. The cross-lingual check moved into the evaluation, and the remaining weeks move the final-phase work earlier.
 
-| Week | Dates          | Work                                                                                                                                                                                            | Status  |
-| ---- | -------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------- |
-| 1    | 26 Oct – 1 Nov | Setup, ingestion and hourly runs, embeddings, early ranking experiment and language centering, Google login, feedback with RLS, feed UI with gestures, deployment with CI gate, AI descriptions | Done    |
-| 2    | 2 – 8 Nov      | Cross-lingual check; evaluation harness spec and first implementation; submit plan (8 Nov)                                                                                                      | Planned |
-| 3    | 9 – 15 Nov     | Record the prototype video; LLM relevance labels and manual agreement check; exploration and diversity spec                                                                                     | Planned |
-| 4    | 16 – 22 Nov    | Submit prototype (22 Nov); exploration slots and diversity; interest summary with per-user limits                                                                                               | Planned |
-| 5    | 23 – 29 Nov    | First validation results and tuning; optional click tracking; gate 2 as soon as its criteria hold                                                                                               | Planned |
-| 6    | 30 Nov – 6 Dec | Freeze parameters; catalog-based source discovery if gate 2 passed                                                                                                                              | Planned |
-| 7    | 7 – 12 Dec     | Final evaluation run on the test window; documentation and final demonstration; submit final version (13 Dec)                                                                                   | Planned |
+| Week | Dates          | Work                                                                                                                                                                                                            | Status  |
+| ---- | -------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------- |
+| 1    | 26 Oct – 1 Nov | Setup, ingestion and hourly runs, embeddings, early ranking experiment and language centering, Google login, feedback with RLS, feed UI with gestures, deployment with CI gate, AI descriptions; plan submitted | Done    |
+| 2    | 2 – 8 Nov      | Evaluation harness spec and first implementation, including the cross-lingual check                                                                                                                             | Planned |
+| 3    | 9 – 15 Nov     | Record the prototype video; LLM relevance labels and manual agreement check; exploration and diversity spec                                                                                                     | Planned |
+| 4    | 16 – 22 Nov    | Submit prototype (22 Nov); exploration slots and diversity; interest summary with per-user limits                                                                                                               | Planned |
+| 5    | 23 – 29 Nov    | First validation results and tuning; optional click tracking; gate 2 as soon as its criteria hold                                                                                                               | Planned |
+| 6    | 30 Nov – 6 Dec | Freeze parameters; catalog-based source discovery if gate 2 passed                                                                                                                                              | Planned |
+| 7    | 7 – 12 Dec     | Final evaluation run on the test window; documentation and final demonstration; submit final version (13 Dec)                                                                                                   | Planned |
 
 The evaluation still needs at least two weeks of ingested content for its time-based split; ingestion has run hourly since 28 Oct.
 

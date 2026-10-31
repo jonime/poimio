@@ -1,6 +1,6 @@
 # 005 — Description enrichment
 
-**Status:** Approved  
+**Status:** Done  
 **Milestone:** Prototype  
 **Depends on:** 001 (feed ingestion and embeddings), 003 (feed and liked-item views)  
 **Estimate:** 10 h

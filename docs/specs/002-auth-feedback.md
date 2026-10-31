@@ -102,6 +102,7 @@ Let users sign in with Google and store their per-item feedback (_Like_, _Not in
 - [x] 6. `setFeedback` / `clearFeedback` server actions with verified identity, input validation, and unit tests (criterion 5).
 - [x] 7. Verify criterion 7; update design.md §6.3 if the implementation differs.
 - [x] 8. Add local-only email/password login, tests for the UI and server-side environment restrictions, and local account setup documentation (criteria 9 and 10; scope change approved 30 Oct 2026).
+- [x] 9. Add a GitHub link to `https://github.com/jonime/poimio` alongside the privacy policy in the login page footer, matching its styling; `pnpm lint`, `pnpm typecheck`, and `pnpm test` pass (requested 31 Oct 2026).
 
 ## Decisions
 

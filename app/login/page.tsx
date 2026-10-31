@@ -52,13 +52,19 @@ export default async function Login({
             )}
             <SignInButton />
           </CardContent>
-          <CardFooter className="justify-center">
+          <CardFooter className="justify-center gap-4">
             <Link
               href="/privacy"
               className="text-sm text-muted-foreground underline underline-offset-4"
             >
               Privacy policy
             </Link>
+            <a
+              href="https://github.com/jonime/poimio"
+              className="text-sm text-muted-foreground underline underline-offset-4"
+            >
+              GitHub
+            </a>
           </CardFooter>
         </Card>
       </div>

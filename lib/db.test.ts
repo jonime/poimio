@@ -187,6 +187,8 @@ describe("toContentItemRows", () => {
       url: "https://yle.fi/a/1",
       title: "Test item",
       summary: "A summary",
+      summary_origin: "feed",
+      enrichment_status: "completed",
       language: "fi",
       categories: ["Uutiset", "Tiede"],
       thumbnail_url: "https://i.ytimg.com/vi/abc/hqdefault.jpg",

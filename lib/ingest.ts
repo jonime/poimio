@@ -5,7 +5,17 @@ import {
   type EmbeddingOptions,
   type EmbeddingRunResult,
 } from "./embeddings.ts";
-import { recordSourceOutcome, type IngestDb, type Source } from "./db.ts";
+import {
+  recordSourceOutcome,
+  type EnrichmentDb,
+  type IngestDb,
+  type Source,
+} from "./db.ts";
+import {
+  runEnrichment,
+  type EnrichmentOptions,
+  type EnrichmentRunResult,
+} from "./enrich/coordinator.ts";
 import { parseFeed } from "./normalize/parse.ts";
 
 export interface SourceIngestionSummary {
@@ -18,6 +28,7 @@ export interface SourceIngestionSummary {
 
 export interface IngestionSummary {
   sources: SourceIngestionSummary[];
+  enrichment: EnrichmentRunResult;
   embeddings: EmbeddingRunResult;
 }
 
@@ -27,6 +38,7 @@ export interface IngestionOptions {
     options?: FetchBatchOptions,
   ) => Promise<FetchResult[]>;
   embedding?: EmbeddingOptions;
+  enrichment?: Omit<EnrichmentOptions, "now">;
   now?: () => Date;
 }
 
@@ -54,7 +66,7 @@ function isYouTubeShort(url: string): boolean {
 
 /** Fetch, parse, persist, and embed the currently active feed catalog. */
 export async function runIngestion(
-  db: IngestDb,
+  db: IngestDb & EnrichmentDb,
   openAiApiKey: string,
   options: IngestionOptions = {},
 ): Promise<IngestionSummary> {
@@ -141,12 +153,16 @@ export async function runIngestion(
     );
   }
 
+  const enrichment = await runEnrichment(db, openAiApiKey, {
+    ...options.enrichment,
+    now: options.now,
+  });
   const embeddings = await embedPendingItems(
     db,
     openAiApiKey,
     options.embedding,
   );
-  return { sources: summaries, embeddings };
+  return { sources: summaries, enrichment, embeddings };
 }
 
 /** Format the command output with a row for every active source. */
@@ -164,6 +180,9 @@ export function formatIngestionSummary(summary: IngestionSummary): string {
     );
   }
 
+  lines.push(
+    `Enrichment: ${summary.enrichment.processed} processed, ${summary.enrichment.succeeded} succeeded, ${summary.enrichment.unresolved} unresolved, ${summary.enrichment.skipped} skipped, ${summary.enrichment.failed} failed (page metadata ${summary.enrichment.byOrigin.page_metadata}, AI ${summary.enrichment.byOrigin.ai_generated}, requests ${summary.enrichment.summaryRequests})`,
+  );
   lines.push(`Embedded: ${summary.embeddings.embedded}`);
   for (const failure of summary.embeddings.failedBatches) {
     lines.push(

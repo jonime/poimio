@@ -39,10 +39,44 @@ beforeEach(() => {
           url: "https://example.com/story",
           title: "A liked article",
           summary: "Short summary",
+          summary_origin: "ai_generated",
+          enrichment_status: "completed",
           type: "article",
           language: "en",
           thumbnail_url: null,
           published_at: "2026-10-29T11:00:00.000Z",
+          source: { name: "Example News" },
+        },
+      },
+      {
+        updated_at: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString(),
+        item: {
+          id: "item-2",
+          url: "https://example.com/feed-story",
+          title: "A feed description",
+          summary: "Provided by the feed",
+          summary_origin: "feed",
+          enrichment_status: "completed",
+          type: "article",
+          language: "en",
+          thumbnail_url: null,
+          published_at: "2026-10-29T10:00:00.000Z",
+          source: { name: "Example News" },
+        },
+      },
+      {
+        updated_at: new Date(Date.now() - 3 * 60 * 60 * 1000).toISOString(),
+        item: {
+          id: "item-3",
+          url: "https://example.com/unresolved",
+          title: "Unresolved liked item",
+          summary: null,
+          summary_origin: null,
+          enrichment_status: "pending",
+          type: "article",
+          language: "en",
+          thumbnail_url: null,
+          published_at: "2026-10-29T09:00:00.000Z",
           source: { name: "Example News" },
         },
       },
@@ -58,7 +92,7 @@ describe("liked page", () => {
     expect(auth.getClaims).toHaveBeenCalledExactlyOnceWith();
     expect(from).toHaveBeenCalledExactlyOnceWith("feedback");
     expect(select).toHaveBeenCalledWith(
-      expect.stringContaining("content_items"),
+      expect.stringContaining("summary_origin,enrichment_status"),
     );
     expect(eq).toHaveBeenCalledExactlyOnceWith("kind", "like");
     expect(order).toHaveBeenCalledExactlyOnceWith("updated_at", {
@@ -66,6 +100,9 @@ describe("liked page", () => {
     });
     expect(html).toContain("Liked items");
     expect(html).toContain("A liked article");
+    expect(html).toContain("A feed description");
+    expect(html).not.toContain("Unresolved liked item");
+    expect(html.match(/AI summary/g)).toHaveLength(1);
     expect(html).toContain("Example News");
     expect(html).toContain("Unlike");
   });

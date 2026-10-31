@@ -3,6 +3,7 @@ export interface FeedItem {
   url: string;
   title: string;
   summary: string | null;
+  summary_origin: "feed" | "page_metadata" | "ai_generated";
   type: "article" | "video";
   language: "fi" | "en";
   thumbnail_url: string | null;
@@ -19,6 +20,7 @@ export interface LikedFeedItem {
   url: string;
   title: string;
   summary: string | null;
+  summary_origin: "feed" | "page_metadata" | "ai_generated";
   type: "article" | "video";
   language: "fi" | "en";
   thumbnail_url: string | null;

@@ -120,11 +120,51 @@ export interface IngestDb {
   updateSource(id: string, patch: SourceStatusPatch): Promise<void>;
 }
 
+export type SummaryOrigin = "feed" | "page_metadata" | "ai_generated";
+
+export interface EnrichmentItem {
+  id: string;
+  url: string;
+  title: string;
+  summary: string | null;
+  language: "fi" | "en";
+  attemptCount: number;
+}
+
+export interface EnrichmentDb {
+  listDueEnrichmentItems(
+    limit: number,
+    now: Date,
+    ids?: string[],
+  ): Promise<EnrichmentItem[]>;
+  saveEnrichedSummary(
+    id: string,
+    expectedAttemptCount: number,
+    summary: string,
+    origin: Exclude<SummaryOrigin, "feed">,
+    attemptedAt: Date,
+  ): Promise<boolean>;
+  saveEnrichmentFailure(
+    id: string,
+    expectedAttemptCount: number,
+    attemptedAt: Date,
+    nextAttemptAt: Date | null,
+    error: string,
+    exhausted: boolean,
+  ): Promise<boolean>;
+}
+
+export interface BackfillDb extends EnrichmentDb {
+  listExhaustedEnrichmentItems(limit: number): Promise<EnrichmentItem[]>;
+  requeueExhaustedEnrichmentItems(ids: string[]): Promise<number>;
+}
+
 /** Content fields needed to create an embedding. */
 export interface UnembeddedItem {
   id: string;
   title: string;
   summary: string | null;
+  summaryOrigin: SummaryOrigin | null;
 }
 
 /* ------------------------------------------------------------------ *
@@ -139,6 +179,8 @@ export interface ContentItemRow {
   title: string;
   /** null when the item has no summary (e.g. Hacker News). */
   summary: string | null;
+  summary_origin: "feed" | null;
+  enrichment_status: "pending" | "completed";
   language: "fi" | "en";
   categories: string[];
   thumbnail_url: string | null;
@@ -157,9 +199,9 @@ function hasUsableUrl(url: string): boolean {
 /**
  * Map normalized items to `content_items` rows.
  *
- * `language` is copied from the source (design §6.2); an empty summary
- * becomes `null`; items without a usable http(s) URL are skipped because a
- * URL is the deduplication key.
+ * `language` is copied from the source (design §6.2); usable feed summaries
+ * are marked complete, while missing summaries remain pending. Items without
+ * a usable http(s) URL are skipped because a URL is the deduplication key.
  */
 export function toContentItemRows(
   source: Pick<Source, "id" | "language">,
@@ -167,17 +209,22 @@ export function toContentItemRows(
 ): ContentItemRow[] {
   return items
     .filter((item) => hasUsableUrl(item.url))
-    .map((item) => ({
-      source_id: source.id,
-      type: item.type,
-      url: item.url,
-      title: item.title,
-      summary: item.summary === "" ? null : item.summary,
-      language: source.language,
-      categories: item.categories,
-      thumbnail_url: item.thumbnailUrl,
-      published_at: item.publishedAt,
-    }));
+    .map((item) => {
+      const summary = item.summary.trim() || null;
+      return {
+        source_id: source.id,
+        type: item.type,
+        url: item.url,
+        title: item.title,
+        summary,
+        summary_origin: summary === null ? null : "feed",
+        enrichment_status: summary === null ? "pending" : "completed",
+        language: source.language,
+        categories: item.categories,
+        thumbnail_url: item.thumbnailUrl,
+        published_at: item.publishedAt,
+      };
+    });
 }
 
 /**
@@ -306,7 +353,9 @@ export interface IngestDbEnv {
  * variable). Throws immediately if either is missing, so a misconfigured
  * run fails before fetching any feeds.
  */
-export function createIngestDb(env: IngestDbEnv = process.env): IngestDb {
+export function createIngestDb(
+  env: IngestDbEnv = process.env,
+): IngestDb & BackfillDb {
   const url = env.NEXT_PUBLIC_SUPABASE_URL;
   const serviceRoleKey = env.SUPABASE_SERVICE_ROLE_KEY;
 
@@ -344,8 +393,10 @@ export function createIngestDb(env: IngestDbEnv = process.env): IngestDb {
       for (let offset = 0; ; offset += pageSize) {
         const { data, error } = await client
           .from("content_items")
-          .select("id,title,summary")
+          .select("id,title,summary,summary_origin")
           .is("embedding", null)
+          .eq("enrichment_status", "completed")
+          .not("summary", "is", null)
           .order("created_at")
           .range(offset, offset + pageSize - 1);
         if (error) {
@@ -353,10 +404,156 @@ export function createIngestDb(env: IngestDbEnv = process.env): IngestDb {
             `loading unembedded content items failed: ${error.message}`,
           );
         }
-        const page = data as UnembeddedItem[];
-        items.push(...page);
+        const page = data as Array<{
+          id: string;
+          title: string;
+          summary: string | null;
+          summary_origin: SummaryOrigin;
+        }>;
+        items.push(
+          ...page.map((row) => ({
+            id: row.id,
+            title: row.title,
+            summary: row.summary,
+            summaryOrigin: row.summary_origin,
+          })),
+        );
         if (page.length < pageSize) return items;
       }
+    },
+
+    async listDueEnrichmentItems(limit, now, ids) {
+      if (ids?.length === 0) return [];
+      let query = client
+        .from("content_items")
+        .select("id,url,title,summary,language,enrichment_attempt_count")
+        .eq("enrichment_status", "pending")
+        .or(
+          `enrichment_next_attempt_at.is.null,enrichment_next_attempt_at.lte.${now.toISOString()}`,
+        )
+        .order("created_at");
+      if (ids !== undefined) query = query.in("id", ids);
+      const { data, error } = await query.limit(Math.max(0, limit));
+      if (error) {
+        throw new Error("loading due description enrichments failed");
+      }
+      return (
+        data as Array<{
+          id: string;
+          url: string;
+          title: string;
+          summary: string | null;
+          language: "fi" | "en";
+          enrichment_attempt_count: number;
+        }>
+      ).map((row) => ({
+        id: row.id,
+        url: row.url,
+        title: row.title,
+        summary: row.summary,
+        language: row.language,
+        attemptCount: row.enrichment_attempt_count,
+      }));
+    },
+
+    async listExhaustedEnrichmentItems(limit) {
+      const { data, error } = await client
+        .from("content_items")
+        .select("id,url,title,summary,language,enrichment_attempt_count")
+        .eq("enrichment_status", "exhausted")
+        .order("created_at")
+        .limit(Math.max(0, limit));
+      if (error) {
+        throw new Error("loading exhausted description enrichments failed");
+      }
+      return (
+        data as Array<{
+          id: string;
+          url: string;
+          title: string;
+          summary: string | null;
+          language: "fi" | "en";
+          enrichment_attempt_count: number;
+        }>
+      ).map((row) => ({
+        id: row.id,
+        url: row.url,
+        title: row.title,
+        summary: row.summary,
+        language: row.language,
+        attemptCount: row.enrichment_attempt_count,
+      }));
+    },
+
+    async requeueExhaustedEnrichmentItems(ids) {
+      if (ids.length === 0) return 0;
+      const { data, error } = await client
+        .from("content_items")
+        .update({
+          enrichment_status: "pending",
+          enrichment_attempt_count: 0,
+          enrichment_last_attempt_at: null,
+          enrichment_next_attempt_at: null,
+          enrichment_error: null,
+        })
+        .eq("enrichment_status", "exhausted")
+        .in("id", ids)
+        .select("id");
+      if (error) throw new Error("requeuing exhausted descriptions failed");
+      return data?.length ?? 0;
+    },
+
+    async saveEnrichedSummary(
+      id,
+      expectedAttemptCount,
+      summary,
+      origin,
+      attemptedAt,
+    ) {
+      const { data, error } = await client
+        .from("content_items")
+        .update({
+          summary,
+          summary_origin: origin,
+          enrichment_status: "completed",
+          enrichment_attempt_count: expectedAttemptCount + 1,
+          enrichment_last_attempt_at: attemptedAt.toISOString(),
+          enrichment_next_attempt_at: null,
+          enrichment_error: null,
+          embedding: null,
+          embedding_model: null,
+        })
+        .eq("id", id)
+        .eq("enrichment_status", "pending")
+        .eq("enrichment_attempt_count", expectedAttemptCount)
+        .select("id");
+      if (error) throw new Error("saving enriched description failed");
+      return (data?.length ?? 0) > 0;
+    },
+
+    async saveEnrichmentFailure(
+      id,
+      expectedAttemptCount,
+      attemptedAt,
+      nextAttemptAt,
+      errorDetail,
+      exhausted,
+    ) {
+      const { data, error } = await client
+        .from("content_items")
+        .update({
+          enrichment_status: exhausted ? "exhausted" : "pending",
+          enrichment_attempt_count: expectedAttemptCount + 1,
+          enrichment_last_attempt_at: attemptedAt.toISOString(),
+          enrichment_next_attempt_at: nextAttemptAt?.toISOString() ?? null,
+          enrichment_error: errorDetail.slice(0, 500),
+        })
+        .eq("id", id)
+        .eq("enrichment_status", "pending")
+        .eq("enrichment_attempt_count", expectedAttemptCount)
+        .select("id");
+      if (error) throw new Error("saving description retry state failed");
+      return (data?.length ?? 0) > 0;
     },
 
     async saveEmbedding(id, embedding, model) {
@@ -366,6 +563,8 @@ export function createIngestDb(env: IngestDbEnv = process.env): IngestDb {
         .update({ embedding: vector, embedding_model: model })
         .eq("id", id)
         .is("embedding", null)
+        .eq("enrichment_status", "completed")
+        .not("summary", "is", null)
         .select("id");
       if (error) {
         throw new Error(

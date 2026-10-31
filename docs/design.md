@@ -40,7 +40,8 @@ Notes:
 Representation:
 
 - Each item has a type: _article_ or _video_. Videos come from YouTube channel feeds; only metadata is used (no transcripts). Boilerplate in video descriptions (links, sponsor and subscribe text) is removed before embedding.
-- Each item's title and description are converted into a semantic embedding.
+- Every item shown to users must have a completed, non-empty summary. Its provenance is `feed`, `page_metadata`, or `ai_generated`; unresolved items remain stored but are hidden.
+- Embeddings use exactly `title + "\n\n" + summary`, and are created only after the summary is complete. Enrichment updates the summary and clears any stale vector/model in the same database update. Unresolved items cannot retain embeddings and therefore cannot be candidates or ranking signals.
 - The embedding model must be **multilingual (Finnish + English)** so that interests transfer across languages.
 - The embedding model name is stored with each vector, so embeddings can be regenerated if the model changes.
 - **Language bias:** with `text-embedding-3-small`, texts in the same language are similar just because of the language (random-pair cosine: Finnish–Finnish 0.232, English–English 0.148, Finnish–English 0.077 on 306 items). This favors same-language matches and hurts both nearest-liked scoring and cross-lingual recommendations.
@@ -100,6 +101,9 @@ OpenAI API (a small, low-cost GPT model, chosen in week 1). The LLM is **not** u
 1. **Interest summary** (optional): periodically turns likes/dislikes into a readable profile shown to the user.
 2. **Evaluation judge:** labels test items as relevant/not relevant for simulated personas.
 3. **Source discovery** (stretch, stage b): finds candidate sites with the built-in web search tool and assesses source quality.
+4. **Description enrichment:** `gpt-6-luna` via the Responses API creates a concise, factual description only when feed and page metadata descriptions are unavailable. The request has no tools or URL access; extracted article text is untrusted content, not instructions. The output must preserve Finnish or English, use only facts in the text, and fit the existing 1,000-character summary limit. Prompt constraints and representative tests live with the enrichment implementation.
+
+Description generation is bounded to 20 API requests per ingestion run, including retries, at most 24,000 extracted characters per item and 200 output tokens per request. At an estimated 6,000 input tokens per request, the full request budget is about $0.014 at the model's current standard rates ($0.10/M input tokens and $0.50/M output tokens); this is an estimate, not a hard dollar cap. A failed item gets at most three attempts total, with retries due after 1 hour and 6 hours; exhausted items require an explicit backfill retry. Readable article text is extracted with the approved `@mozilla/readability` and `jsdom` dependencies. No full page or article text is retained.
 
 ## 3. Source discovery (stretch goal)
 
@@ -170,7 +174,7 @@ Guiding principle: lowest possible cost, single language (TypeScript).
 | Authentication       | Supabase Auth with Google login                                                                       | Free          |
 | Scheduled jobs       | GitHub Actions scheduled workflow running TypeScript scripts                                          | Free          |
 | Embeddings           | OpenAI `text-embedding-3-small`, 512 dimensions                                                       | < 1 €/month   |
-| LLM                  | OpenAI small GPT model, Responses API with web search                                                 | A few € total |
+| LLM                  | OpenAI GPT models via Responses API; description enrichment uses `gpt-6-luna`                         | A few € total |
 | RSS parsing          | `rss-parser` or similar                                                                               | Free          |
 
 Implementation notes:
@@ -200,6 +204,7 @@ Rules:
 - Feed and scoring functions read the user from `auth.uid()` internally and never accept a `user_id` parameter; they run as `SECURITY INVOKER`.
 - Views are created with `security_invoker = true`.
 - The service-role key is used only in GitHub Actions secrets and server-only environment variables, never in `NEXT_PUBLIC_` variables.
+- Description enrichment fetches only an ingested item's canonical `http` or `https` URL. It rejects loopback, private, link-local, reserved, and mixed DNS answers; pins each validated public answer to its connection; and validates every redirect target before connecting, preserving the hostname for Host and TLS verification. It forwards no credentials or feed validators, accepts only HTML, caps each request at 8 seconds and 1 MB with at most 3 redirects and 3 concurrent fetches, executes no JavaScript, and never stores or logs fetched page/article text.
 - RLS does not limit cost. Current AI usage is shared ingestion work, independent of user count; per-user limits must be implemented with the first user-triggered LLM action.
 - Policies are covered by automated tests with two users.
 
@@ -225,23 +230,29 @@ Tables are added by the spec that first needs them. Shared content tables are re
 
 ### 6.2 `content_items` (shared)
 
-| Column            | Type                  | Notes                                      |
-| ----------------- | --------------------- | ------------------------------------------ |
-| `id`              | `uuid` PK             |                                            |
-| `source_id`       | `uuid` FK → `sources` | First source that delivered the item       |
-| `type`            | `text`                | `article` or `video`                       |
-| `url`             | `text` unique         | Normalized URL; deduplication key          |
-| `title`           | `text`                | Plain text                                 |
-| `summary`         | `text` null           | Plain text, cleaned, max ~1,000 characters |
-| `language`        | `text`                | Copied from the source                     |
-| `categories`      | `text[]`              | Feed category tags; not used for ranking   |
-| `thumbnail_url`   | `text` null           |                                            |
-| `published_at`    | `timestamptz`         | Falls back to fetch time                   |
-| `embedding`       | `vector(512)` null    | Null until embedded                        |
-| `embedding_model` | `text` null           | e.g. `text-embedding-3-small@512`          |
-| `created_at`      | `timestamptz`         |                                            |
+| Column                       | Type                  | Notes                                                             |
+| ---------------------------- | --------------------- | ----------------------------------------------------------------- |
+| `id`                         | `uuid` PK             |                                                                   |
+| `source_id`                  | `uuid` FK → `sources` | First source that delivered the item                              |
+| `type`                       | `text`                | `article` or `video`                                              |
+| `url`                        | `text` unique         | Normalized URL; deduplication key                                 |
+| `title`                      | `text`                | Plain text                                                        |
+| `summary`                    | `text` null           | Plain text, cleaned, max ~1,000 characters                        |
+| `summary_origin`             | `text` null           | `feed`, `page_metadata`, or `ai_generated`; null while unresolved |
+| `enrichment_status`          | `text`                | `pending`, `completed`, or `exhausted`                            |
+| `enrichment_attempt_count`   | `integer`             | Non-negative; bounded by the retry policy                         |
+| `enrichment_last_attempt_at` | `timestamptz` null    |                                                                   |
+| `enrichment_next_attempt_at` | `timestamptz` null    | Due time for a pending retry                                      |
+| `enrichment_error`           | `text` null           | Bounded to 500 characters                                         |
+| `language`                   | `text`                | Copied from the source                                            |
+| `categories`                 | `text[]`              | Feed category tags; not used for ranking                          |
+| `thumbnail_url`              | `text` null           |                                                                   |
+| `published_at`               | `timestamptz`         | Falls back to fetch time                                          |
+| `embedding`                  | `vector(512)` null    | Null until embedded                                               |
+| `embedding_model`            | `text` null           | e.g. `text-embedding-3-small@512`                                 |
+| `created_at`                 | `timestamptz`         |                                                                   |
 
-Indexes: `published_at desc`; an HNSW index on `embedding` is added only if exact search becomes slow (tens of thousands of rows are fine without it).
+Non-empty existing summaries are backfilled as `feed`/`completed`; empty summaries are `pending` with no provenance. Database checks enforce valid provenance and enrichment-state combinations. Indexes cover `published_at desc`, due pending enrichment, and completed items missing embeddings. An HNSW index on `embedding` is added only if exact search becomes slow (tens of thousands of rows are fine without it).
 
 ### 6.3 `feedback` (per-user)
 

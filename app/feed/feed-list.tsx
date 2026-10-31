@@ -235,6 +235,9 @@ function FeedCard({
           <CardHeader>
             <CardDescription className="flex flex-wrap items-center gap-2">
               <Badge variant="secondary">{item.source_name}</Badge>
+              {item.summary_origin === "ai_generated" && (
+                <Badge variant="outline">AI summary</Badge>
+              )}
               <time dateTime={item.published_at}>
                 {formatRelativeTime(item.published_at, new Date(renderedAt))}
               </time>
@@ -283,7 +286,11 @@ function FeedCard({
                 <Button
                   key={kind}
                   variant={
-                    pressed ? (kind === "like" ? "success" : "secondary") : "ghost"
+                    pressed
+                      ? kind === "like"
+                        ? "success"
+                        : "secondary"
+                      : "ghost"
                   }
                   size="sm"
                   type="button"

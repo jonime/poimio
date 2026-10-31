@@ -328,7 +328,9 @@ describe.skipIf(!enabled || anonKey == null || serviceKey == null)(
           type: "article",
           url: `https://feed-integration.example/${suffix}/${definition.key}`,
           title: `feed-test-${definition.key}`,
-          summary: null,
+          summary: "Ranking integration description",
+          summary_origin: "feed",
+          enrichment_status: "completed",
           language: definition.language,
           published_at: publishedAt,
           embedding: embedding === null ? null : pgVector(embedding),
@@ -613,6 +615,37 @@ describe.skipIf(!enabled || anonKey == null || serviceKey == null)(
             `Restoring test English mean failed: ${error.message}`,
           );
       }
+    });
+
+    it("excludes unresolved items even when the user has feedback on them", async () => {
+      const { service, userAClient } = clients();
+      const { data: unresolved, error: insertError } = await service
+        .from("content_items")
+        .insert({
+          source_id: sourceIds[0],
+          type: "article",
+          url: `https://feed-integration.example/${suffix}/unresolved-feedback`,
+          title: "Unresolved feedback fixture",
+          summary: null,
+          summary_origin: null,
+          enrichment_status: "pending",
+          language: "fi",
+          published_at: new Date().toISOString(),
+        })
+        .select("id")
+        .single();
+      expect(insertError).toBeNull();
+
+      const { error: feedbackError } = await userAClient.rpc("set_feedback", {
+        p_item_id: unresolved?.id,
+        p_kind: "like",
+        p_via: "button",
+      });
+      expect(feedbackError).toBeNull();
+
+      const feed = await getFeed(userAClient);
+      expect(feed.some((row) => row.id === unresolved?.id)).toBe(false);
+      expect(feed.every((row) => row.reason === "recent")).toBe(true);
     });
   },
 );

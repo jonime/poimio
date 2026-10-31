@@ -38,9 +38,24 @@ function vectors(count: number) {
 describe("embedPendingItems", () => {
   it("sends ordered text in batches of at most 100 with the required model and dimensions", async () => {
     const items = [
-      { id: "1", title: "Title one", summary: "Summary one" },
-      { id: "2", title: "Title two", summary: null },
-      { id: "3", title: "Title three", summary: "Summary three" },
+      {
+        id: "1",
+        title: "Title one",
+        summary: "Summary one",
+        summaryOrigin: "feed" as const,
+      },
+      {
+        id: "2",
+        title: "Title two",
+        summary: "Summary two",
+        summaryOrigin: "feed" as const,
+      },
+      {
+        id: "3",
+        title: "Title three",
+        summary: "Summary three",
+        summaryOrigin: "feed" as const,
+      },
     ];
     const db = new FakeEmbeddingDb(items);
     const requests: Array<Record<string, unknown>> = [];
@@ -70,7 +85,7 @@ describe("embedPendingItems", () => {
         dimensions: EMBEDDING_DIMENSIONS,
         input: [
           "Title one\n\nSummary one",
-          "Title two",
+          "Title two\n\nSummary two",
           "Title three\n\nSummary three",
         ],
       },
@@ -87,7 +102,8 @@ describe("embedPendingItems", () => {
       (_, index) => ({
         id: `item-${index}`,
         title: `Title ${index}`,
-        summary: null,
+        summary: `Summary ${index}`,
+        summaryOrigin: "feed" as const,
       }),
     );
     const db = new FakeEmbeddingDb(items);
@@ -142,5 +158,68 @@ describe("embedPendingItems", () => {
       failedBatches: [],
     });
     expect(await db.listUnembeddedItems()).toEqual([]);
+  });
+
+  it("never embeds items with missing or whitespace-only summaries", async () => {
+    const db = new FakeEmbeddingDb([
+      {
+        id: "missing",
+        title: "Title only",
+        summary: null,
+        summaryOrigin: null,
+      },
+      {
+        id: "blank",
+        title: "Blank description",
+        summary: "  ",
+        summaryOrigin: "feed",
+      },
+    ]);
+    let requestCount = 0;
+
+    const result = await embedPendingItems(db, "test-key", {
+      fetch: async () => {
+        requestCount++;
+        return new Response(JSON.stringify({ data: [] }), { status: 200 });
+      },
+    });
+
+    expect(result).toEqual({ embedded: 0, failedBatches: [] });
+    expect(requestCount).toBe(0);
+    expect(db.embeddings.size).toBe(0);
+  });
+
+  it("embeds only selected recovery IDs within the configured limit", async () => {
+    const db = new FakeEmbeddingDb([
+      {
+        id: "first",
+        title: "First title",
+        summary: "First summary",
+        summaryOrigin: "feed",
+      },
+      {
+        id: "second",
+        title: "Second title",
+        summary: "Second summary",
+        summaryOrigin: "ai_generated",
+      },
+    ]);
+    let requestBody = "";
+
+    const result = await embedPendingItems(db, "test-key", {
+      itemIds: ["second"],
+      limit: 1,
+      fetch: async (_input, init) => {
+        requestBody = String(init?.body ?? "");
+        return new Response(JSON.stringify({ data: vectors(1) }), {
+          status: 200,
+        });
+      },
+    });
+
+    expect(result.embedded).toBe(1);
+    expect(requestBody).toContain("Second title\\n\\nSecond summary");
+    expect(db.embeddings.has("first")).toBe(false);
+    expect(db.embeddings.has("second")).toBe(true);
   });
 });

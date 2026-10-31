@@ -11,6 +11,7 @@ const item: FeedItem = {
   url: "https://example.com/story",
   title: "A useful article",
   summary: null,
+  summary_origin: "feed",
   type: "article",
   language: "en",
   thumbnail_url: null,

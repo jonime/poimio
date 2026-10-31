@@ -23,10 +23,12 @@ export interface EmbeddingRunResult {
 
 export interface EmbeddingOptions {
   fetch?: typeof fetch;
+  itemIds?: string[];
+  limit?: number;
 }
 
 function embeddingInput(item: UnembeddedItem): string {
-  return item.summary ? `${item.title}\n\n${item.summary}` : item.title;
+  return `${item.title}\n\n${item.summary?.trim() ?? ""}`;
 }
 
 function describeError(error: unknown): string {
@@ -89,7 +91,17 @@ export async function embedPendingItems(
   options: EmbeddingOptions = {},
 ): Promise<EmbeddingRunResult> {
   const fetchImpl = options.fetch ?? fetch;
-  const pending = await db.listUnembeddedItems();
+  const allowedIds =
+    options.itemIds === undefined ? null : new Set(options.itemIds);
+  const eligible = (await db.listUnembeddedItems()).filter(
+    (item) =>
+      Boolean(item.summary?.trim()) &&
+      (allowedIds === null || allowedIds.has(item.id)),
+  );
+  const pending = eligible.slice(
+    0,
+    Math.max(0, options.limit ?? eligible.length),
+  );
   const result: EmbeddingRunResult = { embedded: 0, failedBatches: [] };
 
   for (

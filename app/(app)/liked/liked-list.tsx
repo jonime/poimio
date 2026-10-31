@@ -117,6 +117,9 @@ export default function LikedList({
               <CardHeader>
                 <CardDescription className="flex flex-wrap items-center gap-2">
                   <Badge variant="secondary">{item.source_name}</Badge>
+                  {item.summary_origin === "ai_generated" && (
+                    <Badge variant="outline">AI summary</Badge>
+                  )}
                   <time dateTime={item.liked_at}>
                     Liked{" "}
                     {formatRelativeTime(item.liked_at, new Date(renderedAt))}

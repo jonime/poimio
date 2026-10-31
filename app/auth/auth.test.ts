@@ -77,6 +77,7 @@ describe("signed-in page", () => {
           url: "https://publisher.example/story",
           title: "A useful article",
           summary: "A short summary",
+          summary_origin: "feed",
           type: "article",
           language: "en",
           thumbnail_url: "https://publisher.example/image.jpg",
@@ -109,6 +110,43 @@ describe("signed-in page", () => {
     expect(html).toContain('action="/" method="get"');
     expect(html).toContain("Refresh feed");
   });
+
+  it.each([
+    { origin: "ai_generated", visible: true },
+    { origin: "feed", visible: false },
+    { origin: "page_metadata", visible: false },
+  ])(
+    "shows the AI summary badge only for $origin provenance",
+    async ({ origin, visible }) => {
+      rpc.mockResolvedValueOnce({
+        data: [
+          {
+            id: "item-provenance",
+            url: "https://publisher.example/story",
+            title: "A useful article",
+            summary: "A short summary",
+            summary_origin: origin,
+            type: "article",
+            language: "en",
+            thumbnail_url: null,
+            published_at: new Date().toISOString(),
+            source_name: "Example News",
+            score: 0.9,
+            reason: "recent",
+            because_item_id: null,
+            because_title: null,
+          },
+        ],
+        error: null,
+      });
+
+      const html = renderToStaticMarkup(
+        await Home({ searchParams: Promise.resolve({}) }),
+      );
+
+      expect(html.includes("AI summary")).toBe(visible);
+    },
+  );
 
   it.each([
     { data: null, error: null },

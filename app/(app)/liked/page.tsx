@@ -12,6 +12,8 @@ interface RelatedContentItem {
   url: string;
   title: string;
   summary: string | null;
+  summary_origin: "feed" | "page_metadata" | "ai_generated" | null;
+  enrichment_status: "pending" | "completed" | "exhausted";
   type: "article" | "video";
   language: "fi" | "en";
   thumbnail_url: string | null;
@@ -33,19 +35,27 @@ export default async function LikedPage() {
   const { data, error } = await supabase
     .from("feedback")
     .select(
-      "updated_at,item:content_items(id,url,title,summary,type,language,thumbnail_url,published_at,source:sources(name))",
+      "updated_at,item:content_items(id,url,title,summary,summary_origin,enrichment_status,type,language,thumbnail_url,published_at,source:sources(name))",
     )
     .eq("kind", "like")
     .order("updated_at", { ascending: false });
   const likedItems = ((data ?? []) as RawLikedItem[]).flatMap((row) => {
     const item = Array.isArray(row.item) ? row.item[0] : row.item;
-    if (!item) return [];
+    if (
+      !item ||
+      item.enrichment_status !== "completed" ||
+      !item.summary?.trim() ||
+      item.summary_origin === null
+    ) {
+      return [];
+    }
     const source = Array.isArray(item.source) ? item.source[0] : item.source;
     const likedItem: LikedFeedItem = {
       id: item.id,
       url: item.url,
       title: item.title,
       summary: item.summary,
+      summary_origin: item.summary_origin,
       type: item.type,
       language: item.language,
       thumbnail_url: item.thumbnail_url,

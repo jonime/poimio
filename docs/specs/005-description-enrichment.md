@@ -90,18 +90,20 @@ Each criterion is verified by a test, command, or observable result.
 
 ## Tasks
 
-- [ ] 1. Decide and record the LLM model, prompt/output contract, per-run cost limits, retry policy, and whether a readability dependency is needed; get approval before adding a dependency.
-- [ ] 2. Add the migration, backfill existing provenance/status, and update design.md §6.2.
-- [ ] 3. Implement safe bounded page fetching with connection-bound DNS validation, metadata normalization and usable-candidate precedence, readable-text extraction, and focused unit/security tests.
-- [ ] 4. Implement the staged enrichment coordinator and AI summary request with per-item failure isolation, retry state, and tests.
-- [ ] 5. Integrate enrichment before embeddings in ingestion, including due-item selection independent of feed outcomes and recovery of completed-but-unembedded items; prevent unresolved items from embedding and ranking; add integration coverage.
-- [ ] 6. Update all user-facing item lists to hide unresolved items and show the AI-summary indicator; add focused UI tests.
-- [ ] 7. Implement `pnpm enrich:backfill` with dry-run, limit, resumability including embedding-only recovery, and explicit retry of exhausted items; test it against local Supabase.
-- [ ] 8. Update design.md §1, §2.5, §6.2, and the relevant security notes; verify existing ranking artifacts remain unchanged.
-- [ ] 9. Run lint, typecheck, unit tests, and local Supabase integration tests with 0 skipped.
+- [x] 1. Decide and record the LLM model, prompt/output contract, per-run cost limits, retry policy, and whether a readability dependency is needed; get approval before adding a dependency.
+- [x] 2. Add the migration, backfill existing provenance/status, and update design.md §6.2.
+- [x] 3. Implement safe bounded page fetching with connection-bound DNS validation, metadata normalization and usable-candidate precedence, readable-text extraction, and focused unit/security tests.
+- [x] 4. Implement the staged enrichment coordinator and AI summary request with per-item failure isolation, retry state, and tests.
+- [x] 5. Integrate enrichment before embeddings in ingestion, including due-item selection independent of feed outcomes and recovery of completed-but-unembedded items; prevent unresolved items from embedding and ranking; add integration coverage.
+- [x] 6. Update all user-facing item lists to hide unresolved items and show the AI-summary indicator; add focused UI tests.
+- [x] 7. Implement `pnpm enrich:backfill` with dry-run, limit, resumability including embedding-only recovery, and explicit retry of exhausted items; test it against local Supabase.
+- [x] 8. Update design.md §1, §2.5, §6.2, and the relevant security notes; verify existing ranking artifacts remain unchanged.
+- [x] 9. Run lint, typecheck, unit tests, and local Supabase integration tests with 0 skipped.
 
 ## Decisions
 
+- Description summaries use `gpt-6-luna` with the Responses API, no tools or URL access, at most 20 requests per ingestion run (including retries), 24,000 extracted characters per item, and 200 output tokens per request. The prompt requires concise, factual output in the item's Finnish or English language, treats article text as untrusted content, and forbids unsupported facts; the result must fit the 1,000-character summary limit. At an estimated 6,000 input tokens per request, a full run costs about $0.014 at current standard pricing; this is an estimate, not a hard dollar cap.
+- Retry at most three times total, due after 1 hour and 6 hours; exhausted items need an explicit backfill retry. `@mozilla/readability` and `jsdom` are approved for deterministic readable-text extraction.
 - Items without a successfully resolved description are hidden from all user-facing item lists; they are not deleted.
 - Description provenance is stored, not just a generated/not-generated boolean, so feed, page metadata, and AI summaries can be distinguished.
 - Enrichment is shared ingestion work, not a user-triggered or request-time LLM feature.
@@ -109,5 +111,4 @@ Each criterion is verified by a test, command, or observable result.
 
 ## Open questions
 
-- Which small LLM model meets Finnish/English quality and cost requirements?
-- Which maintained HTML readability extractor should be used, if the existing stack has no suitable option? Any new dependency requires approval.
+- None for task 1. The model, budget, retry policy, and readability dependencies are selected and approved.

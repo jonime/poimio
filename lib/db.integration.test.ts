@@ -19,6 +19,7 @@ import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 import {
   createIngestDb,
   recordSourceOutcome,
+  type BackfillDb,
   type IngestDb,
   type Source,
 } from "./db";
@@ -37,7 +38,7 @@ describe.skipIf(!enabled || serviceKey == null)(
     const client: SupabaseClient | null = serviceKey
       ? createClient(url, serviceKey)
       : null;
-    const db: IngestDb | null =
+    const db: (IngestDb & BackfillDb) | null =
       client != null
         ? createIngestDb({
             NEXT_PUBLIC_SUPABASE_URL: url,
@@ -46,7 +47,7 @@ describe.skipIf(!enabled || serviceKey == null)(
         : null;
 
     /** Narrows the nullable handles; tests only run when ready. */
-    function ready(): { client: SupabaseClient; db: IngestDb } {
+    function ready(): { client: SupabaseClient; db: IngestDb & BackfillDb } {
       if (client == null || db == null) {
         throw new Error("integration environment not ready");
       }
@@ -160,6 +161,251 @@ describe.skipIf(!enabled || serviceKey == null)(
         .single();
       expect(error).toBeNull();
       expect(data?.source_id).toBe(sourceA.id);
+    });
+
+    it("persists feed provenance only for non-empty summaries", async () => {
+      const { client, db } = ready();
+      const nonEmpty = item(`${prefix}/summary`, "Summary");
+      const empty = { ...item(`${prefix}/empty`, "Empty"), summary: "  " };
+
+      expect(await db.insertItems(sourceA, [nonEmpty, empty])).toBe(2);
+
+      const { data, error } = await client
+        .from("content_items")
+        .select("url,summary,summary_origin,enrichment_status")
+        .in("url", [nonEmpty.url, empty.url]);
+      expect(error).toBeNull();
+      expect(data).toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({
+            url: nonEmpty.url,
+            summary: "Integration test summary",
+            summary_origin: "feed",
+            enrichment_status: "completed",
+          }),
+          expect.objectContaining({
+            url: empty.url,
+            summary: null,
+            summary_origin: null,
+            enrichment_status: "pending",
+          }),
+        ]),
+      );
+    });
+
+    it("selects due unresolved rows and saves descriptions before embeddings", async () => {
+      const { client, db } = ready();
+      const unresolved = {
+        ...item(`${prefix}/enrichment-success`, "Enrichment success"),
+        summary: "  ",
+      };
+      await db.insertItems(sourceA, [unresolved]);
+      const { data: inserted, error: insertError } = await client
+        .from("content_items")
+        .select("id")
+        .eq("url", unresolved.url)
+        .single();
+      expect(insertError).toBeNull();
+
+      const id = inserted?.id as string;
+      const now = new Date("2026-10-31T12:00:00.000Z");
+      const due = await db.listDueEnrichmentItems(1_000, now);
+      expect(due.some((candidate) => candidate.id === id)).toBe(true);
+      expect(
+        await db.saveEnrichedSummary(
+          id,
+          0,
+          "A page metadata description",
+          "page_metadata",
+          now,
+        ),
+      ).toBe(true);
+
+      const { data, error } = await client
+        .from("content_items")
+        .select(
+          "summary,summary_origin,enrichment_status,enrichment_attempt_count,embedding,embedding_model",
+        )
+        .eq("id", id)
+        .single();
+      expect(error).toBeNull();
+      expect(data).toMatchObject({
+        summary: "A page metadata description",
+        summary_origin: "page_metadata",
+        enrichment_status: "completed",
+        enrichment_attempt_count: 1,
+        embedding: null,
+        embedding_model: null,
+      });
+      expect(
+        (await db.listDueEnrichmentItems(1_000, now)).some(
+          (candidate) => candidate.id === id,
+        ),
+      ).toBe(false);
+      expect(
+        (await db.listUnembeddedItems()).some(
+          (candidate) => candidate.id === id,
+        ),
+      ).toBe(true);
+    });
+
+    it("rejects embeddings on unresolved items so ranking cannot admit them", async () => {
+      const { client, db } = ready();
+      const unresolved = {
+        ...item(`${prefix}/unresolved-embedding`, "Unresolved embedding"),
+        summary: "",
+      };
+      await db.insertItems(sourceA, [unresolved]);
+      const { data: inserted, error: insertError } = await client
+        .from("content_items")
+        .select("id")
+        .eq("url", unresolved.url)
+        .single();
+      expect(insertError).toBeNull();
+      const id = inserted?.id as string;
+      const vector = `[${Array<number>(512).fill(0).join(",")}]`;
+
+      const { error } = await client
+        .from("content_items")
+        .update({ embedding: vector, embedding_model: "title-only@512" })
+        .eq("id", id);
+      expect(error?.code).toBe("23514");
+
+      const { data: unresolvedWithVectors, error: queryError } = await client
+        .from("content_items")
+        .select("id")
+        .neq("enrichment_status", "completed")
+        .not("embedding", "is", null);
+      expect(queryError).toBeNull();
+      expect(unresolvedWithVectors).toEqual([]);
+    });
+
+    it("does not select future retries and excludes exhausted rows", async () => {
+      const { client, db } = ready();
+      const unresolved = {
+        ...item(`${prefix}/enrichment-retry`, "Enrichment retry"),
+        summary: "",
+      };
+      await db.insertItems(sourceA, [unresolved]);
+      const { data: inserted, error: insertError } = await client
+        .from("content_items")
+        .select("id")
+        .eq("url", unresolved.url)
+        .single();
+      expect(insertError).toBeNull();
+      const id = inserted?.id as string;
+      const firstAttempt = new Date("2026-10-31T12:00:00.000Z");
+      const retryAt = new Date(firstAttempt.getTime() + 60 * 60 * 1000);
+
+      expect(
+        await db.saveEnrichmentFailure(
+          id,
+          0,
+          firstAttempt,
+          retryAt,
+          "page fetch failed",
+          false,
+        ),
+      ).toBe(true);
+      expect(
+        (await db.listDueEnrichmentItems(1_000, firstAttempt)).some(
+          (candidate) => candidate.id === id,
+        ),
+      ).toBe(false);
+      expect(
+        (await db.listDueEnrichmentItems(1_000, retryAt)).some(
+          (candidate) => candidate.id === id,
+        ),
+      ).toBe(true);
+
+      expect(
+        await db.saveEnrichmentFailure(
+          id,
+          1,
+          retryAt,
+          null,
+          "retry limit reached",
+          true,
+        ),
+      ).toBe(true);
+      expect(
+        (
+          await db.listDueEnrichmentItems(
+            1_000,
+            new Date("2026-11-02T00:00:00Z"),
+          )
+        ).some((candidate) => candidate.id === id),
+      ).toBe(false);
+    });
+
+    it("only requeues an exhausted item through the explicit backfill method", async () => {
+      const { client, db } = ready();
+      const unresolved = {
+        ...item(`${prefix}/enrichment-requeue`, "Enrichment requeue"),
+        summary: "",
+      };
+      await db.insertItems(sourceA, [unresolved]);
+      const { data: inserted, error: insertError } = await client
+        .from("content_items")
+        .select("id")
+        .eq("url", unresolved.url)
+        .single();
+      expect(insertError).toBeNull();
+      const id = inserted?.id as string;
+      const now = new Date("2026-10-31T12:00:00.000Z");
+
+      expect(
+        await db.saveEnrichmentFailure(id, 0, now, null, "exhausted", true),
+      ).toBe(true);
+      expect(
+        (await db.listExhaustedEnrichmentItems(1_000)).some(
+          (candidate) => candidate.id === id,
+        ),
+      ).toBe(true);
+      expect(await db.requeueExhaustedEnrichmentItems([id])).toBe(1);
+
+      const requeued = await db.listDueEnrichmentItems(1_000, now, [id]);
+      expect(requeued).toHaveLength(1);
+      expect(requeued[0]).toMatchObject({ id, attemptCount: 0 });
+    });
+
+    it("rejects invalid provenance and enrichment-state combinations", async () => {
+      const { client } = ready();
+      const base = {
+        source_id: sourceA.id,
+        type: "article",
+        title: "Invalid state fixture",
+        language: "en",
+        categories: [],
+        published_at: new Date("2026-10-28T08:00:00.000Z").toISOString(),
+      };
+      const invalidStates = [
+        {
+          summary: "A summary",
+          summary_origin: "unknown",
+          enrichment_status: "completed",
+        },
+        {
+          summary: "A summary",
+          summary_origin: null,
+          enrichment_status: "completed",
+        },
+        {
+          summary: "A summary",
+          summary_origin: null,
+          enrichment_status: "pending",
+        },
+      ];
+
+      for (const [index, state] of invalidStates.entries()) {
+        const { error } = await client.from("content_items").insert({
+          ...base,
+          url: `${prefix}/invalid-state-${index}`,
+          ...state,
+        });
+        expect(error).not.toBeNull();
+        expect(error?.code).toBe("23514");
+      }
     });
 
     it("applies source status patches to the right row and fields", async () => {

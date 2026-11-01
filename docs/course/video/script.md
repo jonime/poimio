@@ -22,7 +22,19 @@ On screen: the app's home feed.
 
 ### 2. Empty profile (0:23–0:55)
 
-_TBD after recording._
+Three separate clips; place each when the matching moment appears in the recording.
+
+**2a. Sign in** (on screen: Sign in with Google, then the first feed)
+
+> Signing in takes one click with Google. This is a brand-new account, so there are no likes yet.
+
+**2b. Cold-start feed** (on screen: scrolling the feed, pause on a "Recent from …" label)
+
+> Without likes, the feed is a balanced mix of the newest items from every source: Finnish and English, articles and videos. Each card says why it's there, for now just "Recent from" its source.
+
+**2c. AI summary** (on screen: a card with the "AI summary" badge, e.g. a Hacker News link)
+
+> Some feeds, like Hacker News, give only a link. If the page has no description either, Poimio writes a short one with a language model and marks it with an AI summary badge.
 
 ### 3. Learning (0:55–1:35)
 
@@ -30,7 +42,29 @@ _TBD after recording._
 
 ### 4. Phone (1:35–2:05)
 
-_TBD after recording._
+Separate clips; place each when the matching moment appears in the phone recording.
+
+**4a. Swipe** (on screen: swipe left on a sports item)
+
+> On a phone, swipe right to like and left for Not interested. Not into sports? Swipe it away.
+
+**4b. Undo** (on screen: the "Undo" toast, tap it, then swipe again)
+
+> Every swipe can be undone for a few seconds, in case it was a mistake.
+
+**4c. Seen** (on screen: press Seen on a video)
+
+> Seen hides something you've already read or watched elsewhere. It doesn't count as a like or a dislike.
+
+**4d. Refresh** (on screen: refresh; sports items are gone or lower)
+
+> After a refresh, sports stories move down the feed.
+
+Check in the rehearsal that this actually happens; otherwise drop 4d.
+
+**4e. Liked page** (on screen: open Liked)
+
+> And everything you've liked is saved on the Liked page.
 
 ### 5. Pipeline diagram (2:05–2:30)
 

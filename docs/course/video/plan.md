@@ -1,8 +1,10 @@
 # Prototype Video Plan
 
-Target length 2–3 minutes, recorded on the deployed app at https://poimio.cc. Submission deadline: Sun 22 Nov 2026 12:00 (see [proto-deliverable.md](proto-deliverable.md)).
+Target length about 3 minutes (going slightly over is fine), recorded on the deployed app at https://poimio.cc. Submission deadline: Sun 22 Nov 2026 12:00 (see [proto-deliverable.md](../proto-deliverable.md)).
 
 ## Script
+
+Frame-by-frame narration lives in [script.md](script.md).
 
 | Time      | Scene          | What to show                                                                                                                                                                                                                                                                                                                          |
 | --------- | -------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -24,4 +26,4 @@ Target length 2–3 minutes, recorded on the deployed app at https://poimio.cc. 
 
 ## After recording
 
-- [ ] Upload to YouTube and add the link to [proto-deliverable.md](proto-deliverable.md).
+- [ ] Upload to YouTube and add the link to [proto-deliverable.md](../proto-deliverable.md).

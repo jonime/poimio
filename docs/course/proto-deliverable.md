@@ -56,8 +56,8 @@ The evaluation still needs at least two weeks of ingested content for its time-b
 
 ## Links
 
-GitHub repository: https://github.com/jonime/poimio
+GitHub repository: https://github.com/jonime/poimio/tree/prototype
 
-Prototype video: https://www.youtube.com/watch?v=(not yet)
+Prototype video: https://www.youtube.com/watch?v=0VndVQhf-Ag
 
 Deployed application: https://poimio.cc

@@ -36,11 +36,23 @@ Three separate clips; place each when the matching moment appears in the recordi
 
 > Some feeds, like Hacker News, give only a link. If the page has no description either, Poimio writes a short one with a language model and marks it with an AI summary badge.
 
-### 3. Learning (0:55–1:35)
+### 3. Learning (0:55–1:26)
 
-_TBD after recording._
+Recorded clip, 31 s: scroll down, like the Finnish Yle article "Suomi EU:n työttömyystilastojen kärjessä syyskuussakin", scroll up, refresh; the English Yle News article "Finland's unemployment rate remains worst in EU" appears.
 
-### 4. Phone (1:35–2:05)
+**3a. Like** (on screen: scrolling and pressing Like on the Finnish article)
+
+> Let's teach it something. I scroll down and like a Finnish story from Yle: Finland has the highest unemployment rate in the EU.
+
+**3b. Refresh** (on screen: scroll up, Refresh feed, the English article appears)
+
+> Now I refresh the feed. A new English article on the same story shows up, and the card explains why: it's similar to the Finnish one I liked.
+
+**3c. Cross-language** (on screen: hold on the "Similar to …, which you liked" label)
+
+> Language doesn't matter. Poimio compares meaning, not words, so one Finnish like is enough to find the same topic in English.
+
+### 4. Phone (1:26–1:56)
 
 Separate clips; place each when the matching moment appears in the phone recording.
 
@@ -66,25 +78,19 @@ Check in the rehearsal that this actually happens; otherwise drop 4d.
 
 > And everything you've liked is saved on the Liked page.
 
-### 5. Pipeline diagram (2:05–2:30)
+### 5. Pipeline diagram (1:56–2:21)
 
 On screen: [diagram1.png](diagram1.png).
 
 > Here's how it works. Every hour, a GitHub Actions job fetches seventeen Finnish and English feeds. If an item has no description, Poimio tries the page's metadata, and only then asks a language model for a short summary. Each item becomes an OpenAI embedding, stored in Postgres with pgvector. One SQL function ranks the feed by similarity to what you've liked, and every like or dismissal feeds back into the next refresh.
 
-### 6. Gate 1 chart (2:30–2:47)
-
-On screen: [chart1.png](chart1.png).
-
-> Early on, the embeddings matched by language, not topic, so unrelated Finnish news pushed out relevant English items. Subtracting each language's average embedding fixed it: in a blind-judged test, top-ten precision rose from sixty-five to one hundred percent. Newest-first reached thirty.
-
-### 7. Security (2:47–3:02)
+### 6. Security (2:21–2:36)
 
 On screen: [security.png](security.png).
 
 > Security is built in. Row Level Security in the database keeps each user's feedback private. Automated tests sign in as two different users and check that neither can see or change the other's data. And production deploys only after the tests and build pass in CI.
 
-### 8. Next steps (3:02–3:25)
+### 7. Next steps (2:36–2:59)
 
 On screen: [next-steps.png](next-steps.png), static.
 

@@ -150,7 +150,7 @@ Specs are written just in time: spec N+1 is drafted when spec N reaches its last
 | [003](specs/003-feed-ui.md)                | Feed UI (buttons, swipe gestures, Seen, undo), recommender SQL function, recency, explanations     | 3    | After gate 1                    |
 | [004](specs/004-deployment-access.md)      | Vercel deployment from CI, authenticated access with database RLS                                  | 4    | 003 nearly done                 |
 | [005](specs/005-description-enrichment.md) | Enrich missing descriptions from page metadata and article text; backfill existing items           | 2–3  | Drafted                         |
-| 006                                        | Evaluation harness, including the cross-lingual check moved from spec 001                          | 5    | During week 4                   |
+| [006](specs/006-evaluation.md)             | Evaluation harness, including the cross-lingual check moved from spec 001                          | 2–5  | Drafted                         |
 | 007                                        | Exploration slots and diversity; per-user LLM limits; optional interest summary and click tracking | 6    | During week 5                   |
 | 008                                        | Source discovery: (a) catalog-based, (b) LLM web search                                            | 6–7  | When gate 2 passes              |
 
@@ -222,10 +222,10 @@ The minimum acceptable result is: ingestion, personal feed with feedback, the re
 
 None of these block spec 001; each is decided in the spec that first needs it.
 
-| Decision                                                                                  | Decided in                                                          |
-| ----------------------------------------------------------------------------------------- | ------------------------------------------------------------------- |
-| Exact OpenAI model for LLM tasks (price, Finnish quality)                                 | Spec 005 (description summaries) and spec 006 (evaluation labels)   |
-| Parameter values (click weight, $\lambda$, recency decay, slot mix)                       | Defaults in spec 003; tuned and frozen through evaluation in week 6 |
-| How long older but relevant items stay in the feed (possibly longer for videos than news) | Spec 003 (recency defaults)                                         |
-| More YouTube channels or Finnish technology media in the active set                       | After about a week of ingestion data shows volume per topic         |
-| Per-user LLM limits (e.g. interest summaries per day, discovery runs per week)            | Spec 007 (first LLM-triggering user action)                         |
+| Decision                                                                                  | Decided in                                                                                                                                 |
+| ----------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------ |
+| LLM models (price, Finnish quality)                                                       | Decided: `gpt-6-luna` for descriptions (spec 005); local Qwen 3.8 27B via MTPLX for evaluation labels, `gpt-6-luna` as fallback (spec 006) |
+| Parameter values (click weight, $\lambda$, recency decay, slot mix)                       | Defaults in spec 003; tuned and frozen through evaluation in week 6                                                                        |
+| How long older but relevant items stay in the feed (possibly longer for videos than news) | Spec 003 (recency defaults)                                                                                                                |
+| More YouTube channels or Finnish technology media in the active set                       | After about a week of ingestion data shows volume per topic                                                                                |
+| Per-user LLM limits (e.g. interest summaries per day, discovery runs per week)            | Spec 007 (first LLM-triggering user action)                                                                                                |

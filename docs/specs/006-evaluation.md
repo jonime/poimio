@@ -146,7 +146,7 @@ Each criterion belongs to one task.
 
 ## Tasks
 
-- [ ] 1. Migration: `rank_items` with methods and parameters; refactor `get_feed` to use it; integration tests (criterion 1).
+- [x] 1. Migration: `rank_items` with methods and parameters; refactor `get_feed` to use it; integration tests (criterion 1).
 - [ ] 2. `pnpm eval:export` and `pnpm eval:import` with manifest and hash checks (criterion 2).
 - [ ] 3. Personas file and `pnpm eval:label` (criterion 3).
 - [ ] 4. `pnpm eval:agreement export|score` with the sampling design and weights; I label the selection set, decide on the fallback, then label the reporting set (criterion 4).

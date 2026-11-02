@@ -139,26 +139,26 @@ Goal: a rigorous comparison of the recommender against simple baselines. A caref
 
 ### 4.2 Dataset and labels
 
-1. Freeze a snapshot of ~1.5–2k items covering at least two weeks.
-2. Define 3–4 personas as text descriptions (e.g. "AI and software", "cars and engineering", "science and space", "Finnish sports"). Each persona is a real user in the database, so the replay also exercises the multi-user setup and RLS.
-3. An LLM labels each item's relevance per persona. These labels are **proxy judgments**, not independent ground truth. Using a different model family than the embedding provider (e.g. a local Qwen model) reduces shared bias.
-4. Manually label ~100 items, balanced between Finnish and English. Report agreement with the LLM labels (percent agreement and Cohen's κ) overall and separately for Finnish and English.
+1. Export a read-only production snapshot of eligible items spanning at least 14 days. Preserve source, item, and language-mean UUIDs/vectors. Import it only into an empty local Supabase database. Split by publication time into feedback (oldest 50%), validation (next 25%), and test (newest 25%) windows.
+2. Personas are configuration, not database users: "AI and software", "cars and engineering", "science and space", and "Finnish sports". Replay passes explicit item IDs to `rank_items`; user isolation is covered by the RLS integration tests.
+3. Label every persona-item pair with local Qwen 3.8 27B via MTPLX, a different model family from the OpenAI embedding model. Labels are proxy judgments, not independent ground truth. The label cache records the served model ID and prompt version, is resumable, and must form one complete, single-model label set before replay.
+4. Draw two disjoint blind sets of 60 pairs each, 15 per persona and balanced by language. Stratify by persona, language, and the primary model's label; record population/sample stratum sizes and inclusion probabilities. The selection set decides whether the whole snapshot must be relabeled with `gpt-6-luna`; score the reporting set once with the selected label set. Report inverse-probability-weighted agreement, Cohen's κ, precision, and recall overall and by language.
 
 ### 4.3 Protocol safeguards
 
-- **Time-based split:** items are ordered by publication time into a feedback window (oldest ~50%), a validation window (~25%), and a test window (newest ~25%). Feedback comes only from the feedback window; candidates come only from later windows. This mirrors real use and prevents leakage.
-- **Identical feedback histories:** for each persona and run, one feedback sequence is sampled from the feedback window independently of any method (relevant items as likes, a fixed share of non-relevant items as _Not interested_). Every method receives exactly the same sequence.
-- **Rated items are excluded** from every method's candidates.
-- **Near-duplicates:** candidates with cosine similarity above a threshold fixed in advance (e.g. 0.9) to any feedback item are excluded from the headline metric, since the same story from several sources would inflate nearest-neighbor matching. Results including them are reported separately.
-- **Tuning only on the validation window.** Parameters ($\lambda$, recency weight, click weight, slot mix) are frozen and recorded (commit hash) before a single run on the test window.
-- **Repeated runs:** at least 10 runs with different random seeds for feedback sampling; report the mean and spread (standard deviation or 95% interval) per method.
+- `rank_items` is the production SQL ranking surface and the only ranking implementation used by replay. It supports `nearest_liked`, `average_vector`, feedback-independent `newest_first` and seeded `random`; it also supports the raw-vector variant with `centered = false`. Recency uses a fixed `p_as_of` for each candidate window.
+- For each persona and seed, sample one fixed feedback sequence from the feedback window: $k$ relevant items as likes and $\lfloor k/2 \rfloor$ non-relevant items as dislikes, for $k \in \{0,1,3,5,10,20\}$. Larger $k$ values are prefixes of the same sequences. Every method receives the same lists; rated items are removed from every candidate pool.
+- Cross-lingual retrieval uses only feedback in the source language and a candidate pool in the target language: English-to-Finnish and Finnish-to-English. Both likes and dislikes use the source language.
+- Freeze the near-duplicate threshold after inspecting feedback-window pairs only. For the headline metric, remove candidates whose centered similarity to any feedback item meets the threshold **before** ranking. Rank the full candidate pool separately for the duplicate-inclusive metric.
+- Tune parameters only on validation. Before one test-window run, freeze parameters, commit, snapshot/label/config hashes, threshold, seeds, and $k$ values. Test replay requires a clean tree and matching `HEAD`, refuses `--params` and duplicate runs, and records the reason for an explicitly authorized new experiment.
+- Use at least 10 seeds. Report means, standard deviations, and paired 95% intervals across seeds; do not pad missing cells.
 
 ### 4.4 Metrics
 
-- Precision@10 as a function of the number of feedback items (e.g. 0, 3, 5, 10, 20), for the recommender and all baselines.
-- Topic diversity of the top 10 (distinct categories and sources).
-- Divergence between persona rankings.
-- Cross-lingual retrieval: share of relevant Finnish items ranked in the top 10 from English-only feedback, and vice versa.
+- Precision@10 by method, persona, $k$, and ranking scope (headline and duplicate-inclusive), with seed mean, standard deviation, and paired difference to `average_vector` with a 95% interval.
+- Distinct sources and categories in each top 10, plus top-10 Jaccard overlap between personas at $k=10$.
+- Cross-lingual retrieval precision@10 for relevant target-language items under source-language-only feedback. Record the number of relevant candidates for each cell.
+- The separate embedding check compares at least 10 manually confirmed Yle Finnish-English event pairs against the 95th percentile of random cross-language pairs, for raw and centered vectors. If fewer than 9 of 10 matched pairs exceed the random threshold for both variants, compare a local multilingual embedding model.
 
 Limitation: this demonstrates adaptation in a controlled setting, not real-world recommendation accuracy.
 

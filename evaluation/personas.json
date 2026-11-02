@@ -1,0 +1,18 @@
+[
+  {
+    "id": "ai-software",
+    "description": "You follow artificial intelligence, software engineering, programming tools, and the technology industry. Relevant items explain meaningful developments, research, products, or practical engineering work in these areas."
+  },
+  {
+    "id": "cars-engineering",
+    "description": "You are interested in cars, vehicle technology, mechanical engineering, and how machines work. Relevant items cover automotive design, engineering decisions, vehicle testing, or related technical developments."
+  },
+  {
+    "id": "science-space",
+    "description": "You follow science, astronomy, space exploration, and major scientific discoveries. Relevant items explain research, missions, observations, or evidence-based developments in these fields."
+  },
+  {
+    "id": "finnish-sports",
+    "description": "You follow Finnish sports, including Finnish teams, athletes, competitions, and important sports developments in Finland. Relevant items are substantially about Finnish sport rather than sports in general."
+  }
+]

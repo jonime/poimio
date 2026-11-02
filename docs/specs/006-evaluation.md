@@ -61,6 +61,7 @@ Measure, reproducibly and without inflating the results, whether the production 
 - A committed manifest `evaluation/snapshot/manifest.json` records the schema version, date range, window boundaries, item IDs, a hash of each exported item row (all exported fields), a hash of each mean vector, and counts per language and source.
 - `pnpm eval:import` loads the snapshot into **local** Supabase only (service role; refuses non-local URLs), requires empty `sources`, `content_items`, and `embedding_language_means` (run after `supabase db reset`), inserts rows with their original UUIDs, and fails on any missing column, schema-version mismatch, or hash mismatch. All later steps run locally.
 - Window split by `published_at`: feedback (oldest ~50%), validation (~25%), test (newest ~25%), stored in the manifest. The snapshot must cover at least 14 days (ingestion has run since 28 Oct, so the earliest freeze is about 11 Nov).
+- **Provisional snapshots** for development: `pnpm eval:export --provisional` may cover fewer than 14 days and writes `"provisional": true` in the manifest. Labels, agreement samples, and replay results derived from it are marked provisional in their output and file names, are never committed as results, and are not recorded as findings. The test-window guard and the freeze file reject provisional snapshots. The final snapshot is a fresh, non-provisional export.
 
 **Personas**
 
@@ -127,6 +128,7 @@ Each criterion belongs to one task.
 2. **Task 2 — snapshot export and import**
    1. Export reads production only with the explicit production env file and performs no writes there; the manifest is committed and the snapshot files are gitignored.
    2. Import loads only into local Supabase with original UUIDs, refuses non-local URLs and non-empty target tables, satisfies all current constraints, and fails on any missing column, schema-version mismatch, or item or mean-vector hash mismatch. After import, cold-start ordering on the snapshot matches the export's source IDs.
+   3. A non-provisional export refuses a date range shorter than 14 days; `--provisional` allows it and marks the manifest.
 3. **Task 3 — LLM labels**
    1. Labels are produced for every (persona, item) pair, validated against the schema, cached, and resumable; the model and prompt version are recorded. The replay refuses incomplete or mixed-model label sets. Unit tests cover batching, parsing, cache keys, and the completeness check.
 4. **Task 4 — manual agreement**
@@ -137,9 +139,9 @@ Each criterion belongs to one task.
    1. At least 10 confirmed Finnish–English pairs; the score step reports raw and centered results. It passes if at least 9 of 10 matched pairs score above the 95th percentile of random pairs for at least one of them; otherwise a local multilingual embedding model is compared. The result is recorded in `docs/ai-log.md`.
 6. **Task 6 — replay runner**
    1. Unit tests: identical feedback lists across methods, prefix property across $k$, rated-item exclusion, near-duplicates removed **before** ranking for the headline result and kept for the inclusive result, same-language feedback (likes and dislikes) in cross-lingual runs with a target-language-only pool, missing cells for each missing-cell rule, metric calculations.
-   2. A validation run completes and writes JSON and CSV with all metrics and provenance fields.
+   2. A validation run completes and writes JSON and CSV with all metrics and provenance fields; runs on a provisional snapshot are marked provisional in content and file name.
 7. **Task 7 — test-window guard**
-   1. Unit tests: `--window test` fails without a valid freeze file, with a dirty tree or a different `HEAD`, with any hash mismatch, with `--params`, and when a test result for the experiment already exists; a different existing test result requires `--new-experiment` with a reason.
+   1. Unit tests: `--window test` fails without a valid freeze file, with a dirty tree or a different `HEAD`, with any hash mismatch, with a provisional snapshot, with `--params`, and when a test result for the experiment already exists; a different existing test result requires `--new-experiment` with a reason.
 8. **Task 8 — documentation**
    1. design.md §4 reflects the final protocol (personas as configuration, `rank_items`, label model); the first validation results and the agreement numbers are recorded in `docs/ai-log.md`.
 9. **Every task:** `pnpm lint`, `pnpm typecheck`, and `pnpm test` pass; tasks touching the database also pass `pnpm test:integration` with 0 skipped.
@@ -147,7 +149,7 @@ Each criterion belongs to one task.
 ## Tasks
 
 - [x] 1. Migration: `rank_items` with methods and parameters; refactor `get_feed` to use it; integration tests (criterion 1).
-- [ ] 2. `pnpm eval:export` and `pnpm eval:import` with manifest and hash checks (criterion 2).
+- [ ] 2. `pnpm eval:export` (including `--provisional`) and `pnpm eval:import` with manifest and hash checks (criterion 2).
 - [ ] 3. Personas file and `pnpm eval:label` (criterion 3).
 - [ ] 4. `pnpm eval:agreement export|score` with the sampling design and weights; I label the selection set, decide on the fallback, then label the reporting set (criterion 4).
 - [ ] 5. `pnpm eval:crosslingual propose|score`; I confirm pairs (criterion 5).
@@ -165,6 +167,7 @@ Each criterion belongs to one task.
 - Relevance labels come from a **local Qwen 3.8 27B via MTPLX** (OpenAI-compatible server on localhost): free, and a different model family than the OpenAI embeddings. Labeling runs only locally, never in CI or production; the exact model build and quantization are recorded with the labels and in `docs/ai-log.md`.
 - Fallback: decided on the selection set only (weighted κ below 0.6 for Finnish or English); the fallback model then labels the whole snapshot, and one complete label set is used per experiment.
 - Personas: "AI and software", "cars and engineering", "science and space", "Finnish sports".
+- Tasks 2–7 are developed and checked on a provisional snapshot while data accumulates; the cross-lingual check (task 5) runs on production data as soon as 10 pairs exist. Final labeling, the agreement check, and the first validation run use the non-provisional snapshot from about 11 Nov.
 
 ## Open questions
 

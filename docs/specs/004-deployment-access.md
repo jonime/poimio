@@ -127,7 +127,7 @@ Each criterion belongs to one task.
 9. **Every task:** `pnpm lint`, `pnpm typecheck`, and `pnpm test` pass; tasks touching the database also pass `pnpm test:integration` with 0 skipped.
 10. **Task 9 — non-code CI filtering:** push and pull request triggers use the same non-code exclusions; mixed code and documentation changes, workflow changes, and unknown paths still run CI. The workflow passes `actionlint`; deployment logic stays unchanged.
 11. **Task 10 — minimal CI Supabase stack:** only PostgreSQL, Auth, PostgREST, and Kong run; unused Storage and Realtime initialization jobs are disabled. The workflow passes `actionlint`, all four integration suites pass with 0 skipped against a fresh minimal local stack, and local development configuration and deployment gates stay unchanged. Compare startup and integration job durations with the full-stack baseline after CI runs; do not assume a speedup before measuring it.
-12. **Task 11 — overlap CI database startup:** start the minimal Supabase stack in a tracked background step while Node/pnpm setup and dependency installation run, then wait for startup before running integration tests. The startup wait propagates failures and tests still pass with 0 skipped. `actionlint` checks all supported syntax; until its parser supports GitHub's documented `background` and `wait` fields, ignore only its two corresponding parser diagnostics. Compare total integration-job time against the prior run; no speedup is assumed until measured.
+12. **Task 11 — overlap CI database startup:** start the minimal Supabase stack as a tracked background step in the integration job while Node/pnpm setup and dependency installation run, then wait for startup before running tests. The startup wait propagates failures, and the GitHub Actions run passes with 0 skipped. `actionlint` checks all supported syntax; ignore only its two parser diagnostics for GitHub's documented `background` and `wait` fields until actionlint supports them. Record the measured integration-job time against the prior run and note run-to-run variability.
 
 ## Tasks
 
@@ -141,11 +141,11 @@ Each criterion belongs to one task.
 - [x] 8. README deployment section; update design.md §5.1 and §6 (criterion 8).
 - [x] 9. Skip non-code-only CI runs using trigger path exclusions (criterion 10).
 - [x] 10. Reduce CI Supabase to the services required by the existing integration tests (criterion 11).
-- [ ] 11. Overlap minimal Supabase startup with Node/pnpm setup and dependency installation (criterion 12).
+- [x] 11. Overlap minimal Supabase startup with Node/pnpm setup and dependency installation (criterion 12).
 
 Task 10 validation: `actionlint`, `pnpm lint`, `pnpm typecheck`, and `pnpm test` passed (204 unit tests; two existing image lint warnings). All four integration suites passed on a fresh disposable minimal Supabase stack (32 tests, 0 skipped); exactly PostgreSQL, Auth, PostgREST, and Kong were running. The disposable project used separate API/database ports, so the suites ran directly through Vitest rather than through the repository runner's fixed-port guard. Existing development stacks were left running. GitHub Actions timing comparison remains pending.
 
-Task 11 validation: `actionlint` 1.7.12 passed with only its two unsupported `background`/`wait` parser diagnostics ignored; `pnpm lint`, `pnpm typecheck`, `pnpm test` (290 passed), and `pnpm test:integration` (43 passed, 0 skipped against local Supabase) passed. Local testing verifies the suites after the workflow reorder but does not execute GitHub's background-step orchestration. Compare integration-job time against run 41133044346 after the updated workflow runs; that measurement remains pending.
+Task 11 validation: `actionlint` 1.7.12 passed with only its two `background`/`wait` parser diagnostics ignored. Lint, typecheck, and 290 unit tests passed; the corrected GitHub Actions run 41426891409 passed with 43 integration tests and 0 skipped. The first push failed before jobs were created because the background step had accidentally been placed in `checks` while `integration` referenced its step ID; moving startup into the integration job fixed it. The integration job took 68s, compared with 77s in run 41424125769 (9s lower in this single-run comparison). Supabase startup itself took 47s versus 44s, so this is not evidence that startup became faster; the total-time difference is subject to runner variability.
 
 ## Decisions
 

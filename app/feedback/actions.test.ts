@@ -1,5 +1,8 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { clearFeedback, setFeedback } from "./actions";
+import { revalidatePath } from "next/cache";
+
+vi.mock("next/cache", () => ({ revalidatePath: vi.fn() }));
 
 const { auth, createClient, from, rpc, deleteQuery, eq } = vi.hoisted(() => ({
   auth: { getClaims: vi.fn() },
@@ -30,6 +33,17 @@ beforeEach(() => {
 });
 
 describe("setFeedback", () => {
+  it.each(["like", "not_interested", "seen"] as const)(
+    "invalidates the liked page after saving %s feedback",
+    async (kind) => {
+      await setFeedback(validItemId, kind, "button");
+      expect(revalidatePath).toHaveBeenCalledExactlyOnceWith("/liked");
+      expect(vi.mocked(revalidatePath).mock.invocationCallOrder[0]).toBeGreaterThan(
+        rpc.mock.invocationCallOrder[0],
+      );
+    },
+  );
+
   it("rejects malformed UUIDs before creating a client", async () => {
     await expect(setFeedback("not-a-uuid", "like", "button")).rejects.toThrow(
       "Invalid item ID.",
@@ -105,6 +119,7 @@ describe("setFeedback", () => {
     await expect(setFeedback(validItemId, "like", "button")).rejects.toThrow(
       "Could not save feedback.",
     );
+    expect(revalidatePath).not.toHaveBeenCalled();
   });
 });
 
@@ -144,6 +159,7 @@ describe("clearFeedback", () => {
     );
     expect(createClient).toHaveBeenCalledExactlyOnceWith();
     expect(rpc).not.toHaveBeenCalled();
+    expect(revalidatePath).toHaveBeenCalledExactlyOnceWith("/liked");
   });
 
   it("does not expose database error details", async () => {
@@ -155,5 +171,6 @@ describe("clearFeedback", () => {
     await expect(clearFeedback(validItemId)).rejects.toThrow(
       "Could not clear feedback.",
     );
+    expect(revalidatePath).not.toHaveBeenCalled();
   });
 });

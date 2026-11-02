@@ -81,7 +81,7 @@ export default async function LikedPage() {
           </AlertTitle>
         </Alert>
       ) : (
-        <LikedList initialItems={likedItems} renderedAt={renderedAt} />
+        <LikedList items={likedItems} renderedAt={renderedAt} />
       )}
     </main>
   );

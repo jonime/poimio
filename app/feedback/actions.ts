@@ -1,5 +1,6 @@
 "use server";
 
+import { revalidatePath } from "next/cache";
 import { createClient } from "../../lib/supabase/server";
 
 type FeedbackKind = "like" | "not_interested" | "seen";
@@ -55,6 +56,7 @@ export async function setFeedback(
     p_via: via,
   });
   if (error) throw new Error("Could not save feedback.");
+  revalidatePath("/liked");
 }
 
 export async function clearFeedback(itemId: string): Promise<void> {
@@ -67,4 +69,5 @@ export async function clearFeedback(itemId: string): Promise<void> {
     .eq("user_id", userId)
     .eq("item_id", itemId);
   if (error) throw new Error("Could not clear feedback.");
+  revalidatePath("/liked");
 }

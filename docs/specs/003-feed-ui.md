@@ -139,6 +139,7 @@ Each criterion belongs to one task, so tasks can be completed in order.
    2. On a touch device (or touch emulation), swiping right likes and swiping left marks _Not interested_ with `via = 'swipe'`; every swipe shows Undo; vertical scrolling is not captured; short swipes snap back.
 8. **Task 8 — liked page**
    1. `/liked` lists only the caller's liked items, and _Unlike_ removes an item from the list.
+   2. After a successful feedback save or clear, returning to `/liked` shows the current likes without a page reload, including when the page was previously visited or prefetched. Failed mutations do not invalidate the page.
 9. **Task 9 — cloud means and video check**
    1. Means exist on the cloud project. From an empty profile, liking 4–5 AI/software items and refreshing re-ranks the feed with explanations; at least one Finnish item on a liked topic appears in the top 20; marking a sports item _Not interested_ and refreshing pushes other sports items down.
 10. **Every task:** `pnpm lint`, `pnpm typecheck`, and `pnpm test` pass; from task 3 on, `pnpm test:integration` passes with 0 skipped.
@@ -155,6 +156,9 @@ Each criterion belongs to one task, so tasks can be completed in order.
 - [x] 8. `/liked` page with Unlike (criterion 8).
 - [x] 9. Run `pnpm embeddings:means` on the cloud project, do the manual video check (criterion 9), and update design.md §2 and §6 with the final defaults and the new table.
 - [x] 10. Selected-state visibility (user-requested follow-up): use a high-contrast active navigation button and a green selected Like button labeled "Liked", preserving `aria-current` and `aria-pressed`. Verify visually and pass the existing checks.
+- [x] 11. Liked-page freshness (user-requested bug fix): invalidate `/liked` after successful feedback changes and render refreshed server items directly, so tab navigation and Unlike show current data without a reload (criterion 8.2).
+
+Task 11 validation (2 Nov 2026): regression tests cover successful-feedback invalidation, failed writes leaving the cache intact, a mounted liked list receiving fresh server items, and failed Unlike preserving the item. Lint, typecheck, and 295 unit tests passed; local Supabase integration tests passed with 43 tests and 0 skipped.
 
 Task 10 implementation (31 Oct 2026): added a semantic success button variant with light/dark theme tokens and switched active navigation to the primary variant. Browser verification confirmed both selected states and Like toggling; restored the temporary test like. Lint, typecheck, and 212 unit tests passed. Local integration tests ran with 0 skipped: 30 passed, while two ingestion tests failed on `content_items_enrichment_state_check`. Marked done at the user’s explicit request after UI review; the two ingestion integration failures remain unresolved.
 

@@ -32,13 +32,12 @@ import {
 } from "@/lib/feed-ui";
 
 export default function LikedList({
-  initialItems,
+  items,
   renderedAt,
 }: {
-  initialItems: LikedFeedItem[];
+  items: LikedFeedItem[];
   renderedAt: string;
 }) {
-  const [items, setItems] = useState(initialItems);
   const [pendingId, setPendingId] = useState<string | null>(null);
   const [error, setError] = useState(false);
 
@@ -48,9 +47,6 @@ export default function LikedList({
     setError(false);
     try {
       await clearFeedback(itemId);
-      setItems((currentItems) =>
-        currentItems.filter((item) => item.id !== itemId),
-      );
     } catch {
       setError(true);
     } finally {

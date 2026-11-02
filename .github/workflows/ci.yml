@@ -70,6 +70,7 @@ jobs:
       SUPABASE_STORAGE_ENABLED: "false"
       SUPABASE_LOCAL_SMTP_ENABLED: "false"
       SUPABASE_AUTH_EXTERNAL_GOOGLE_ENABLED: "false"
+      SUPABASE_USE_SLIM_IMAGES: "1"
     steps:
       - name: Check out repository
         uses: actions/checkout@v6

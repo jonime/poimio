@@ -35,19 +35,6 @@ jobs:
       - name: Check out repository
         uses: actions/checkout@v6
 
-      - name: Set up Supabase CLI
-        uses: supabase/setup-cli@v1
-        with:
-          version: 2.122.0
-
-      - name: Start minimal local Supabase
-        id: supabase
-        run: >-
-          supabase start
-          -x realtime,storage-api,imgproxy,mailpit,postgres-meta,studio,edge-runtime,logflare,vector,supavisor
-          > /dev/null
-        background: true
-
       - name: Set up pnpm
         uses: pnpm/action-setup@v5
         with:
@@ -86,6 +73,19 @@ jobs:
     steps:
       - name: Check out repository
         uses: actions/checkout@v6
+
+      - name: Set up Supabase CLI
+        uses: supabase/setup-cli@v1
+        with:
+          version: 2.122.0
+
+      - name: Start minimal local Supabase
+        id: supabase
+        run: >-
+          supabase start
+          -x realtime,storage-api,imgproxy,mailpit,postgres-meta,studio,edge-runtime,logflare,vector,supavisor
+          > /dev/null
+        background: true
 
       - name: Set up pnpm
         uses: pnpm/action-setup@v5

@@ -1,7 +1,9 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { renderToStaticMarkup } from "react-dom/server";
 import { createElement } from "react";
-import Home from "../(app)/page";
+import Home from "../page";
+import AppLayout from "../(app)/layout";
+import { GuestPreview } from "../feed/guest-preview";
 import Login from "../login/page";
 import PrivacyPage, { metadata as privacyMetadata } from "../privacy/page";
 import { AppHeader } from "@/components/app-header";
@@ -21,6 +23,7 @@ const { auth, createClient, rpc } = vi.hoisted(() => ({
 }));
 
 vi.mock("../../lib/supabase/server", () => ({ createClient }));
+vi.mock("../feed/guest-preview", () => ({ GuestPreview: vi.fn() }));
 vi.mock("next/navigation", () => ({
   redirect: (destination: string): never => {
     throw new Error(`REDIRECT:${destination}`);
@@ -42,6 +45,7 @@ beforeEach(() => {
   auth.signOut.mockResolvedValue({ error: null });
   auth.signInWithPassword.mockResolvedValue({ error: null });
   rpc.mockResolvedValue({ data: [], error: null });
+  vi.mocked(GuestPreview).mockResolvedValue(createElement("div", null, "Public preview cards"));
   auth.exchangeCodeForSession.mockResolvedValue({ error: null });
 });
 
@@ -49,6 +53,33 @@ describe("signed-in page", () => {
   it("independently verifies identity before rendering the feed", async () => {
     await Home({ searchParams: Promise.resolve({}) });
     expect(auth.getClaims).toHaveBeenCalledExactlyOnceWith();
+    expect(GuestPreview).not.toHaveBeenCalled();
+  });
+
+  it("keeps public and personal output separate through sign-in and sign-out", async () => {
+    auth.getClaims.mockResolvedValueOnce({ data: null, error: null });
+    const guest = renderToStaticMarkup(await Home({ searchParams: Promise.resolve({}) }));
+    const signedIn = renderToStaticMarkup(await Home({ searchParams: Promise.resolve({}) }));
+    auth.getClaims.mockResolvedValueOnce({ data: null, error: null });
+    const signedOut = renderToStaticMarkup(await Home({ searchParams: Promise.resolve({}) }));
+    expect(guest).toContain("Public preview cards");
+    expect(signedOut).toContain("Public preview cards");
+    for (const html of [guest, signedOut]) {
+      expect(html).not.toContain("Sign out");
+      expect(html).not.toContain("Your feed");
+    }
+    expect(signedIn).toContain("Your feed");
+    expect(signedIn).toContain("Sign out");
+    expect(signedIn).not.toContain("Public preview cards");
+    expect(rpc).toHaveBeenCalledTimes(1);
+    expect(GuestPreview).toHaveBeenCalledTimes(2);
+  });
+
+  it("renders callback errors even with an existing verified session", async () => {
+    const html = renderToStaticMarkup(await Home({ searchParams: Promise.resolve({ error: "callback" }) }));
+    expect(html).toContain("Sign-in could not be completed. Please try again.");
+    expect(html).toContain("Your feed");
+    expect(GuestPreview).not.toHaveBeenCalled();
   });
 
   it("shows only the first name, navigation, and sign-out in the shared header", () => {
@@ -153,12 +184,15 @@ describe("signed-in page", () => {
     { data: { claims: {} }, error: null },
     { ...verifiedClaims, error: new Error("Unverified claims") },
   ])(
-    "rejects missing or unverified identity independently of proxy",
+    "shows a public preview for missing or unverified identity independently of proxy",
     async (result) => {
       auth.getClaims.mockResolvedValueOnce(result);
-      await expect(Home({ searchParams: Promise.resolve({}) })).rejects.toThrow(
-        "REDIRECT:/login",
-      );
+      const html = renderToStaticMarkup(await Home({ searchParams: Promise.resolve({}) }));
+      expect(html).toContain("Latest picks");
+      expect(html).toContain("Public preview cards");
+      expect(html).not.toContain("Your feed");
+      expect(rpc).not.toHaveBeenCalled();
+      expect(GuestPreview).toHaveBeenCalledTimes(1);
     },
   );
 
@@ -170,10 +204,11 @@ describe("signed-in page", () => {
   });
 });
 
-describe("login page", () => {
+describe("guest home", () => {
+  beforeEach(() => { auth.getClaims.mockResolvedValue({ data: null, error: null }); });
   it("links to the public privacy policy", async () => {
     const html = renderToStaticMarkup(
-      await Login({ searchParams: Promise.resolve({}) }),
+      await Home({ searchParams: Promise.resolve({}) }),
     );
     expect(html).toContain('href="/privacy"');
     expect(html).toContain("Privacy policy");
@@ -181,10 +216,10 @@ describe("login page", () => {
 
   it("offers Google as the only sign-in method outside local development", async () => {
     const html = renderToStaticMarkup(
-      await Login({ searchParams: Promise.resolve({}) }),
+      await Home({ searchParams: Promise.resolve({}) }),
     );
     expect(html).toContain("Sign in with Google");
-    expect(html.match(/<button/g)).toHaveLength(1);
+    expect(html.match(/<button/g)).toHaveLength(2);
     expect(html).not.toContain('type="password"');
   });
 
@@ -194,11 +229,11 @@ describe("login page", () => {
       vi.stubEnv("NODE_ENV", "development");
       vi.stubEnv("NEXT_PUBLIC_SUPABASE_URL", `http://${hostname}:55321`);
       const html = renderToStaticMarkup(
-        await Login({ searchParams: Promise.resolve({}) }),
+        await Home({ searchParams: Promise.resolve({}) }),
       );
       expect(html).toContain("Sign in with Google");
       expect(html).toContain("Local sign-in");
-      expect(html.match(/<button/g)).toHaveLength(2);
+      expect(html.match(/<button/g)).toHaveLength(3);
     },
   );
 
@@ -221,16 +256,16 @@ describe("login page", () => {
     vi.stubEnv("NODE_ENV", mode);
     vi.stubEnv("NEXT_PUBLIC_SUPABASE_URL", url);
     const html = renderToStaticMarkup(
-      await Login({ searchParams: Promise.resolve({}) }),
+      await Home({ searchParams: Promise.resolve({}) }),
     );
     expect(html).toContain("Sign in with Google");
     expect(html).not.toContain('type="password"');
-    expect(html.match(/<button/g)).toHaveLength(1);
+    expect(html.match(/<button/g)).toHaveLength(2);
   });
 
   it("displays a generic callback error rather than provider details", async () => {
     const html = renderToStaticMarkup(
-      await Login({ searchParams: Promise.resolve({ error: "callback" }) }),
+      await Home({ searchParams: Promise.resolve({ error: "callback" }) }),
     );
     expect(html).toContain("Sign-in could not be completed. Please try again.");
   });
@@ -249,7 +284,7 @@ describe("privacy page", () => {
     expect(html).toContain("OpenAI");
     expect(html).toContain("Supabase");
     expect(html).toContain("Vercel");
-    expect(html).toContain('href="/login"');
+    expect(html).toContain('href="/"');
     expect(createClient).not.toHaveBeenCalled();
     expect(auth.getClaims).not.toHaveBeenCalled();
   });
@@ -359,8 +394,8 @@ describe("local password sign-in action", () => {
 });
 
 describe("sign-out action", () => {
-  it("verifies identity, signs out the current session, then redirects to login", async () => {
-    await expect(signOut()).rejects.toThrow("REDIRECT:/login");
+  it("verifies identity, signs out the current session, then redirects home", async () => {
+    await expect(signOut()).rejects.toThrow("REDIRECT:/");
     expect(auth.getClaims).toHaveBeenCalledExactlyOnceWith();
     expect(auth.signOut).toHaveBeenCalledExactlyOnceWith({ scope: "local" });
     expect(auth.getClaims.mock.invocationCallOrder[0]).toBeLessThan(
@@ -376,7 +411,7 @@ describe("sign-out action", () => {
     "does not mutate auth when identity verification fails",
     async (result) => {
       auth.getClaims.mockResolvedValueOnce(result);
-      await expect(signOut()).rejects.toThrow("REDIRECT:/login");
+      await expect(signOut()).rejects.toThrow("REDIRECT:/");
       expect(auth.signOut).not.toHaveBeenCalled();
     },
   );
@@ -384,6 +419,14 @@ describe("sign-out action", () => {
   it("returns to the signed-in page with a generic error if sign-out fails", async () => {
     auth.signOut.mockResolvedValueOnce({ error: new Error("Provider error") });
     await expect(signOut()).rejects.toThrow("REDIRECT:/?error=sign-out");
+  });
+});
+
+describe("protected app layout", () => {
+  it("redirects missing identity to the public home independently of proxy", async () => {
+    auth.getClaims.mockResolvedValueOnce({ data: null, error: null });
+    await expect(AppLayout({ children: createElement("p", null, "Private page") }))
+      .rejects.toThrow("REDIRECT:/");
   });
 });
 
@@ -412,7 +455,7 @@ describe("OAuth callback", () => {
       new Request(`http://localhost:3001/auth/callback${query}`),
     );
     expect(response.headers.get("location")).toBe(
-      "http://localhost:3001/login?error=callback",
+      "http://localhost:3001/?error=callback",
     );
     expect(createClient).not.toHaveBeenCalled();
   });
@@ -425,7 +468,7 @@ describe("OAuth callback", () => {
       new Request("http://localhost:3001/auth/callback?code=expired"),
     );
     expect(response.headers.get("location")).toBe(
-      "http://localhost:3001/login?error=callback",
+      "http://localhost:3001/?error=callback",
     );
     expect(auth.getClaims).not.toHaveBeenCalled();
   });
@@ -442,7 +485,7 @@ describe("OAuth callback", () => {
         new Request("http://localhost:3001/auth/callback?code=code"),
       );
       expect(response.headers.get("location")).toBe(
-        "http://localhost:3001/login?error=callback",
+        "http://localhost:3001/?error=callback",
       );
     },
   );
@@ -459,5 +502,17 @@ describe("OAuth callback", () => {
       new Request(url, { headers: { "x-forwarded-host": "evil.example" } }),
     );
     expect(response.headers.get("location")).toBe("http://localhost:3001/");
+  });
+});
+
+
+describe("legacy login route", () => {
+  it.each([
+    [{}, "/"],
+    [{ error: "callback" }, "/?error=callback"],
+    [{ error: "provider-secret" }, "/"],
+    [{ error: ["callback", "private"] }, "/"],
+  ])("redirects old links without forwarding arbitrary errors", async (params, destination) => {
+    await expect(Login({ searchParams: Promise.resolve(params) })).rejects.toThrow(`REDIRECT:${destination}`);
   });
 });

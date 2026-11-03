@@ -50,12 +50,12 @@ export async function signInWithPassword(
 export async function signOut() {
   const supabase = await createClient();
   const { data, error } = await supabase.auth.getClaims();
-  if (error || !data?.claims?.sub) redirect("/login");
+  if (error || !data?.claims?.sub) redirect("/");
 
   const { error: signOutError } = await supabase.auth.signOut({
     scope: "local",
   });
   if (signOutError) redirect("/?error=sign-out");
 
-  redirect("/login");
+  redirect("/");
 }

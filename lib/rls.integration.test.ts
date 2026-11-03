@@ -215,15 +215,15 @@ describe.skipIf(!enabled || anonKey == null || serviceKey == null)(
       expect(access.error?.code).toBe("42501");
     });
 
-    it("denies anonymous reads from both shared tables", async () => {
+    it("denies anonymous wildcard reads from both shared tables", async () => {
       const { anonymous } = ready();
       const { error: sourceError } = await anonymous
         .from("sources")
-        .select("id")
+        .select("*")
         .eq("id", sourceId);
       const { error: itemError } = await anonymous
         .from("content_items")
-        .select("id")
+        .select("*")
         .eq("id", itemId);
 
       expect(sourceError?.code).toBe("42501");

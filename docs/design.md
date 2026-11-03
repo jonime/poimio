@@ -189,16 +189,17 @@ Implementation notes:
 
 ### 5.1 Data access and security
 
-All user-facing queries run through supabase-js with the user's session, so Row Level Security (RLS) is enforced by the database.
+User-facing queries run through supabase-js with the user's session, or a cookie-free anonymous client for the public preview. Row Level Security (RLS) and column privileges are enforced by the database.
 
 | Data     | Examples                                           | Read                                | Write                                |
 | -------- | -------------------------------------------------- | ----------------------------------- | ------------------------------------ |
-| Shared   | `sources`, content items, embedding language means | Authenticated users                 | Service role only (ingestion, admin) |
+| Shared   | `sources`, content items, embedding language means | Authenticated users; public metadata exception below | Service role only (ingestion, admin) |
 | Per-user | feedback, interest summaries, discovery candidates | Owner only (`user_id = auth.uid()`) | Owner only                           |
 
 Rules:
 
 - RLS is enabled on every table.
+- Public-preview exception ([spec 008](specs/008-guest-feed-preview.md)): anonymous clients can select `sources.id,name` for active sources and `content_items.id,source_id,url,title,summary,summary_origin,type,language,thumbnail_url,published_at` for completed items with nonblank summaries and HTTP(S) URLs from active sources, published within seven days for articles or thirty days for videos, never in the future. Explicit column grants and anonymous SELECT policies enforce this boundary. All eligible public metadata can be queried directly through the Data API, beyond the twelve cached preview cards. Anonymous writes, vectors, ingestion internals, ranking/feedback functions, and user data remain protected.
 - Any verified Google user can use the app; no invitation or email provisioning is required.
 - App pages verify identity with `getClaims()`; RLS and database functions remain the authorization boundary. Google OAuth must be published to Production for sign-in beyond Google's configured test users.
 - Feed and scoring functions read the user from `auth.uid()` internally and never accept a `user_id` parameter; they run as `SECURITY INVOKER`.
@@ -210,7 +211,7 @@ Rules:
 
 ## 6. Data model
 
-Tables are added by the spec that first needs them. Shared content tables are readable only by authenticated users and writable only with the service role (§5.1).
+Tables are added by the spec that first needs them. Shared tables are writable only with the service role; reads require authentication except for the explicitly public source/content metadata in §5.1. Spec 008 adds no table: its twelve-card guest preview reads the existing tables through an anonymous client and caches the result for thirty-minute revalidation.
 
 ### 6.1 `sources` (shared)
 

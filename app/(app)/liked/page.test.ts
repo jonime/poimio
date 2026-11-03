@@ -113,7 +113,7 @@ describe("liked page", () => {
     { ...claims, error: new Error("Unverified claims") },
   ])("redirects when the user is missing or unverified", async (result) => {
     auth.getClaims.mockResolvedValueOnce(result);
-    await expect(LikedPage()).rejects.toThrow("REDIRECT:/login");
+    await expect(LikedPage()).rejects.toThrow("REDIRECT:/");
     expect(from).not.toHaveBeenCalled();
   });
 });

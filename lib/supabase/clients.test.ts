@@ -110,13 +110,13 @@ describe("Supabase clients", () => {
 });
 
 describe("session refresh proxy", () => {
-  it("redirects a missing session to login", async () => {
+  it("redirects a missing session on a private page to home", async () => {
     getClaims.mockResolvedValueOnce({ data: null, error: null });
-    const response = await proxy(new NextRequest("http://localhost:3001/"));
+    const response = await proxy(new NextRequest("http://localhost:3001/liked"));
     expect(getClaims).toHaveBeenCalledExactlyOnceWith();
     expect(response.status).toBe(307);
     expect(response.headers.get("location")).toBe(
-      "http://localhost:3001/login",
+      "http://localhost:3001/",
     );
     expect(response.cookies.getAll()).toEqual([]);
   });
@@ -126,13 +126,14 @@ describe("session refresh proxy", () => {
       data: { claims: { sub: "user-a" } },
       error: new Error("Invalid signature"),
     });
-    const response = await proxy(new NextRequest("http://localhost:3001/"));
+    const response = await proxy(new NextRequest("http://localhost:3001/liked"));
     expect(response.headers.get("location")).toBe(
-      "http://localhost:3001/login",
+      "http://localhost:3001/",
     );
   });
 
   it.each([
+    "/",
     "/login",
     "/privacy",
     "/privacy?source=google",
@@ -154,7 +155,7 @@ describe("session refresh proxy", () => {
         new NextRequest(`http://localhost:3001${path}`),
       );
       expect(response.headers.get("location")).toBe(
-        "http://localhost:3001/login",
+        "http://localhost:3001/",
       );
     },
   );
@@ -168,10 +169,10 @@ describe("session refresh proxy", () => {
       return { data: null, error: null };
     });
     const response = await proxy(
-      new NextRequest("http://localhost:3001/?private=value"),
+      new NextRequest("http://localhost:3001/liked?private=value"),
     );
     expect(response.headers.get("location")).toBe(
-      "http://localhost:3001/login",
+      "http://localhost:3001/",
     );
     expect(response.cookies.get("sb-session")?.maxAge).toBe(0);
     expect(response.headers.get("cache-control")).toBe("private, no-store");

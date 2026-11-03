@@ -8,7 +8,6 @@ import {
   type MouseEvent as ReactMouseEvent,
   type PointerEvent as ReactPointerEvent,
 } from "react";
-import Image from "next/image";
 import {
   CheckIcon,
   CircleAlertIcon,
@@ -19,16 +18,9 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Alert, AlertTitle } from "@/components/ui/alert";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardFooter,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { CardFooter } from "@/components/ui/card";
+import { ContentCard } from "@/components/content-card";
 import {
   Empty,
   EmptyDescription,
@@ -49,8 +41,6 @@ import {
 } from "../../lib/feedback-queue";
 import {
   explanationForFeedItem,
-  formatRelativeTime,
-  safeHttpUrl,
   type FeedItem,
 } from "../../lib/feed-ui";
 import {
@@ -162,8 +152,6 @@ function FeedCard({
     snapshot.displayed?.kind === "not_interested" ||
     snapshot.displayed?.kind === "seen";
 
-  const itemUrl = safeHttpUrl(item.url);
-  const thumbnailUrl = safeHttpUrl(item.thumbnail_url);
   const swipeDelta = gesture?.lock === "horizontal" ? gesture.deltaX : 0;
   const revealOpacity = gesture
     ? Math.min(1, Math.abs(swipeDelta) / (gesture.width * 0.4 || 1))
@@ -213,98 +201,51 @@ function FeedCard({
         onPointerCancel={onPointerCancel}
         onClickCapture={onClickCapture}
       >
-        <Card
-          className={cn(
-            "relative",
-            itemUrl &&
-              "transition-shadow hover:shadow-md has-[a:focus-visible]:ring-2 has-[a:focus-visible]:ring-ring",
-          )}
-        >
-          {thumbnailUrl && (
-            <Image
-              className="aspect-video w-full object-cover"
-              src={thumbnailUrl}
-              width={1200}
-              height={675}
-              alt=""
-              loading="lazy"
-              referrerPolicy="no-referrer"
-              unoptimized
-            />
-          )}
-          <CardHeader>
-            <CardDescription className="flex flex-wrap items-center gap-2">
-              <Badge variant="secondary">{item.source_name}</Badge>
-              {item.summary_origin === "ai_generated" && (
-                <Badge variant="outline">AI summary</Badge>
-              )}
-              <time dateTime={item.published_at}>
-                {formatRelativeTime(item.published_at, new Date(renderedAt))}
-              </time>
-            </CardDescription>
-            <CardTitle className="text-lg">
-              <h2 className="break-words">
-                {itemUrl ? (
-                  <a
-                    className="underline-offset-4 outline-none group-hover/card:underline after:absolute after:inset-0 after:content-['']"
-                    href={itemUrl}
-                    target="_blank"
-                    rel="noopener noreferrer"
+        <ContentCard
+          item={item}
+          renderedAt={renderedAt}
+          footer={
+            <CardFooter
+              className="relative z-10 gap-1"
+              role="group"
+              aria-label="Rate this item"
+            >
+              {feedbackActions.map(({ kind, label, icon: Icon }) => {
+                const pressed = snapshot.displayed?.kind === kind;
+                return (
+                  <Button
+                    key={kind}
+                    variant={
+                      pressed
+                        ? kind === "like"
+                          ? "success"
+                          : "secondary"
+                        : "ghost"
+                    }
+                    size="sm"
+                    type="button"
+                    aria-label={label}
+                    aria-pressed={pressed}
+                    onClick={() => chooseAction(kind)}
                   >
-                    {item.title}
-                  </a>
-                ) : (
-                  item.title
-                )}
-              </h2>
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="flex flex-col gap-3">
-            {item.summary && (
-              <p className="line-clamp-3 break-words text-muted-foreground">
-                {item.summary}
-              </p>
-            )}
-            <p className="flex items-center gap-1.5 text-xs text-muted-foreground">
-              <SparklesIcon className="size-3.5 shrink-0" aria-hidden="true" />
-              {explanationForFeedItem(item)}
+                    <Icon data-icon="inline-start" aria-hidden="true" />
+                    {pressed && kind === "like" ? "Liked" : label}
+                  </Button>
+                );
+              })}
+            </CardFooter>
+          }
+        >
+          <p className="flex items-center gap-1.5 text-xs text-muted-foreground">
+            <SparklesIcon className="size-3.5 shrink-0" aria-hidden="true" />
+            {explanationForFeedItem(item)}
+          </p>
+          {snapshot.error && (
+            <p className="text-sm text-destructive" role="alert">
+              {snapshot.error}
             </p>
-            {snapshot.error && (
-              <p className="text-sm text-destructive" role="alert">
-                {snapshot.error}
-              </p>
-            )}
-          </CardContent>
-          <CardFooter
-            className="relative z-10 gap-1"
-            role="group"
-            aria-label="Rate this item"
-          >
-            {feedbackActions.map(({ kind, label, icon: Icon }) => {
-              const pressed = snapshot.displayed?.kind === kind;
-              return (
-                <Button
-                  key={kind}
-                  variant={
-                    pressed
-                      ? kind === "like"
-                        ? "success"
-                        : "secondary"
-                      : "ghost"
-                  }
-                  size="sm"
-                  type="button"
-                  aria-label={label}
-                  aria-pressed={pressed}
-                  onClick={() => chooseAction(kind)}
-                >
-                  <Icon data-icon="inline-start" aria-hidden="true" />
-                  {pressed && kind === "like" ? "Liked" : label}
-                </Button>
-              );
-            })}
-          </CardFooter>
-        </Card>
+          )}
+        </ContentCard>
       </article>
     </div>
   );

@@ -39,6 +39,7 @@ Poimio is a personal content discovery app: it ingests Finnish and English RSS/A
 ## Security rules (non-negotiable)
 
 - Every table has RLS enabled. Shared tables: `select` for `authenticated` only, no write policies. Per-user tables: owner-only (`user_id = (select auth.uid())`).
+- Approved public-preview exception (spec 008): `anon` may select only `sources.id,name` for active sources and `content_items.id,source_id,url,title,summary,summary_origin,type,language,thumbnail_url,published_at` for recent, completed items with nonblank summaries and HTTP(S) URLs from active sources (articles: 7 days; videos: 30 days; no future dates). Enforce this with column grants and RLS. No anonymous writes, embeddings, ingestion internals, or user data are exposed.
 - Every per-user table ships with automated two-user tests (user A cannot read or modify user B's rows) in the same spec that creates it.
 - Security integration tests must actually run: a spec that adds them is done only when `pnpm test:integration` passes against local Supabase with 0 skipped.
 - Authorization uses verified identity (`supabase.auth.getClaims()` or `getUser()`), never `getSession()` alone. Every server action and route handler checks the user itself; request-level redirects are not authorization.

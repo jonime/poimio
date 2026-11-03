@@ -71,6 +71,7 @@ try {
       "lib/rls.integration.test.ts",
       "lib/feedback.integration.test.ts",
       "lib/feed.integration.test.ts",
+      "lib/guest-feed.integration.test.ts",
       "--reporter=default",
       "--reporter=json",
       `--outputFile=${reportPath}`,

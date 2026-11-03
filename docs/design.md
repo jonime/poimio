@@ -96,14 +96,16 @@ With no eligible likes, the prototype round-robins sources, newest first within 
 
 ### 2.5 LLM usage (limited)
 
-OpenAI API (a small, low-cost GPT model, chosen in week 1). The LLM is **not** used to rank individual items (cost, latency, reproducibility). It is used for:
+OpenAI API with `gpt-6-luna` (chosen in week 1). The LLM is **not** used to rank individual items (cost, latency, reproducibility). It is used for:
 
 1. **Interest summary** (optional): periodically turns likes/dislikes into a readable profile shown to the user.
-2. **Evaluation judge:** labels test items as relevant/not relevant for simulated personas.
+2. **Evaluation judge:** labels test items as relevant/not relevant for simulated personas. The primary labeler is local Qwen 3.8 27B via MTPLX, with `gpt-6-luna` as fallback (§4.2).
 3. **Source discovery** (stretch, stage b): finds candidate sites with the built-in web search tool and assesses source quality.
 4. **Description enrichment:** `gpt-6-luna` via the Responses API creates a concise, factual description only when feed and page metadata descriptions are unavailable. The request has no tools or URL access; extracted article text is untrusted content, not instructions. The output must preserve Finnish or English, use only facts in the text, and fit the existing 1,000-character summary limit. Prompt constraints and representative tests live with the enrichment implementation.
 
 Description generation is bounded to 20 API requests per ingestion run, including retries, at most 24,000 extracted characters per item and 200 output tokens per request. At an estimated 6,000 input tokens per request, the full request budget is about $0.014 at the model's current standard rates ($0.10/M input tokens and $0.50/M output tokens); this is an estimate, not a hard dollar cap. A failed item gets at most three attempts total, with retries due after 1 hour and 6 hours; exhausted items require an explicit backfill retry. Readable article text is extracted with the approved `@mozilla/readability` and `jsdom` dependencies. No full page or article text is retained.
+
+Planned AI features (natural-language feed tuning, same-story grouping, and TypeSafe Jev experiments; see [plan.md §3](plan.md#3-ai-in-the-application-summary)) are designed in their own specs and added here when implemented.
 
 ## 3. Source discovery (stretch goal)
 
@@ -166,16 +168,19 @@ Limitation: this demonstrates adaptation in a controlled setting, not real-world
 
 Guiding principle: lowest possible cost, single language (TypeScript).
 
-| Part                 | Choice                                                                                                | Cost          |
-| -------------------- | ----------------------------------------------------------------------------------------------------- | ------------- |
-| Frontend and API     | Next.js (App Router, TypeScript) on Vercel Hobby                                                      | Free          |
-| Database and vectors | Supabase Postgres + pgvector                                                                          | Free tier     |
-| Database access      | supabase-js (`@supabase/ssr` in Next.js), SQL migrations via Supabase CLI, generated TypeScript types | Free          |
-| Authentication       | Supabase Auth with Google login                                                                       | Free          |
-| Scheduled jobs       | GitHub Actions scheduled workflow running TypeScript scripts                                          | Free          |
-| Embeddings           | OpenAI `text-embedding-3-small`, 512 dimensions                                                       | < 1 €/month   |
-| LLM                  | OpenAI GPT models via Responses API; description enrichment uses `gpt-6-luna`                         | A few € total |
-| RSS parsing          | `rss-parser` or similar                                                                               | Free          |
+| Part                 | Choice                                                                                                  | Cost          |
+| -------------------- | ------------------------------------------------------------------------------------------------------- | ------------- |
+| Frontend and API     | Next.js (App Router, TypeScript) on Vercel Hobby                                                        | Free          |
+| Database and vectors | Supabase Postgres + pgvector                                                                            | Free tier     |
+| Database access      | supabase-js (`@supabase/ssr` in Next.js), SQL migrations via Supabase CLI, generated TypeScript types   | Free          |
+| Authentication       | Supabase Auth with Google login                                                                         | Free          |
+| Scheduled jobs       | GitHub Actions scheduled workflow running TypeScript scripts                                            | Free          |
+| Embeddings           | OpenAI `text-embedding-3-small`, 512 dimensions                                                         | < 1 €/month   |
+| LLM                  | OpenAI GPT models via Responses API; description enrichment uses `gpt-6-luna`                           | A few € total |
+| Evaluation labels    | Local Qwen 3.8 27B via MTPLX (OpenAI-compatible API)                                                    | Free          |
+| Classification       | TypeSafe Jev `jev-1.14.0` via plain `fetch` (planned, [spec 009](specs/009-description-quality-jev.md)) | < 1 € total   |
+| RSS parsing          | `rss-parser`; article text with `@mozilla/readability` and `jsdom`                                      | Free          |
+| UI                   | shadcn/ui (Base UI) + Tailwind CSS v4                                                                   | Free          |
 
 Implementation notes:
 
@@ -191,10 +196,10 @@ Implementation notes:
 
 User-facing queries run through supabase-js with the user's session, or a cookie-free anonymous client for the public preview. Row Level Security (RLS) and column privileges are enforced by the database.
 
-| Data     | Examples                                           | Read                                | Write                                |
-| -------- | -------------------------------------------------- | ----------------------------------- | ------------------------------------ |
+| Data     | Examples                                           | Read                                                 | Write                                |
+| -------- | -------------------------------------------------- | ---------------------------------------------------- | ------------------------------------ |
 | Shared   | `sources`, content items, embedding language means | Authenticated users; public metadata exception below | Service role only (ingestion, admin) |
-| Per-user | feedback, interest summaries, discovery candidates | Owner only (`user_id = auth.uid()`) | Owner only                           |
+| Per-user | feedback, interest summaries, discovery candidates | Owner only (`user_id = auth.uid()`)                  | Owner only                           |
 
 Rules:
 

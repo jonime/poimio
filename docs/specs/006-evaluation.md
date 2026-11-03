@@ -1,6 +1,6 @@
 # 006 — Evaluation harness
 
-**Status:** Approved  
+**Status:** In progress  
 **Milestone:** Final (weeks 2–5; final test run in week 7)  
 **Depends on:** 001 (content, embeddings), 003 (`get_feed`, centering), 005 (completed descriptions)  
 **Estimate:** 23 h

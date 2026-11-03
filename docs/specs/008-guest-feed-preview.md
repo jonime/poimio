@@ -1,6 +1,6 @@
 # 008 — Cached guest feed preview
 
-**Status:** Done — implemented and locally verified 3 Nov 2026; awaiting PR review
+**Status:** Done — implemented 3 Nov 2026; merged in PR #6
 
 **Milestone:** Final
 
@@ -160,35 +160,35 @@ Work in order, one task at a time. Every task requires its criteria plus
 require `pnpm test:integration` against local Supabase with zero skipped.
 
 - [x] 1. Record the specified public-metadata exception in security/design
-      documentation and add the column grants/RLS migration. Fresh local
-      migrations apply cleanly. Existing authenticated and owner-only policies
-      remain intact; there are no new tables, RPCs, or client write privileges.
+     documentation and add the column grants/RLS migration. Fresh local
+     migrations apply cleanly. Existing authenticated and owner-only policies
+     remain intact; there are no new tables, RPCs, or client write privileges.
 - [x] 2. Add and run integration tests proving anonymous explicit-column reads
-      and the exact source join work. Verify inactive-source, incomplete,
-      blank-summary, unsafe-URL, future, and expired items are hidden. Test
-      article/video cutoff boundaries. Verify forbidden columns and wildcard
-      reads fail, anonymous inserts/updates/deletes cannot change either table,
-      and feedback, embeddings, means, `get_feed`, and feedback APIs remain
-      protected. Existing two-user isolation and authenticated feed tests pass.
+     and the exact source join work. Verify inactive-source, incomplete,
+     blank-summary, unsafe-URL, future, and expired items are hidden. Test
+     article/video cutoff boundaries. Verify forbidden columns and wildcard
+     reads fail, anonymous inserts/updates/deletes cannot change either table,
+     and feedback, embeddings, means, `get_feed`, and feedback APIs remain
+     protected. Existing two-user isolation and authenticated feed tests pass.
 - [x] 3. Add the anonymous reader, typed DTO, selection, and cached preview.
-      Tests cover language balance/fallback, source diversity, deterministic
-      ties, pagination, duplicate prevention, safe URLs, empty results, errors,
-      and exact rendered fields. No privileged key, cookies, feedback query,
-      personalized RPC, or OpenAI request is needed to render the preview.
+     Tests cover language balance/fallback, source diversity, deterministic
+     ties, pagination, duplicate prevention, safe URLs, empty results, errors,
+     and exact rendered fields. No privileged key, cookies, feedback query,
+     personalized RPC, or OpenAI request is needed to render the preview.
 - [x] 4. Implement the root guest/authenticated branches, shared static cards,
-      redirect compatibility, and updated auth/privacy links. Tests cover guest
-      `/` without redirect, verified `/`, sign-in/out transitions, callback
-      success/failure, legacy `/login`, private `/liked`, direct unauthorized
-      actions, and separation of cached public content from personal content.
-      Browser checks at desktop and 375px confirm working article links,
-      sign-in/errors/privacy, no overflow or guest action controls, and working
-      authenticated feedback and gestures.
+     redirect compatibility, and updated auth/privacy links. Tests cover guest
+     `/` without redirect, verified `/`, sign-in/out transitions, callback
+     success/failure, legacy `/login`, private `/liked`, direct unauthorized
+     actions, and separation of cached public content from personal content.
+     Browser checks at desktop and 375px confirm working article links,
+     sign-in/errors/privacy, no overflow or guest action controls, and working
+     authenticated feedback and gestures.
 - [x] 5. Run all gates plus `pnpm build` and local integration tests with zero
-      skipped. In a production-mode local server, verify repeated guest visits
-      reuse preview content, refresh after revalidation, and never show one
-      user's personalized data to another visitor. Verify caching via the
-      preview query/cache behavior, not whole-page headers alone. Document
-      rollout and review the diff; the human commits.
+     skipped. In a production-mode local server, verify repeated guest visits
+     reuse preview content, refresh after revalidation, and never show one
+     user's personalized data to another visitor. Verify caching via the
+     preview query/cache behavior, not whole-page headers alone. Document
+     rollout and review the diff; the human commits.
 
 ## Rollout and rollback
 

@@ -22,7 +22,9 @@ Poimio is a personal content discovery app: it ingests Finnish and English RSS/A
 - Next.js (App Router) + TypeScript, deployed on Vercel
 - Supabase Postgres + pgvector; SQL migrations via Supabase CLI; supabase-js / `@supabase/ssr`; no ORM
 - Supabase Auth (Google)
-- OpenAI: `text-embedding-3-small` (512 dimensions); small GPT model for LLM tasks
+- OpenAI: `text-embedding-3-small` (512 dimensions); `gpt-6-luna` for LLM tasks (Responses API, plain `fetch`)
+- Evaluation labels: local Qwen 3.8 27B via MTPLX
+- TypeSafe Jev (planned, spec 009): plain `fetch`, no SDK
 - Scheduled jobs: TypeScript scripts run by GitHub Actions
 - Tests: Vitest
 - UI: shadcn/ui (Base UI, `base-nova` style, lucide icons) + Tailwind CSS v4
@@ -44,7 +46,7 @@ Poimio is a personal content discovery app: it ingests Finnish and English RSS/A
 - Security integration tests must actually run: a spec that adds them is done only when `pnpm test:integration` passes against local Supabase with 0 skipped.
 - Authorization uses verified identity (`supabase.auth.getClaims()` or `getUser()`), never `getSession()` alone. Every server action and route handler checks the user itself; request-level redirects are not authorization.
 - Database functions read the user from `auth.uid()`; they never take a `user_id` parameter and run as `SECURITY INVOKER`. Views use `security_invoker = true`.
-- The service-role key and OpenAI key are used only in server-side code and scripts; never in client components or `NEXT_PUBLIC_` variables. Never commit secrets; `.env*` files (except `.env.example`) are gitignored.
+- The service-role key, OpenAI key, and TypeSafe key are used only in server-side code and scripts; never in client components or `NEXT_PUBLIC_` variables. Never commit secrets; `.env*` files (except `.env.example`) are gitignored.
 - Fetching external URLs: http/https only, timeouts, response size limits; block private/internal addresses when the URL comes from users or an LLM.
 
 ## Supabase environment selection
@@ -55,13 +57,19 @@ Poimio is a personal content discovery app: it ingests Finnish and English RSS/A
 - Before database-backed work, confirm which project the selected environment targets. Prefer local Supabase for writes and tests; use production only when explicitly requested and keep analysis read-only unless the user authorizes a write.
 - Never print credentials. The Supabase service-role key is server-side only and must not use a `NEXT_PUBLIC_` variable.
 
+## Code principles
+
+- KISS: choose the simplest solution that meets the acceptance criteria; prefer deterministic code over AI when it solves the problem reliably.
+- YAGNI: no speculative options, configuration, abstractions, or error handling for cases that cannot happen.
+- DRY: reuse existing helpers in `lib/` before writing new ones; extract shared code on the third repetition, not the second, so abstraction does not trump simplicity.
+
 ## Conventions
 
 - Never edit an applied migration; add a new one.
 - Ask before adding a new dependency.
 - Keep LLM calls out of request-time ranking.
-- Commands: `pnpm dev`, `pnpm build`, `pnpm lint`, `pnpm typecheck`, `pnpm test`.
-- Ingestion command: `pnpm ingest` (to be implemented in spec 001, task 8).
+- Commands: `pnpm dev`, `pnpm build`, `pnpm lint`, `pnpm typecheck`, `pnpm test`, `pnpm test:integration` (local Supabase).
+- Ingestion command: `pnpm ingest`.
 
 <!-- BEGIN:nextjs-agent-rules -->
 

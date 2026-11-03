@@ -1,20 +1,21 @@
 # Poimio
 
-Poimio is an AI-powered personal content discovery app. It collects news, articles, and videos from Finnish and English RSS/Atom/YouTube feeds and learns what each user is interested in from simple feedback (_Like_, _Not interested_, clicks). The feed is a list of links; clicking an item opens the original site.
+Poimio is an AI-powered personal content discovery app. It collects news, articles, and videos from Finnish and English RSS/Atom/YouTube feeds and learns what each user is interested in from simple feedback (_Like_, _Not interested_, _Seen_). The feed is a list of links; clicking an item opens the original site. Signed-out visitors see a guest preview of recent items.
 
-> **Status:** Planning complete. Implementation starts with [spec 001](docs/specs/001-ingestion.md).  
+> **Status:** Prototype deployed at [poimio.cc](https://poimio.cc). Specs 001–005 and 008 are done; the evaluation harness ([spec 006](docs/specs/006-evaluation.md)) is in progress.  
 > Solo project for an AI course (7 weeks, 135 h): plan due 8 Nov, prototype with demo video due 22 Nov, final version due 13 Dec 2026.
 
 ## How it uses AI
 
-- **Multilingual embeddings** represent every item, so interests transfer between Finnish and English content.
-- **Recommender:** each item is scored by its similarity to the closest item the user liked, minus similarity to items marked _Not interested_, combined with recency, diversity, and exploration. Every recommendation is explained ("Similar to _X_, which you liked").
-- **LLM tasks:** readable interest summaries, source discovery with web search (stretch goal), and relevance labels for evaluation. The LLM does not rank items.
-- **Evaluation:** replay tests with simulated users against newest-first, random, and average-vector baselines.
+- **Multilingual embeddings** (`text-embedding-3-small`, 512 dimensions) represent every item. Each language's mean vector is subtracted, so interests transfer between Finnish and English content.
+- **Recommender:** each item is scored by its similarity to the closest item the user liked, minus similarity to items marked _Not interested_, combined with recency. Every recommendation is explained ("Similar to _X_, which you liked").
+- **AI descriptions:** when a feed has no usable description, `gpt-6-luna` summarizes the extracted article text. Cards show where each description came from.
+- **Evaluation:** replay tests with simulated users against newest-first, random, and average-vector baselines; relevance labels from a local Qwen model, checked against manual labels.
+- **Planned** ([plan](docs/plan.md)): exploration and diversity, natural-language feed tuning, same-story grouping with TypeSafe Jev, a Jev description-quality experiment, and source discovery as a stretch goal. The LLM does not rank items.
 
 ## Tech stack
 
-Next.js (App Router, TypeScript) on Vercel · Supabase Postgres + pgvector · Supabase Auth (Google) with Row Level Security · OpenAI embeddings and LLM · GitHub Actions for scheduled ingestion · Vitest
+Next.js (App Router, TypeScript) on Vercel · Tailwind CSS v4 + shadcn/ui · Supabase Postgres + pgvector · Supabase Auth (Google) with Row Level Security · OpenAI `text-embedding-3-small` and `gpt-6-luna` · GitHub Actions for CI and hourly ingestion · Vitest
 
 ## Documentation
 
@@ -40,6 +41,21 @@ node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON \
 ```
 
 That ingestion command writes to the selected database. Confirm the target project before running it; use production for read-only checks unless a production write is explicitly intended. Never print or commit either environment file.
+
+## Evaluation scripts
+
+See [spec 006](docs/specs/006-evaluation.md) for the protocol. Check which environment file a script loads (in `package.json`) before running it.
+
+| Command             | Purpose                                                                       |
+| ------------------- | ----------------------------------------------------------------------------- |
+| `eval:export`       | Export an evaluation snapshot from production (reads `.env.production.local`) |
+| `eval:import`       | Import a snapshot into local Supabase (`.env.local`)                          |
+| `eval:label`        | LLM relevance labels with the local MTPLX Qwen model; resumable               |
+| `eval:agreement`    | Stratified sample for the manual agreement check, and agreement scoring       |
+| `eval:judge`        | Manual relevance judging of a CSV (below)                                     |
+| `eval:crosslingual` | Cross-lingual Finnish–English pair check                                      |
+| `eval:replay`       | Replay test of rankers and baselines against the local database               |
+| `eval:freeze`       | Freeze parameters before the one-time test run                                |
 
 ## Manual relevance judging
 
@@ -77,7 +93,7 @@ This configures OAuth for spec 002's Google login page and application callback 
 ### Google Cloud
 
 1. Select or create a project in [Google Cloud Console](https://console.cloud.google.com/), then open **Google Auth Platform**.
-2. Configure **Branding** with the app name and support/developer email. In **Audience**, choose **External**, keep the publishing status **Testing**, and add each permitted Google account under **Test users**. Do not publish the consent screen during the course.
+2. Configure **Branding** with the app name and support/developer email. In **Audience**, choose **External**. For local development, keep the publishing status **Testing** and add each permitted Google account under **Test users**; production uses a published app (see [Hosted Supabase Auth](#hosted-supabase-auth)).
 3. In **Data Access**, configure only `openid`, `userinfo.email`, and `userinfo.profile`; no additional Google API scopes are needed.
 4. In **Clients**, create an OAuth client of type **Web application**. Add `http://localhost:3001` and `http://127.0.0.1:3001` as **Authorized JavaScript origins**.
 5. Add `http://127.0.0.1:55321/auth/v1/callback` as an **Authorized redirect URI**. This repository uses Supabase API port **55321**, not the CLI default 54321. For hosted Supabase, also add the exact callback URL shown by that project's Google provider settings, usually `https://<project-ref>.supabase.co/auth/v1/callback`.
@@ -122,9 +138,9 @@ Local CLI configuration does not configure the hosted project. Perform these ste
 1. Confirm the project reference, then open **Authentication > Sign In / Providers > Google**. Enable Google and enter the web client ID and secret for that environment. Keep nonce checking enabled and email required.
 2. Copy the provider's displayed callback URL into the matching Google Cloud web client's **Authorized redirect URIs**. It is the hosted Supabase callback, not the local one.
 3. For testing the local app against hosted Auth, set **Authentication > URL Configuration > Site URL** to `http://localhost:3001` and add the exact app redirect URLs `http://localhost:3001/auth/callback` and `http://127.0.0.1:3001/auth/callback`. Keep the Google consent screen in **Testing** with explicitly listed test users.
-4. Keep hosted app credentials in the ignored `.env.production.local`, separate from local credentials. The normal `pnpm dev` flow uses `.env.local`; do not swap its contents to test hosted Auth. Vercel deployment, selecting the hosted app environment, and production app redirect URLs are deferred to spec 004.
+4. Keep hosted app credentials in the ignored `.env.production.local`, separate from local credentials. The normal `pnpm dev` flow uses `.env.local`; do not swap its contents to test hosted Auth. Production deployment and redirect URLs are covered in [Deployment](#deployment).
 
-To verify the setup, visit `/` without a session and check that it redirects to `/login`. A listed Google test user should be able to sign in, return to `/`, see their email, and sign out back to `/login`. A Google `redirect_uri_mismatch` error means its registered Supabase callback does not exactly match; a missing PKCE verifier usually means the app hostname changed or its cookie was lost.
+To verify the setup, visit `/` without a session and check that it shows the guest preview, and that `/liked` redirects back to `/`. A Google user should be able to sign in, return to `/` with a personal feed, and sign out back to the guest view. A Google `redirect_uri_mismatch` error means its registered Supabase callback does not exactly match; a missing PKCE verifier usually means the app hostname changed or its cookie was lost.
 
 References: [Supabase Google Auth](https://supabase.com/docs/guides/auth/social-login/auth-google), [local config and secrets](https://supabase.com/docs/guides/local-development/managing-config), [redirect URLs](https://supabase.com/docs/guides/auth/redirect-urls).
 
@@ -142,7 +158,7 @@ The form and its server action are enabled only when `NODE_ENV=development` and 
 
 ### Application access
 
-Any user who signs in with Google can use the feed; no invitation or email provisioning is required. Authentication remains mandatory. Shared content is read-only for authenticated users, and feedback remains private to its owner through database RLS. Browsing and feedback do not trigger OpenAI calls; ingestion AI work is shared across users. Per-user usage limits must ship with the first user-triggered AI feature.
+Any user who signs in with Google can use the feed; no invitation or email provisioning is required. Signed-out visitors see only a cached guest preview of recent public item metadata ([spec 008](docs/specs/008-guest-feed-preview.md)); everything else requires authentication. Shared content is read-only for authenticated users, and feedback remains private to its owner through database RLS. Browsing and feedback do not trigger OpenAI calls; ingestion AI work is shared across users. Per-user usage limits must ship with the first user-triggered AI feature.
 
 The removal migration drops `allowed_users` and removes its policy and RPC checks. It temporarily retains `is_allowed()` as an authenticated identity check so the previously deployed app continues working when migrations arrive before the new app. The new app does not call it. Remove this compatibility function only in a later migration after the new app is deployed.
 

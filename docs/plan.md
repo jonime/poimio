@@ -56,10 +56,12 @@ Articles from that blog become candidates for the personalized feed.
 Technical details are in [design.md](design.md).
 
 - **Semantic embeddings** (multilingual, Finnish + English) represent every article and video.
-- **Recommender:** each item is scored by its similarity to the closest item the user liked, minus a penalty for similarity to items marked _Not interested_, combined with recency, diversity, and exploration slots. Every recommendation can be explained.
+- **Recommender:** each item is scored by its similarity to the closest item the user liked, minus a penalty for similarity to items marked _Not interested_, combined with recency, diversity, and exploration slots. Every recommendation can be explained. An optional reason on negative feedback (not this topic, not this source, already known) decides whether the topic, the source, or nothing is penalized.
+- **Natural-language feed tuning:** an LLM turns a request such as "less crypto, more local AI models" into structured, editable preferences once per edit; their embeddings act as extra positive or negative signals in the existing scoring. No LLM call at ranking time.
+- **Same-story grouping:** embeddings find candidate pairs at ingestion; TypeSafe Jev classifies each pair as the same event, a follow-up, or a different story. The feed shows one card per story with links to every source.
 - **LLM tasks:** fill missing item descriptions from extracted article text, readable interest summary, relevance labels for evaluation, and (stretch goal) source discovery with web search. The LLM does not rank items.
 - **Description quality (experiment):** TypeSafe Jev, a non-generative scoring model, flags poor item descriptions; compared offline with deterministic rules and `gpt-6-luna` as a judge ([spec 009](specs/009-description-quality-jev.md)).
-- **Evaluation:** replay test with simulated personas against average-vector, newest-first, and random baselines.
+- **Evaluation:** replay test with simulated personas against average-vector, newest-first, and random baselines. Relevance labels from the local Qwen model are compared with Jev and with manual labels.
 
 ## 4. Deliverables
 
@@ -88,8 +90,9 @@ Not included: exploration slots, interest summary, evaluation harness, cross-lin
 ### 4.2 Final application (due 13 Dec)
 
 - Per-user LLM usage limits, added with the first LLM-triggering user action.
-- Exploration slots and diversity re-ranking.
-- Evaluation harness and results ([design.md §4](design.md#4-evaluation)).
+- Exploration slots and diversity re-ranking; reasons on negative feedback.
+- Natural-language feed tuning and same-story grouping (see cut order in §9).
+- Evaluation harness and results ([design.md §4](design.md#4-evaluation)), including Jev as a relevance judge.
 - Optional (see cut order in §9): LLM interest summary; click tracking as a weak positive signal.
 - Optional experiment ([spec 009](specs/009-description-quality-jev.md)): description quality with TypeSafe Jev against rules and an LLM judge. Offline with no production changes, so it does not wait for gate 2.
 - Stretch goals, only after gate 2 passes ([design.md §3](design.md#3-source-discovery-stretch-goal)): (a) catalog-based source discovery; (b) LLM web-search discovery.
@@ -125,13 +128,13 @@ About 19 hours per week over 7 weeks. Most code is written by AI agents, so impl
 
 ### Phase 2 — Final application
 
-| Week | Dates          | Focus                                                                                                                                                                                                                             | AI tool support               | Hours   |
-| ---- | -------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------- | ------- |
-| 5    | 23 – 29 Nov    | Evaluation harness with protocol safeguards (time-based splits, identical histories, near-duplicate handling, repeated runs); LLM labels and manual agreement check; first validation results; Jev experiment test run and report | Metric code, labeling scripts | 19      |
-| 6    | 30 Nov – 6 Dec | Exploration slots and diversity; optional LLM interest summary and click tracking; tune on validation set and **freeze parameters**; **gate 2**                                                                                   | Debugging, algorithm review   | 19      |
-| 7    | 7 – 12 Dec     | Final evaluation run on the test window; documentation and final demonstration; **submit final version (13 Dec)**; stretch goals only if gate 2 passed earlier                                                                    | Documentation drafts, tests   | 16      |
-| —    |                | Buffer                                                                                                                                                                                                                            |                               | 12      |
-|      |                | **Total**                                                                                                                                                                                                                         |                               | **135** |
+| Week | Dates          | Focus                                                                                                                                                                                                                                                                                     | AI tool support               | Hours   |
+| ---- | -------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------- | ------- |
+| 5    | 23 – 29 Nov    | Evaluation harness with protocol safeguards (time-based splits, identical histories, near-duplicate handling, repeated runs); LLM labels and manual agreement check; Jev as a relevance judge; first validation results; Jev experiment test run and report; natural-language feed tuning | Metric code, labeling scripts | 19      |
+| 6    | 30 Nov – 6 Dec | Exploration slots and diversity; negative-feedback reasons; same-story grouping; optional LLM interest summary and click tracking; tune on validation set and **freeze parameters**; **gate 2**                                                                                           | Debugging, algorithm review   | 19      |
+| 7    | 7 – 12 Dec     | Final evaluation run on the test window; documentation and final demonstration; **submit final version (13 Dec)**; stretch goals only if gate 2 passed earlier                                                                                                                            | Documentation drafts, tests   | 16      |
+| —    |                | Buffer                                                                                                                                                                                                                                                                                    |                               | 12      |
+|      |                | **Total**                                                                                                                                                                                                                                                                                 |                               | **135** |
 
 ## 7. Development approach
 
@@ -145,18 +148,20 @@ About 19 hours per week over 7 weeks. Most code is written by AI agents, so impl
 
 Specs are written just in time: spec N+1 is drafted when spec N reaches its last few tasks, so it reflects what was learned. Workflow and rules are in [AGENTS.md](../AGENTS.md); the template is [specs/\_template.md](specs/_template.md).
 
-| Spec                                        | Content                                                                                            | Week | Draft when                      |
-| ------------------------------------------- | -------------------------------------------------------------------------------------------------- | ---- | ------------------------------- |
-| [001](specs/001-ingestion.md)               | Project setup, ingestion, hourly GitHub Actions run, early ranking experiment (gate 1)             | 1–2  | Drafted                         |
-| [002](specs/002-auth-feedback.md)           | Google login, feedback table, two-user RLS tests                                                   | 2    | 001 reaches its embedding tasks |
-| [003](specs/003-feed-ui.md)                 | Feed UI (buttons, swipe gestures, Seen, undo), recommender SQL function, recency, explanations     | 3    | After gate 1                    |
-| [004](specs/004-deployment-access.md)       | Vercel deployment from CI, authenticated access with database RLS                                  | 4    | 003 nearly done                 |
-| [005](specs/005-description-enrichment.md)  | Enrich missing descriptions from page metadata and article text; backfill existing items           | 2–3  | Drafted                         |
-| [006](specs/006-evaluation.md)              | Evaluation harness, including the cross-lingual check moved from spec 001                          | 2–5  | Drafted                         |
-| 007                                         | Exploration slots and diversity; per-user LLM limits; optional interest summary and click tracking | 6    | During week 5                   |
-| [008](specs/008-guest-feed-preview.md)      | Cached guest feed preview for signed-out visitors                                                  | 2    | Drafted                         |
-| [009](specs/009-description-quality-jev.md) | Description quality experiment with TypeSafe Jev (optional)                                        | 4–5  | Drafted                         |
-| 010                                         | Source discovery: (a) catalog-based, (b) LLM web search                                            | 6–7  | When gate 2 passes              |
+| Spec                                        | Content                                                                                                                       | Week | Draft when                      |
+| ------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------- | ---- | ------------------------------- |
+| [001](specs/001-ingestion.md)               | Project setup, ingestion, hourly GitHub Actions run, early ranking experiment (gate 1)                                        | 1–2  | Drafted                         |
+| [002](specs/002-auth-feedback.md)           | Google login, feedback table, two-user RLS tests                                                                              | 2    | 001 reaches its embedding tasks |
+| [003](specs/003-feed-ui.md)                 | Feed UI (buttons, swipe gestures, Seen, undo), recommender SQL function, recency, explanations                                | 3    | After gate 1                    |
+| [004](specs/004-deployment-access.md)       | Vercel deployment from CI, authenticated access with database RLS                                                             | 4    | 003 nearly done                 |
+| [005](specs/005-description-enrichment.md)  | Enrich missing descriptions from page metadata and article text; backfill existing items                                      | 2–3  | Drafted                         |
+| [006](specs/006-evaluation.md)              | Evaluation harness, including the cross-lingual check moved from spec 001; Jev as a relevance judge                           | 2–5  | Drafted                         |
+| 007                                         | Exploration slots and diversity; negative-feedback reasons; per-user LLM limits; optional interest summary and click tracking | 6    | During week 5                   |
+| [008](specs/008-guest-feed-preview.md)      | Cached guest feed preview for signed-out visitors                                                                             | 2    | Drafted                         |
+| [009](specs/009-description-quality-jev.md) | Description quality experiment with TypeSafe Jev (optional)                                                                   | 4–5  | Drafted                         |
+| 010                                         | Natural-language feed tuning                                                                                                  | 5    | During week 4                   |
+| 011                                         | Same-story grouping with embeddings and Jev                                                                                   | 6    | During week 5                   |
+| 012                                         | Source discovery: (a) catalog-based, (b) LLM web search                                                                       | 6–7  | When gate 2 passes              |
 
 Spec 002 runs alongside the end of 001 because login is independent of ingestion.
 
@@ -177,7 +182,8 @@ Spec 002 runs alongside the end of 001 because login is independent of ingestion
 | RSS feeds unreliable                              | Multiple sources, robust error handling                                                                                                                                                              |
 | API costs or provider changes                     | Limited LLM use, cached results, model name stored with embeddings                                                                                                                                   |
 | Source discovery too complex                      | Two independent stages, both after gate 2; first cuts                                                                                                                                                |
-| Jev is weak in Finnish or adds nothing over rules | Per-language success criteria; rules only or an LLM judge are valid outcomes; cut second (§9)                                                                                                        |
+| Jev is weak in Finnish or adds nothing over rules | Per-language success criteria; rules only or an LLM judge are valid outcomes; grouping falls back to an embedding threshold; cut order (§9)                                                          |
+| LLM misreads a natural-language request           | Preferences are shown as structured, editable items before use; per-user limits; no LLM at ranking time                                                                                              |
 | LLM suggests invented or unsafe URLs              | Every candidate fetched and validated; SSRF safeguards                                                                                                                                               |
 | Free-tier limits (Vercel, Supabase)               | Jobs on GitHub Actions; 512-dim embeddings; prune old articles                                                                                                                                       |
 | Supabase free project pauses when idle            | Scheduled jobs keep it active; check before demos                                                                                                                                                    |
@@ -199,10 +205,12 @@ If gate 2 has not passed by the end of week 6, week 7 goes to the final evaluati
 **Cut order** if time runs short:
 
 1. LLM web-search discovery
-2. Jev description-quality experiment
-3. Catalog-based discovery
+2. Catalog-based discovery
+3. Jev description-quality experiment
 4. LLM interest summary
 5. Click tracking
+6. Same-story grouping
+7. Natural-language feed tuning
 
 The minimum acceptable result is: ingestion, personal feed with feedback, the recommender, RLS tests, and the baseline comparison.
 
@@ -219,11 +227,12 @@ The minimum acceptable result is: ingestion, personal feed with feedback, the re
 - Finnish and English supported from the start.
 - Recommender: nearest-liked-item scoring with negative penalty, recency, diversity, and exploration slots.
 - Average-vector, newest-first, and random as evaluation baselines.
-- OpenAI for embeddings and LLM; LLM used for missing-description summaries, interest summary, evaluation labels, and (stretch) web-search source discovery — not for ranking.
+- OpenAI for embeddings and LLM; LLM used for missing-description summaries, natural-language preferences, interest summary, evaluation labels, and (stretch) web-search source discovery — not for ranking.
 - Stack: Next.js on Vercel, Supabase Postgres + pgvector, supabase-js with SQL migrations (no ORM), Supabase Auth, GitHub Actions for scheduled jobs (hourly ingestion from week 2).
 - Source discovery is a two-stage stretch goal (catalog-based, then LLM web search), attempted only after gate 2; admin-approved sources join a shared pool.
 - Optional offline experiment: TypeSafe Jev for description quality, compared with rules and an LLM judge (spec 009); called with plain `fetch`, no SDK.
-- Cut order: web-search discovery, Jev experiment, catalog discovery, LLM interest summary, click tracking.
+- Additional AI features chosen for product value and measurability: natural-language feed tuning (LLM, spec 010), same-story grouping (embeddings + Jev, spec 011), Jev as a relevance judge (spec 006), and negative-feedback reasons (spec 007).
+- Cut order: web-search discovery, catalog discovery, Jev description experiment, LLM interest summary, click tracking, same-story grouping, natural-language feed tuning.
 
 ## 11. Open decisions
 

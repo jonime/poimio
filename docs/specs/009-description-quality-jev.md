@@ -1,7 +1,7 @@
 # 009 — Description quality experiment with TypeSafe Jev
 
 **Status:** Draft (for review)  
-**Milestone:** Final (optional side experiment while [spec 006](006-evaluation.md) waits for more data; second in the [plan's cut order](../plan.md#9-decision-gates-and-cut-order))  
+**Milestone:** Final (optional side experiment while [spec 006](006-evaluation.md) waits for more data; third in the [plan's cut order](../plan.md#9-decision-gates-and-cut-order))  
 **Depends on:** 005 (description provenance), 006 (evaluation snapshot export)  
 **Estimate:** roughly 10 h, plus a few hours of manual labelling
 

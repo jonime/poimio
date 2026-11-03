@@ -63,6 +63,7 @@ export interface SnapshotWindow {
 
 export interface EvaluationSnapshotManifest {
   schemaVersion: number;
+  provisional: boolean;
   createdAt: string;
   dateRange: { from: string; toExclusive: string };
   windows: {
@@ -85,6 +86,14 @@ export interface EvaluationSnapshotManifest {
 export interface SnapshotDateRange {
   from: string;
   toExclusive: string;
+}
+
+export function requireFinalSnapshot(
+  manifest: EvaluationSnapshotManifest,
+): void {
+  if (manifest.provisional !== false) {
+    throw new Error("Freeze and test runs require a non-provisional snapshot");
+  }
 }
 
 function canonicalize(value: unknown): unknown {
@@ -114,6 +123,7 @@ export function meanHashKey(row: SnapshotRow): string {
 export function parseSnapshotDateRange(
   from: string | undefined,
   toExclusive: string | undefined,
+  provisional = false,
 ): SnapshotDateRange {
   if (!from || !toExclusive) {
     throw new Error("Both --from and --to are required (the end is exclusive)");
@@ -123,7 +133,10 @@ export function parseSnapshotDateRange(
   if (!Number.isFinite(fromTime) || !Number.isFinite(toTime)) {
     throw new Error("Snapshot dates must be valid ISO-8601 timestamps");
   }
-  if (toTime - fromTime < MINIMUM_SNAPSHOT_SPAN_MS) {
+  if (toTime <= fromTime) {
+    throw new Error("Snapshot end must be later than its start");
+  }
+  if (!provisional && toTime - fromTime < MINIMUM_SNAPSHOT_SPAN_MS) {
     throw new Error("The snapshot date range must cover at least 14 days");
   }
   return {
@@ -218,9 +231,11 @@ export function buildSnapshotManifest(input: {
   sources: SnapshotRow[];
   items: SnapshotRow[];
   means: SnapshotRow[];
+  provisional?: boolean;
   createdAt?: string;
 }): EvaluationSnapshotManifest {
   const { dateRange, sources, items, means } = input;
+  const provisional = input.provisional ?? false;
   assertColumns(items, SNAPSHOT_ITEM_COLUMNS, "item");
   assertColumns(sources, SNAPSHOT_SOURCE_COLUMNS, "source");
   assertColumns(means, SNAPSHOT_MEAN_COLUMNS, "mean");
@@ -239,7 +254,7 @@ export function buildSnapshotManifest(input: {
   if (
     !Number.isFinite(firstPublished) ||
     !Number.isFinite(lastPublished) ||
-    lastPublished - firstPublished < MINIMUM_SNAPSHOT_SPAN_MS
+    (!provisional && lastPublished - firstPublished < MINIMUM_SNAPSHOT_SPAN_MS)
   ) {
     throw new Error("Eligible snapshot items must span at least 14 days");
   }
@@ -271,6 +286,7 @@ export function buildSnapshotManifest(input: {
 
   return {
     schemaVersion: EVALUATION_SNAPSHOT_SCHEMA_VERSION,
+    provisional,
     createdAt: input.createdAt ?? new Date().toISOString(),
     dateRange,
     windows: {
@@ -322,6 +338,7 @@ export function validateSnapshotData(input: {
     sources,
     items,
     means,
+    provisional: manifest.provisional,
     createdAt: manifest.createdAt,
   });
   if (

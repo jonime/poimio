@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
   chunkItems,
+  evaluationLabelBatchSize,
   labelCacheKey,
   parseLabelJsonLines,
   parseLabelResponse,
@@ -38,6 +39,12 @@ describe("evaluation labels", () => {
     expect(chunkItems([1, 2, 3, 4, 5], 2)).toEqual([[1, 2], [3, 4], [5]]);
     expect(chunkItems([], 20)).toEqual([]);
     expect(() => chunkItems([1], 0)).toThrow(/positive integer/u);
+  });
+
+  it("bounds the configurable request size at twenty", () => {
+    expect(evaluationLabelBatchSize(undefined)).toBe(20);
+    expect(evaluationLabelBatchSize("5")).toBe(5);
+    expect(() => evaluationLabelBatchSize("21")).toThrow(/from 1 to 20/u);
   });
 
   it("validates exact JSON response coverage and boolean values", () => {
@@ -106,6 +113,15 @@ describe("evaluation labels", () => {
           index === 0 ? { ...entry, promptVersion: "v2" } : entry,
         ),
       }),
-    ).toThrow(/more than one model or prompt/u);
+    ).toThrow(/more than one model, prompt version, or provisional state/u);
+    expect(() =>
+      validateLabelSet({
+        personas,
+        items,
+        labels: complete.map((entry, index) =>
+          index === 0 ? { ...entry, provisional: true } : entry,
+        ),
+      }),
+    ).toThrow(/provisional state/u);
   });
 });

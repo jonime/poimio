@@ -15,6 +15,7 @@ import {
 } from "../lib/evaluation-labels.ts";
 import {
   parseJsonLines,
+  requireFinalSnapshot,
   sha256,
   validateSnapshotData,
   type EvaluationSnapshotManifest,
@@ -55,6 +56,7 @@ async function findCompleteLabelSet(
     labels: ReturnType<typeof parseLabelJsonLines>;
   }> = [];
   for (const name of names.filter((entry) => entry.endsWith(".jsonl"))) {
+    if (name.endsWith(".provisional.jsonl")) continue;
     const path = resolve(labelsDirectory, name);
     const labels = parseLabelJsonLines(await readFile(path, "utf8"));
     try {
@@ -116,6 +118,7 @@ async function main(): Promise<void> {
     readFile(resolve(root, "evaluation/config.json"), "utf8"),
   ]);
   const manifest = JSON.parse(manifestText) as EvaluationSnapshotManifest;
+  requireFinalSnapshot(manifest);
   const sources = parseJsonLines<SnapshotRow>(sourceText, "sources.jsonl");
   const itemRows = parseJsonLines<SnapshotRow>(itemText, "items.jsonl");
   const means = parseJsonLines<SnapshotRow>(meanText, "means.jsonl");

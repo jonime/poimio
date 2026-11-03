@@ -21,16 +21,14 @@ import {
 } from "../lib/evaluation-snapshot.ts";
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), "..");
-const snapshotDirectory = resolve(root, "evaluation/snapshot");
 const personaPath = resolve(root, "evaluation/personas.json");
-const agreementDirectory = resolve(root, "evaluation/agreement");
-const resultDirectory = resolve(agreementDirectory, "results");
 const sampleSeed = 6022026;
 
 interface CliOptions {
   command: "export" | "score";
   set: "selection" | "reporting";
   labelsPath?: string;
+  provisional: boolean;
 }
 
 function parseArguments(args: string[]): CliOptions {
@@ -42,6 +40,7 @@ function parseArguments(args: string[]): CliOptions {
   }
   let set: string | undefined;
   let labelsPath: string | undefined;
+  let provisional = false;
   for (let index = 1; index < args.length; index += 1) {
     const argument = args[index]!;
     if (argument === "--set" || argument.startsWith("--set=")) {
@@ -51,6 +50,8 @@ function parseArguments(args: string[]): CliOptions {
         argument === "--labels"
           ? args[++index]
           : argument.slice("--labels=".length);
+    } else if (argument === "--provisional") {
+      provisional = true;
     } else {
       throw new Error(`Unknown option: ${argument}`);
     }
@@ -61,10 +62,23 @@ function parseArguments(args: string[]): CliOptions {
   if (command === "score" && !labelsPath) {
     throw new Error("--labels <file> is required when scoring");
   }
-  return { command, set, labelsPath };
+  return { command, set, labelsPath, provisional };
 }
 
-async function loadInputs(labelsPath?: string) {
+function artifactDirectory(provisional: boolean): string {
+  return resolve(
+    root,
+    "evaluation/agreement",
+    provisional ? "provisional" : ".",
+  );
+}
+
+async function loadInputs(labelsPath?: string, provisional = false) {
+  const snapshotDirectory = resolve(
+    root,
+    "evaluation/snapshot",
+    provisional ? "provisional" : ".",
+  );
   const [
     manifestText,
     sourceText,
@@ -79,10 +93,13 @@ async function loadInputs(labelsPath?: string) {
     readFile(resolve(snapshotDirectory, "means.jsonl"), "utf8"),
     readFile(personaPath, "utf8"),
     labelsPath
-      ? readFile(resolveLabelFile(labelsPath), "utf8")
+      ? readFile(resolveLabelFile(labelsPath, provisional), "utf8")
       : Promise.resolve(null),
   ]);
   const manifest = JSON.parse(manifestText) as EvaluationSnapshotManifest;
+  if (manifest.provisional !== provisional) {
+    throw new Error("snapshot provisional state does not match --provisional");
+  }
   const sources = parseJsonLines<SnapshotRow>(sourceText, "sources.jsonl");
   const snapshotItems = parseJsonLines<SnapshotRow>(itemText, "items.jsonl");
   const means = parseJsonLines<SnapshotRow>(meanText, "means.jsonl");
@@ -109,20 +126,28 @@ async function loadInputs(labelsPath?: string) {
   }
   const labels = parseLabelJsonLines(labelsText);
   const labelSet = validateLabelSet({ personas, items, labels });
+  if (labelSet.provisional !== provisional) {
+    throw new Error("label set provisional state does not match the snapshot");
+  }
   return { personas, items, labels: labelSet.labels, labelSet };
 }
 
-function resolveLabelFile(value: string): string {
+function resolveLabelFile(value: string, provisional: boolean): string {
   if (isAbsolute(value) || value.includes("/") || value.endsWith(".jsonl")) {
     return isAbsolute(value) ? value : resolve(root, value);
   }
   const modelSlug = value.replace(/[^a-zA-Z0-9._-]/gu, "_");
-  return resolve(root, "evaluation/labels", `${modelSlug}.jsonl`);
+  return resolve(
+    root,
+    "evaluation/labels",
+    `${modelSlug}${provisional ? ".provisional" : ""}.jsonl`,
+  );
 }
 
 async function findCompleteLabelFile(
   personas: EvaluationPersona[],
   items: EvaluationLabelItem[],
+  provisional: boolean,
 ): Promise<string> {
   let names: string[];
   try {
@@ -133,7 +158,11 @@ async function findCompleteLabelFile(
     );
   }
   const completeFiles: string[] = [];
-  for (const name of names.filter((entry) => entry.endsWith(".jsonl"))) {
+  for (const name of names.filter(
+    (entry) =>
+      entry.endsWith(".jsonl") &&
+      entry.endsWith(".provisional.jsonl") === provisional,
+  )) {
     const path = resolve(root, "evaluation/labels", name);
     const labels = parseLabelJsonLines(await readFile(path, "utf8"));
     try {
@@ -206,6 +235,7 @@ async function exportSet(
   options: CliOptions,
   inputs: Awaited<ReturnType<typeof loadInputs>>,
 ): Promise<void> {
+  const agreementDirectory = artifactDirectory(options.provisional);
   const designPath = resolve(agreementDirectory, "design.json");
   const samplesPath = resolve(agreementDirectory, "sample-pairs.json");
   const csvPath = resolve(agreementDirectory, `${options.set}.csv`);
@@ -222,6 +252,7 @@ async function exportSet(
     });
     const publicDesign = {
       seed: design.seed,
+      provisional: options.provisional,
       labelSetId: inputs.labelSet.id,
       labelSetHash: inputs.labelSet.hash,
       strata: design.strata.map((stratum) => ({
@@ -330,6 +361,8 @@ async function scoreSet(
   options: CliOptions,
   inputs: Awaited<ReturnType<typeof loadInputs>>,
 ): Promise<void> {
+  const agreementDirectory = artifactDirectory(options.provisional);
+  const resultDirectory = resolve(agreementDirectory, "results");
   if (!inputs.labelSet)
     throw new Error("scoring requires a complete label set");
   const csvPath = resolve(agreementDirectory, `${options.set}.csv`);
@@ -429,6 +462,7 @@ async function scoreSet(
     `${JSON.stringify(
       {
         set: options.set,
+        provisional: inputs.labelSet.provisional,
         labelSetId: inputs.labelSet.id,
         labelSetHash: inputs.labelSet.hash,
         model: inputs.labelSet.model,
@@ -446,7 +480,7 @@ async function scoreSet(
 
 async function main(): Promise<void> {
   const options = parseArguments(process.argv.slice(2));
-  let inputs = await loadInputs(options.labelsPath);
+  let inputs = await loadInputs(options.labelsPath, options.provisional);
   if (
     options.command === "export" &&
     options.set === "selection" &&
@@ -455,8 +489,9 @@ async function main(): Promise<void> {
     const labelsPath = await findCompleteLabelFile(
       inputs.personas,
       inputs.items,
+      options.provisional,
     );
-    inputs = await loadInputs(labelsPath);
+    inputs = await loadInputs(labelsPath, options.provisional);
   }
   if (options.command === "export") await exportSet(options, inputs);
   else await scoreSet(options, inputs);

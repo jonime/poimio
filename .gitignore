@@ -24,5 +24,11 @@ next-env.d.ts
 evaluation/early-ranking/.answer-key.json
 evaluation/early-ranking/.centered-answer-key.json
 evaluation/snapshot/*.jsonl
+evaluation/snapshot/provisional/
+evaluation/config.provisional.json
+evaluation/labels/*.provisional.jsonl
+evaluation/agreement/provisional/
+evaluation/crosslingual/provisional/
+evaluation/results/provisional/
 evaluation/frozen-params.json
 .vercel

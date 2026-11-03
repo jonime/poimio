@@ -59,7 +59,7 @@ Measure, reproducibly and without inflating the results, whether the production 
   - `items.jsonl`: eligible items in the chosen date range with **original UUIDs** and every column needed to satisfy the current schema and constraints: `id`, `source_id`, `type`, `url`, `title`, `summary`, `summary_origin`, `enrichment_status` and the other enrichment-state columns, `language`, `categories`, `thumbnail_url`, `published_at`, `embedding`, `embedding_model`, `created_at`.
   - `means.jsonl`: the frozen `embedding_language_means` rows, including the mean vectors.
 - A committed manifest `evaluation/snapshot/manifest.json` records the schema version, date range, window boundaries, item IDs, a hash of each exported item row (all exported fields), a hash of each mean vector, and counts per language and source.
-- `pnpm eval:import` loads the snapshot into **local** Supabase only (service role; refuses non-local URLs), requires empty `sources`, `content_items`, and `embedding_language_means` (run after `supabase db reset`), inserts rows with their original UUIDs, and fails on any missing column, schema-version mismatch, or hash mismatch. All later steps run locally.
+- `pnpm eval:import` loads the snapshot into **local** Supabase only (service role; refuses non-local URLs). It requires empty `content_items` and `embedding_language_means`; reset-seeded sources may remain. Snapshot sources are upserted by `feed_url` with their original UUIDs, retaining unrelated seed catalog rows. Import fails on any missing column, schema-version mismatch, or hash mismatch. All later steps run locally.
 - Window split by `published_at`: feedback (oldest ~50%), validation (~25%), test (newest ~25%), stored in the manifest. The snapshot must cover at least 14 days (ingestion has run since 28 Oct, so the earliest freeze is about 11 Nov).
 - **Provisional snapshots** for development: `pnpm eval:export --provisional` may cover fewer than 14 days and writes `"provisional": true` in the manifest. Labels, agreement samples, and replay results derived from it are marked provisional in their output and file names, are never committed as results, and are not recorded as findings. The test-window guard and the freeze file reject provisional snapshots. The final snapshot is a fresh, non-provisional export.
 
@@ -128,7 +128,7 @@ Each criterion belongs to one task.
    3. New integration tests: `rank_items` with a user's likes and dislikes returns the same order as `get_feed` for that user; `nearest_liked` and `average_vector` follow the exact formulas with controlled vectors and differ only in the interest term; `newest_first` and `random` ignore feedback; `centered = false` changes the cross-language test case; unknown parameter keys raise an error; `random` is deterministic per seed; ties follow `published_at desc`, then `id`.
 2. **Task 2 — snapshot export and import**
    1. Export reads production only with the explicit production env file and performs no writes there; the manifest is committed and the snapshot files are gitignored.
-   2. Import loads only into local Supabase with original UUIDs, refuses non-local URLs and non-empty target tables, satisfies all current constraints, and fails on any missing column, schema-version mismatch, or item or mean-vector hash mismatch. After import, cold-start ordering on the snapshot matches the export's source IDs.
+   2. Import loads only into local Supabase with original UUIDs, refuses non-local URLs and non-empty `content_items` or `embedding_language_means`, upserts snapshot sources by `feed_url` while retaining unrelated reset-seeded sources, satisfies all current constraints, and fails on any missing column, schema-version mismatch, or item or mean-vector hash mismatch. After import, cold-start ordering on the snapshot matches the export's source IDs.
    3. A non-provisional export refuses a date range shorter than 14 days; `--provisional` allows it and marks the manifest.
 3. **Task 3 — LLM labels**
    1. Labels are produced for every (persona, item) pair, validated against the schema, cached, and resumable; the model and prompt version are recorded. The replay refuses incomplete or mixed-model label sets. Unit tests cover batching, parsing, cache keys, and the completeness check.
@@ -151,11 +151,11 @@ Each criterion belongs to one task.
 
 - [x] 1. Migration: `rank_items` with methods and parameters; refactor `get_feed` to use it; integration tests (criterion 1).
 - [ ] 2. `pnpm eval:export` (including `--provisional`) and `pnpm eval:import` with manifest and hash checks (criterion 2).
-- [ ] 3. Personas file and `pnpm eval:label` (criterion 3).
-- [ ] 4. `pnpm eval:agreement export|score` with the sampling design and weights; I label the selection set, decide on the fallback, then label the reporting set (criterion 4).
+- [x] 3. Personas file and `pnpm eval:label` (criterion 3).
+- [x] 4. `pnpm eval:agreement export|score` with the sampling design and weights; I label the selection set, decide on the fallback, then label the reporting set (criterion 4).
 - [ ] 5. `pnpm eval:crosslingual propose|score`; I confirm pairs (criterion 5).
-- [ ] 6. Near-duplicate threshold from the feedback window; `pnpm eval:replay` with metrics; first validation run (criterion 6).
-- [ ] 7. Test-window guard, `frozen-params.json` format, and experiment ID (criterion 7).
+- [x] 6. Near-duplicate threshold from the feedback window; `pnpm eval:replay` with metrics; first validation run (criterion 6).
+- [x] 7. Test-window guard, `frozen-params.json` format, and experiment ID (criterion 7).
 - [ ] 8. Update design.md §4 and log results (criterion 8).
 
 ## Decisions

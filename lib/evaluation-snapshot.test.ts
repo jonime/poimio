@@ -3,6 +3,7 @@ import {
   buildSnapshotManifest,
   hashSnapshotRow,
   parseSnapshotDateRange,
+  requireFinalSnapshot,
   requireLocalSupabaseUrl,
   requireProductionUrl,
   validateSnapshotData,
@@ -91,6 +92,7 @@ describe("evaluation snapshot", () => {
     expect(manifest.windows.validation.itemIds).toEqual(["item-3"]);
     expect(manifest.windows.test.itemIds).toEqual(["item-4"]);
     expect(manifest.counts.byLanguage).toEqual({ en: 4 });
+    expect(manifest.provisional).toBe(false);
     expect(() =>
       validateSnapshotData({ manifest, sources: [source], items, means }),
     ).not.toThrow();
@@ -155,5 +157,47 @@ describe("evaluation snapshot", () => {
     expect(requireLocalSupabaseUrl("http://127.0.0.1:55321").port).toBe(
       "55321",
     );
+  });
+
+  it("allows a short range only for a marked provisional snapshot", () => {
+    const shortRange = {
+      from: "2026-10-01T00:00:00.000Z",
+      toExclusive: "2026-10-03T00:00:00.000Z",
+    };
+    expect(() =>
+      parseSnapshotDateRange(shortRange.from, shortRange.toExclusive),
+    ).toThrow(/14 days/u);
+    expect(
+      parseSnapshotDateRange(shortRange.from, shortRange.toExclusive, true),
+    ).toEqual(shortRange);
+    const shortItems = [
+      item("short-1", shortRange.from),
+      item("short-2", "2026-10-02T00:00:00.000Z"),
+    ];
+    expect(() =>
+      buildSnapshotManifest({
+        dateRange: shortRange,
+        sources: [source],
+        items: shortItems,
+        means,
+      }),
+    ).toThrow(/14 days/u);
+    const provisionalManifest = buildSnapshotManifest({
+      dateRange: shortRange,
+      sources: [source],
+      items: shortItems,
+      means,
+      provisional: true,
+    });
+    expect(provisionalManifest.provisional).toBe(true);
+    expect(() => requireFinalSnapshot(provisionalManifest)).toThrow(
+      /non-provisional/u,
+    );
+    validateSnapshotData({
+      manifest: provisionalManifest,
+      sources: [source],
+      items: shortItems,
+      means,
+    });
   });
 });

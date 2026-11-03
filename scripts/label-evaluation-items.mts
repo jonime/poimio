@@ -3,8 +3,8 @@ import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import {
   chunkItems,
-  EVALUATION_LABEL_BATCH_SIZE,
   EVALUATION_LABEL_PROMPT_VERSION,
+  evaluationLabelBatchSize,
   parseLabelJsonLines,
   parseLabelResponse,
   validateLabelSet,
@@ -20,11 +20,11 @@ import {
 } from "../lib/evaluation-snapshot.ts";
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), "..");
-const snapshotDirectory = resolve(root, "evaluation/snapshot");
 const personaPath = resolve(root, "evaluation/personas.json");
 const labelsDirectory = resolve(root, "evaluation/labels");
 const defaultBaseUrl = "http://127.0.0.1:8888/v1";
 const requestTimeoutMs = 120_000;
+const maxBatchAttempts = 3;
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return value !== null && typeof value === "object" && !Array.isArray(value);
@@ -46,7 +46,14 @@ function localBaseUrl(value: string): URL {
   return url;
 }
 
-async function loadSnapshot(): Promise<EvaluationLabelItem[]> {
+async function loadSnapshot(
+  provisional: boolean,
+): Promise<EvaluationLabelItem[]> {
+  const snapshotDirectory = resolve(
+    root,
+    "evaluation/snapshot",
+    provisional ? "provisional" : ".",
+  );
   const [manifestText, sourceText, itemText, meanText] = await Promise.all([
     readFile(resolve(snapshotDirectory, "manifest.json"), "utf8"),
     readFile(resolve(snapshotDirectory, "sources.jsonl"), "utf8"),
@@ -130,7 +137,6 @@ async function requestBatch(input: {
       body: JSON.stringify({
         model,
         temperature: 0,
-        response_format: { type: "json_object" },
         messages: [
           {
             role: "system",
@@ -161,7 +167,16 @@ async function requestBatch(input: {
     },
   );
   if (!response.ok) {
-    throw new Error(`label request failed with HTTP ${response.status}`);
+    const body: unknown = await response.json().catch(() => null);
+    const errorMessage =
+      isRecord(body) &&
+      isRecord(body.error) &&
+      typeof body.error.message === "string"
+        ? body.error.message.slice(0, 300)
+        : "no server error message";
+    throw new Error(
+      `label request failed with HTTP ${response.status}: ${errorMessage}`,
+    );
   }
   const payload: unknown = await response.json();
   if (
@@ -199,6 +214,11 @@ async function readExistingLabels(path: string): Promise<EvaluationLabel[]> {
 }
 
 async function main(): Promise<void> {
+  const args = process.argv.slice(2);
+  const provisional = args.includes("--provisional");
+  if (args.some((argument) => argument !== "--provisional")) {
+    throw new Error("usage: pnpm eval:label [--provisional]");
+  }
   if (process.env.CI === "true") {
     throw new Error("Evaluation labeling is disabled in CI");
   }
@@ -210,10 +230,13 @@ async function main(): Promise<void> {
   const personas = JSON.parse(
     await readFile(personaPath, "utf8"),
   ) as EvaluationPersona[];
-  const items = await loadSnapshot();
+  const items = await loadSnapshot(provisional);
   const model = await resolveModel(baseUrl, apiKey);
   const cacheName = model.replace(/[^a-zA-Z0-9._-]/gu, "_");
-  const cachePath = resolve(labelsDirectory, `${cacheName}.jsonl`);
+  const cachePath = resolve(
+    labelsDirectory,
+    `${cacheName}${provisional ? ".provisional" : ""}.jsonl`,
+  );
   await mkdir(labelsDirectory, { recursive: true });
   const labels = await readExistingLabels(cachePath);
   if (
@@ -242,20 +265,37 @@ async function main(): Promise<void> {
     const missingItems = items.filter(
       (item) => !existingKeys.has(`${persona.id}\u0000${item.id}`),
     );
-    for (const batch of chunkItems(missingItems, EVALUATION_LABEL_BATCH_SIZE)) {
-      const batchLabels = await requestBatch({
-        baseUrl,
-        apiKey,
-        model,
-        persona,
-        items: batch,
-      });
+    const batchSize = evaluationLabelBatchSize(process.env.LLM_BATCH_SIZE);
+    const batches = chunkItems(missingItems, batchSize);
+    for (const [batchIndex, batch] of batches.entries()) {
+      let batchLabels: Map<string, boolean> | undefined;
+      let lastError: unknown;
+      for (let attempt = 1; attempt <= maxBatchAttempts; attempt += 1) {
+        try {
+          batchLabels = await requestBatch({
+            baseUrl,
+            apiKey,
+            model,
+            persona,
+            items: batch,
+          });
+          break;
+        } catch (error) {
+          lastError = error;
+        }
+      }
+      if (!batchLabels) {
+        throw new Error(
+          `failed to get a valid label batch after ${maxBatchAttempts} attempts: ${lastError instanceof Error ? lastError.message : "unknown error"}`,
+        );
+      }
       const records = batch.map((item) => ({
         personaId: persona.id,
         itemId: item.id,
         model,
         promptVersion: EVALUATION_LABEL_PROMPT_VERSION,
         relevant: batchLabels.get(item.id)!,
+        provisional,
       }));
       await appendFile(
         cachePath,
@@ -265,13 +305,16 @@ async function main(): Promise<void> {
       records.forEach((record) =>
         existingKeys.add(`${record.personaId}\u0000${record.itemId}`),
       );
+      console.log(
+        `Labeled ${persona.id} batch ${batchIndex + 1}/${batches.length}`,
+      );
     }
     console.log(`Labeled ${persona.id}: ${items.length}/${items.length}`);
   }
 
   const labelSet = validateLabelSet({ personas, items, labels });
   console.log(
-    `Complete label set ${labelSet.id}: ${labelSet.labels.length} labels, sha256 ${labelSet.hash}`,
+    `Complete ${labelSet.provisional ? "provisional " : ""}label set ${labelSet.id}: ${labelSet.labels.length} labels, sha256 ${labelSet.hash}`,
   );
 }
 

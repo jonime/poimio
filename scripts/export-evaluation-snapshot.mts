@@ -13,14 +13,17 @@ import {
 import { EMBEDDING_MODEL_VERSION } from "../lib/embeddings.ts";
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), "..");
-const snapshotDirectory = resolve(root, "evaluation/snapshot");
 const pageSize = 500;
 
 function parseArguments(args: string[]): {
   from?: string;
   toExclusive?: string;
+  provisional: boolean;
 } {
-  const parsed: { from?: string; toExclusive?: string } = {};
+  const parsed: { from?: string; toExclusive?: string; provisional: boolean } =
+    {
+      provisional: false,
+    };
   for (let index = 0; index < args.length; index += 1) {
     const argument = args[index]!;
     if (argument === "--from" || argument.startsWith("--from=")) {
@@ -31,6 +34,8 @@ function parseArguments(args: string[]): {
     } else if (argument === "--to" || argument.startsWith("--to=")) {
       parsed.toExclusive =
         argument === "--to" ? args[++index] : argument.slice("--to=".length);
+    } else if (argument === "--provisional") {
+      parsed.provisional = true;
     } else {
       throw new Error(`Unknown option: ${argument}`);
     }
@@ -56,9 +61,15 @@ function environmentFileValue(
 
 async function main(): Promise<void> {
   const arguments_ = parseArguments(process.argv.slice(2));
+  const snapshotDirectory = resolve(
+    root,
+    "evaluation/snapshot",
+    arguments_.provisional ? "provisional" : ".",
+  );
   const dateRange = parseSnapshotDateRange(
     arguments_.from,
     arguments_.toExclusive,
+    arguments_.provisional,
   );
   const projectUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
@@ -150,6 +161,7 @@ async function main(): Promise<void> {
     sources,
     items: eligibleItems,
     means,
+    provisional: arguments_.provisional,
   });
   await mkdir(snapshotDirectory, { recursive: true });
   await Promise.all([
@@ -186,7 +198,7 @@ async function main(): Promise<void> {
     ),
   ]);
   console.log(
-    `Exported ${manifest.counts.items} items, ${manifest.counts.sources} sources, and ${manifest.counts.means} language means to evaluation/snapshot. Production was read only.`,
+    `Exported ${manifest.counts.items} ${manifest.provisional ? "provisional " : ""}items, ${manifest.counts.sources} sources, and ${manifest.counts.means} language means to evaluation/snapshot${manifest.provisional ? "/provisional" : ""}. Production was read only.`,
   );
 }
 

@@ -11,10 +11,19 @@ import {
 } from "../lib/evaluation-snapshot.ts";
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), "..");
-const snapshotDirectory = resolve(root, "evaluation/snapshot");
 const batchSize = 100;
 
 async function main(): Promise<void> {
+  const args = process.argv.slice(2);
+  if (args.some((argument) => argument !== "--provisional")) {
+    throw new Error("usage: pnpm eval:import [--provisional]");
+  }
+  const provisional = args.includes("--provisional");
+  const snapshotDirectory = resolve(
+    root,
+    "evaluation/snapshot",
+    provisional ? "provisional" : ".",
+  );
   const projectUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
   if (!projectUrl || !serviceRoleKey) {
@@ -31,38 +40,44 @@ async function main(): Promise<void> {
     readFile(resolve(snapshotDirectory, "means.jsonl"), "utf8"),
   ]);
   const manifest = JSON.parse(manifestText) as EvaluationSnapshotManifest;
+  if (manifest.provisional !== provisional) {
+    throw new Error("snapshot provisional state does not match --provisional");
+  }
   const sources = parseJsonLines<SnapshotRow>(sourcesText, "sources.jsonl");
   const items = parseJsonLines<SnapshotRow>(itemsText, "items.jsonl");
   const means = parseJsonLines<SnapshotRow>(meansText, "means.jsonl");
   validateSnapshotData({ manifest, sources, items, means });
 
   const client = createClient(projectUrl, serviceRoleKey);
-  const tableCounts = await Promise.all(
-    ["sources", "content_items", "embedding_language_means"].map(
-      async (table) => {
-        const { count, error } = await client
-          .from(table)
-          .select("*", { count: "exact", head: true });
-        if (error) {
-          throw new Error(`checking local ${table} failed: ${error.message}`);
-        }
-        if (count === null) {
-          throw new Error(`could not verify whether local ${table} is empty`);
-        }
-        return { table, count };
-      },
-    ),
+  const [contentCount, meansCount] = await Promise.all(
+    ["content_items", "embedding_language_means"].map(async (table) => {
+      const { count, error } = await client
+        .from(table)
+        .select("*", { count: "exact", head: true });
+      if (error) {
+        throw new Error(`checking local ${table} failed: ${error.message}`);
+      }
+      if (count === null) {
+        throw new Error(`could not verify whether local ${table} is empty`);
+      }
+      return count;
+    }),
   );
-  const nonEmpty = tableCounts.find((entry) => entry.count !== 0);
-  if (nonEmpty) {
+  if (contentCount !== 0) {
     throw new Error(
-      `local ${nonEmpty.table} must be empty before import; found ${nonEmpty.count} rows (run supabase db reset)`,
+      `local content_items must be empty before import; found ${contentCount} rows`,
     );
   }
-
+  if (meansCount !== 0) {
+    throw new Error(
+      `local embedding_language_means must be empty before import; found ${meansCount} rows`,
+    );
+  }
   for (let offset = 0; offset < sources.length; offset += batchSize) {
     const batch = sources.slice(offset, offset + batchSize);
-    const { error } = await client.from("sources").insert(batch);
+    const { error } = await client
+      .from("sources")
+      .upsert(batch, { onConflict: "feed_url" });
     if (error) {
       throw new Error(`inserting sources failed: ${error.message}`);
     }

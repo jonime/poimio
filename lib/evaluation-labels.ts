@@ -3,6 +3,23 @@ import { createHash } from "node:crypto";
 export const EVALUATION_LABEL_PROMPT_VERSION = "relevance-v1";
 export const EVALUATION_LABEL_BATCH_SIZE = 20;
 
+export function evaluationLabelBatchSize(value: string | undefined): number {
+  if (value === undefined || value.trim() === "") {
+    return EVALUATION_LABEL_BATCH_SIZE;
+  }
+  const parsed = Number(value);
+  if (
+    !Number.isInteger(parsed) ||
+    parsed < 1 ||
+    parsed > EVALUATION_LABEL_BATCH_SIZE
+  ) {
+    throw new Error(
+      `LLM_BATCH_SIZE must be an integer from 1 to ${EVALUATION_LABEL_BATCH_SIZE}`,
+    );
+  }
+  return parsed;
+}
+
 export interface EvaluationPersona {
   id: string;
   description: string;
@@ -21,6 +38,7 @@ export interface EvaluationLabel {
   model: string;
   promptVersion: string;
   relevant: boolean;
+  provisional?: boolean;
 }
 
 export interface LabelSet {
@@ -28,6 +46,7 @@ export interface LabelSet {
   hash: string;
   model: string;
   promptVersion: string;
+  provisional: boolean;
   labels: EvaluationLabel[];
 }
 
@@ -125,7 +144,9 @@ export function parseLabelJsonLines(content: string): EvaluationLabel[] {
         typeof parsed.itemId !== "string" ||
         typeof parsed.model !== "string" ||
         typeof parsed.promptVersion !== "string" ||
-        typeof parsed.relevant !== "boolean"
+        typeof parsed.relevant !== "boolean" ||
+        (Object.hasOwn(parsed, "provisional") &&
+          typeof parsed.provisional !== "boolean")
       ) {
         throw new Error(`Label cache row ${index + 1} has an invalid schema`);
       }
@@ -135,6 +156,7 @@ export function parseLabelJsonLines(content: string): EvaluationLabel[] {
         model: parsed.model,
         promptVersion: parsed.promptVersion,
         relevant: parsed.relevant,
+        provisional: parsed.provisional === true,
       };
     });
 }
@@ -148,12 +170,18 @@ export function validateLabelSet(input: {
   if (labels.length === 0) throw new Error("Label set is empty");
   const model = labels[0]!.model;
   const promptVersion = labels[0]!.promptVersion;
+  const provisional = labels[0]!.provisional === true;
   if (
     labels.some(
-      (label) => label.model !== model || label.promptVersion !== promptVersion,
+      (label) =>
+        label.model !== model ||
+        label.promptVersion !== promptVersion ||
+        (label.provisional === true) !== provisional,
     )
   ) {
-    throw new Error("Label set contains more than one model or prompt version");
+    throw new Error(
+      "Label set contains more than one model, prompt version, or provisional state",
+    );
   }
 
   const personaIds = new Set(personas.map((persona) => persona.id));
@@ -197,10 +225,11 @@ export function validateLabelSet(input: {
     .update(JSON.stringify(sortedLabels))
     .digest("hex");
   return {
-    id: `${model}:${promptVersion}:${hash.slice(0, 16)}`,
+    id: `${model}:${promptVersion}:${provisional ? "provisional" : "final"}:${hash.slice(0, 16)}`,
     hash,
     model,
     promptVersion,
+    provisional,
     labels: sortedLabels,
   };
 }

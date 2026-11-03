@@ -1,6 +1,6 @@
 import { execFileSync } from "node:child_process";
 import { mkdir, readFile, readdir, writeFile } from "node:fs/promises";
-import { dirname, resolve } from "node:path";
+import { dirname, isAbsolute, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 import { encodeCsv } from "../lib/early-ranking.ts";
@@ -28,6 +28,7 @@ import {
 } from "../lib/evaluation-labels.ts";
 import {
   parseJsonLines,
+  requireFinalSnapshot,
   requireLocalSupabaseUrl,
   sha256,
   validateSnapshotData,
@@ -36,10 +37,7 @@ import {
 } from "../lib/evaluation-snapshot.ts";
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), "..");
-const snapshotDirectory = resolve(root, "evaluation/snapshot");
 const labelsDirectory = resolve(root, "evaluation/labels");
-const resultsDirectory = resolve(root, "evaluation/results");
-const configPath = resolve(root, "evaluation/config.json");
 const methods = [
   { method: "nearest_liked", name: "nearest_liked", params: {} },
   {
@@ -82,6 +80,8 @@ interface ReplayCell {
 
 interface ReplayOptions {
   window: "validation" | "test";
+  provisional: boolean;
+  labelsPath?: string;
   paramsPath?: string;
   newExperimentReason?: string;
 }
@@ -89,7 +89,9 @@ interface ReplayOptions {
 function parseArguments(args: string[]): ReplayOptions {
   let window: string | undefined;
   let paramsPath: string | undefined;
+  let labelsPath: string | undefined;
   let newExperimentReason: string | undefined;
+  let provisional = false;
   for (let index = 0; index < args.length; index += 1) {
     const argument = args[index]!;
     if (argument === "--window" || argument.startsWith("--window=")) {
@@ -99,6 +101,11 @@ function parseArguments(args: string[]): ReplayOptions {
         argument === "--params"
           ? args[++index]
           : argument.slice("--params=".length);
+    } else if (argument === "--labels" || argument.startsWith("--labels=")) {
+      labelsPath =
+        argument === "--labels"
+          ? args[++index]
+          : argument.slice("--labels=".length);
     } else if (
       argument === "--new-experiment" ||
       argument.startsWith("--new-experiment=")
@@ -107,6 +114,8 @@ function parseArguments(args: string[]): ReplayOptions {
         argument === "--new-experiment"
           ? args[++index]
           : argument.slice("--new-experiment=".length);
+    } else if (argument === "--provisional") {
+      provisional = true;
     } else {
       throw new Error(`Unknown option: ${argument}`);
     }
@@ -123,7 +132,10 @@ function parseArguments(args: string[]): ReplayOptions {
   if (window === "validation" && newExperimentReason) {
     throw new Error("--new-experiment is only valid for --window test");
   }
-  return { window, paramsPath, newExperimentReason };
+  if (window === "test" && provisional) {
+    throw new Error("test replay refuses provisional snapshots");
+  }
+  return { window, paramsPath, labelsPath, newExperimentReason, provisional };
 }
 
 function parseVector(value: unknown, label: string): number[] {
@@ -144,10 +156,16 @@ function parseVector(value: unknown, label: string): number[] {
 async function findLabelFile(
   personas: EvaluationPersona[],
   items: EvaluationLabelItem[],
+  provisional: boolean,
+  labelsPath?: string,
 ): Promise<string> {
+  if (labelsPath) {
+    return isAbsolute(labelsPath) ? labelsPath : resolve(root, labelsPath);
+  }
   const names = await readdir(labelsDirectory);
   const complete: string[] = [];
   for (const name of names.filter((entry) => entry.endsWith(".jsonl"))) {
+    if (name.endsWith(".provisional.jsonl") !== provisional) continue;
     const path = resolve(labelsDirectory, name);
     const labels = parseLabelJsonLines(await readFile(path, "utf8"));
     try {
@@ -172,7 +190,16 @@ async function findLabelFile(
   return complete[0]!;
 }
 
-async function loadSnapshot() {
+async function loadSnapshot(
+  provisional: boolean,
+  testWindow: boolean,
+  labelsPath?: string,
+) {
+  const snapshotDirectory = resolve(
+    root,
+    "evaluation/snapshot",
+    provisional ? "provisional" : ".",
+  );
   const [manifestText, sourceText, itemText, meanText, personaText] =
     await Promise.all([
       readFile(resolve(snapshotDirectory, "manifest.json"), "utf8"),
@@ -182,6 +209,10 @@ async function loadSnapshot() {
       readFile(resolve(root, "evaluation/personas.json"), "utf8"),
     ]);
   const manifest = JSON.parse(manifestText) as EvaluationSnapshotManifest;
+  if (testWindow) requireFinalSnapshot(manifest);
+  if (manifest.provisional !== provisional) {
+    throw new Error("snapshot provisional state does not match --provisional");
+  }
   const sourceRows = parseJsonLines<SnapshotRow>(sourceText, "sources.jsonl");
   const itemRows = parseJsonLines<SnapshotRow>(itemText, "items.jsonl");
   const meanRows = parseJsonLines<SnapshotRow>(meanText, "means.jsonl");
@@ -245,6 +276,8 @@ async function loadSnapshot() {
       summary,
       language,
     })),
+    provisional,
+    labelsPath,
   );
   const labelRows = parseLabelJsonLines(await readFile(labelFile, "utf8"));
   const labelSet = validateLabelSet({
@@ -257,6 +290,9 @@ async function loadSnapshot() {
     })),
     labels: labelRows,
   });
+  if (labelSet.provisional !== provisional) {
+    throw new Error("label set provisional state does not match the snapshot");
+  }
   return {
     manifest,
     manifestHash: sha256(manifestText),
@@ -348,6 +384,11 @@ function missingCell(
 
 async function main(): Promise<void> {
   const options = parseArguments(process.argv.slice(2));
+  const resultsDirectory = resolve(
+    root,
+    "evaluation/results",
+    options.provisional ? "provisional" : ".",
+  );
   if (
     !process.env.NEXT_PUBLIC_SUPABASE_URL ||
     !process.env.SUPABASE_SERVICE_ROLE_KEY
@@ -363,9 +404,36 @@ async function main(): Promise<void> {
     projectUrl.toString(),
     process.env.SUPABASE_SERVICE_ROLE_KEY,
   );
-  const snapshot = await loadSnapshot();
+  const snapshot = await loadSnapshot(
+    options.provisional,
+    options.window === "test",
+    options.labelsPath,
+  );
+  const configPath = resolve(
+    root,
+    "evaluation",
+    options.provisional ? "config.provisional.json" : "config.json",
+  );
   const configText = await readFile(configPath, "utf8");
-  const config = JSON.parse(configText) as { nearDuplicateThreshold?: number };
+  const config = JSON.parse(configText) as {
+    nearDuplicateThreshold?: number;
+    provisional?: boolean;
+    snapshotManifestHash?: string;
+  };
+  if (
+    options.provisional &&
+    (config.provisional !== true ||
+      config.snapshotManifestHash !== snapshot.manifestHash)
+  ) {
+    throw new Error(
+      "provisional config does not match the provisional snapshot",
+    );
+  }
+  if (!options.provisional && config.provisional === true) {
+    throw new Error(
+      "final replay cannot use a provisional near-duplicate config",
+    );
+  }
   let threshold = config.nearDuplicateThreshold;
   if (typeof threshold !== "number" || threshold < -1 || threshold > 1) {
     throw new Error(
@@ -749,6 +817,7 @@ async function main(): Promise<void> {
   }
   const provenance = {
     createdAt: new Date().toISOString(),
+    provisional: snapshot.manifest.provisional,
     window: options.window,
     gitCommit: execFileSync("git", ["rev-parse", "HEAD"], {
       cwd: root,
@@ -769,7 +838,7 @@ async function main(): Promise<void> {
   const resultName =
     options.window === "test"
       ? `test-${experimentId}`
-      : `validation-${timestamp}`;
+      : `${options.provisional ? "provisional-" : ""}validation-${timestamp}`;
   const jsonPath = resolve(resultsDirectory, `${resultName}.json`);
   const csvPath = resolve(resultsDirectory, `${resultName}.csv`);
   await mkdir(resultsDirectory, { recursive: true });

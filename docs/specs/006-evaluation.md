@@ -84,6 +84,7 @@ Measure, reproducibly and without inflating the results, whether the production 
   - **reporting set:** scored once, after the label model is chosen, to report its agreement.
 - Agreement metrics use inverse-inclusion-probability weights, so they estimate agreement on the snapshot distribution: weighted percent agreement, weighted Cohen's κ, and the LLM labels' precision and recall for "relevant". Reported overall, for Finnish, and for English, together with the stratum counts.
 - `pnpm eval:agreement export --set selection|reporting` and `pnpm eval:agreement score --set selection|reporting --labels <set>`.
+- `pnpm eval:judge <file.csv>` shows each unlabeled pair's persona, title, and summary for manual `1`/`0` judging. Each answer is saved immediately; reruns resume blank cells. Skipping and quitting leave unanswered cells blank. Only `relevant` values change; all other CSV content and formatting are preserved.
 - **Fallback:** if weighted κ on the selection set is below 0.6 for Finnish or English, the **whole snapshot** is labeled with `gpt-6-luna` (all persona–item pairs). The model with the higher weighted κ on the selection set is used for every replay; the other set is kept and reported but never mixed in.
 
 **Cross-lingual check** (from spec 001)

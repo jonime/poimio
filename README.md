@@ -41,6 +41,21 @@ node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON \
 
 That ingestion command writes to the selected database. Confirm the target project before running it; use production for read-only checks unless a production write is explicitly intended. Never print or commit either environment file.
 
+## Manual relevance judging
+
+Label an exported agreement CSV interactively, without any API or database access:
+
+```sh
+pnpm eval:judge evaluation/agreement/provisional/selection.csv
+```
+
+Each record shows its persona, title, and summary. Enter `1`/`y` for relevant,
+`0`/`n` for not relevant, `s` to skip, or `q` to quit, followed by Enter.
+Each answer is saved immediately; rerunning the command skips existing labels
+and resumes blank cells. Only the `relevant` field changes: quoting, line endings,
+and all other CSV content are preserved. The CSV must contain `persona_id`,
+`persona_description`, `title`, `summary`, and `relevant` columns.
+
 ## Database integration tests
 
 Start the local Supabase stack and apply migrations before running the database-backed tests:

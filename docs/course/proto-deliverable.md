@@ -2,7 +2,7 @@
 
 ## Short description of what the prototype does.
 
-Poimio is a personal content feed. It collects news, articles, and videos from 17 Finnish and English RSS/Atom/YouTube feeds (Yle, BBC, Hacker News, NASA, and others) and learns each user's interests from feedback. Users sign in with Google; nothing needs configuring.
+Poimio is a personal content feed. It collects news, articles, and videos from 17 Finnish and English RSS/Atom/YouTube feeds (Yle, BBC, Hacker News, NASA, and others) and learns each user's interests from feedback. Nothing needs configuring.
 
 What works:
 
@@ -15,15 +15,15 @@ What works:
 
 ## What technologies did you use?
 
-| Area         | Technology                                                                                                                             |
-| ------------ | -------------------------------------------------------------------------------------------------------------------------------------- |
-| App          | Next.js 16, React 19, Tailwind CSS v4, shadcn/ui; Vercel (poimio.cc)                                                                   |
-| Database     | Supabase PostgreSQL + pgvector; ranking in SQL                                                                                         |
-| Auth         | Supabase Auth (Google), Row Level Security                                                                                             |
-| AI           | OpenAI `text-embedding-3-small` (512 dimensions, language-centered), `gpt-6-luna` for summaries                                        |
-| Ingestion    | `rss-parser`, Mozilla Readability + jsdom, SSRF-safe fetching                                                                          |
-| Automation   | GitHub Actions: hourly ingestion; CI with lint, typecheck, Vitest unit and database tests; deployment promotion                        |
-| AI dev tools | GitHub Copilot agent mode (Claude Opus 5.5, GPT-6.1 Sol, GPT-6 Luna), Codex desktop, local Qwen3 27B (MTPLX) in OpenCode; AI usage log |
+| Area         | Technology                                                                                                               |
+| ------------ | ------------------------------------------------------------------------------------------------------------------------ |
+| App          | Next.js 16, React 19, Tailwind CSS v4, shadcn/ui; Vercel (poimio.cc)                                                     |
+| Database     | Supabase PostgreSQL + pgvector; ranking in SQL                                                                           |
+| Auth         | Supabase Auth (Google), Row Level Security                                                                               |
+| AI           | OpenAI `text-embedding-3-small` (512 dimensions, language-centered), `gpt-6-luna` for summaries                          |
+| Ingestion    | `rss-parser`, Mozilla Readability + jsdom, SSRF-safe fetching                                                            |
+| Automation   | GitHub Actions: CI with lint, typecheck, Vitest unit and database tests                                                  |
+| AI dev tools | GitHub Copilot agent mode (Claude Opus 5.5, GPT-6.1 Sol, GPT-6 Luna), Codex desktop, local Qwen3 27B (MTPLX) in OpenCode |
 
 ## TODO list (list and prioritize what you need to do next)
 
@@ -40,17 +40,15 @@ What works:
 
 Implementation ran well ahead of plan: all prototype features were done in week 1, mostly by AI agents following specs.
 
-| Week | Work                                                                           | Status  |
-| ---- | ------------------------------------------------------------------------------ | ------- |
-| 1    | All prototype features; plan submitted                                         | Done    |
-| 2    | Evaluation harness; guest feed preview; Jev description experiment             | Planned |
-| 3    | Prototype video; relevance labels (Qwen, Jev, manual); natural-language tuning | Planned |
-| 4    | Submit prototype (22 Nov); exploration, diversity, feedback reasons            | Planned |
-| 5    | Same-story grouping; validation results and tuning; gate 2                     | Planned |
-| 6    | Freeze parameters; optional features; source discovery if gate 2 passed        | Planned |
-| 7    | Final evaluation run, documentation, demonstration; submit (13 Dec)            | Planned |
-
-The time-based split needs at least two weeks of content; ingestion has run hourly since 28 Oct.
+| Week | Work                                                                           |
+| ---- | ------------------------------------------------------------------------------ |
+| 1    | All prototype features; plan submitted (done)                                  |
+| 2    | Evaluation harness; guest feed preview; Jev description experiment             |
+| 3    | Prototype video; relevance labels (Qwen, Jev, manual); natural-language tuning |
+| 4    | Submit prototype (22 Nov); exploration, diversity, feedback reasons            |
+| 5    | Same-story grouping; validation results and tuning; gate 2                     |
+| 6    | Freeze parameters; optional features; source discovery if gate 2 passed        |
+| 7    | Final evaluation run, documentation, demonstration; submit (13 Dec)            |
 
 ## Links
 

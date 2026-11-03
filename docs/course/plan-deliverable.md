@@ -5,12 +5,11 @@
 A web app that collects Finnish and English news, articles, and videos from RSS/Atom feeds and **learns each user's interests** from feedback; links open the original sites. AI is the core:
 
 - **Embeddings:** multilingual, so topics match across languages.
-- **Recommender:** similarity to liked items minus disliked ones, plus recency, diversity, and exploration, with explanations. Feedback reasons (topic, source, already known) adjust the penalty.
+- **Recommender:** similarity to liked items minus disliked ones, plus recency, diversity, and exploration. Feedback reasons (topic, source, already known) adjust the penalty.
 - **Natural-language tuning:** an LLM turns _"less crypto, more local AI"_ into editable preferences for ranking.
 - **Same-story grouping:** embeddings find candidates; TypeSafe Jev, a non-generative classifier, tells same events from follow-ups.
 - **Descriptions:** `gpt-6-luna` summarizes articles without one; a Jev experiment flags poor descriptions.
 - **Evaluation:** simulated users against newest-first, random, and average-of-likes baselines; LLM labels compared with Jev and manual labels.
-- **Stretch goal:** discovering new sources.
 
 **Examples:** (1) A user likes English AI articles and dismisses sports; Finnish Yle tech articles also rise, labeled _"Similar to 'X', which you liked."_ (2) A new user types _"more space, no sports"_ and gets a matching feed before any likes.
 
@@ -24,9 +23,6 @@ A web app that collects Finnish and English news, articles, and videos from RSS/
 | AI         | OpenAI `text-embedding-3-small` (512 dimensions) and `gpt-6-luna`; TypeSafe `jev-1.14.0` |
 | Ingestion  | TypeScript + `rss-parser`, hourly on GitHub Actions; 17 feeds (Yle, BBC, NASA, YouTube…) |
 | Evaluation | TypeScript replay scripts; local Qwen 3.8 27B via MTPLX for labels                       |
-| Testing    | Vitest; two-user RLS tests in CI                                                         |
-
-Expected cost under 10 € (OpenAI, TypeSafe).
 
 ## What are the risks related to this project e.g. what could make the project fail?
 
@@ -37,8 +33,6 @@ Expected cost under 10 € (OpenAI, TypeSafe).
 | User data leaks                            | RLS on every table; two-user tests                                |
 | Weak Finnish quality (embeddings, Jev)     | Per-language tests; switch model or fall back to embeddings only  |
 | API costs or LLM errors                    | Budgets, per-user limits, editable preferences, no LLM in ranking |
-
-Minimum result: ingestion, personal feed, recommender, RLS tests, and baseline comparison.
 
 ## Make a weekly schedule (what each group member does each week and how many hours you think it takes). Plan also the utilization of AI tools.
 
@@ -60,5 +54,4 @@ Solo project, about 19 h per week.
 
 - **Spec-driven workflow:** a short spec per feature; GitHub Copilot (agent mode) implements it task by task, running lint, type checks, and tests; I review and commit.
 - **ChatGPT / Copilot chat:** research, design review.
-- **Local model:** Qwen via MTPLX on a few tasks for comparison.
 - **My role:** architecture, code review (especially security and evaluation), validating results.

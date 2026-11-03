@@ -30,7 +30,7 @@ export default async function LikedPage() {
   const supabase = await createClient();
   const { data: claimsData, error: claimsError } =
     await supabase.auth.getClaims();
-  if (claimsError || !claimsData?.claims?.sub) redirect("/login");
+  if (claimsError || !claimsData?.claims?.sub) redirect("/");
 
   const { data, error } = await supabase
     .from("feedback")

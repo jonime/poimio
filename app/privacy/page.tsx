@@ -13,7 +13,7 @@ export default function PrivacyPage() {
     <main className="min-h-svh bg-background px-6 py-10 sm:py-16">
       <div className="mx-auto flex w-full max-w-2xl flex-col gap-10">
         <header className="flex flex-col items-start gap-6">
-          <Link href="/login" aria-label="Poimio sign-in page">
+          <Link href="/" aria-label="Poimio home">
             <Image
               src="/full.png"
               alt="Poimio"
@@ -171,8 +171,8 @@ export default function PrivacyPage() {
         </article>
 
         <footer>
-          <Link href="/login" className="text-sm underline underline-offset-4">
-            Back to sign in
+          <Link href="/" className="text-sm underline underline-offset-4">
+            Back to Poimio
           </Link>
         </footer>
       </div>

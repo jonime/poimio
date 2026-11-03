@@ -1,6 +1,6 @@
 # 008 — Cached guest feed preview
 
-**Status:** Approved — 3 Nov 2026, including the public-content security exception
+**Status:** Done — implemented and locally verified 3 Nov 2026; awaiting PR review
 
 **Milestone:** Final
 
@@ -159,23 +159,23 @@ Work in order, one task at a time. Every task requires its criteria plus
 `pnpm lint`, `pnpm typecheck`, and `pnpm test`. Database/security tasks also
 require `pnpm test:integration` against local Supabase with zero skipped.
 
-- [ ] 1. Record the specified public-metadata exception in security/design
+- [x] 1. Record the specified public-metadata exception in security/design
       documentation and add the column grants/RLS migration. Fresh local
       migrations apply cleanly. Existing authenticated and owner-only policies
       remain intact; there are no new tables, RPCs, or client write privileges.
-- [ ] 2. Add and run integration tests proving anonymous explicit-column reads
+- [x] 2. Add and run integration tests proving anonymous explicit-column reads
       and the exact source join work. Verify inactive-source, incomplete,
       blank-summary, unsafe-URL, future, and expired items are hidden. Test
       article/video cutoff boundaries. Verify forbidden columns and wildcard
       reads fail, anonymous inserts/updates/deletes cannot change either table,
       and feedback, embeddings, means, `get_feed`, and feedback APIs remain
       protected. Existing two-user isolation and authenticated feed tests pass.
-- [ ] 3. Add the anonymous reader, typed DTO, selection, and cached preview.
+- [x] 3. Add the anonymous reader, typed DTO, selection, and cached preview.
       Tests cover language balance/fallback, source diversity, deterministic
       ties, pagination, duplicate prevention, safe URLs, empty results, errors,
       and exact rendered fields. No privileged key, cookies, feedback query,
       personalized RPC, or OpenAI request is needed to render the preview.
-- [ ] 4. Implement the root guest/authenticated branches, shared static cards,
+- [x] 4. Implement the root guest/authenticated branches, shared static cards,
       redirect compatibility, and updated auth/privacy links. Tests cover guest
       `/` without redirect, verified `/`, sign-in/out transitions, callback
       success/failure, legacy `/login`, private `/liked`, direct unauthorized
@@ -183,7 +183,7 @@ require `pnpm test:integration` against local Supabase with zero skipped.
       Browser checks at desktop and 375px confirm working article links,
       sign-in/errors/privacy, no overflow or guest action controls, and working
       authenticated feedback and gestures.
-- [ ] 5. Run all gates plus `pnpm build` and local integration tests with zero
+- [x] 5. Run all gates plus `pnpm build` and local integration tests with zero
       skipped. In a production-mode local server, verify repeated guest visits
       reuse preview content, refresh after revalidation, and never show one
       user's personalized data to another visitor. Verify caching via the
@@ -218,4 +218,38 @@ require `pnpm test:integration` against local Supabase with zero skipped.
 
 ## Open questions
 
-- None. Implement the approved tasks in order.
+- None.
+
+## Validation — 3 Nov 2026
+
+- With the user's explicit approval, reset local Supabase at
+  `http://127.0.0.1:55321` and applied the complete migration chain successfully.
+  The new anonymous metadata migration was not applied to production.
+- Final gates: `pnpm lint`, `pnpm typecheck`, and `pnpm build` passed;
+  After rebasing onto current `main` for the PR, `pnpm test` passed 338 tests
+  (56 opt-in tests skipped by the normal runner).
+  `pnpm test:integration` passed all 58 tests with zero skipped, including exact
+  database-clock recency boundaries, anonymous column/join access, denied
+  writes/private fields, and existing two-user feedback/ranking isolation.
+- Real React DOM interaction tests cover Like, Seen, both touch-swipe
+  directions, and Undo through the extracted shared card. No dependency added.
+- Browser checks at desktop and 375px: twelve public cards, no guest feedback
+  controls or horizontal overflow, loaded branding/thumbnails, safe external
+  link attributes, privacy navigation, local sign-in, persisted Like on the
+  private Liked page, protected-page redirects, and callback errors on `/`.
+  The user reviewed the populated guest page and approved its layout.
+- Production-mode local cache verification used temporary query counters and
+  an isolated test-process clock: repeated guest visits performed one metadata
+  read; two authenticated users performed two personal feed RPCs without
+  entering the public preview cache; a subsequent guest still saw public cards.
+  Advancing the test process by 1,801 seconds triggered the second metadata
+  read and displayed a changed local fixture title. Restored the fixture and
+  stopped the instrumented server; no test instrumentation ships in the app.
+- With explicit approval, read twenty public article metadata rows from the
+  production project and copied them into local Supabase for visual review.
+  Production was read-only; no accounts or feedback were copied. Local fixture
+  vectors/means supported interaction checks without OpenAI calls. Removed
+  both disposable local review accounts and their feedback afterward; retained
+  the public sample articles for review at `http://localhost:3001/`.
+- Prepared for pull-request review. Production migration/deployment are separate
+  rollout steps, not part of this local implementation.

@@ -89,10 +89,10 @@ Stop accepting a site's generic metadata description, such as Yle's "Uutiset nop
 
 ## Tasks
 
-- [ ] 1. Add `SITE_WIDE_DESCRIPTIONS` and the rejection in `normalizedDescription`; add unit tests (criteria 1–2).
-- [ ] 2. Add `requeueSiteWideDescriptionItems` and the selection to `BackfillDb` and the supabase adapter; add the `--requeue-site-wide` option and report count; add unit and local integration tests (criteria 3–4).
-- [ ] 3. Update design.md (criterion 5); run lint, typecheck, unit tests, and local integration tests (criterion 6).
-- [ ] 4. Production rollout, run by you: dry run, then real runs until 0 matches (criterion 7).
+- [x] 1. Add `SITE_WIDE_DESCRIPTIONS` and the rejection in `normalizedDescription`; add unit tests (criteria 1–2).
+- [x] 2. Add `requeueSiteWideDescriptionItems` and the selection to `BackfillDb` and the supabase adapter; add the `--requeue-site-wide` option and report count; add unit and local integration tests (criteria 3–4).
+- [x] 3. Update design.md (criterion 5); run lint, typecheck, unit tests, and local integration tests (criterion 6).
+- [x] 4. Production rollout, run by you: dry run, then real runs until 0 matches (criterion 7).
 
 ## Decisions
 

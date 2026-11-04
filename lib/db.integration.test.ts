@@ -369,6 +369,126 @@ describe.skipIf(!enabled || serviceKey == null)(
       expect(requeued[0]).toMatchObject({ id, attemptCount: 0 });
     });
 
+    it("only requeues completed page-metadata rows with a listed site-wide summary", async () => {
+      const { client, db } = ready();
+      const siteWideSummary = "Uutiset nopeasti ja luotettavasti.";
+      const matching = {
+        ...item(`${prefix}/site-wide-matching`, "Site-wide matching"),
+        summary: siteWideSummary,
+      };
+      const feedMatch = {
+        ...item(`${prefix}/site-wide-feed`, "Site-wide feed"),
+        summary: siteWideSummary,
+      };
+      const differentMetadata = {
+        ...item(`${prefix}/site-wide-different`, "Different metadata"),
+        summary: "A specific article description.",
+      };
+      const pending = {
+        ...item(`${prefix}/site-wide-pending`, "Already pending"),
+        summary: "  ",
+      };
+      await db.insertItems(sourceA, [
+        matching,
+        feedMatch,
+        differentMetadata,
+        pending,
+      ]);
+
+      const urls = [
+        matching.url,
+        feedMatch.url,
+        differentMetadata.url,
+        pending.url,
+      ];
+      const { data: inserted, error: insertError } = await client
+        .from("content_items")
+        .select("id,url")
+        .in("url", urls);
+      expect(insertError).toBeNull();
+      const matchingId = inserted?.find((row) => row.url === matching.url)
+        ?.id as string;
+      const embedding = `[${Array<number>(512).fill(0).join(",")}]`;
+
+      for (const [urlValue, fields] of [
+        [
+          matching.url,
+          {
+            summary_origin: "page_metadata",
+            embedding,
+            embedding_model: "test@512",
+          },
+        ],
+        [feedMatch.url, { summary_origin: "feed" }],
+        [differentMetadata.url, { summary_origin: "page_metadata" }],
+      ] as const) {
+        const { error } = await client
+          .from("content_items")
+          .update(fields)
+          .eq("url", urlValue);
+        expect(error).toBeNull();
+      }
+
+      const selectedSiteWide = await db.listSiteWideDescriptionItems(1_000);
+      expect(
+        selectedSiteWide.some(
+          (candidate) =>
+            candidate.id === matchingId &&
+            candidate.summary === siteWideSummary,
+        ),
+      ).toBe(true);
+      expect(
+        selectedSiteWide.some((candidate) =>
+          [feedMatch.url, differentMetadata.url, pending.url].includes(
+            candidate.url,
+          ),
+        ),
+      ).toBe(false);
+      expect(await db.requeueSiteWideDescriptionItems([matchingId])).toBe(1);
+
+      const { data: rows, error } = await client
+        .from("content_items")
+        .select(
+          "url,summary,summary_origin,enrichment_status,enrichment_attempt_count,enrichment_last_attempt_at,enrichment_next_attempt_at,enrichment_error,embedding,embedding_model",
+        )
+        .in("url", urls);
+      expect(error).toBeNull();
+      expect(rows).toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({
+            url: matching.url,
+            summary: null,
+            summary_origin: null,
+            enrichment_status: "pending",
+            enrichment_attempt_count: 0,
+            enrichment_last_attempt_at: null,
+            enrichment_next_attempt_at: null,
+            enrichment_error: null,
+            embedding: null,
+            embedding_model: null,
+          }),
+          expect.objectContaining({
+            url: feedMatch.url,
+            summary: siteWideSummary,
+            summary_origin: "feed",
+            enrichment_status: "completed",
+          }),
+          expect.objectContaining({
+            url: differentMetadata.url,
+            summary: "A specific article description.",
+            summary_origin: "page_metadata",
+            enrichment_status: "completed",
+          }),
+          expect.objectContaining({
+            url: pending.url,
+            summary: null,
+            summary_origin: null,
+            enrichment_status: "pending",
+          }),
+        ]),
+      );
+    });
+
     it("rejects invalid provenance and enrichment-state combinations", async () => {
       const { client } = ready();
       const base = {

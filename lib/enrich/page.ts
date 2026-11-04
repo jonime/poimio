@@ -18,6 +18,7 @@ export const PAGE_FETCH_MAX_BYTES = 1_000_000;
 export const PAGE_FETCH_MAX_REDIRECTS = 3;
 export const PAGE_FETCH_CONCURRENCY = 3;
 export const MAX_ARTICLE_TEXT_LENGTH = 24_000;
+export const SITE_WIDE_DESCRIPTIONS = ["Uutiset nopeasti ja luotettavasti."];
 
 const REDIRECT_STATUSES = new Set([301, 302, 303, 307, 308]);
 const RESERVED_HOST_SUFFIXES = [
@@ -489,7 +490,16 @@ function metaContent(
 function normalizedDescription(candidate: string | null): string | null {
   if (candidate === null || isLinkOnly(candidate)) return null;
   const text = htmlToText(candidate).replace(/\s+/g, " ").trim();
-  if (!text) return null;
+  if (
+    !text ||
+    SITE_WIDE_DESCRIPTIONS.some(
+      (description) =>
+        text.toLowerCase().replace(/\.$/, "") ===
+        description.toLowerCase().replace(/\.$/, ""),
+    )
+  ) {
+    return null;
+  }
   return truncateSummary(text, DEFAULT_SUMMARY_MAX_LENGTH);
 }
 

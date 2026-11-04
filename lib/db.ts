@@ -23,6 +23,7 @@
  */
 
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
+import { SITE_WIDE_DESCRIPTIONS } from "./enrich/page.ts";
 import type { ParsedItem } from "./normalize/parse.ts";
 
 /** A row from the shared `sources` table (camelCase). */
@@ -157,6 +158,8 @@ export interface EnrichmentDb {
 export interface BackfillDb extends EnrichmentDb {
   listExhaustedEnrichmentItems(limit: number): Promise<EnrichmentItem[]>;
   requeueExhaustedEnrichmentItems(ids: string[]): Promise<number>;
+  listSiteWideDescriptionItems(limit: number): Promise<EnrichmentItem[]>;
+  requeueSiteWideDescriptionItems(ids: string[]): Promise<number>;
 }
 
 /** Content fields needed to create an embedding. */
@@ -483,6 +486,61 @@ export function createIngestDb(
         language: row.language,
         attemptCount: row.enrichment_attempt_count,
       }));
+    },
+
+    async listSiteWideDescriptionItems(limit) {
+      const { data, error } = await client
+        .from("content_items")
+        .select("id,url,title,summary,language,enrichment_attempt_count")
+        .eq("enrichment_status", "completed")
+        .eq("summary_origin", "page_metadata")
+        .in("summary", SITE_WIDE_DESCRIPTIONS)
+        .order("created_at")
+        .limit(Math.max(0, limit));
+      if (error) {
+        throw new Error("loading site-wide descriptions for requeue failed");
+      }
+      return (
+        data as Array<{
+          id: string;
+          url: string;
+          title: string;
+          summary: string | null;
+          language: "fi" | "en";
+          enrichment_attempt_count: number;
+        }>
+      ).map((row) => ({
+        id: row.id,
+        url: row.url,
+        title: row.title,
+        summary: row.summary,
+        language: row.language,
+        attemptCount: row.enrichment_attempt_count,
+      }));
+    },
+
+    async requeueSiteWideDescriptionItems(ids) {
+      if (ids.length === 0) return 0;
+      const { data, error } = await client
+        .from("content_items")
+        .update({
+          summary: null,
+          summary_origin: null,
+          embedding: null,
+          embedding_model: null,
+          enrichment_status: "pending",
+          enrichment_attempt_count: 0,
+          enrichment_last_attempt_at: null,
+          enrichment_next_attempt_at: null,
+          enrichment_error: null,
+        })
+        .eq("enrichment_status", "completed")
+        .eq("summary_origin", "page_metadata")
+        .in("summary", SITE_WIDE_DESCRIPTIONS)
+        .in("id", ids)
+        .select("id");
+      if (error) throw new Error("requeuing site-wide descriptions failed");
+      return data?.length ?? 0;
     },
 
     async requeueExhaustedEnrichmentItems(ids) {

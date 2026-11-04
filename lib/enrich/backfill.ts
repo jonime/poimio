@@ -25,6 +25,7 @@ export interface BackfillOptions {
   dryRun?: boolean;
   limit?: number;
   retryFailed?: boolean;
+  requeueSiteWide?: boolean;
   now?: () => Date;
   enrichment?: Pick<EnrichmentOptions, "fetchPage" | "summarize">;
   embedding?: Pick<EmbeddingOptions, "fetch">;
@@ -37,9 +38,10 @@ export type BackfillProgressEvent =
       total: number;
       due: number;
       exhausted: number;
+      siteWideMatches: number;
       embeddingRecovery: number;
     }
-  | { phase: "requeue"; count: number }
+  | { phase: "requeue"; kind: "exhausted" | "site-wide"; count: number }
   | ({ phase: "description" } & EnrichmentProgress)
   | { phase: "embedding"; status: "starting"; total: number }
   | {
@@ -60,6 +62,8 @@ export interface BackfillResult {
   summaryRequests: number;
   embedded: number;
   embeddingFailures: EmbeddingBatchFailure[];
+  requeued: number;
+  siteWideMatches: number;
   byOrigin: Record<SummaryOrigin, number>;
 }
 
@@ -81,9 +85,12 @@ function countOrigin(
 function describeDryRun(
   due: EnrichmentItem[],
   exhausted: EnrichmentItem[],
+  siteWide: EnrichmentItem[],
+  siteWideMatches: number,
   missingEmbeddings: UnembeddedItem[],
 ): BackfillResult {
-  const selected = due.length + exhausted.length + missingEmbeddings.length;
+  const selected =
+    due.length + exhausted.length + siteWide.length + missingEmbeddings.length;
   const byOrigin = emptyOrigins();
   for (const item of missingEmbeddings)
     countOrigin(byOrigin, item.summaryOrigin);
@@ -92,11 +99,13 @@ function describeDryRun(
     processed: 0,
     skipped: selected,
     succeeded: 0,
-    unresolved: due.length + exhausted.length,
+    unresolved: due.length + exhausted.length + siteWide.length,
     failed: 0,
     summaryRequests: 0,
     embedded: 0,
     embeddingFailures: [],
+    requeued: 0,
+    siteWideMatches,
     byOrigin,
   };
 }
@@ -129,29 +138,61 @@ export async function runEnrichmentBackfill(
       ? await db.listExhaustedEnrichmentItems(remaining)
       : [];
   remaining -= exhausted.length;
+  const siteWideCandidates = options.requeueSiteWide
+    ? await db.listSiteWideDescriptionItems(MAX_ENRICHMENT_ITEMS_PER_RUN)
+    : [];
+  const siteWide = siteWideCandidates.slice(0, remaining);
+  remaining -= siteWide.length;
   const allMissingEmbeddings = await db.listUnembeddedItems();
   const missingEmbeddings = allMissingEmbeddings.slice(0, remaining);
   reportProgress({
     phase: "selection",
-    total: due.length + exhausted.length + missingEmbeddings.length,
+    total:
+      due.length +
+      exhausted.length +
+      siteWide.length +
+      missingEmbeddings.length,
     due: due.length,
     exhausted: exhausted.length,
+    siteWideMatches: siteWideCandidates.length,
     embeddingRecovery: missingEmbeddings.length,
   });
 
   if (options.dryRun) {
-    return describeDryRun(due, exhausted, missingEmbeddings);
+    return describeDryRun(
+      due,
+      exhausted,
+      siteWide,
+      siteWideCandidates.length,
+      missingEmbeddings,
+    );
   }
 
   if (exhausted.length > 0) {
-    reportProgress({ phase: "requeue", count: exhausted.length });
+    reportProgress({
+      phase: "requeue",
+      kind: "exhausted",
+      count: exhausted.length,
+    });
   }
-  const requeuedCount = exhausted.length
+  const exhaustedRequeuedCount = exhausted.length
     ? await db.requeueExhaustedEnrichmentItems(exhausted.map((item) => item.id))
     : 0;
+  if (siteWide.length > 0) {
+    reportProgress({
+      phase: "requeue",
+      kind: "site-wide",
+      count: siteWide.length,
+    });
+  }
+  const siteWideRequeuedCount = siteWide.length
+    ? await db.requeueSiteWideDescriptionItems(siteWide.map((item) => item.id))
+    : 0;
+  const requeuedCount = exhaustedRequeuedCount + siteWideRequeuedCount;
   const enrichmentIds = [
     ...due.map((item) => item.id),
     ...exhausted.map((item) => item.id),
+    ...siteWide.map((item) => item.id),
   ];
   const enrichment: EnrichmentRunResult = await runEnrichment(db, apiKey, {
     ...options.enrichment,
@@ -207,15 +248,23 @@ export async function runEnrichmentBackfill(
     processed: due.length + requeuedCount + missingEmbeddings.length,
     skipped:
       exhausted.length -
-      requeuedCount +
+      exhaustedRequeuedCount +
+      (siteWide.length - siteWideRequeuedCount) +
       enrichment.skipped +
       unpersistedEmbeddings,
     succeeded: embedding.embedded,
-    unresolved: enrichment.unresolved + exhausted.length - requeuedCount,
+    unresolved:
+      enrichment.unresolved +
+      exhausted.length -
+      exhaustedRequeuedCount +
+      siteWide.length -
+      siteWideRequeuedCount,
     failed: enrichment.failed + embeddingFailureCount,
     summaryRequests: enrichment.summaryRequests,
     embedded: embedding.embedded,
     embeddingFailures: embedding.failedBatches,
+    requeued: requeuedCount,
+    siteWideMatches: siteWideCandidates.length,
     byOrigin,
   };
 }
@@ -240,6 +289,8 @@ export function parseBackfillArgs(args: string[]): BackfillCliOptions {
       options.dryRun = true;
     } else if (argument === "--retry-failed") {
       options.retryFailed = true;
+    } else if (argument === "--requeue-site-wide") {
+      options.requeueSiteWide = true;
     } else if (argument === "--limit" || argument.startsWith("--limit=")) {
       const value = argument === "--limit" ? args[++index] : argument.slice(8);
       if (!value) throw new Error("--limit requires a value.");
@@ -268,6 +319,8 @@ export function formatBackfillResult(result: BackfillResult): string {
     `Summary requests: ${result.summaryRequests}`,
     `Embedded: ${result.embedded}`,
     `Embedding batches failed: ${result.embeddingFailures.length}`,
+    `Site-wide matches: ${result.siteWideMatches}`,
+    `Requeued: ${result.requeued}`,
     `Provenance: feed ${result.byOrigin.feed}, page metadata ${result.byOrigin.page_metadata}, AI generated ${result.byOrigin.ai_generated}`,
   ];
   return lines.join("\n");
@@ -278,9 +331,9 @@ export function formatBackfillProgress(
 ): string {
   switch (progress.phase) {
     case "selection":
-      return `Selected ${progress.total} item(s): ${progress.due} due, ${progress.exhausted} exhausted, ${progress.embeddingRecovery} embedding recovery.`;
+      return `Selected ${progress.total} item(s): ${progress.due} due, ${progress.exhausted} exhausted, ${progress.siteWideMatches} site-wide matches, ${progress.embeddingRecovery} embedding recovery.`;
     case "requeue":
-      return `Requeuing ${progress.count} exhausted item(s).`;
+      return `Requeuing ${progress.count} ${progress.kind} item(s).`;
     case "description":
       if (progress.status === "starting") {
         return `Description ${progress.current}/${progress.total}: processing.`;

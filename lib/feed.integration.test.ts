@@ -1,6 +1,7 @@
 import { randomUUID } from "node:crypto";
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
+import { createIngestDb } from "./db.ts";
 import { EMBEDDING_DIMENSIONS } from "./embeddings.ts";
 
 const enabled = process.env.SUPABASE_INTEGRATION === "1";
@@ -113,6 +114,7 @@ const itemDefinitions: ItemDefinition[] = [
     language: "fi",
     center: addVectors(axisVector(6), axisVector(7, -1)),
   },
+  { key: "sitewide-requeue", source: 1, language: "fi", center: axisVector(8) },
   {
     key: "no-embedding-signal",
     source: 2,
@@ -568,6 +570,51 @@ describe.skipIf(!enabled || anonKey == null || serviceKey == null)(
       expect(ranking.map((row) => row.item_id)).toEqual(
         feed.map((row) => row.id),
       );
+    });
+
+    it("hides a site-wide description until its summary and embedding are restored", async () => {
+      const { service, userAClient } = clients();
+      const id = itemIds.get("sitewide-requeue")!;
+      const { error: metadataError } = await service
+        .from("content_items")
+        .update({
+          summary: "Uutiset nopeasti ja luotettavasti.",
+          summary_origin: "page_metadata",
+        })
+        .eq("id", id);
+      expect(metadataError).toBeNull();
+
+      const otherFixtureIds = [...itemIds.values()].filter(
+        (fixtureId) => fixtureId !== id,
+      );
+      const loadFeed = () =>
+        getFeed(userAClient, { p_limit: 100, p_exclude: otherFixtureIds });
+      expect((await loadFeed()).some((row) => row.id === id)).toBe(true);
+
+      const db = createIngestDb({
+        NEXT_PUBLIC_SUPABASE_URL: url,
+        SUPABASE_SERVICE_ROLE_KEY: serviceKey!,
+      });
+      expect(await db.requeueSiteWideDescriptionItems([id])).toBe(1);
+      expect((await loadFeed()).some((row) => row.id === id)).toBe(false);
+
+      expect(
+        await db.saveEnrichedSummary(
+          id,
+          0,
+          "A specific description for this article.",
+          "ai_generated",
+          new Date(),
+        ),
+      ).toBe(true);
+      expect(
+        await db.saveEmbedding(
+          id,
+          addVectors(meanVectors.fi, axisVector(8)),
+          activeModel,
+        ),
+      ).toBe(true);
+      expect((await loadFeed()).some((row) => row.id === id)).toBe(true);
     });
 
     it("uses the exact nearest-liked and average-vector score formulas", async () => {

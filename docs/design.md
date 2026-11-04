@@ -29,6 +29,7 @@ The rest of the catalog is stored as inactive sources and can be activated later
 Notes:
 
 - Hacker News items have only a title; Yle items sometimes lack a description. YouTube descriptions contain a lot of boilerplate that is removed before embedding.
+- Known site-wide page metadata descriptions, including Yle's "Uutiset nopeasti ja luotettavasti.", are treated as unavailable; readable article text is summarized instead, and existing matches are requeued by the enrichment backfill.
 - Yle News in English and Finnish Yle feeds often cover the same events, which gives natural test pairs for the week 1 cross-lingual embedding check.
 - Feed windows are small (e.g. Yle Latest shows only the 20 newest items, all within a few hours), so ingestion runs **hourly** to avoid missing items.
 - The same Yle article can appear in several Yle feeds; it is stored once (unique normalized URL).
@@ -257,6 +258,8 @@ Tables are added by the spec that first needs them. Shared tables are writable o
 | `embedding`                  | `vector(512)` null    | Null until embedded                                               |
 | `embedding_model`            | `text` null           | e.g. `text-embedding-3-small@512`                                 |
 | `created_at`                 | `timestamptz`         |                                                                   |
+
+Known site-wide page metadata descriptions are rejected; existing matching `page_metadata` summaries are requeued by the enrichment backfill.
 
 Non-empty existing summaries are backfilled as `feed`/`completed`; empty summaries are `pending` with no provenance. Database checks enforce valid provenance and enrichment-state combinations. Indexes cover `published_at desc`, due pending enrichment, and completed items missing embeddings. An HNSW index on `embedding` is added only if exact search becomes slow (tens of thousands of rows are fine without it).
 

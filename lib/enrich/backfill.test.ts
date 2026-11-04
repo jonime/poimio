@@ -33,23 +33,24 @@ function metadataPage(): PageFetchResult {
 }
 
 function embeddingFetch(): typeof fetch {
-  return async () =>
-    new Response(
+  return async (_input, init) => {
+    const body = JSON.parse(String(init?.body)) as { input: string[] };
+    return new Response(
       JSON.stringify({
-        data: [
-          {
-            index: 0,
-            embedding: Array<number>(EMBEDDING_DIMENSIONS).fill(0),
-          },
-        ],
+        data: body.input.map((_, index) => ({
+          index,
+          embedding: Array<number>(EMBEDDING_DIMENSIONS).fill(0),
+        })),
       }),
       { status: 200 },
     );
+  };
 }
 
 class FakeBackfillDb implements EnrichmentBackfillDb {
   writes = 0;
   requeuedIds: string[] = [];
+  siteWideRequeuedIds: string[] = [];
   readonly embeddedIds = new Set<string>();
   readonly successes: Array<{ id: string; summary: string; origin: string }> =
     [];
@@ -59,6 +60,7 @@ class FakeBackfillDb implements EnrichmentBackfillDb {
     readonly due: EnrichmentItem[] = [],
     readonly exhausted: EnrichmentItem[] = [],
     readonly unembedded: UnembeddedItem[] = [],
+    readonly siteWide: EnrichmentItem[] = [],
   ) {}
 
   async listDueEnrichmentItems(
@@ -87,6 +89,23 @@ class FakeBackfillDb implements EnrichmentBackfillDb {
         .map((candidate) => ({ ...candidate, attemptCount: 0 })),
     );
     return this.requeuedIds.length;
+  }
+
+  async listSiteWideDescriptionItems(limit: number): Promise<EnrichmentItem[]> {
+    return this.siteWide.slice(0, limit);
+  }
+
+  async requeueSiteWideDescriptionItems(ids: string[]): Promise<number> {
+    this.writes++;
+    this.siteWideRequeuedIds = ids.filter((id) =>
+      this.siteWide.some((candidate) => candidate.id === id),
+    );
+    this.due.push(
+      ...this.siteWide
+        .filter((candidate) => this.siteWideRequeuedIds.includes(candidate.id))
+        .map((candidate) => ({ ...candidate, summary: null, attemptCount: 0 })),
+    );
+    return this.siteWideRequeuedIds.length;
   }
 
   async listUnembeddedItems(): Promise<UnembeddedItem[]> {
@@ -130,18 +149,20 @@ class FakeBackfillDb implements EnrichmentBackfillDb {
 }
 
 describe("parseBackfillArgs", () => {
-  it("parses dry-run, bounded limit, retry-failed, and explicit environment", () => {
+  it("parses dry-run, bounded limit, requeue options, and environment", () => {
     expect(
       parseBackfillArgs([
         "--dry-run",
         "--limit=4",
         "--retry-failed",
+        "--requeue-site-wide",
         "--env=production",
       ]),
     ).toEqual({
       dryRun: true,
       limit: 4,
       retryFailed: true,
+      requeueSiteWide: true,
       environment: "production",
     });
     expect(parseBackfillArgs([]).environment).toBe("local");
@@ -231,6 +252,59 @@ describe("runEnrichmentBackfill", () => {
 
     expect(db.requeuedIds).toEqual(["exhausted"]);
     expect(result.succeeded).toBe(1);
+    expect(result.requeued).toBe(1);
+  });
+
+  it("reports site-wide matches in dry-run without writing", async () => {
+    const db = new FakeBackfillDb([item("due")], [], [], [item("site-wide")]);
+    const result = await runEnrichmentBackfill(db, "test-key", {
+      dryRun: true,
+      requeueSiteWide: true,
+      limit: 1,
+      now: () => fixedNow,
+    });
+
+    expect(result).toMatchObject({
+      dryRun: true,
+      siteWideMatches: 1,
+      skipped: 1,
+      unresolved: 1,
+      requeued: 0,
+    });
+    expect(db.writes).toBe(0);
+    expect(db.siteWideRequeuedIds).toEqual([]);
+  });
+
+  it("requeues after due and exhausted work, then enriches and embeds within the limit", async () => {
+    const db = new FakeBackfillDb(
+      [item("due")],
+      [item("exhausted", 3)],
+      [],
+      [item("site-wide")],
+    );
+    const result = await runEnrichmentBackfill(db, "test-key", {
+      retryFailed: true,
+      requeueSiteWide: true,
+      limit: 3,
+      now: () => fixedNow,
+      enrichment: { fetchPage: async () => metadataPage() },
+      embedding: { fetch: embeddingFetch() },
+    });
+
+    expect(db.siteWideRequeuedIds).toEqual(["site-wide"]);
+    expect(db.successes.map(({ id }) => id)).toEqual([
+      "due",
+      "exhausted",
+      "site-wide",
+    ]);
+    expect(db.embeddedIds).toEqual(new Set(["due", "exhausted", "site-wide"]));
+    expect(result).toMatchObject({
+      processed: 3,
+      requeued: 2,
+      siteWideMatches: 1,
+      succeeded: 3,
+      embedded: 3,
+    });
   });
 
   it("recovers a saved description after embedding failure without refetching", async () => {
@@ -288,6 +362,8 @@ describe("runEnrichmentBackfill", () => {
       summaryRequests: 1,
       embedded: 2,
       embeddingFailures: [],
+      requeued: 2,
+      siteWideMatches: 2,
       byOrigin: { feed: 1, page_metadata: 1, ai_generated: 1 },
     });
     expect(text).toContain("Processed: 3");
@@ -310,7 +386,7 @@ describe("runEnrichmentBackfill", () => {
     });
 
     expect(progress).toEqual([
-      "Selected 1 item(s): 1 due, 0 exhausted, 0 embedding recovery.",
+      "Selected 1 item(s): 1 due, 0 exhausted, 0 site-wide matches, 0 embedding recovery.",
       "Description 1/1: processing.",
       "Description 1/1: saved (page metadata).",
       "Embedding 1 item(s).",

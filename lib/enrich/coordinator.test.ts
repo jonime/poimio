@@ -164,6 +164,32 @@ describe("runEnrichment", () => {
     expect(db.successes[0]?.origin).toBe("ai_generated");
   });
 
+  it("summarizes a Yle-like page when all metadata is site-wide", async () => {
+    const db = new FakeEnrichmentDb([item("yle")]);
+    const summarize = vi.fn(async () => "Tiivis kuvaus uutisesta.");
+
+    const result = await runEnrichment(db, "test-key", {
+      now: () => fixedNow,
+      fetchPage: async () =>
+        page(`
+          <meta property="og:description" content="Uutiset nopeasti ja luotettavasti.">
+          <meta name="twitter:description" content="Uutiset nopeasti ja luotettavasti.">
+          <meta name="description" content="Uutiset nopeasti ja luotettavasti.">
+          <article><h1>Title yle</h1><p>${articleText}</p></article>`),
+      summarize,
+    });
+
+    expect(result.byOrigin).toEqual({ page_metadata: 0, ai_generated: 1 });
+    expect(summarize).toHaveBeenCalledWith(
+      expect.stringContaining(articleText),
+      "test-key",
+    );
+    expect(db.successes[0]).toMatchObject({
+      summary: "Tiivis kuvaus uutisesta.",
+      origin: "ai_generated",
+    });
+  });
+
   it("does not ask the model to summarize title-only pages", async () => {
     const db = new FakeEnrichmentDb([
       { ...item("title-only"), title: "Only a title" },

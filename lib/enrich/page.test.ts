@@ -284,6 +284,30 @@ describe("extractPageContent", () => {
     ).toBe("Twitter");
   });
 
+  it("rejects listed site-wide metadata and falls through to readable text", () => {
+    const html = `
+      <meta property="og:description" content="Uutiset nopeasti ja luotettavasti.">
+      <meta name="twitter:description" content="Uutiset nopeasti ja luotettavasti.">
+      <meta name="description" content="Uutiset nopeasti ja luotettavasti.">
+      <article><h1>Article headline</h1><p>Readable article body with useful details.</p></article>`;
+
+    expect(extractPageContent(html, "https://yle.fi/a/story")).toEqual({
+      description: null,
+      articleText: expect.stringContaining("Readable article body"),
+    });
+  });
+
+  it("rejects normalized variants and continues to the next metadata candidate", () => {
+    const html = `
+      <meta property="og:description" content="  uutiset   NOPEASTI ja luotettavasti  ">
+      <meta name="twitter:description" content="A specific article description.">
+      <article><p>Readable article body.</p></article>`;
+
+    expect(extractPageContent(html, "https://yle.fi/a/story").description).toBe(
+      "A specific article description.",
+    );
+  });
+
   it.each([
     ["og:description", "property", "og:description"],
     ["twitter:description", "name", "twitter:description"],

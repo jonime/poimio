@@ -414,7 +414,7 @@ A production gate needs its own spec. It would change a spec 005 decision (feed 
 - `gpt-6-luna` as an LLM judge (L) is included as a baseline.
 - The replacement probe (task 8) is included.
 - The user provides a TypeSafe API key; rate limits are expected to be sufficient for about 400 sequential requests.
-- The Yle site-wide metadata description is fixed independently in a separate small spec, not in this experiment. The experiment samples from data captured before that fix, so the boilerplate items stay in the sample.
+- The Yle site-wide metadata description is fixed independently in [spec 010](010-site-wide-metadata-descriptions.md), not in this experiment. The experiment samples from data captured before that fix, so the boilerplate items stay in the sample.
 
 ## Open questions
 

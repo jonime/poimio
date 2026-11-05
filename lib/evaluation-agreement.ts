@@ -189,24 +189,24 @@ export function createAgreementDesign(input: {
           0,
           reportingCount,
         );
-        selected.forEach((pair) =>
+        selected.forEach((pair) => {
           selection.push({
             ...pair,
             stratumSize: rows.length,
             selectionSampleSize: selectionCount,
             reportingSampleSize: reportingCount,
             inclusionProbability: selectionCount / rows.length,
-          }),
-        );
-        reported.forEach((pair) =>
+          });
+        });
+        reported.forEach((pair) => {
           reporting.push({
             ...pair,
             stratumSize: rows.length,
             selectionSampleSize: selectionCount,
             reportingSampleSize: reportingCount,
             inclusionProbability: reportingCount / rows.length,
-          }),
-        );
+          });
+        });
         strata.push({
           key,
           personaId: persona.id,

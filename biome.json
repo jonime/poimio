@@ -34,6 +34,8 @@
         "noBeforeInteractiveScriptOutsideDocument": "warn",
         "noNextAsyncClientComponent": "warn",
         "noConstantCondition": "error",
+        "noUnsafeFinally": "warn",
+        "noUnsafeOptionalChaining": "warn",
         "noUnusedVariables": {
           "level": "error",
           "options": {
@@ -61,18 +63,26 @@
       },
       "suspicious": {
         "noArrayIndexKey": "off",
+        "noAsyncPromiseExecutor": "error",
+        "noAssignInExpressions": "error",
+        "noCompareNegZero": "error",
+        "noConfusingLabels": "error",
         "noDebugger": "error",
         "noDoubleEquals": "warn",
         "noDocumentImportInPage": "error",
         "noDuplicateEnumValues": "error",
         "noExplicitAny": "error",
         "noExtraNonNullAssertion": "error",
+        "noFallthroughSwitchClause": "error",
         "noHeadImportInDocument": "error",
+        "noImplicitAnyLet": "warn",
+        "noMisleadingCharacterClass": "error",
         "noMisleadingInstantiator": "error",
         "noNonNullAssertedOptionalChain": "error",
         "noUnsafeDeclarationMerging": "error",
         "noUnusedExpressions": "off",
         "useGoogleFontDisplay": "warn",
+        "useIterableCallbackReturn": "warn",
         "useNamespaceKeyword": "error"
       }
     },

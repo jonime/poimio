@@ -267,7 +267,9 @@ async function main(): Promise<void> {
         `${records.map((record) => JSON.stringify(record)).join("\n")}\n`,
       );
       labels.push(...records);
-      records.forEach((record) => existingKeys.add(`${record.personaId}\u0000${record.itemId}`));
+      records.forEach((record) => {
+        existingKeys.add(`${record.personaId}\u0000${record.itemId}`);
+      });
       console.log(`Labeled ${persona.id} batch ${batchIndex + 1}/${batches.length}`);
     }
     console.log(`Labeled ${persona.id}: ${items.length}/${items.length}`);

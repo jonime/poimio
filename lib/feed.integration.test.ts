@@ -713,6 +713,7 @@ describe.skipIf(!enabled || anonKey == null || serviceKey == null)(
         throw new Error(`Removing test English mean failed: ${deleteMeanError.message}`);
       }
 
+      let restoreErrorMessage: string | undefined;
       try {
         const feed = await getFeed(userAClient);
         expect(feed.length).toBeGreaterThan(0);
@@ -730,7 +731,10 @@ describe.skipIf(!enabled || anonKey == null || serviceKey == null)(
           },
           { onConflict: "embedding_model,language" },
         );
-        if (error) throw new Error(`Restoring test English mean failed: ${error.message}`);
+        if (error) restoreErrorMessage = error.message;
+      }
+      if (restoreErrorMessage !== undefined) {
+        throw new Error(`Restoring test English mean failed: ${restoreErrorMessage}`);
       }
     });
 

@@ -99,11 +99,12 @@ describe("fetchFeed", () => {
 
     await fetchFeed("https://example.com/feed");
 
-    const headers = (calls[0]?.init as RequestInit).headers as Record<string, string>;
-    expect(headers["User-Agent"]).toBe(DEFAULT_USER_AGENT);
+    expect(calls).toHaveLength(1);
+    const headers = new Headers(calls[0]?.init?.headers);
+    expect(headers.get("User-Agent")).toBe(DEFAULT_USER_AGENT);
     // No stored state: no conditional-GET headers.
-    expect(headers["If-None-Match"]).toBeUndefined();
-    expect(headers["If-Modified-Since"]).toBeUndefined();
+    expect(headers.get("If-None-Match")).toBeNull();
+    expect(headers.get("If-Modified-Since")).toBeNull();
   });
 
   it("returns not_modified on 304", async () => {

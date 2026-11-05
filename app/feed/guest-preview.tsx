@@ -13,7 +13,7 @@ async function cachedGuestFeed() {
 }
 
 export async function GuestPreview() {
-  let feed;
+  let feed: Awaited<ReturnType<typeof cachedGuestFeed>> | undefined;
   try {
     feed = await cachedGuestFeed();
   } catch {

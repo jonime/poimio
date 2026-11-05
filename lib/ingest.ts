@@ -106,7 +106,7 @@ export async function runIngestion(
     }
 
     summary.fetched = 1;
-    let parsed;
+    let parsed: Awaited<ReturnType<typeof parseFeed>>;
     try {
       parsed = await parseFeed(result.body, { fetchTime: options.now?.() });
     } catch (error) {

@@ -25,11 +25,9 @@ describe("normalizeUrl", () => {
   });
 
   it("drops fbclid and gclid", () => {
-    expect(
-      normalizeUrl(
-        "https://example.com/x?fbclid=IwAR1&gclid=abc123&keep=1",
-      ),
-    ).toBe("https://example.com/x?keep=1");
+    expect(normalizeUrl("https://example.com/x?fbclid=IwAR1&gclid=abc123&keep=1")).toBe(
+      "https://example.com/x?keep=1",
+    );
   });
 
   it("strips the fragment", () => {
@@ -39,9 +37,9 @@ describe("normalizeUrl", () => {
   });
 
   it("keeps the YouTube v parameter", () => {
-    expect(
-      normalizeUrl("https://www.youtube.com/watch?v=hJSbro3EBnY&t=10s"),
-    ).toBe("https://www.youtube.com/watch?v=hJSbro3EBnY&t=10s");
+    expect(normalizeUrl("https://www.youtube.com/watch?v=hJSbro3EBnY&t=10s")).toBe(
+      "https://www.youtube.com/watch?v=hJSbro3EBnY&t=10s",
+    );
   });
 
   it("keeps all other query parameters in their original order", () => {

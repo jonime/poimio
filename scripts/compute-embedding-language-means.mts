@@ -20,9 +20,7 @@ async function main(): Promise<void> {
   const projectUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
   if (!projectUrl || !serviceRoleKey) {
-    throw new Error(
-      "NEXT_PUBLIC_SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY are required",
-    );
+    throw new Error("NEXT_PUBLIC_SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY are required");
   }
 
   const client = createClient(projectUrl, serviceRoleKey);
@@ -41,11 +39,7 @@ async function main(): Promise<void> {
 
     const rows = (data ?? []) as EmbeddedItemRow[];
     for (const row of rows) {
-      addLanguageEmbedding(
-        accumulator,
-        row.language,
-        parseEmbeddingVector(row.embedding),
-      );
+      addLanguageEmbedding(accumulator, row.language, parseEmbeddingVector(row.embedding));
     }
     if (rows.length < pageSize) break;
   }
@@ -68,9 +62,7 @@ async function main(): Promise<void> {
     }
   }
 
-  const skippedLanguages = (
-    Object.keys(accumulator.counts) as ContentLanguage[]
-  ).filter(
+  const skippedLanguages = (Object.keys(accumulator.counts) as ContentLanguage[]).filter(
     (language) => accumulator.counts[language] < MIN_LANGUAGE_MEAN_ITEMS,
   );
   if (skippedLanguages.length > 0) {
@@ -89,9 +81,7 @@ async function main(): Promise<void> {
     const status = count >= MIN_LANGUAGE_MEAN_ITEMS ? "saved" : "skipped";
     console.log(`${language}: ${count} items (${status})`);
   }
-  console.log(
-    `Computed ${rows.length} language means for ${EMBEDDING_MODEL_VERSION}`,
-  );
+  console.log(`Computed ${rows.length} language means for ${EMBEDDING_MODEL_VERSION}`);
 }
 
 main().catch((error: unknown) => {

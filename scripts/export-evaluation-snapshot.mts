@@ -20,20 +20,15 @@ function parseArguments(args: string[]): {
   toExclusive?: string;
   provisional: boolean;
 } {
-  const parsed: { from?: string; toExclusive?: string; provisional: boolean } =
-    {
-      provisional: false,
-    };
+  const parsed: { from?: string; toExclusive?: string; provisional: boolean } = {
+    provisional: false,
+  };
   for (let index = 0; index < args.length; index += 1) {
     const argument = args[index]!;
     if (argument === "--from" || argument.startsWith("--from=")) {
-      parsed.from =
-        argument === "--from"
-          ? args[++index]
-          : argument.slice("--from=".length);
+      parsed.from = argument === "--from" ? args[++index] : argument.slice("--from=".length);
     } else if (argument === "--to" || argument.startsWith("--to=")) {
-      parsed.toExclusive =
-        argument === "--to" ? args[++index] : argument.slice("--to=".length);
+      parsed.toExclusive = argument === "--to" ? args[++index] : argument.slice("--to=".length);
     } else if (argument === "--provisional") {
       parsed.provisional = true;
     } else {
@@ -43,13 +38,8 @@ function parseArguments(args: string[]): {
   return parsed;
 }
 
-function environmentFileValue(
-  content: string,
-  key: string,
-): string | undefined {
-  const line = content
-    .split(/\r?\n/u)
-    .find((entry) => new RegExp(`^\\s*${key}\\s*=`).test(entry));
+function environmentFileValue(content: string, key: string): string | undefined {
+  const line = content.split(/\r?\n/u).find((entry) => new RegExp(`^\\s*${key}\\s*=`).test(entry));
   if (!line) return undefined;
   const value = line.slice(line.indexOf("=") + 1).trim();
   return value.length >= 2 &&
@@ -78,14 +68,8 @@ async function main(): Promise<void> {
       "NEXT_PUBLIC_SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY are required; run through pnpm eval:export",
     );
   }
-  const productionEnv = await readFile(
-    resolve(root, ".env.production.local"),
-    "utf8",
-  );
-  const productionUrl = environmentFileValue(
-    productionEnv,
-    "NEXT_PUBLIC_SUPABASE_URL",
-  );
+  const productionEnv = await readFile(resolve(root, ".env.production.local"), "utf8");
+  const productionUrl = environmentFileValue(productionEnv, "NEXT_PUBLIC_SUPABASE_URL");
   if (!productionUrl || projectUrl !== productionUrl) {
     throw new Error(
       "active Supabase URL must match NEXT_PUBLIC_SUPABASE_URL in .env.production.local",
@@ -110,8 +94,7 @@ async function main(): Promise<void> {
       .order("published_at", { ascending: true })
       .order("id", { ascending: true })
       .range(offset, offset + pageSize - 1);
-    if (error)
-      throw new Error(`loading snapshot items failed: ${error.message}`);
+    if (error) throw new Error(`loading snapshot items failed: ${error.message}`);
     const page = (data ?? []) as SnapshotRow[];
     items.push(...page.filter((row) => String(row.summary).trim().length > 0));
     if (page.length < pageSize) break;
@@ -123,24 +106,18 @@ async function main(): Promise<void> {
     .order("embedding_model")
     .order("language");
   if (meanError) {
-    throw new Error(
-      `loading snapshot language means failed: ${meanError.message}`,
-    );
+    throw new Error(`loading snapshot language means failed: ${meanError.message}`);
   }
   const allMeans = (meanData ?? []) as SnapshotRow[];
   const itemMeanKeys = new Set(
-    items.map(
-      (row) => `${String(row.embedding_model)}:${String(row.language)}`,
-    ),
+    items.map((row) => `${String(row.embedding_model)}:${String(row.language)}`),
   );
   const means = allMeans.filter((row) => itemMeanKeys.has(meanHashKey(row)));
   const meanKeys = new Set(means.map(meanHashKey));
   const eligibleItems = items.filter((row) =>
     meanKeys.has(`${String(row.embedding_model)}:${String(row.language)}`),
   );
-  const sourceIds = [
-    ...new Set(eligibleItems.map((row) => String(row.source_id))),
-  ];
+  const sourceIds = [...new Set(eligibleItems.map((row) => String(row.source_id)))];
   const sources: SnapshotRow[] = [];
   for (let offset = 0; offset < sourceIds.length; offset += 100) {
     const ids = sourceIds.slice(offset, offset + 100);
@@ -151,8 +128,7 @@ async function main(): Promise<void> {
       )
       .in("id", ids)
       .order("id");
-    if (error)
-      throw new Error(`loading snapshot sources failed: ${error.message}`);
+    if (error) throw new Error(`loading snapshot sources failed: ${error.message}`);
     sources.push(...((data ?? []) as SnapshotRow[]));
   }
 
@@ -168,9 +144,7 @@ async function main(): Promise<void> {
     writeFile(
       resolve(snapshotDirectory, "sources.jsonl"),
       stringifyJsonLines(
-        sources.sort((left, right) =>
-          String(left.id).localeCompare(String(right.id)),
-        ),
+        sources.sort((left, right) => String(left.id).localeCompare(String(right.id))),
       ),
     ),
     writeFile(
@@ -178,18 +152,15 @@ async function main(): Promise<void> {
       stringifyJsonLines(
         [...eligibleItems].sort(
           (left, right) =>
-            String(left.published_at).localeCompare(
-              String(right.published_at),
-            ) || String(left.id).localeCompare(String(right.id)),
+            String(left.published_at).localeCompare(String(right.published_at)) ||
+            String(left.id).localeCompare(String(right.id)),
         ),
       ),
     ),
     writeFile(
       resolve(snapshotDirectory, "means.jsonl"),
       stringifyJsonLines(
-        means.sort((left, right) =>
-          meanHashKey(left).localeCompare(meanHashKey(right)),
-        ),
+        means.sort((left, right) => meanHashKey(left).localeCompare(meanHashKey(right))),
       ),
     ),
     writeFile(

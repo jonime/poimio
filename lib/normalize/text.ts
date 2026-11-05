@@ -33,20 +33,12 @@ const NAMED_ENTITIES: Record<string, string> = {
  */
 export function decodeEntities(text: string): string {
   return text
-    .replace(
-      /&#(\d+);/g,
-      (match, decimal: string) =>
-        safeFromCodePoint(Number(decimal)) ?? match,
-    )
+    .replace(/&#(\d+);/g, (match, decimal: string) => safeFromCodePoint(Number(decimal)) ?? match)
     .replace(
       /&#x([0-9a-fA-F]+);/g,
-      (match, hex: string) =>
-        safeFromCodePoint(Number.parseInt(hex, 16)) ?? match,
+      (match, hex: string) => safeFromCodePoint(Number.parseInt(hex, 16)) ?? match,
     )
-    .replace(
-      /&([a-zA-Z][a-zA-Z0-9]*);/g,
-      (match, name: string) => NAMED_ENTITIES[name] ?? match,
-    );
+    .replace(/&([a-zA-Z][a-zA-Z0-9]*);/g, (match, name: string) => NAMED_ENTITIES[name] ?? match);
 }
 
 function safeFromCodePoint(code: number): string | null {
@@ -72,10 +64,7 @@ const BLOCK_TAG_RE =
 export function htmlToText(html: string): string {
   if (!html) return "";
 
-  let text = html.replace(
-    /<(script|style|noscript)\b[^>]*>[\s\S]*?<\/\1>/gi,
-    " ",
-  );
+  let text = html.replace(/<(script|style|noscript)\b[^>]*>[\s\S]*?<\/\1>/gi, " ");
   text = text.replace(/<br\s*\/?\s*>/gi, "\n");
   text = text.replace(BLOCK_TAG_RE, "\n");
   text = text.replace(/<[^>]+>/g, " ");
@@ -97,10 +86,7 @@ export function htmlToText(html: string): string {
  * anchor and at least one anchor is present.
  */
 export function isLinkOnly(html: string): boolean {
-  const withoutAnchors = html.replace(
-    /<a\b[^>]*>[\s\S]*?<\/a>/gi,
-    " ",
-  );
+  const withoutAnchors = html.replace(/<a\b[^>]*>[\s\S]*?<\/a>/gi, " ");
   const withoutTags = withoutAnchors.replace(/<[^>]+>/g, " ");
   return withoutTags.trim() === "" && /<a\b/i.test(html);
 }

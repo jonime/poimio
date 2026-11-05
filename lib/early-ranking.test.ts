@@ -12,11 +12,7 @@ import {
   type RankingAnswerKey,
 } from "./early-ranking";
 
-function item(
-  id: string,
-  embedding: number[],
-  publishedAt: string,
-): EarlyRankingItem {
+function item(id: string, embedding: number[], publishedAt: string): EarlyRankingItem {
   return {
     id,
     title: id,
@@ -39,17 +35,13 @@ describe("early ranking", () => {
 
   it("ranks by nearest liked and excludes feedback items", () => {
     expect(
-      rankEarlyItems(items, ["liked-a", "liked-b"], "nearest-liked").map(
-        ({ id }) => id,
-      ),
+      rankEarlyItems(items, ["liked-a", "liked-b"], "nearest-liked").map(({ id }) => id),
     ).toEqual(["near-a", "near-b", "middle"]);
   });
 
   it("ranks against the mean liked vector", () => {
     expect(
-      rankEarlyItems(items, ["liked-a", "liked-b"], "average-vector").map(
-        ({ id }) => id,
-      ),
+      rankEarlyItems(items, ["liked-a", "liked-b"], "average-vector").map(({ id }) => id),
     ).toEqual(["middle", "near-a", "near-b"]);
   });
 
@@ -87,10 +79,7 @@ describe("early ranking", () => {
   });
 
   it("scores centered variants using previous and newly collected judgments", () => {
-    const urls = Array.from(
-      { length: 10 },
-      (_, index) => `https://example.test/${index}`,
-    );
+    const urls = Array.from({ length: 10 }, (_, index) => `https://example.test/${index}`);
     const personas = Object.fromEntries(
       CENTERED_RANKING_METHODS.map((method) => [
         method,
@@ -112,10 +101,7 @@ describe("early ranking", () => {
       relevant: index < 4 ? "1" : "0",
     }));
 
-    const result = scoreCenteredEarlyRanking(
-      [...oldJudgments, ...newJudgments],
-      answerKey,
-    );
+    const result = scoreCenteredEarlyRanking([...oldJudgments, ...newJudgments], answerKey);
 
     expect(result.perPersona).toHaveLength(CENTERED_RANKING_METHODS.length);
     expect(result.macroAverage).toEqual({
@@ -134,9 +120,12 @@ describe("early ranking", () => {
   });
 
   it("uses newest-first with deterministic ties", () => {
-    expect(
-      rankEarlyItems(items, ["liked-a"], "newest-first").map(({ id }) => id),
-    ).toEqual(["near-b", "middle", "near-a", "liked-b"]);
+    expect(rankEarlyItems(items, ["liked-a"], "newest-first").map(({ id }) => id)).toEqual([
+      "near-b",
+      "middle",
+      "near-a",
+      "liked-b",
+    ]);
   });
 
   it("round-trips CSV quotes, commas, and newlines", () => {

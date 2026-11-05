@@ -10,12 +10,20 @@ vi.mock("@/lib/guest-feed", () => ({ readGuestFeed: vi.fn() }));
 beforeEach(() => vi.clearAllMocks());
 
 it("renders public cards without action controls, personalized explanations, or private fields", async () => {
-  vi.mocked(readGuestFeed).mockResolvedValue([{
-    id: "public-item", url: "https://example.com/story", title: "A public story",
-    summary: "A short summary", summary_origin: "ai_generated", type: "article",
-    language: "fi", thumbnail_url: null, published_at: new Date().toISOString(),
-    source_name: "Public source",
-  }]);
+  vi.mocked(readGuestFeed).mockResolvedValue([
+    {
+      id: "public-item",
+      url: "https://example.com/story",
+      title: "A public story",
+      summary: "A short summary",
+      summary_origin: "ai_generated",
+      type: "article",
+      language: "fi",
+      thumbnail_url: null,
+      published_at: new Date().toISOString(),
+      source_name: "Public source",
+    },
+  ]);
   const html = renderToStaticMarkup(await GuestPreview());
   expect(html).toContain("A public story");
   expect(html).toContain("Public source");
@@ -23,7 +31,11 @@ it("renders public cards without action controls, personalized explanations, or 
   expect(html).toContain('href="https://example.com/story"');
   expect(html).toContain('rel="noopener noreferrer"');
   expect(html).not.toMatch(/<button|Rate this item|Similar to|Refresh feed|Load more|source_id/);
-  expect(cacheLife).toHaveBeenCalledExactlyOnceWith({ stale: 300, revalidate: 1800, expire: 86400 });
+  expect(cacheLife).toHaveBeenCalledExactlyOnceWith({
+    stale: 300,
+    revalidate: 1800,
+    expire: 86400,
+  });
   expect(readGuestFeed).toHaveBeenCalledWith({ public: true }, expect.any(String));
 });
 

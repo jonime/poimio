@@ -76,16 +76,16 @@ describe("signed-in page", () => {
   });
 
   it("renders callback errors even with an existing verified session", async () => {
-    const html = renderToStaticMarkup(await Home({ searchParams: Promise.resolve({ error: "callback" }) }));
+    const html = renderToStaticMarkup(
+      await Home({ searchParams: Promise.resolve({ error: "callback" }) }),
+    );
     expect(html).toContain("Sign-in could not be completed. Please try again.");
     expect(html).toContain("Your feed");
     expect(GuestPreview).not.toHaveBeenCalled();
   });
 
   it("shows only the first name, navigation, and sign-out in the shared header", () => {
-    const html = renderToStaticMarkup(
-      createElement(AppHeader, { displayName: "Joni Mertoniemi" }),
-    );
+    const html = renderToStaticMarkup(createElement(AppHeader, { displayName: "Joni Mertoniemi" }));
     expect(html).toContain(">Joni</span>");
     expect(html).not.toContain("Mertoniemi");
     expect(html).not.toContain("user-a@example.com");
@@ -123,9 +123,7 @@ describe("signed-in page", () => {
       error: null,
     });
 
-    const html = renderToStaticMarkup(
-      await Home({ searchParams: Promise.resolve({}) }),
-    );
+    const html = renderToStaticMarkup(await Home({ searchParams: Promise.resolve({}) }));
 
     expect(rpc).toHaveBeenCalledExactlyOnceWith("get_feed", { p_limit: 30 });
     expect(html).toContain("A useful article");
@@ -146,38 +144,33 @@ describe("signed-in page", () => {
     { origin: "ai_generated", visible: true },
     { origin: "feed", visible: false },
     { origin: "page_metadata", visible: false },
-  ])(
-    "shows the AI summary badge only for $origin provenance",
-    async ({ origin, visible }) => {
-      rpc.mockResolvedValueOnce({
-        data: [
-          {
-            id: "item-provenance",
-            url: "https://publisher.example/story",
-            title: "A useful article",
-            summary: "A short summary",
-            summary_origin: origin,
-            type: "article",
-            language: "en",
-            thumbnail_url: null,
-            published_at: new Date().toISOString(),
-            source_name: "Example News",
-            score: 0.9,
-            reason: "recent",
-            because_item_id: null,
-            because_title: null,
-          },
-        ],
-        error: null,
-      });
+  ])("shows the AI summary badge only for $origin provenance", async ({ origin, visible }) => {
+    rpc.mockResolvedValueOnce({
+      data: [
+        {
+          id: "item-provenance",
+          url: "https://publisher.example/story",
+          title: "A useful article",
+          summary: "A short summary",
+          summary_origin: origin,
+          type: "article",
+          language: "en",
+          thumbnail_url: null,
+          published_at: new Date().toISOString(),
+          source_name: "Example News",
+          score: 0.9,
+          reason: "recent",
+          because_item_id: null,
+          because_title: null,
+        },
+      ],
+      error: null,
+    });
 
-      const html = renderToStaticMarkup(
-        await Home({ searchParams: Promise.resolve({}) }),
-      );
+    const html = renderToStaticMarkup(await Home({ searchParams: Promise.resolve({}) }));
 
-      expect(html.includes("AI summary")).toBe(visible);
-    },
-  );
+    expect(html.includes("AI summary")).toBe(visible);
+  });
 
   it.each([
     { data: null, error: null },
@@ -205,19 +198,17 @@ describe("signed-in page", () => {
 });
 
 describe("guest home", () => {
-  beforeEach(() => { auth.getClaims.mockResolvedValue({ data: null, error: null }); });
+  beforeEach(() => {
+    auth.getClaims.mockResolvedValue({ data: null, error: null });
+  });
   it("links to the public privacy policy", async () => {
-    const html = renderToStaticMarkup(
-      await Home({ searchParams: Promise.resolve({}) }),
-    );
+    const html = renderToStaticMarkup(await Home({ searchParams: Promise.resolve({}) }));
     expect(html).toContain('href="/privacy"');
     expect(html).toContain("Privacy policy");
   });
 
   it("offers Google as the only sign-in method outside local development", async () => {
-    const html = renderToStaticMarkup(
-      await Home({ searchParams: Promise.resolve({}) }),
-    );
+    const html = renderToStaticMarkup(await Home({ searchParams: Promise.resolve({}) }));
     expect(html).toContain("Sign in with Google");
     expect(html.match(/<button/g)).toHaveLength(2);
     expect(html).not.toContain('type="password"');
@@ -228,9 +219,7 @@ describe("guest home", () => {
     async (hostname) => {
       vi.stubEnv("NODE_ENV", "development");
       vi.stubEnv("NEXT_PUBLIC_SUPABASE_URL", `http://${hostname}:55321`);
-      const html = renderToStaticMarkup(
-        await Home({ searchParams: Promise.resolve({}) }),
-      );
+      const html = renderToStaticMarkup(await Home({ searchParams: Promise.resolve({}) }));
       expect(html).toContain("Sign in with Google");
       expect(html).toContain("Local sign-in");
       expect(html.match(/<button/g)).toHaveLength(3);
@@ -255,9 +244,7 @@ describe("guest home", () => {
   ])("hides password login in %s with %s", async (mode, url) => {
     vi.stubEnv("NODE_ENV", mode);
     vi.stubEnv("NEXT_PUBLIC_SUPABASE_URL", url);
-    const html = renderToStaticMarkup(
-      await Home({ searchParams: Promise.resolve({}) }),
-    );
+    const html = renderToStaticMarkup(await Home({ searchParams: Promise.resolve({}) }));
     expect(html).toContain("Sign in with Google");
     expect(html).not.toContain('type="password"');
     expect(html.match(/<button/g)).toHaveLength(2);
@@ -278,9 +265,7 @@ describe("privacy page", () => {
     expect(html).toContain("Privacy Policy");
     expect(html).toContain("Joni Mertoniemi");
     expect(html).toContain('href="mailto:privacy@poimio.cc"');
-    expect(html).toContain(
-      "We keep your account and feedback until you request deletion.",
-    );
+    expect(html).toContain("We keep your account and feedback until you request deletion.");
     expect(html).toContain("OpenAI");
     expect(html).toContain("Supabase");
     expect(html).toContain("Vercel");
@@ -307,9 +292,7 @@ describe("local password sign-in action", () => {
     "signs in against %s, verifies claims, then redirects home",
     async (hostname) => {
       vi.stubEnv("NEXT_PUBLIC_SUPABASE_URL", `http://${hostname}:55321`);
-      await expect(signInWithPassword(null, credentials())).rejects.toThrow(
-        "REDIRECT:/",
-      );
+      await expect(signInWithPassword(null, credentials())).rejects.toThrow("REDIRECT:/");
       expect(auth.signInWithPassword).toHaveBeenCalledExactlyOnceWith({
         email: "user-a@example.com",
         password: " local-password ",
@@ -333,9 +316,7 @@ describe("local password sign-in action", () => {
   ])("rejects %s with %s before creating a client", async (mode, url) => {
     vi.stubEnv("NODE_ENV", mode);
     vi.stubEnv("NEXT_PUBLIC_SUPABASE_URL", url);
-    expect(await signInWithPassword(null, credentials())).toBe(
-      "Password sign-in is unavailable.",
-    );
+    expect(await signInWithPassword(null, credentials())).toBe("Password sign-in is unavailable.");
     expect(createClient).not.toHaveBeenCalled();
   });
 
@@ -407,14 +388,11 @@ describe("sign-out action", () => {
     { data: null, error: null },
     { data: { claims: {} }, error: null },
     { ...verifiedClaims, error: new Error("Invalid signature") },
-  ])(
-    "does not mutate auth when identity verification fails",
-    async (result) => {
-      auth.getClaims.mockResolvedValueOnce(result);
-      await expect(signOut()).rejects.toThrow("REDIRECT:/");
-      expect(auth.signOut).not.toHaveBeenCalled();
-    },
-  );
+  ])("does not mutate auth when identity verification fails", async (result) => {
+    auth.getClaims.mockResolvedValueOnce(result);
+    await expect(signOut()).rejects.toThrow("REDIRECT:/");
+    expect(auth.signOut).not.toHaveBeenCalled();
+  });
 
   it("returns to the signed-in page with a generic error if sign-out fails", async () => {
     auth.signOut.mockResolvedValueOnce({ error: new Error("Provider error") });
@@ -425,51 +403,39 @@ describe("sign-out action", () => {
 describe("protected app layout", () => {
   it("redirects missing identity to the public home independently of proxy", async () => {
     auth.getClaims.mockResolvedValueOnce({ data: null, error: null });
-    await expect(AppLayout({ children: createElement("p", null, "Private page") }))
-      .rejects.toThrow("REDIRECT:/");
+    await expect(AppLayout({ children: createElement("p", null, "Private page") })).rejects.toThrow(
+      "REDIRECT:/",
+    );
   });
 });
 
 describe("OAuth callback", () => {
   it("exchanges the code and independently verifies claims before returning home", async () => {
-    const response = await GET(
-      new Request("http://localhost:3001/auth/callback?code=valid-code"),
-    );
-    expect(auth.exchangeCodeForSession).toHaveBeenCalledExactlyOnceWith(
-      "valid-code",
-    );
+    const response = await GET(new Request("http://localhost:3001/auth/callback?code=valid-code"));
+    expect(auth.exchangeCodeForSession).toHaveBeenCalledExactlyOnceWith("valid-code");
     expect(auth.getClaims).toHaveBeenCalledExactlyOnceWith();
-    expect(
-      auth.exchangeCodeForSession.mock.invocationCallOrder[0],
-    ).toBeLessThan(auth.getClaims.mock.invocationCallOrder[0]);
+    expect(auth.exchangeCodeForSession.mock.invocationCallOrder[0]).toBeLessThan(
+      auth.getClaims.mock.invocationCallOrder[0],
+    );
     expect(response.headers.get("location")).toBe("http://localhost:3001/");
     expect(response.headers.get("cache-control")).toBe("private, no-store");
   });
 
-  it.each([
-    "",
-    "?error=access_denied&error_description=private",
-    "?code=code&error=access_denied",
-  ])("rejects missing codes and OAuth errors: %s", async (query) => {
-    const response = await GET(
-      new Request(`http://localhost:3001/auth/callback${query}`),
-    );
-    expect(response.headers.get("location")).toBe(
-      "http://localhost:3001/?error=callback",
-    );
-    expect(createClient).not.toHaveBeenCalled();
-  });
+  it.each(["", "?error=access_denied&error_description=private", "?code=code&error=access_denied"])(
+    "rejects missing codes and OAuth errors: %s",
+    async (query) => {
+      const response = await GET(new Request(`http://localhost:3001/auth/callback${query}`));
+      expect(response.headers.get("location")).toBe("http://localhost:3001/?error=callback");
+      expect(createClient).not.toHaveBeenCalled();
+    },
+  );
 
   it("rejects an invalid or expired exchange without trusting claims", async () => {
     auth.exchangeCodeForSession.mockResolvedValueOnce({
       error: new Error("Expired code"),
     });
-    const response = await GET(
-      new Request("http://localhost:3001/auth/callback?code=expired"),
-    );
-    expect(response.headers.get("location")).toBe(
-      "http://localhost:3001/?error=callback",
-    );
+    const response = await GET(new Request("http://localhost:3001/auth/callback?code=expired"));
+    expect(response.headers.get("location")).toBe("http://localhost:3001/?error=callback");
     expect(auth.getClaims).not.toHaveBeenCalled();
   });
 
@@ -477,34 +443,24 @@ describe("OAuth callback", () => {
     { data: null, error: null },
     { data: { claims: {} }, error: null },
     { ...verifiedClaims, error: new Error("Invalid signature") },
-  ])(
-    "rejects the callback if the exchanged identity cannot be verified",
-    async (result) => {
-      auth.getClaims.mockResolvedValueOnce(result);
+  ])("rejects the callback if the exchanged identity cannot be verified", async (result) => {
+    auth.getClaims.mockResolvedValueOnce(result);
+    const response = await GET(new Request("http://localhost:3001/auth/callback?code=code"));
+    expect(response.headers.get("location")).toBe("http://localhost:3001/?error=callback");
+  });
+
+  it.each(["https://evil.example/", "//evil.example/", "/\\evil.example/", "/another-page"])(
+    "ignores next redirect target %s and forwarded hosts",
+    async (next) => {
+      const url = new URL("http://localhost:3001/auth/callback?code=code");
+      url.searchParams.set("next", next);
       const response = await GET(
-        new Request("http://localhost:3001/auth/callback?code=code"),
+        new Request(url, { headers: { "x-forwarded-host": "evil.example" } }),
       );
-      expect(response.headers.get("location")).toBe(
-        "http://localhost:3001/?error=callback",
-      );
+      expect(response.headers.get("location")).toBe("http://localhost:3001/");
     },
   );
-
-  it.each([
-    "https://evil.example/",
-    "//evil.example/",
-    "/\\evil.example/",
-    "/another-page",
-  ])("ignores next redirect target %s and forwarded hosts", async (next) => {
-    const url = new URL("http://localhost:3001/auth/callback?code=code");
-    url.searchParams.set("next", next);
-    const response = await GET(
-      new Request(url, { headers: { "x-forwarded-host": "evil.example" } }),
-    );
-    expect(response.headers.get("location")).toBe("http://localhost:3001/");
-  });
 });
-
 
 describe("legacy login route", () => {
   it.each([
@@ -513,6 +469,8 @@ describe("legacy login route", () => {
     [{ error: "provider-secret" }, "/"],
     [{ error: ["callback", "private"] }, "/"],
   ])("redirects old links without forwarding arbitrary errors", async (params, destination) => {
-    await expect(Login({ searchParams: Promise.resolve(params) })).rejects.toThrow(`REDIRECT:${destination}`);
+    await expect(Login({ searchParams: Promise.resolve(params) })).rejects.toThrow(
+      `REDIRECT:${destination}`,
+    );
   });
 });

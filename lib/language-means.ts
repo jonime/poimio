@@ -26,11 +26,7 @@ export function createLanguageMeanAccumulator(): LanguageMeanAccumulator {
 }
 
 export function parseEmbeddingVector(value: unknown): number[] {
-  if (
-    typeof value !== "string" ||
-    !value.startsWith("[") ||
-    !value.endsWith("]")
-  ) {
+  if (typeof value !== "string" || !value.startsWith("[") || !value.endsWith("]")) {
     throw new Error("database returned an invalid embedding vector");
   }
 
@@ -38,10 +34,7 @@ export function parseEmbeddingVector(value: unknown): number[] {
     .slice(1, -1)
     .split(",")
     .map((component) => Number(component));
-  if (
-    vector.length !== EMBEDDING_DIMENSIONS ||
-    !vector.every(Number.isFinite)
-  ) {
+  if (vector.length !== EMBEDDING_DIMENSIONS || !vector.every(Number.isFinite)) {
     throw new Error(
       `database returned an embedding that is not a finite ${EMBEDDING_DIMENSIONS}-dimension vector`,
     );
@@ -54,13 +47,8 @@ export function addLanguageEmbedding(
   language: ContentLanguage,
   embedding: number[],
 ): void {
-  if (
-    embedding.length !== EMBEDDING_DIMENSIONS ||
-    !embedding.every(Number.isFinite)
-  ) {
-    throw new Error(
-      `expected a finite ${EMBEDDING_DIMENSIONS}-dimension vector`,
-    );
+  if (embedding.length !== EMBEDDING_DIMENSIONS || !embedding.every(Number.isFinite)) {
+    throw new Error(`expected a finite ${EMBEDDING_DIMENSIONS}-dimension vector`);
   }
 
   accumulator.counts[language]++;

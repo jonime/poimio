@@ -17,8 +17,7 @@ export async function loadMoreFeed(excludeIds: string[]): Promise<FeedItem[]> {
   }
 
   const supabase = await createClient();
-  const { data: claimsData, error: claimsError } =
-    await supabase.auth.getClaims();
+  const { data: claimsData, error: claimsError } = await supabase.auth.getClaims();
   if (claimsError || typeof claimsData?.claims?.sub !== "string") {
     throw new Error("Authentication required.");
   }

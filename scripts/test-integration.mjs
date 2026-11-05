@@ -21,9 +21,7 @@ let localStatus;
 try {
   localStatus = JSON.parse(statusResult.stdout);
 } catch {
-  throw new Error(
-    "Could not read local Supabase status; refusing to run integration tests.",
-  );
+  throw new Error("Could not read local Supabase status; refusing to run integration tests.");
 }
 
 assert.equal(
@@ -34,16 +32,9 @@ assert.equal(
 
 const databaseUrl = new URL(localStatus.DB_URL);
 assert.equal(databaseUrl.hostname, "127.0.0.1", "Database must be local.");
-assert.equal(
-  databaseUrl.port,
-  "55322",
-  "Database must use this project's local port.",
-);
+assert.equal(databaseUrl.port, "55322", "Database must use this project's local port.");
 assert.ok(localStatus.ANON_KEY, "Local Supabase anon key is unavailable.");
-assert.ok(
-  localStatus.SERVICE_ROLE_KEY,
-  "Local Supabase service-role key is unavailable.",
-);
+assert.ok(localStatus.SERVICE_ROLE_KEY, "Local Supabase service-role key is unavailable.");
 
 if (existsSync(".env.local")) {
   const envFile = readFileSync(".env.local", "utf8");
@@ -90,20 +81,14 @@ try {
     },
   );
 
-  assert.equal(
-    testResult.status,
-    0,
-    "One or more local integration tests failed.",
-  );
+  assert.equal(testResult.status, 0, "One or more local integration tests failed.");
 
   let report;
   try {
     const output = readFileSync(reportPath, "utf8");
     report = JSON.parse(output.slice(output.indexOf("{")));
   } catch {
-    throw new Error(
-      "Vitest did not produce a readable JSON report; cannot verify skipped tests.",
-    );
+    throw new Error("Vitest did not produce a readable JSON report; cannot verify skipped tests.");
   }
 
   assert.equal(
@@ -111,15 +96,9 @@ try {
     0,
     `Expected 0 skipped integration tests, found ${report.numPendingTests} pending tests.`,
   );
-  assert.equal(
-    report.numTodoTests,
-    0,
-    "Integration tests must not be left as todo.",
-  );
+  assert.equal(report.numTodoTests, 0, "Integration tests must not be left as todo.");
   assert.ok(report.numTotalTests > 0, "No integration tests were discovered.");
-  console.log(
-    `Local integration tests passed: ${report.numPassedTests} passed, 0 skipped.`,
-  );
+  console.log(`Local integration tests passed: ${report.numPassedTests} passed, 0 skipped.`);
 } finally {
   rmSync(reportDirectory, { recursive: true, force: true });
 }

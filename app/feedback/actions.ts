@@ -16,10 +16,7 @@ function validateItemId(itemId: unknown): asserts itemId is string {
   }
 }
 
-function validateFeedback(
-  kind: unknown,
-  via: unknown,
-): asserts kind is FeedbackKind {
+function validateFeedback(kind: unknown, via: unknown): asserts kind is FeedbackKind {
   if (typeof kind !== "string" || !feedbackKinds.has(kind as FeedbackKind)) {
     throw new Error("Invalid feedback kind.");
   }

@@ -39,12 +39,12 @@ describe("evaluation test-window freeze", () => {
   });
 
   it("rejects invalid freeze schemas", () => {
-    expect(() =>
-      parseFrozenParameters(JSON.stringify({ ...frozen, schemaVersion: 9 })),
-    ).toThrow(/schema version/u);
-    expect(() =>
-      parseFrozenParameters(JSON.stringify({ ...frozen, seeds: [1, 2] })),
-    ).toThrow(/invalid schema/u);
+    expect(() => parseFrozenParameters(JSON.stringify({ ...frozen, schemaVersion: 9 }))).toThrow(
+      /schema version/u,
+    );
+    expect(() => parseFrozenParameters(JSON.stringify({ ...frozen, seeds: [1, 2] }))).toThrow(
+      /invalid schema/u,
+    );
   });
 
   it("rejects missing freeze, dirty tree, wrong HEAD, mismatched hashes, and params", () => {
@@ -57,9 +57,7 @@ describe("evaluation test-window freeze", () => {
       [{ paramsProvided: true }, /--params/u],
     ];
     for (const [changes, error] of cases) {
-      expect(() =>
-        validateTestRun(frozen, { ...cleanState, ...changes }),
-      ).toThrow(error);
+      expect(() => validateTestRun(frozen, { ...cleanState, ...changes })).toThrow(error);
     }
   });
 

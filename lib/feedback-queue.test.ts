@@ -84,9 +84,7 @@ describe("FeedbackMutationQueue", () => {
   });
 
   it("restores an un-rated item with clearFeedback state", async () => {
-    const save = vi
-      .fn<(state: FeedbackState) => Promise<void>>()
-      .mockResolvedValue(undefined);
+    const save = vi.fn<(state: FeedbackState) => Promise<void>>().mockResolvedValue(undefined);
     const queue = new FeedbackMutationQueue(null, save, vi.fn());
 
     queue.enqueue({ kind: "seen", via: "button" });

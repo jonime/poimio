@@ -12,13 +12,7 @@ export function AppHeader({ displayName }: { displayName?: string | null }) {
     <header className="sticky top-0 z-20 border-b bg-background/80 backdrop-blur">
       <div className="mx-auto flex h-14 w-full max-w-2xl items-center gap-4 px-4">
         <Link href="/" className="flex items-center gap-2 font-medium">
-          <Image
-            src="/icon.png"
-            alt=""
-            width={1254}
-            height={1254}
-            className="size-7"
-          />
+          <Image src="/icon.png" alt="" width={1254} height={1254} className="size-7" />
           <span className="hidden sm:inline">Poimio</span>
         </Link>
         <AppNav />

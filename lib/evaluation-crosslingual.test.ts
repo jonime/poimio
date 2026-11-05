@@ -5,11 +5,7 @@ import {
   type CrosslingualVectorItem,
 } from "./evaluation-crosslingual.ts";
 
-function item(
-  id: string,
-  language: "fi" | "en",
-  embedding: number[],
-): CrosslingualVectorItem {
+function item(id: string, language: "fi" | "en", embedding: number[]): CrosslingualVectorItem {
   return { id, language, embedding };
 }
 
@@ -43,9 +39,7 @@ describe("evaluation cross-lingual check", () => {
       item("e9", "en", [7, -1]),
       item("e10", "en", [6, 1]),
     ];
-    const finnish = english.map((entry, index) =>
-      item(`f${index}`, "fi", [...entry.embedding]),
-    );
+    const finnish = english.map((entry, index) => item(`f${index}`, "fi", [...entry.embedding]));
     const pairs = english.map((entry, index) => ({
       englishItemId: entry.id,
       finnishItemId: `f${index}`,

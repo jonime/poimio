@@ -19,11 +19,7 @@ async function main(): Promise<void> {
     throw new Error("usage: pnpm eval:import [--provisional]");
   }
   const provisional = args.includes("--provisional");
-  const snapshotDirectory = resolve(
-    root,
-    "evaluation/snapshot",
-    provisional ? "provisional" : ".",
-  );
+  const snapshotDirectory = resolve(root, "evaluation/snapshot", provisional ? "provisional" : ".");
   const projectUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
   if (!projectUrl || !serviceRoleKey) {
@@ -51,9 +47,7 @@ async function main(): Promise<void> {
   const client = createClient(projectUrl, serviceRoleKey);
   const [contentCount, meansCount] = await Promise.all(
     ["content_items", "embedding_language_means"].map(async (table) => {
-      const { count, error } = await client
-        .from(table)
-        .select("*", { count: "exact", head: true });
+      const { count, error } = await client.from(table).select("*", { count: "exact", head: true });
       if (error) {
         throw new Error(`checking local ${table} failed: ${error.message}`);
       }
@@ -64,9 +58,7 @@ async function main(): Promise<void> {
     }),
   );
   if (contentCount !== 0) {
-    throw new Error(
-      `local content_items must be empty before import; found ${contentCount} rows`,
-    );
+    throw new Error(`local content_items must be empty before import; found ${contentCount} rows`);
   }
   if (meansCount !== 0) {
     throw new Error(
@@ -75,18 +67,14 @@ async function main(): Promise<void> {
   }
   for (let offset = 0; offset < sources.length; offset += batchSize) {
     const batch = sources.slice(offset, offset + batchSize);
-    const { error } = await client
-      .from("sources")
-      .upsert(batch, { onConflict: "feed_url" });
+    const { error } = await client.from("sources").upsert(batch, { onConflict: "feed_url" });
     if (error) {
       throw new Error(`inserting sources failed: ${error.message}`);
     }
   }
   for (let offset = 0; offset < means.length; offset += batchSize) {
     const batch = means.slice(offset, offset + batchSize);
-    const { error } = await client
-      .from("embedding_language_means")
-      .insert(batch);
+    const { error } = await client.from("embedding_language_means").insert(batch);
     if (error) {
       throw new Error(`inserting language means failed: ${error.message}`);
     }

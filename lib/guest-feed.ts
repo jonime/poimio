@@ -1,9 +1,18 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { safeHttpUrl, type FeedItem } from "./feed-ui";
 
-export type GuestFeedItem = Pick<FeedItem,
-  "id" | "url" | "title" | "summary" | "summary_origin" | "type" |
-  "language" | "thumbnail_url" | "published_at" | "source_name"
+export type GuestFeedItem = Pick<
+  FeedItem,
+  | "id"
+  | "url"
+  | "title"
+  | "summary"
+  | "summary_origin"
+  | "type"
+  | "language"
+  | "thumbnail_url"
+  | "published_at"
+  | "source_name"
 >;
 
 export const guestFeedColumns =
@@ -16,26 +25,40 @@ function isRecord(value: unknown): value is Record<string, unknown> {
 }
 
 function parseCandidate(value: unknown): Candidate | null {
-  if (!isRecord(value) || !isRecord(value.sources) ||
-    typeof value.id !== "string" || typeof value.source_id !== "string" ||
-    typeof value.url !== "string" || typeof value.title !== "string" ||
-    typeof value.summary !== "string" || !value.summary.trim() ||
+  if (
+    !isRecord(value) ||
+    !isRecord(value.sources) ||
+    typeof value.id !== "string" ||
+    typeof value.source_id !== "string" ||
+    typeof value.url !== "string" ||
+    typeof value.title !== "string" ||
+    typeof value.summary !== "string" ||
+    !value.summary.trim() ||
     !["feed", "page_metadata", "ai_generated"].includes(String(value.summary_origin)) ||
     (value.type !== "article" && value.type !== "video") ||
     (value.language !== "fi" && value.language !== "en") ||
-    typeof value.published_at !== "string" || !Number.isFinite(Date.parse(value.published_at)) ||
+    typeof value.published_at !== "string" ||
+    !Number.isFinite(Date.parse(value.published_at)) ||
     (value.thumbnail_url !== null && typeof value.thumbnail_url !== "string") ||
-    typeof value.sources.name !== "string" || value.sources.id !== value.source_id
-  ) throw new Error("Malformed public feed data");
+    typeof value.sources.name !== "string" ||
+    value.sources.id !== value.source_id
+  )
+    throw new Error("Malformed public feed data");
 
   const url = safeHttpUrl(value.url);
   if (!url) return null;
   return {
-    id: value.id, source_id: value.source_id, url, title: value.title,
-    summary: value.summary, summary_origin: value.summary_origin as GuestFeedItem["summary_origin"],
-    type: value.type, language: value.language,
+    id: value.id,
+    source_id: value.source_id,
+    url,
+    title: value.title,
+    summary: value.summary,
+    summary_origin: value.summary_origin as GuestFeedItem["summary_origin"],
+    type: value.type,
+    language: value.language,
     thumbnail_url: safeHttpUrl(value.thumbnail_url),
-    published_at: value.published_at, source_name: value.sources.name,
+    published_at: value.published_at,
+    source_name: value.sources.name,
   };
 }
 
@@ -45,8 +68,11 @@ function newestFirst(a: Candidate, b: Candidate): number {
 
 export function selectGuestFeed(rows: unknown[]): GuestFeedItem[] {
   const seen = new Set<string>();
-  const candidates = rows.map(parseCandidate).filter((item): item is Candidate => item !== null)
-    .sort(newestFirst).filter((item) => {
+  const candidates = rows
+    .map(parseCandidate)
+    .filter((item): item is Candidate => item !== null)
+    .sort(newestFirst)
+    .filter((item) => {
       if (seen.has(item.id)) return false;
       seen.add(item.id);
       return true;
@@ -61,10 +87,13 @@ export function selectGuestFeed(rows: unknown[]): GuestFeedItem[] {
     }
     const queue: Candidate[] = [];
     for (let round = 0; queue.length < 12; round++) {
-      const items = [...sources.values()].flatMap((items) => items[round] ? [items[round]] : []);
+      const items = [...sources.values()].flatMap((items) => (items[round] ? [items[round]] : []));
       if (!items.length) break;
-      items.sort((a, b) => Date.parse(b.published_at) - Date.parse(a.published_at) ||
-        a.source_id.localeCompare(b.source_id));
+      items.sort(
+        (a, b) =>
+          Date.parse(b.published_at) - Date.parse(a.published_at) ||
+          a.source_id.localeCompare(b.source_id),
+      );
       queue.push(...items);
     }
     return queue;
@@ -78,9 +107,15 @@ export function selectGuestFeed(rows: unknown[]): GuestFeedItem[] {
       const item = queue[round];
       if (item && result.length < 12) {
         result.push({
-          id: item.id, url: item.url, title: item.title, summary: item.summary,
-          summary_origin: item.summary_origin, type: item.type, language: item.language,
-          thumbnail_url: item.thumbnail_url, published_at: item.published_at,
+          id: item.id,
+          url: item.url,
+          title: item.title,
+          summary: item.summary,
+          summary_origin: item.summary_origin,
+          type: item.type,
+          language: item.language,
+          thumbnail_url: item.thumbnail_url,
+          published_at: item.published_at,
           source_name: item.source_name,
         });
       }
@@ -89,10 +124,14 @@ export function selectGuestFeed(rows: unknown[]): GuestFeedItem[] {
   return result;
 }
 
-export async function readGuestFeed(client: SupabaseClient, asOf: string): Promise<GuestFeedItem[]> {
+export async function readGuestFeed(
+  client: SupabaseClient,
+  asOf: string,
+): Promise<GuestFeedItem[]> {
   const rows: unknown[] = [];
   for (let offset = 0; ; offset += pageSize) {
-    const { data, error } = await client.from("content_items")
+    const { data, error } = await client
+      .from("content_items")
       .select(guestFeedColumns)
       .lte("published_at", asOf)
       .order("published_at", { ascending: false })

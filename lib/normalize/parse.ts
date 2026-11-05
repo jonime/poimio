@@ -23,19 +23,9 @@
 
 import Parser from "rss-parser";
 import { normalizeUrl } from "./url.ts";
-import {
-  decodeEntities,
-  htmlToText,
-  isLinkOnly,
-  truncateSummary,
-} from "./text.ts";
+import { decodeEntities, htmlToText, isLinkOnly, truncateSummary } from "./text.ts";
 import { removeYouTubeBoilerplate } from "./boilerplate.ts";
-import {
-  elementText,
-  extractAtomCategories,
-  extractThumbnailUrl,
-  splitItemBlocks,
-} from "./raw.ts";
+import { elementText, extractAtomCategories, extractThumbnailUrl, splitItemBlocks } from "./raw.ts";
 
 /** A normalized feed item, shaped for the `content_items` table. */
 export interface ParsedItem {
@@ -104,10 +94,7 @@ function isYouTubeVideoUrl(url: string): boolean {
  * Resolve an item's publication date: the ISO date `rss-parser` computes
  * first, then the raw date string, then the fetch-time fallback.
  */
-function resolvePublishedAt(
-  item: Record<string, unknown>,
-  fetchTime: Date,
-): Date {
+function resolvePublishedAt(item: Record<string, unknown>, fetchTime: Date): Date {
   const iso = item.isoDate;
   if (typeof iso === "string") {
     const parsed = new Date(iso);
@@ -129,11 +116,7 @@ function resolvePublishedAt(
  * summary, `media:description` is used as a fallback source, with
  * YouTube boilerplate lines removed.
  */
-function buildSummary(
-  block: string,
-  format: "rss" | "atom",
-  type: "video" | "article",
-): string {
+function buildSummary(block: string, format: "rss" | "atom", type: "video" | "article"): string {
   const summaryTag = format === "rss" ? "description" : "summary";
   const raw = elementText(block, summaryTag);
 
@@ -171,10 +154,7 @@ function dedupe(values: string[]): string[] {
  * @throws when the document is neither RSS nor Atom, or when the parser
  * fails on malformed XML (the ingestion run isolates per-source errors).
  */
-export async function parseFeed(
-  xml: string,
-  options: ParseOptions = {},
-): Promise<ParsedFeed> {
+export async function parseFeed(xml: string, options: ParseOptions = {}): Promise<ParsedFeed> {
   const format = detectFormat(xml);
   if (format == null) {
     throw new Error("unsupported feed format: expected RSS 2.0 or Atom");
@@ -194,9 +174,7 @@ export async function parseFeed(
     const block = useBlocks ? (blocks[index] ?? "") : "";
     const link = typeof item.link === "string" ? item.link : "";
     const url = normalizeUrl(link);
-    const type: "video" | "article" = isYouTubeVideoUrl(url)
-      ? "video"
-      : "article";
+    const type: "video" | "article" = isYouTubeVideoUrl(url) ? "video" : "article";
 
     const titleRaw = typeof item.title === "string" ? item.title : "";
     const title = decodeEntities(titleRaw).replace(/\s+/g, " ").trim();
@@ -216,10 +194,7 @@ export async function parseFeed(
       type,
       categories,
       thumbnailUrl: useBlocks ? extractThumbnailUrl(block) : null,
-      publishedAt: resolvePublishedAt(
-        item as unknown as Record<string, unknown>,
-        fetchTime,
-      ),
+      publishedAt: resolvePublishedAt(item as unknown as Record<string, unknown>, fetchTime),
     };
   });
 

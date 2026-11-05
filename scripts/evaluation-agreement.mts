@@ -46,10 +46,7 @@ function parseArguments(args: string[]): CliOptions {
     if (argument === "--set" || argument.startsWith("--set=")) {
       set = argument === "--set" ? args[++index] : argument.slice(6);
     } else if (argument === "--labels" || argument.startsWith("--labels=")) {
-      labelsPath =
-        argument === "--labels"
-          ? args[++index]
-          : argument.slice("--labels=".length);
+      labelsPath = argument === "--labels" ? args[++index] : argument.slice("--labels=".length);
     } else if (argument === "--provisional") {
       provisional = true;
     } else {
@@ -66,36 +63,23 @@ function parseArguments(args: string[]): CliOptions {
 }
 
 function artifactDirectory(provisional: boolean): string {
-  return resolve(
-    root,
-    "evaluation/agreement",
-    provisional ? "provisional" : ".",
-  );
+  return resolve(root, "evaluation/agreement", provisional ? "provisional" : ".");
 }
 
 async function loadInputs(labelsPath?: string, provisional = false) {
-  const snapshotDirectory = resolve(
-    root,
-    "evaluation/snapshot",
-    provisional ? "provisional" : ".",
+  const snapshotDirectory = resolve(root, "evaluation/snapshot", provisional ? "provisional" : ".");
+  const [manifestText, sourceText, itemText, meanText, personaText, labelsText] = await Promise.all(
+    [
+      readFile(resolve(snapshotDirectory, "manifest.json"), "utf8"),
+      readFile(resolve(snapshotDirectory, "sources.jsonl"), "utf8"),
+      readFile(resolve(snapshotDirectory, "items.jsonl"), "utf8"),
+      readFile(resolve(snapshotDirectory, "means.jsonl"), "utf8"),
+      readFile(personaPath, "utf8"),
+      labelsPath
+        ? readFile(resolveLabelFile(labelsPath, provisional), "utf8")
+        : Promise.resolve(null),
+    ],
   );
-  const [
-    manifestText,
-    sourceText,
-    itemText,
-    meanText,
-    personaText,
-    labelsText,
-  ] = await Promise.all([
-    readFile(resolve(snapshotDirectory, "manifest.json"), "utf8"),
-    readFile(resolve(snapshotDirectory, "sources.jsonl"), "utf8"),
-    readFile(resolve(snapshotDirectory, "items.jsonl"), "utf8"),
-    readFile(resolve(snapshotDirectory, "means.jsonl"), "utf8"),
-    readFile(personaPath, "utf8"),
-    labelsPath
-      ? readFile(resolveLabelFile(labelsPath, provisional), "utf8")
-      : Promise.resolve(null),
-  ]);
   const manifest = JSON.parse(manifestText) as EvaluationSnapshotManifest;
   if (manifest.provisional !== provisional) {
     throw new Error("snapshot provisional state does not match --provisional");
@@ -153,15 +137,11 @@ async function findCompleteLabelFile(
   try {
     names = await readdir(resolve(root, "evaluation/labels"));
   } catch {
-    throw new Error(
-      "no evaluation/labels directory; run pnpm eval:label first",
-    );
+    throw new Error("no evaluation/labels directory; run pnpm eval:label first");
   }
   const completeFiles: string[] = [];
   for (const name of names.filter(
-    (entry) =>
-      entry.endsWith(".jsonl") &&
-      entry.endsWith(".provisional.jsonl") === provisional,
+    (entry) => entry.endsWith(".jsonl") && entry.endsWith(".provisional.jsonl") === provisional,
   )) {
     const path = resolve(root, "evaluation/labels", name);
     const labels = parseLabelJsonLines(await readFile(path, "utf8"));
@@ -171,8 +151,7 @@ async function findCompleteLabelFile(
     } catch (error) {
       if (
         error instanceof Error &&
-        (error.message.includes("incomplete") ||
-          error.message.includes("missing "))
+        (error.message.includes("incomplete") || error.message.includes("missing "))
       ) {
         continue;
       }
@@ -242,8 +221,7 @@ async function exportSet(
   await mkdir(agreementDirectory, { recursive: true });
   let exportedPairs: ExportPair[];
   if (options.set === "selection") {
-    if (!inputs.labelSet)
-      throw new Error("selection export requires primary labels");
+    if (!inputs.labelSet) throw new Error("selection export requires primary labels");
     const design = createAgreementDesign({
       personas: inputs.personas,
       items: inputs.items,
@@ -330,8 +308,7 @@ function parseHumanLabels(csv: string): Array<{
     "inclusion_probability",
     "relevant",
   ]) {
-    if (!column.has(required))
-      throw new Error(`agreement CSV is missing ${required}`);
+    if (!column.has(required)) throw new Error(`agreement CSV is missing ${required}`);
   }
   return records.map((record, index) => {
     const get = (name: string) => record[column.get(name)!] ?? "";
@@ -363,8 +340,7 @@ async function scoreSet(
 ): Promise<void> {
   const agreementDirectory = artifactDirectory(options.provisional);
   const resultDirectory = resolve(agreementDirectory, "results");
-  if (!inputs.labelSet)
-    throw new Error("scoring requires a complete label set");
+  if (!inputs.labelSet) throw new Error("scoring requires a complete label set");
   const csvPath = resolve(agreementDirectory, `${options.set}.csv`);
   const designPath = resolve(agreementDirectory, "design.json");
   const csvPairs = parseHumanLabels(await readFile(csvPath, "utf8"));
@@ -380,25 +356,18 @@ async function scoreSet(
     }>;
   };
   const labelByPair = new Map(
-    inputs.labels.map((label) => [
-      `${label.personaId}\u0000${label.itemId}`,
-      label,
-    ]),
+    inputs.labels.map((label) => [`${label.personaId}\u0000${label.itemId}`, label]),
   );
   const seen = new Set<string>();
   const pairs: AgreementPair[] = csvPairs.map((pair) => {
     const key = `${pair.personaId}\u0000${pair.itemId}`;
     const label = labelByPair.get(key);
-    if (!label)
-      throw new Error(`label set is missing ${pair.personaId}/${pair.itemId}`);
-    if (seen.has(key))
-      throw new Error("agreement CSV contains duplicate pairs");
+    if (!label) throw new Error(`label set is missing ${pair.personaId}/${pair.itemId}`);
+    if (seen.has(key)) throw new Error("agreement CSV contains duplicate pairs");
     seen.add(key);
     const item = inputs.items.find((candidate) => candidate.id === pair.itemId);
     if (!item || item.language !== pair.language) {
-      throw new Error(
-        `agreement CSV has an unknown or mismatched item ${pair.itemId}`,
-      );
+      throw new Error(`agreement CSV has an unknown or mismatched item ${pair.itemId}`);
     }
     return {
       pairId: `${pair.personaId}:${pair.itemId}`,
@@ -432,28 +401,16 @@ async function scoreSet(
   const scores = scoreAgreement(pairs);
   await mkdir(resultDirectory, { recursive: true });
   const labelSlug = inputs.labelSet.id.replace(/[^a-zA-Z0-9._-]/gu, "_");
-  const resultPath = resolve(
-    resultDirectory,
-    `${options.set}-${labelSlug}.json`,
-  );
+  const resultPath = resolve(resultDirectory, `${options.set}-${labelSlug}.json`);
   if (options.set === "reporting") {
     const names = await readdir(resultDirectory);
-    const selectionScore = resolve(
-      resultDirectory,
-      `selection-${labelSlug}.json`,
-    );
+    const selectionScore = resolve(resultDirectory, `selection-${labelSlug}.json`);
     try {
       await readFile(selectionScore, "utf8");
     } catch {
-      throw new Error(
-        "score the selection set for this label set before scoring reporting",
-      );
+      throw new Error("score the selection set for this label set before scoring reporting");
     }
-    if (
-      names.some(
-        (name) => name.startsWith("reporting-") && name.endsWith(".json"),
-      )
-    ) {
+    if (names.some((name) => name.startsWith("reporting-") && name.endsWith(".json"))) {
       throw new Error("reporting agreement has already been scored");
     }
   }
@@ -481,11 +438,7 @@ async function scoreSet(
 async function main(): Promise<void> {
   const options = parseArguments(process.argv.slice(2));
   let inputs = await loadInputs(options.labelsPath, options.provisional);
-  if (
-    options.command === "export" &&
-    options.set === "selection" &&
-    !options.labelsPath
-  ) {
+  if (options.command === "export" && options.set === "selection" && !options.labelsPath) {
     const labelsPath = await findCompleteLabelFile(
       inputs.personas,
       inputs.items,

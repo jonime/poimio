@@ -20,8 +20,7 @@ async function main(): Promise<void> {
   if (!header) throw new Error("judging.csv is empty");
   const columns = new Map(header.map((name, index) => [name, index]));
   for (const required of ["persona", "blind_id", "relevant"]) {
-    if (!columns.has(required))
-      throw new Error(`judging.csv is missing ${required}`);
+    if (!columns.has(required)) throw new Error(`judging.csv is missing ${required}`);
   }
   const judgments: JudgingRow[] = records.map((record) => ({
     persona: record[columns.get("persona")!] ?? "",

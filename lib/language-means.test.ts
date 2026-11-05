@@ -14,14 +14,10 @@ function vector(value: number): number[] {
 
 describe("language means", () => {
   it("parses only finite vectors with the configured dimensions", () => {
-    expect(parseEmbeddingVector(`[${vector(0.25).join(",")}]`)).toEqual(
-      vector(0.25),
-    );
+    expect(parseEmbeddingVector(`[${vector(0.25).join(",")}]`)).toEqual(vector(0.25));
     expect(() => parseEmbeddingVector("[1,2]")).toThrow(/512-dimension/);
     expect(() => parseEmbeddingVector("not a vector")).toThrow(/invalid/);
-    expect(() =>
-      parseEmbeddingVector(`[${vector(Number.NaN).join(",")}]`),
-    ).toThrow(/finite/);
+    expect(() => parseEmbeddingVector(`[${vector(Number.NaN).join(",")}]`)).toThrow(/finite/);
   });
 
   it("averages languages independently and excludes groups below 50 items", () => {

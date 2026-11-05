@@ -4,10 +4,7 @@ import { dirname, isAbsolute, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 import { encodeCsv } from "../lib/early-ranking.ts";
-import {
-  parseFrozenParameters,
-  validateTestRun,
-} from "../lib/evaluation-freeze.ts";
+import { parseFrozenParameters, validateTestRun } from "../lib/evaluation-freeze.ts";
 import {
   candidateScopes,
   createFeedbackSequence,
@@ -97,19 +94,10 @@ function parseArguments(args: string[]): ReplayOptions {
     if (argument === "--window" || argument.startsWith("--window=")) {
       window = argument === "--window" ? args[++index] : argument.slice(9);
     } else if (argument === "--params" || argument.startsWith("--params=")) {
-      paramsPath =
-        argument === "--params"
-          ? args[++index]
-          : argument.slice("--params=".length);
+      paramsPath = argument === "--params" ? args[++index] : argument.slice("--params=".length);
     } else if (argument === "--labels" || argument.startsWith("--labels=")) {
-      labelsPath =
-        argument === "--labels"
-          ? args[++index]
-          : argument.slice("--labels=".length);
-    } else if (
-      argument === "--new-experiment" ||
-      argument.startsWith("--new-experiment=")
-    ) {
+      labelsPath = argument === "--labels" ? args[++index] : argument.slice("--labels=".length);
+    } else if (argument === "--new-experiment" || argument.startsWith("--new-experiment=")) {
       newExperimentReason =
         argument === "--new-experiment"
           ? args[++index]
@@ -123,10 +111,7 @@ function parseArguments(args: string[]): ReplayOptions {
   if (window !== "validation" && window !== "test") {
     throw new Error("--window must be validation or test");
   }
-  if (
-    newExperimentReason !== undefined &&
-    newExperimentReason.trim().length === 0
-  ) {
+  if (newExperimentReason !== undefined && newExperimentReason.trim().length === 0) {
     throw new Error("--new-experiment requires a non-empty reason");
   }
   if (window === "validation" && newExperimentReason) {
@@ -144,10 +129,7 @@ function parseVector(value: unknown, label: string): number[] {
     : typeof value === "string"
       ? value.slice(1, -1).split(",").map(Number)
       : [];
-  if (
-    vector.length !== 512 ||
-    vector.some((entry) => !Number.isFinite(entry))
-  ) {
+  if (vector.length !== 512 || vector.some((entry) => !Number.isFinite(entry))) {
     throw new Error(`${label} has an invalid 512-dimensional vector`);
   }
   return vector;
@@ -174,8 +156,7 @@ async function findLabelFile(
     } catch (error) {
       if (
         error instanceof Error &&
-        (error.message.includes("incomplete") ||
-          error.message.includes("missing "))
+        (error.message.includes("incomplete") || error.message.includes("missing "))
       ) {
         continue;
       }
@@ -183,31 +164,20 @@ async function findLabelFile(
     }
   }
   if (complete.length !== 1) {
-    throw new Error(
-      `replay needs exactly one complete label set; found ${complete.length}`,
-    );
+    throw new Error(`replay needs exactly one complete label set; found ${complete.length}`);
   }
   return complete[0]!;
 }
 
-async function loadSnapshot(
-  provisional: boolean,
-  testWindow: boolean,
-  labelsPath?: string,
-) {
-  const snapshotDirectory = resolve(
-    root,
-    "evaluation/snapshot",
-    provisional ? "provisional" : ".",
-  );
-  const [manifestText, sourceText, itemText, meanText, personaText] =
-    await Promise.all([
-      readFile(resolve(snapshotDirectory, "manifest.json"), "utf8"),
-      readFile(resolve(snapshotDirectory, "sources.jsonl"), "utf8"),
-      readFile(resolve(snapshotDirectory, "items.jsonl"), "utf8"),
-      readFile(resolve(snapshotDirectory, "means.jsonl"), "utf8"),
-      readFile(resolve(root, "evaluation/personas.json"), "utf8"),
-    ]);
+async function loadSnapshot(provisional: boolean, testWindow: boolean, labelsPath?: string) {
+  const snapshotDirectory = resolve(root, "evaluation/snapshot", provisional ? "provisional" : ".");
+  const [manifestText, sourceText, itemText, meanText, personaText] = await Promise.all([
+    readFile(resolve(snapshotDirectory, "manifest.json"), "utf8"),
+    readFile(resolve(snapshotDirectory, "sources.jsonl"), "utf8"),
+    readFile(resolve(snapshotDirectory, "items.jsonl"), "utf8"),
+    readFile(resolve(snapshotDirectory, "means.jsonl"), "utf8"),
+    readFile(resolve(root, "evaluation/personas.json"), "utf8"),
+  ]);
   const manifest = JSON.parse(manifestText) as EvaluationSnapshotManifest;
   if (testWindow) requireFinalSnapshot(manifest);
   if (manifest.provisional !== provisional) {
@@ -250,15 +220,11 @@ async function loadSnapshot(
   const meanRowsByLanguage = new Map(
     meanRows.map((row) => [
       `${String(row.embedding_model)}:${String(row.language)}`,
-      parseVector(
-        row.mean,
-        `mean ${String(row.embedding_model)}:${String(row.language)}`,
-      ),
+      parseVector(row.mean, `mean ${String(row.embedding_model)}:${String(row.language)}`),
     ]),
   );
   const models = new Set(itemRows.map((row) => String(row.embedding_model)));
-  if (models.size !== 1)
-    throw new Error("replay snapshot must use one embedding model");
+  if (models.size !== 1) throw new Error("replay snapshot must use one embedding model");
   const model = [...models][0]!;
   const meanByLanguage = {
     fi: meanRowsByLanguage.get(`${model}:fi`),
@@ -312,9 +278,7 @@ function windowItems(
   return snapshot.items.filter((item) => ids.has(item.id));
 }
 
-async function parameterOverrides(
-  path: string | undefined,
-): Promise<Record<string, unknown>> {
+async function parameterOverrides(path: string | undefined): Promise<Record<string, unknown>> {
   if (!path) return {};
   const resolvedPath = resolve(root, path);
   const text = await readFile(resolvedPath, "utf8");
@@ -354,8 +318,7 @@ async function runRanking(input: {
     p_seed: input.seed,
     p_limit: 10,
   });
-  if (error)
-    throw new Error(`rank_items ${input.method.name} failed: ${error.message}`);
+  if (error) throw new Error(`rank_items ${input.method.name} failed: ${error.message}`);
   return ((data ?? []) as Array<{ item_id: string }>).map((row) => row.item_id);
 }
 
@@ -389,21 +352,11 @@ async function main(): Promise<void> {
     "evaluation/results",
     options.provisional ? "provisional" : ".",
   );
-  if (
-    !process.env.NEXT_PUBLIC_SUPABASE_URL ||
-    !process.env.SUPABASE_SERVICE_ROLE_KEY
-  ) {
-    throw new Error(
-      "NEXT_PUBLIC_SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY are required",
-    );
+  if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.SUPABASE_SERVICE_ROLE_KEY) {
+    throw new Error("NEXT_PUBLIC_SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY are required");
   }
-  const projectUrl = requireLocalSupabaseUrl(
-    process.env.NEXT_PUBLIC_SUPABASE_URL,
-  );
-  const client = createClient(
-    projectUrl.toString(),
-    process.env.SUPABASE_SERVICE_ROLE_KEY,
-  );
+  const projectUrl = requireLocalSupabaseUrl(process.env.NEXT_PUBLIC_SUPABASE_URL);
+  const client = createClient(projectUrl.toString(), process.env.SUPABASE_SERVICE_ROLE_KEY);
   const snapshot = await loadSnapshot(
     options.provisional,
     options.window === "test",
@@ -422,23 +375,16 @@ async function main(): Promise<void> {
   };
   if (
     options.provisional &&
-    (config.provisional !== true ||
-      config.snapshotManifestHash !== snapshot.manifestHash)
+    (config.provisional !== true || config.snapshotManifestHash !== snapshot.manifestHash)
   ) {
-    throw new Error(
-      "provisional config does not match the provisional snapshot",
-    );
+    throw new Error("provisional config does not match the provisional snapshot");
   }
   if (!options.provisional && config.provisional === true) {
-    throw new Error(
-      "final replay cannot use a provisional near-duplicate config",
-    );
+    throw new Error("final replay cannot use a provisional near-duplicate config");
   }
   let threshold = config.nearDuplicateThreshold;
   if (typeof threshold !== "number" || threshold < -1 || threshold > 1) {
-    throw new Error(
-      "evaluation/config.json must define nearDuplicateThreshold between -1 and 1",
-    );
+    throw new Error("evaluation/config.json must define nearDuplicateThreshold between -1 and 1");
   }
   let params: Record<string, unknown>;
   let seedsToRun = seeds;
@@ -450,13 +396,12 @@ async function main(): Promise<void> {
     const frozen = parseFrozenParameters(
       await readFile(resolve(root, "evaluation/frozen-params.json"), "utf8"),
     );
-    const status = execFileSync(
-      "git",
-      ["status", "--porcelain", "--untracked-files=all"],
-      { cwd: root, encoding: "utf8" },
-    );
-    const existingTestResults = (await readdir(resultsDirectory)).filter(
-      (name) => name.startsWith("test-"),
+    const status = execFileSync("git", ["status", "--porcelain", "--untracked-files=all"], {
+      cwd: root,
+      encoding: "utf8",
+    });
+    const existingTestResults = (await readdir(resultsDirectory)).filter((name) =>
+      name.startsWith("test-"),
     );
     const guard = validateTestRun(frozen, {
       currentCommit: execFileSync("git", ["rev-parse", "HEAD"], {
@@ -483,9 +428,7 @@ async function main(): Promise<void> {
   }
   const candidateWindow = windowItems(snapshot, options.window);
   const feedbackWindow = snapshot.manifest.windows.feedback.itemIds;
-  const feedbackItems = snapshot.items.filter((item) =>
-    feedbackWindow.includes(item.id),
-  );
+  const feedbackItems = snapshot.items.filter((item) => feedbackWindow.includes(item.id));
   const candidateById = new Map(candidateWindow.map((item) => [item.id, item]));
   const itemById = new Map(snapshot.items.map((item) => [item.id, item]));
   const labelsByPersona = new Map<string, Map<string, boolean>>();
@@ -532,15 +475,11 @@ async function main(): Promise<void> {
               relevantCandidateCount: 0,
             };
             if (!feedback) {
-              cells.push(
-                missingCell(base, "insufficient feedback-window labels"),
-              );
+              cells.push(missingCell(base, "insufficient feedback-window labels"));
               continue;
             }
             const ratedIds = new Set([...feedback.likes, ...feedback.dislikes]);
-            const baseCandidates = candidateWindow.filter(
-              (item) => !ratedIds.has(item.id),
-            );
+            const baseCandidates = candidateWindow.filter((item) => !ratedIds.has(item.id));
             const signalItems = [...feedback.likes, ...feedback.dislikes]
               .map((id) => itemById.get(id))
               .filter((item): item is ReplayContentItem => item !== undefined);
@@ -550,17 +489,10 @@ async function main(): Promise<void> {
               meanByLanguage: snapshot.meanByLanguage,
               threshold,
             });
-            const pools = candidateScopes(
-              candidateWindow,
-              ratedIds,
-              duplicates,
-            );
-            const candidates =
-              scope === "headline" ? pools.headline : pools.duplicateInclusive;
+            const pools = candidateScopes(candidateWindow, ratedIds, duplicates);
+            const candidates = scope === "headline" ? pools.headline : pools.duplicateInclusive;
             const relevantIds = new Set(
-              candidates
-                .filter((item) => relevance.get(item.id) === true)
-                .map((item) => item.id),
+              candidates.filter((item) => relevance.get(item.id) === true).map((item) => item.id),
             );
             const filled = {
               ...base,
@@ -568,9 +500,7 @@ async function main(): Promise<void> {
               relevantCandidateCount: relevantIds.size,
             };
             if (relevantIds.size === 0) {
-              cells.push(
-                missingCell(filled, "candidate pool has no relevant item"),
-              );
+              cells.push(missingCell(filled, "candidate pool has no relevant item"));
               continue;
             }
             const candidateIds = candidates.map((item) => item.id);
@@ -589,20 +519,13 @@ async function main(): Promise<void> {
               ...filled,
               status: "complete",
               missingReason: null,
-              precisionAt10: precisionAt10(
-                rankedIds,
-                candidateIds,
-                relevantIds,
-              ),
+              precisionAt10: precisionAt10(rankedIds, candidateIds, relevantIds),
               distinctSources: diversity.distinctSources,
               distinctCategories: diversity.distinctCategories,
               top10ItemIds: rankedIds,
             });
             if (k === 10 && scope === "headline") {
-              top10ByPersona.set(
-                `${method.name}:${seed}:${persona.id}`,
-                rankedIds,
-              );
+              top10ByPersona.set(`${method.name}:${seed}:${persona.id}`, rankedIds);
             }
           }
         }
@@ -655,39 +578,24 @@ async function main(): Promise<void> {
                 relevantCandidateCount: 0,
               };
               if (!feedback) {
-                cells.push(
-                  missingCell(base, "insufficient same-language feedback"),
-                );
+                cells.push(missingCell(base, "insufficient same-language feedback"));
                 continue;
               }
               const rated = new Set([...feedback.likes, ...feedback.dislikes]);
-              const baseCandidates = targetCandidates.filter(
-                (item) => !rated.has(item.id),
-              );
+              const baseCandidates = targetCandidates.filter((item) => !rated.has(item.id));
               const signalItems = [...feedback.likes, ...feedback.dislikes]
                 .map((id) => itemById.get(id))
-                .filter(
-                  (item): item is ReplayContentItem => item !== undefined,
-                );
+                .filter((item): item is ReplayContentItem => item !== undefined);
               const duplicates = nearDuplicateIds({
                 candidates: baseCandidates,
                 feedbackItems: signalItems,
                 meanByLanguage: snapshot.meanByLanguage,
                 threshold,
               });
-              const pools = candidateScopes(
-                targetCandidates,
-                rated,
-                duplicates,
-              );
-              const candidates =
-                scope === "headline"
-                  ? pools.headline
-                  : pools.duplicateInclusive;
+              const pools = candidateScopes(targetCandidates, rated, duplicates);
+              const candidates = scope === "headline" ? pools.headline : pools.duplicateInclusive;
               const relevantIds = new Set(
-                candidates
-                  .filter((item) => relevance.get(item.id) === true)
-                  .map((item) => item.id),
+                candidates.filter((item) => relevance.get(item.id) === true).map((item) => item.id),
               );
               const filled = {
                 ...base,
@@ -696,10 +604,7 @@ async function main(): Promise<void> {
               };
               if (relevantIds.size === 0) {
                 cells.push(
-                  missingCell(
-                    filled,
-                    "target-language candidate pool has no relevant item",
-                  ),
+                  missingCell(filled, "target-language candidate pool has no relevant item"),
                 );
                 continue;
               }
@@ -719,11 +624,7 @@ async function main(): Promise<void> {
                 ...filled,
                 status: "complete",
                 missingReason: null,
-                precisionAt10: precisionAt10(
-                  rankedIds,
-                  candidateIds,
-                  relevantIds,
-                ),
+                precisionAt10: precisionAt10(rankedIds, candidateIds, relevantIds),
                 distinctSources: diversity.distinctSources,
                 distinctCategories: diversity.distinctCategories,
                 top10ItemIds: rankedIds,
@@ -736,14 +637,7 @@ async function main(): Promise<void> {
   }
 
   const groupBy = (cell: ReplayCell) =>
-    [
-      cell.runType,
-      cell.direction,
-      cell.scope,
-      cell.personaId,
-      cell.k,
-      cell.method,
-    ].join("|");
+    [cell.runType, cell.direction, cell.scope, cell.personaId, cell.k, cell.method].join("|");
   const groups = new Map<string, ReplayCell[]>();
   for (const cell of cells.filter((entry) => entry.status === "complete")) {
     const group = groups.get(groupBy(cell)) ?? [];
@@ -754,24 +648,11 @@ async function main(): Promise<void> {
     const values = rows.map((row) => row.precisionAt10!);
     const stats = seedStatistics(values)!;
     const avgRows = rows;
-    const [runType, direction, scope, personaId, kString, method] =
-      key.split("|");
-    const averageKey = [
-      runType,
-      direction,
-      scope,
-      personaId,
-      kString,
-      "average_vector",
-    ].join("|");
+    const [runType, direction, scope, personaId, kString, method] = key.split("|");
+    const averageKey = [runType, direction, scope, personaId, kString, "average_vector"].join("|");
     const paired = pairedDifferenceStatistics(
       new Map(rows.map((row) => [row.seed, row.precisionAt10!])),
-      new Map(
-        (groups.get(averageKey) ?? avgRows).map((row) => [
-          row.seed,
-          row.precisionAt10!,
-        ]),
-      ),
+      new Map((groups.get(averageKey) ?? avgRows).map((row) => [row.seed, row.precisionAt10!])),
     );
     return {
       runType,
@@ -789,19 +670,11 @@ async function main(): Promise<void> {
   for (const method of methods) {
     for (const seed of seedsToRun) {
       for (let left = 0; left < snapshot.personas.length; left += 1) {
-        for (
-          let right = left + 1;
-          right < snapshot.personas.length;
-          right += 1
-        ) {
+        for (let right = left + 1; right < snapshot.personas.length; right += 1) {
           const leftPersona = snapshot.personas[left]!.id;
           const rightPersona = snapshot.personas[right]!.id;
-          const leftIds = top10ByPersona.get(
-            `${method.name}:${seed}:${leftPersona}`,
-          );
-          const rightIds = top10ByPersona.get(
-            `${method.name}:${seed}:${rightPersona}`,
-          );
+          const leftIds = top10ByPersona.get(`${method.name}:${seed}:${leftPersona}`);
+          const rightIds = top10ByPersona.get(`${method.name}:${seed}:${rightPersona}`);
           if (leftIds && rightIds) {
             overlap.push({
               method: method.name,
@@ -882,18 +755,14 @@ async function main(): Promise<void> {
           cell.missingReason ?? "",
           cell.precisionAt10 === null ? "" : String(cell.precisionAt10),
           cell.distinctSources === null ? "" : String(cell.distinctSources),
-          cell.distinctCategories === null
-            ? ""
-            : String(cell.distinctCategories),
+          cell.distinctCategories === null ? "" : String(cell.distinctCategories),
           cell.top10ItemIds.join(" "),
         ]),
       ]),
       { flag: "wx" },
     ),
   ]);
-  console.log(
-    `Wrote ${cells.length} replay cells to ${jsonPath} and ${csvPath}`,
-  );
+  console.log(`Wrote ${cells.length} replay cells to ${jsonPath} and ${csvPath}`);
 }
 
 main().catch((error: unknown) => {

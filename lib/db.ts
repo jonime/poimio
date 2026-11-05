@@ -99,11 +99,7 @@ export interface IngestDb {
   listUnembeddedItems(): Promise<UnembeddedItem[]>;
 
   /** Save a vector only if this item is still unembedded. */
-  saveEmbedding(
-    id: string,
-    embedding: number[],
-    model: string,
-  ): Promise<boolean>;
+  saveEmbedding(id: string, embedding: number[], model: string): Promise<boolean>;
 
   /**
    * Insert one source's parsed items, deduplicated on the normalized
@@ -112,10 +108,7 @@ export interface IngestDb {
    *
    * @returns the number of newly inserted rows (conflicts are skipped).
    */
-  insertItems(
-    source: Pick<Source, "id" | "language">,
-    items: ParsedItem[],
-  ): Promise<number>;
+  insertItems(source: Pick<Source, "id" | "language">, items: ParsedItem[]): Promise<number>;
 
   /** Apply a status patch to one `sources` row. */
   updateSource(id: string, patch: SourceStatusPatch): Promise<void>;
@@ -133,11 +126,7 @@ export interface EnrichmentItem {
 }
 
 export interface EnrichmentDb {
-  listDueEnrichmentItems(
-    limit: number,
-    now: Date,
-    ids?: string[],
-  ): Promise<EnrichmentItem[]>;
+  listDueEnrichmentItems(limit: number, now: Date, ids?: string[]): Promise<EnrichmentItem[]>;
   saveEnrichedSummary(
     id: string,
     expectedAttemptCount: number,
@@ -234,10 +223,7 @@ export function toContentItemRows(
  * Build the `sources` status patch for one source's outcome (see
  * {@link SourceOutcome} for the per-outcome semantics).
  */
-export function patchForOutcome(
-  outcome: SourceOutcome,
-  now: Date = new Date(),
-): SourceStatusPatch {
+export function patchForOutcome(outcome: SourceOutcome, now: Date = new Date()): SourceStatusPatch {
   switch (outcome.kind) {
     case "fetched": {
       const patch: SourceStatusPatch = {
@@ -259,9 +245,7 @@ export function patchForOutcome(
       return {
         lastFetchedAt: now,
         lastError: outcome.error,
-        ...(outcome.phase === "parse"
-          ? { etag: null, lastModified: null }
-          : {}),
+        ...(outcome.phase === "parse" ? { etag: null, lastModified: null } : {}),
       };
   }
 }
@@ -356,9 +340,7 @@ export interface IngestDbEnv {
  * variable). Throws immediately if either is missing, so a misconfigured
  * run fails before fetching any feeds.
  */
-export function createIngestDb(
-  env: IngestDbEnv = process.env,
-): IngestDb & BackfillDb {
+export function createIngestDb(env: IngestDbEnv = process.env): IngestDb & BackfillDb {
   const url = env.NEXT_PUBLIC_SUPABASE_URL;
   const serviceRoleKey = env.SUPABASE_SERVICE_ROLE_KEY;
 
@@ -367,15 +349,10 @@ export function createIngestDb(
     ...(serviceRoleKey ? [] : ["SUPABASE_SERVICE_ROLE_KEY"]),
   ];
   if (missing.length > 0) {
-    throw new Error(
-      `missing environment variables: ${missing.join(", ")} (see .env.example)`,
-    );
+    throw new Error(`missing environment variables: ${missing.join(", ")} (see .env.example)`);
   }
 
-  const client: SupabaseClient = createClient(
-    url as string,
-    serviceRoleKey as string,
-  );
+  const client: SupabaseClient = createClient(url as string, serviceRoleKey as string);
 
   return {
     async listActiveSources() {
@@ -403,9 +380,7 @@ export function createIngestDb(
           .order("created_at")
           .range(offset, offset + pageSize - 1);
         if (error) {
-          throw new Error(
-            `loading unembedded content items failed: ${error.message}`,
-          );
+          throw new Error(`loading unembedded content items failed: ${error.message}`);
         }
         const page = data as Array<{
           id: string;
@@ -561,13 +536,7 @@ export function createIngestDb(
       return data?.length ?? 0;
     },
 
-    async saveEnrichedSummary(
-      id,
-      expectedAttemptCount,
-      summary,
-      origin,
-      attemptedAt,
-    ) {
+    async saveEnrichedSummary(id, expectedAttemptCount, summary, origin, attemptedAt) {
       const { data, error } = await client
         .from("content_items")
         .update({
@@ -625,9 +594,7 @@ export function createIngestDb(
         .not("summary", "is", null)
         .select("id");
       if (error) {
-        throw new Error(
-          `saving embedding for content item ${id} failed: ${error.message}`,
-        );
+        throw new Error(`saving embedding for content item ${id} failed: ${error.message}`);
       }
       return (data?.length ?? 0) > 0;
     },
@@ -652,10 +619,7 @@ export function createIngestDb(
     async updateSource(id, patch) {
       const payload = toSnakePatch(patch);
       if (Object.keys(payload).length === 0) return;
-      const { error } = await client
-        .from("sources")
-        .update(payload)
-        .eq("id", id);
+      const { error } = await client.from("sources").update(payload).eq("id", id);
       if (error) {
         throw new Error(`updating source ${id} failed: ${error.message}`);
       }

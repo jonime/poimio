@@ -1,16 +1,7 @@
 import type { FetchBatchOptions, FetchResult } from "./fetch.ts";
 import { fetchFeeds } from "./fetch.ts";
-import {
-  embedPendingItems,
-  type EmbeddingOptions,
-  type EmbeddingRunResult,
-} from "./embeddings.ts";
-import {
-  recordSourceOutcome,
-  type EnrichmentDb,
-  type IngestDb,
-  type Source,
-} from "./db.ts";
+import { embedPendingItems, type EmbeddingOptions, type EmbeddingRunResult } from "./embeddings.ts";
+import { recordSourceOutcome, type EnrichmentDb, type IngestDb, type Source } from "./db.ts";
 import {
   runEnrichment,
   type EnrichmentOptions,
@@ -58,8 +49,7 @@ function isYouTubeShort(url: string): boolean {
   const parsed = URL.parse(url);
   if (!parsed) return false;
   return (
-    (parsed.hostname === "youtube.com" ||
-      parsed.hostname.endsWith(".youtube.com")) &&
+    (parsed.hostname === "youtube.com" || parsed.hostname.endsWith(".youtube.com")) &&
     parsed.pathname.startsWith("/shorts/")
   );
 }
@@ -100,12 +90,7 @@ export async function runIngestion(
 
     if (result.status === "not_modified") {
       summary.skipped = 1;
-      await recordSourceOutcome(
-        db,
-        source.id,
-        { kind: "not_modified" },
-        options.now?.(),
-      );
+      await recordSourceOutcome(db, source.id, { kind: "not_modified" }, options.now?.());
       continue;
     }
 
@@ -157,24 +142,16 @@ export async function runIngestion(
     ...options.enrichment,
     now: options.now,
   });
-  const embeddings = await embedPendingItems(
-    db,
-    openAiApiKey,
-    options.embedding,
-  );
+  const embeddings = await embedPendingItems(db, openAiApiKey, options.embedding);
   return { sources: summaries, enrichment, embeddings };
 }
 
 /** Format the command output with a row for every active source. */
 export function formatIngestionSummary(summary: IngestionSummary): string {
-  const lines = [
-    "Ingestion summary",
-    "Source | fetched | new | skipped | errors",
-  ];
+  const lines = ["Ingestion summary", "Source | fetched | new | skipped | errors"];
 
   for (const source of summary.sources) {
-    const errorDetails =
-      source.errors.length > 0 ? ` (${source.errors.join("; ")})` : "";
+    const errorDetails = source.errors.length > 0 ? ` (${source.errors.join("; ")})` : "";
     lines.push(
       `${source.name} | ${source.fetched} | ${source.newItems} | ${source.skipped} | ${source.errors.length}${errorDetails}`,
     );
@@ -185,9 +162,7 @@ export function formatIngestionSummary(summary: IngestionSummary): string {
   );
   lines.push(`Embedded: ${summary.embeddings.embedded}`);
   for (const failure of summary.embeddings.failedBatches) {
-    lines.push(
-      `Embedding error (${failure.itemIds.length} items): ${failure.error}`,
-    );
+    lines.push(`Embedding error (${failure.itemIds.length} items): ${failure.error}`);
   }
 
   return lines.join("\n");

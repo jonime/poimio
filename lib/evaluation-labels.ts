@@ -8,14 +8,8 @@ export function evaluationLabelBatchSize(value: string | undefined): number {
     return EVALUATION_LABEL_BATCH_SIZE;
   }
   const parsed = Number(value);
-  if (
-    !Number.isInteger(parsed) ||
-    parsed < 1 ||
-    parsed > EVALUATION_LABEL_BATCH_SIZE
-  ) {
-    throw new Error(
-      `LLM_BATCH_SIZE must be an integer from 1 to ${EVALUATION_LABEL_BATCH_SIZE}`,
-    );
+  if (!Number.isInteger(parsed) || parsed < 1 || parsed > EVALUATION_LABEL_BATCH_SIZE) {
+    throw new Error(`LLM_BATCH_SIZE must be an integer from 1 to ${EVALUATION_LABEL_BATCH_SIZE}`);
   }
   return parsed;
 }
@@ -54,10 +48,7 @@ function isRecord(value: unknown): value is Record<string, unknown> {
   return value !== null && typeof value === "object" && !Array.isArray(value);
 }
 
-export function chunkItems<T>(
-  items: T[],
-  size = EVALUATION_LABEL_BATCH_SIZE,
-): T[][] {
+export function chunkItems<T>(items: T[], size = EVALUATION_LABEL_BATCH_SIZE): T[][] {
   if (!Number.isInteger(size) || size < 1) {
     throw new Error("Batch size must be a positive integer");
   }
@@ -87,11 +78,7 @@ export function parseLabelResponse(
   } catch {
     throw new Error("Label response is not valid JSON");
   }
-  if (
-    !isRecord(parsed) ||
-    !Object.hasOwn(parsed, "labels") ||
-    !Array.isArray(parsed.labels)
-  ) {
+  if (!isRecord(parsed) || !Object.hasOwn(parsed, "labels") || !Array.isArray(parsed.labels)) {
     throw new Error("Label response must contain a labels array");
   }
 
@@ -102,27 +89,18 @@ export function parseLabelResponse(
       typeof entry.item_id !== "string" ||
       typeof entry.relevant !== "boolean"
     ) {
-      throw new Error(
-        "Each label requires a string item_id and boolean relevant",
-      );
+      throw new Error("Each label requires a string item_id and boolean relevant");
     }
     if (!expectedItemIds.includes(entry.item_id)) {
-      throw new Error(
-        `Label response contains unexpected item ${entry.item_id}`,
-      );
+      throw new Error(`Label response contains unexpected item ${entry.item_id}`);
     }
     if (labels.has(entry.item_id)) {
       throw new Error(`Label response repeats item ${entry.item_id}`);
     }
     labels.set(entry.item_id, entry.relevant);
   }
-  if (
-    labels.size !== expectedItemIds.length ||
-    expectedItemIds.some((id) => !labels.has(id))
-  ) {
-    throw new Error(
-      "Label response must label every requested item exactly once",
-    );
+  if (labels.size !== expectedItemIds.length || expectedItemIds.some((id) => !labels.has(id))) {
+    throw new Error("Label response must label every requested item exactly once");
   }
   return labels;
 }
@@ -145,8 +123,7 @@ export function parseLabelJsonLines(content: string): EvaluationLabel[] {
         typeof parsed.model !== "string" ||
         typeof parsed.promptVersion !== "string" ||
         typeof parsed.relevant !== "boolean" ||
-        (Object.hasOwn(parsed, "provisional") &&
-          typeof parsed.provisional !== "boolean")
+        (Object.hasOwn(parsed, "provisional") && typeof parsed.provisional !== "boolean")
       ) {
         throw new Error(`Label cache row ${index + 1} has an invalid schema`);
       }
@@ -179,9 +156,7 @@ export function validateLabelSet(input: {
         (label.provisional === true) !== provisional,
     )
   ) {
-    throw new Error(
-      "Label set contains more than one model, prompt version, or provisional state",
-    );
+    throw new Error("Label set contains more than one model, prompt version, or provisional state");
   }
 
   const personaIds = new Set(personas.map((persona) => persona.id));
@@ -191,12 +166,7 @@ export function validateLabelSet(input: {
     if (!personaIds.has(label.personaId) || !itemIds.has(label.itemId)) {
       throw new Error("Label set contains an unknown persona or item");
     }
-    const key = labelCacheKey(
-      label.personaId,
-      label.itemId,
-      label.model,
-      label.promptVersion,
-    );
+    const key = labelCacheKey(label.personaId, label.itemId, label.model, label.promptVersion);
     if (pairs.has(key)) throw new Error("Label set contains a duplicate pair");
     pairs.add(key);
   }
@@ -208,9 +178,7 @@ export function validateLabelSet(input: {
   }
   for (const persona of personas) {
     for (const item of items) {
-      if (
-        !pairs.has(labelCacheKey(persona.id, item.id, model, promptVersion))
-      ) {
+      if (!pairs.has(labelCacheKey(persona.id, item.id, model, promptVersion))) {
         throw new Error(`Label set is missing ${persona.id}/${item.id}`);
       }
     }
@@ -218,12 +186,9 @@ export function validateLabelSet(input: {
 
   const sortedLabels = [...labels].sort(
     (left, right) =>
-      left.personaId.localeCompare(right.personaId) ||
-      left.itemId.localeCompare(right.itemId),
+      left.personaId.localeCompare(right.personaId) || left.itemId.localeCompare(right.itemId),
   );
-  const hash = createHash("sha256")
-    .update(JSON.stringify(sortedLabels))
-    .digest("hex");
+  const hash = createHash("sha256").update(JSON.stringify(sortedLabels)).digest("hex");
   return {
     id: `${model}:${promptVersion}:${provisional ? "provisional" : "final"}:${hash.slice(0, 16)}`,
     hash,

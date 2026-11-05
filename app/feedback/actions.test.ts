@@ -45,9 +45,7 @@ describe("setFeedback", () => {
   );
 
   it("rejects malformed UUIDs before creating a client", async () => {
-    await expect(setFeedback("not-a-uuid", "like", "button")).rejects.toThrow(
-      "Invalid item ID.",
-    );
+    await expect(setFeedback("not-a-uuid", "like", "button")).rejects.toThrow("Invalid item ID.");
     expect(createClient).not.toHaveBeenCalled();
     expect(rpc).not.toHaveBeenCalled();
   });
@@ -55,9 +53,7 @@ describe("setFeedback", () => {
   it.each(["", "not-a-uuid", "123e4567e89b42d3a456426614174000"])(
     "rejects malformed item ID %s without creating a client",
     async (itemId) => {
-      await expect(setFeedback(itemId, "like", "button")).rejects.toThrow(
-        "Invalid item ID.",
-      );
+      await expect(setFeedback(itemId, "like", "button")).rejects.toThrow("Invalid item ID.");
       expect(createClient).not.toHaveBeenCalled();
     },
   );
@@ -65,9 +61,9 @@ describe("setFeedback", () => {
   it.each(["", "dislike", "LIKE"])(
     "rejects unknown kind %s before creating a client",
     async (kind) => {
-      await expect(
-        setFeedback(validItemId, kind as "like", "button"),
-      ).rejects.toThrow("Invalid feedback kind.");
+      await expect(setFeedback(validItemId, kind as "like", "button")).rejects.toThrow(
+        "Invalid feedback kind.",
+      );
       expect(createClient).not.toHaveBeenCalled();
     },
   );
@@ -75,9 +71,9 @@ describe("setFeedback", () => {
   it.each(["", "gesture", "BUTTON"])(
     "rejects unknown via %s before creating a client",
     async (via) => {
-      await expect(
-        setFeedback(validItemId, "like", via as "button"),
-      ).rejects.toThrow("Invalid feedback source.");
+      await expect(setFeedback(validItemId, "like", via as "button")).rejects.toThrow(
+        "Invalid feedback source.",
+      );
       expect(createClient).not.toHaveBeenCalled();
     },
   );
@@ -86,18 +82,15 @@ describe("setFeedback", () => {
     { data: null, error: null },
     { data: { claims: {} }, error: null },
     { ...verifiedClaims, error: new Error("Invalid signature") },
-  ])(
-    "rejects a missing or unverified session without writing",
-    async (result) => {
-      auth.getClaims.mockResolvedValueOnce(result);
-      await expect(setFeedback(validItemId, "like", "button")).rejects.toThrow(
-        "Authentication required.",
-      );
-      expect(auth.getClaims).toHaveBeenCalledExactlyOnceWith();
-      expect(rpc).not.toHaveBeenCalled();
-      expect(from).not.toHaveBeenCalled();
-    },
-  );
+  ])("rejects a missing or unverified session without writing", async (result) => {
+    auth.getClaims.mockResolvedValueOnce(result);
+    await expect(setFeedback(validItemId, "like", "button")).rejects.toThrow(
+      "Authentication required.",
+    );
+    expect(auth.getClaims).toHaveBeenCalledExactlyOnceWith();
+    expect(rpc).not.toHaveBeenCalled();
+    expect(from).not.toHaveBeenCalled();
+  });
 
   it("uses verified identity then writes through the RPC", async () => {
     await setFeedback(validItemId, "not_interested", "swipe");
@@ -125,9 +118,7 @@ describe("setFeedback", () => {
 
 describe("clearFeedback", () => {
   it("rejects malformed UUIDs without creating a client", async () => {
-    await expect(clearFeedback("not-a-uuid")).rejects.toThrow(
-      "Invalid item ID.",
-    );
+    await expect(clearFeedback("not-a-uuid")).rejects.toThrow("Invalid item ID.");
     expect(createClient).not.toHaveBeenCalled();
     expect(from).not.toHaveBeenCalled();
   });
@@ -136,17 +127,12 @@ describe("clearFeedback", () => {
     { data: null, error: null },
     { data: { claims: {} }, error: null },
     { ...verifiedClaims, error: new Error("Invalid signature") },
-  ])(
-    "rejects a missing or unverified session without deleting",
-    async (result) => {
-      auth.getClaims.mockResolvedValueOnce(result);
-      await expect(clearFeedback(validItemId)).rejects.toThrow(
-        "Authentication required.",
-      );
-      expect(auth.getClaims).toHaveBeenCalledExactlyOnceWith();
-      expect(from).not.toHaveBeenCalled();
-    },
-  );
+  ])("rejects a missing or unverified session without deleting", async (result) => {
+    auth.getClaims.mockResolvedValueOnce(result);
+    await expect(clearFeedback(validItemId)).rejects.toThrow("Authentication required.");
+    expect(auth.getClaims).toHaveBeenCalledExactlyOnceWith();
+    expect(from).not.toHaveBeenCalled();
+  });
 
   it("deletes only the verified user's row for the requested item", async () => {
     await clearFeedback(validItemId);
@@ -168,9 +154,7 @@ describe("clearFeedback", () => {
     eq.mockImplementationOnce(async () => ({
       error: new Error("internal database detail"),
     }));
-    await expect(clearFeedback(validItemId)).rejects.toThrow(
-      "Could not clear feedback.",
-    );
+    await expect(clearFeedback(validItemId)).rejects.toThrow("Could not clear feedback.");
     expect(revalidatePath).not.toHaveBeenCalled();
   });
 });

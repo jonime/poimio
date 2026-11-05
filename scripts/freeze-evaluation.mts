@@ -35,10 +35,7 @@ function parseArguments(args: string[]): string | undefined {
   for (let index = 0; index < args.length; index += 1) {
     const argument = args[index]!;
     if (argument === "--params" || argument.startsWith("--params=")) {
-      paramsPath =
-        argument === "--params"
-          ? args[++index]
-          : argument.slice("--params=".length);
+      paramsPath = argument === "--params" ? args[++index] : argument.slice("--params=".length);
     } else {
       throw new Error(`Unknown option: ${argument}`);
     }
@@ -46,10 +43,7 @@ function parseArguments(args: string[]): string | undefined {
   return paramsPath;
 }
 
-async function findCompleteLabelSet(
-  personas: EvaluationPersona[],
-  items: EvaluationLabelItem[],
-) {
+async function findCompleteLabelSet(personas: EvaluationPersona[], items: EvaluationLabelItem[]) {
   const names = await readdir(labelsDirectory);
   const complete: Array<{
     path: string;
@@ -65,8 +59,7 @@ async function findCompleteLabelSet(
     } catch (error) {
       if (
         error instanceof Error &&
-        (error.message.includes("incomplete") ||
-          error.message.includes("missing "))
+        (error.message.includes("incomplete") || error.message.includes("missing "))
       ) {
         continue;
       }
@@ -74,9 +67,7 @@ async function findCompleteLabelSet(
     }
   }
   if (complete.length !== 1) {
-    throw new Error(
-      `freezing requires exactly one complete label set; found ${complete.length}`,
-    );
+    throw new Error(`freezing requires exactly one complete label set; found ${complete.length}`);
   }
   return {
     ...complete[0]!,
@@ -90,11 +81,10 @@ async function findCompleteLabelSet(
 
 async function main(): Promise<void> {
   const paramsPath = parseArguments(process.argv.slice(2));
-  const status = execFileSync(
-    "git",
-    ["status", "--porcelain", "--untracked-files=all"],
-    { cwd: root, encoding: "utf8" },
-  );
+  const status = execFileSync("git", ["status", "--porcelain", "--untracked-files=all"], {
+    cwd: root,
+    encoding: "utf8",
+  });
   if (status.trim().length > 0) {
     throw new Error("freeze requires a clean working tree");
   }
@@ -102,21 +92,16 @@ async function main(): Promise<void> {
     cwd: root,
     encoding: "utf8",
   }).trim();
-  const [
-    manifestText,
-    sourceText,
-    itemText,
-    meanText,
-    personaText,
-    configText,
-  ] = await Promise.all([
-    readFile(resolve(snapshotDirectory, "manifest.json"), "utf8"),
-    readFile(resolve(snapshotDirectory, "sources.jsonl"), "utf8"),
-    readFile(resolve(snapshotDirectory, "items.jsonl"), "utf8"),
-    readFile(resolve(snapshotDirectory, "means.jsonl"), "utf8"),
-    readFile(resolve(root, "evaluation/personas.json"), "utf8"),
-    readFile(resolve(root, "evaluation/config.json"), "utf8"),
-  ]);
+  const [manifestText, sourceText, itemText, meanText, personaText, configText] = await Promise.all(
+    [
+      readFile(resolve(snapshotDirectory, "manifest.json"), "utf8"),
+      readFile(resolve(snapshotDirectory, "sources.jsonl"), "utf8"),
+      readFile(resolve(snapshotDirectory, "items.jsonl"), "utf8"),
+      readFile(resolve(snapshotDirectory, "means.jsonl"), "utf8"),
+      readFile(resolve(root, "evaluation/personas.json"), "utf8"),
+      readFile(resolve(root, "evaluation/config.json"), "utf8"),
+    ],
+  );
   const manifest = JSON.parse(manifestText) as EvaluationSnapshotManifest;
   requireFinalSnapshot(manifest);
   const sources = parseJsonLines<SnapshotRow>(sourceText, "sources.jsonl");
@@ -147,21 +132,13 @@ async function main(): Promise<void> {
     config.nearDuplicateThreshold < -1 ||
     config.nearDuplicateThreshold > 1
   ) {
-    throw new Error(
-      "evaluation/config.json must define a valid nearDuplicateThreshold",
-    );
+    throw new Error("evaluation/config.json must define a valid nearDuplicateThreshold");
   }
   const parameterOverrides: Record<string, unknown> = {};
   if (paramsPath) {
-    const path = isAbsolute(paramsPath)
-      ? paramsPath
-      : resolve(root, paramsPath);
+    const path = isAbsolute(paramsPath) ? paramsPath : resolve(root, paramsPath);
     const parsed: unknown = JSON.parse(await readFile(path, "utf8"));
-    if (
-      parsed === null ||
-      typeof parsed !== "object" ||
-      Array.isArray(parsed)
-    ) {
+    if (parsed === null || typeof parsed !== "object" || Array.isArray(parsed)) {
       throw new Error("--params must contain a JSON object");
     }
     Object.assign(parameterOverrides, parsed);

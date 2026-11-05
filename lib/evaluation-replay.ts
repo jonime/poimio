@@ -63,29 +63,20 @@ export function createFeedbackSequence(input: {
 }): ReplayFeedbackSequence {
   const { items, relevantItemIds, seed, personaId, language } = input;
   const relevantSet = new Set(relevantItemIds);
-  const eligible = items.filter(
-    (item) => language === undefined || item.language === language,
-  );
+  const eligible = items.filter((item) => language === undefined || item.language === language);
   return {
     relevantIds: deterministicShuffle(
-      eligible
-        .filter((item) => relevantSet.has(item.id))
-        .map((item) => item.id),
+      eligible.filter((item) => relevantSet.has(item.id)).map((item) => item.id),
       `${seed}:${personaId}:${language ?? "all"}:relevant`,
     ),
     nonRelevantIds: deterministicShuffle(
-      eligible
-        .filter((item) => !relevantSet.has(item.id))
-        .map((item) => item.id),
+      eligible.filter((item) => !relevantSet.has(item.id)).map((item) => item.id),
       `${seed}:${personaId}:${language ?? "all"}:non-relevant`,
     ),
   };
 }
 
-export function feedbackPrefix(
-  sequence: ReplayFeedbackSequence,
-  k: number,
-): ReplayFeedback | null {
+export function feedbackPrefix(sequence: ReplayFeedbackSequence, k: number): ReplayFeedback | null {
   const dislikeCount = Math.floor(k / 2);
   if (
     !Number.isInteger(k) ||
@@ -101,10 +92,7 @@ export function feedbackPrefix(
   };
 }
 
-function centered(
-  item: ReplayItem,
-  meanByLanguage: Record<"fi" | "en", number[]>,
-): number[] {
+function centered(item: ReplayItem, meanByLanguage: Record<"fi" | "en", number[]>): number[] {
   const mean = meanByLanguage[item.language];
   if (mean.length !== item.embedding.length) {
     throw new Error("embedding dimensions do not match language mean");
@@ -175,8 +163,7 @@ export function seedStatistics(values: number[]): SeedStatistics | null {
   const variance =
     values.length < 2
       ? 0
-      : values.reduce((sum, value) => sum + (value - mean) ** 2, 0) /
-        (values.length - 1);
+      : values.reduce((sum, value) => sum + (value - mean) ** 2, 0) / (values.length - 1);
   const standardDeviation = Math.sqrt(variance);
   const margin = 1.96 * (standardDeviation / Math.sqrt(values.length));
   return {

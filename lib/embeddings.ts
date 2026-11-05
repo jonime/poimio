@@ -56,14 +56,11 @@ async function requestEmbeddings(
   const payload = (await response.json()) as EmbeddingResponse;
   if (!response.ok) {
     throw new Error(
-      payload.error?.message ??
-        `OpenAI embeddings request failed: HTTP ${response.status}`,
+      payload.error?.message ?? `OpenAI embeddings request failed: HTTP ${response.status}`,
     );
   }
   if (!Array.isArray(payload.data) || payload.data.length !== items.length) {
-    throw new Error(
-      "OpenAI embeddings response did not include every requested item",
-    );
+    throw new Error("OpenAI embeddings response did not include every requested item");
   }
 
   const ordered = new Array<number[]>(items.length);
@@ -91,24 +88,14 @@ export async function embedPendingItems(
   options: EmbeddingOptions = {},
 ): Promise<EmbeddingRunResult> {
   const fetchImpl = options.fetch ?? fetch;
-  const allowedIds =
-    options.itemIds === undefined ? null : new Set(options.itemIds);
+  const allowedIds = options.itemIds === undefined ? null : new Set(options.itemIds);
   const eligible = (await db.listUnembeddedItems()).filter(
-    (item) =>
-      Boolean(item.summary?.trim()) &&
-      (allowedIds === null || allowedIds.has(item.id)),
+    (item) => Boolean(item.summary?.trim()) && (allowedIds === null || allowedIds.has(item.id)),
   );
-  const pending = eligible.slice(
-    0,
-    Math.max(0, options.limit ?? eligible.length),
-  );
+  const pending = eligible.slice(0, Math.max(0, options.limit ?? eligible.length));
   const result: EmbeddingRunResult = { embedded: 0, failedBatches: [] };
 
-  for (
-    let offset = 0;
-    offset < pending.length;
-    offset += EMBEDDING_BATCH_SIZE
-  ) {
+  for (let offset = 0; offset < pending.length; offset += EMBEDDING_BATCH_SIZE) {
     const batch = pending.slice(offset, offset + EMBEDDING_BATCH_SIZE);
     let vectors: number[][];
     try {
@@ -122,13 +109,7 @@ export async function embedPendingItems(
     }
 
     for (const [index, item] of batch.entries()) {
-      if (
-        await db.saveEmbedding(
-          item.id,
-          vectors[index]!,
-          EMBEDDING_MODEL_VERSION,
-        )
-      ) {
+      if (await db.saveEmbedding(item.id, vectors[index]!, EMBEDDING_MODEL_VERSION)) {
         result.embedded++;
       }
     }

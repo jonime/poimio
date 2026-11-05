@@ -23,15 +23,9 @@ interface PersonaConfig {
 async function main(): Promise<void> {
   try {
     await readFile(samplePath);
-    throw new Error(
-      `${samplePath} already exists; refusing to replace the frozen sample`,
-    );
+    throw new Error(`${samplePath} already exists; refusing to replace the frozen sample`);
   } catch (error) {
-    if (
-      !(error instanceof Error) ||
-      !("code" in error) ||
-      error.code !== "ENOENT"
-    ) {
+    if (!(error instanceof Error) || !("code" in error) || error.code !== "ENOENT") {
       throw error;
     }
   }
@@ -39,9 +33,7 @@ async function main(): Promise<void> {
   const projectUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
   if (!projectUrl || !serviceRoleKey) {
-    throw new Error(
-      "NEXT_PUBLIC_SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY are required",
-    );
+    throw new Error("NEXT_PUBLIC_SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY are required");
   }
 
   const client = createClient(projectUrl, serviceRoleKey);
@@ -53,17 +45,14 @@ async function main(): Promise<void> {
       .not("embedding", "is", null)
       .order("published_at", { ascending: true })
       .range(offset, offset + pageSize - 1);
-    if (error)
-      throw new Error(`loading embedded items failed: ${error.message}`);
+    if (error) throw new Error(`loading embedded items failed: ${error.message}`);
     const page = (data ?? []) as SampleRow[];
     rows.push(...page);
     if (page.length < pageSize) break;
   }
 
   if (rows.length < sampleSize) {
-    throw new Error(
-      `need at least ${sampleSize} embedded items; found ${rows.length}`,
-    );
+    throw new Error(`need at least ${sampleSize} embedded items; found ${rows.length}`);
   }
   const personas = JSON.parse(await readFile(personasPath, "utf8")) as PersonaConfig[];
   const pinnedIds = [...new Set(personas.flatMap((persona) => persona.likedItemIds))];
@@ -83,17 +72,11 @@ async function main(): Promise<void> {
     !selected.some((row) => row.language === "fi") ||
     !selected.some((row) => row.language === "en")
   ) {
-    throw new Error(
-      "the frozen sample must include both Finnish and English items",
-    );
+    throw new Error("the frozen sample must include both Finnish and English items");
   }
-  const wrongModel = selected.find(
-    (row) => row.embedding_model !== EMBEDDING_MODEL_VERSION,
-  );
+  const wrongModel = selected.find((row) => row.embedding_model !== EMBEDDING_MODEL_VERSION);
   if (wrongModel) {
-    throw new Error(
-      `item ${wrongModel.id} does not use ${EMBEDDING_MODEL_VERSION}`,
-    );
+    throw new Error(`item ${wrongModel.id} does not use ${EMBEDDING_MODEL_VERSION}`);
   }
 
   await mkdir(dirname(samplePath), { recursive: true });

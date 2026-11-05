@@ -10,10 +10,7 @@ import {
   type EarlyRankingMethod,
   type RankingAnswerKey,
 } from "../lib/early-ranking.ts";
-import {
-  EMBEDDING_DIMENSIONS,
-  EMBEDDING_MODEL_VERSION,
-} from "../lib/embeddings.ts";
+import { EMBEDDING_DIMENSIONS, EMBEDDING_MODEL_VERSION } from "../lib/embeddings.ts";
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const directory = resolve(root, "evaluation/early-ranking");
@@ -46,13 +43,8 @@ interface ContentRow {
 }
 
 function parseEmbedding(value: string | number[]): number[] {
-  const vector = Array.isArray(value)
-    ? value
-    : value.slice(1, -1).split(",").map(Number);
-  if (
-    vector.length !== EMBEDDING_DIMENSIONS ||
-    vector.some((entry) => !Number.isFinite(entry))
-  ) {
+  const vector = Array.isArray(value) ? value : value.slice(1, -1).split(",").map(Number);
+  if (vector.length !== EMBEDDING_DIMENSIONS || vector.some((entry) => !Number.isFinite(entry))) {
     throw new Error("an item has an invalid embedding vector");
   }
   return vector;
@@ -68,23 +60,16 @@ function seededShuffle<T>(items: T[], initialSeed: number): T[] {
     value ^= value + Math.imul(value ^ (value >>> 7), value | 61);
     const random = ((value ^ (value >>> 14)) >>> 0) / 4294967296;
     const swapIndex = Math.floor(random * (index + 1));
-    [shuffled[index], shuffled[swapIndex]] = [
-      shuffled[swapIndex]!,
-      shuffled[index]!,
-    ];
+    [shuffled[index], shuffled[swapIndex]] = [shuffled[swapIndex]!, shuffled[index]!];
   }
   return shuffled;
 }
 
-async function fetchSampleItems(
-  sample: SampleConfig,
-): Promise<EarlyRankingItem[]> {
+async function fetchSampleItems(sample: SampleConfig): Promise<EarlyRankingItem[]> {
   const projectUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
   if (!projectUrl || !serviceRoleKey) {
-    throw new Error(
-      "NEXT_PUBLIC_SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY are required",
-    );
+    throw new Error("NEXT_PUBLIC_SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY are required");
   }
   const client = createClient(projectUrl, serviceRoleKey);
   const rows: ContentRow[] = [];
@@ -92,18 +77,14 @@ async function fetchSampleItems(
     const ids = sample.itemIds.slice(offset, offset + 100);
     const { data, error } = await client
       .from("content_items")
-      .select(
-        "id,title,summary,language,url,published_at,embedding,embedding_model",
-      )
+      .select("id,title,summary,language,url,published_at,embedding,embedding_model")
       .in("id", ids)
       .not("embedding", "is", null);
     if (error) throw new Error(`loading sample items failed: ${error.message}`);
     rows.push(...((data ?? []) as ContentRow[]));
   }
   if (rows.length !== sample.itemIds.length) {
-    throw new Error(
-      `sample expected ${sample.itemIds.length} items, found ${rows.length}`,
-    );
+    throw new Error(`sample expected ${sample.itemIds.length} items, found ${rows.length}`);
   }
   if (rows.some((row) => row.embedding_model !== sample.embeddingModel)) {
     throw new Error(
@@ -123,13 +104,9 @@ async function fetchSampleItems(
 
 async function main(): Promise<void> {
   const sample = JSON.parse(await readFile(samplePath, "utf8")) as SampleConfig;
-  const personas = JSON.parse(
-    await readFile(personasPath, "utf8"),
-  ) as Persona[];
+  const personas = JSON.parse(await readFile(personasPath, "utf8")) as Persona[];
   if (sample.embeddingModel !== EMBEDDING_MODEL_VERSION) {
-    throw new Error(
-      `sample uses ${sample.embeddingModel}, expected ${EMBEDDING_MODEL_VERSION}`,
-    );
+    throw new Error(`sample uses ${sample.embeddingModel}, expected ${EMBEDDING_MODEL_VERSION}`);
   }
   if (
     await readFile(judgingPath, "utf8").then(
@@ -137,9 +114,7 @@ async function main(): Promise<void> {
       () => false,
     )
   ) {
-    throw new Error(
-      "judging.csv already exists; refusing to overwrite judgments",
-    );
+    throw new Error("judging.csv already exists; refusing to overwrite judgments");
   }
 
   const items = await fetchSampleItems(sample);
@@ -167,10 +142,7 @@ async function main(): Promise<void> {
         );
       return item;
     });
-    if (
-      likedItems.length !== 5 ||
-      !likedItems.some((item) => item.language === "fi")
-    ) {
+    if (likedItems.length !== 5 || !likedItems.some((item) => item.language === "fi")) {
       throw new Error(
         `${persona.id} must have five liked items including at least one Finnish item`,
       );
@@ -200,10 +172,7 @@ async function main(): Promise<void> {
       });
     }
 
-    const shuffled = seededShuffle(
-      [...unique.values()],
-      seed + persona.id.length,
-    );
+    const shuffled = seededShuffle([...unique.values()], seed + persona.id.length);
     const blindIdByItemId = new Map<string, string>();
     shuffled.forEach(({ item }, index) => {
       const blindId = `${persona.id}-${String(index + 1).padStart(3, "0")}`;
@@ -237,9 +206,7 @@ async function main(): Promise<void> {
   console.log(
     `Wrote ${rows.length - 1} shuffled, deduplicated judging rows to evaluation/early-ranking/judging.csv`,
   );
-  console.log(
-    "The method mapping is kept in the ignored local .answer-key.json file.",
-  );
+  console.log("The method mapping is kept in the ignored local .answer-key.json file.");
 }
 
 main().catch((error: unknown) => {

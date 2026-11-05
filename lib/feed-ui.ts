@@ -33,9 +33,7 @@ export function safeHttpUrl(value: string | null | undefined): string | null {
   if (!value) return null;
   try {
     const url = new URL(value);
-    return url.protocol === "http:" || url.protocol === "https:"
-      ? url.href
-      : null;
+    return url.protocol === "http:" || url.protocol === "https:" ? url.href : null;
   } catch {
     return null;
   }
@@ -48,10 +46,7 @@ export function explanationForFeedItem(item: FeedItem): string {
   return `Recent from ${item.source_name}`;
 }
 
-export function formatRelativeTime(
-  publishedAt: string,
-  now: Date = new Date(),
-): string {
+export function formatRelativeTime(publishedAt: string, now: Date = new Date()): string {
   const timestamp = Date.parse(publishedAt);
   if (!Number.isFinite(timestamp)) return "Unknown time";
 

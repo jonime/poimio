@@ -9,22 +9,15 @@ import {
 } from "../lib/enrich/backfill.ts";
 
 function loadSelectedEnvironment(environment: "local" | "production"): void {
-  const filePath =
-    environment === "production" ? ".env.production.local" : ".env.local";
+  const filePath = environment === "production" ? ".env.production.local" : ".env.local";
   let fileEnvironment: ReturnType<typeof parseEnv>;
   try {
     fileEnvironment = parseEnv(readFileSync(filePath, "utf8"));
   } catch {
-    throw new Error(
-      `Could not load the selected environment file: ${filePath}`,
-    );
+    throw new Error(`Could not load the selected environment file: ${filePath}`);
   }
 
-  for (const key of [
-    "NEXT_PUBLIC_SUPABASE_URL",
-    "SUPABASE_SERVICE_ROLE_KEY",
-    "OPENAI_API_KEY",
-  ]) {
+  for (const key of ["NEXT_PUBLIC_SUPABASE_URL", "SUPABASE_SERVICE_ROLE_KEY", "OPENAI_API_KEY"]) {
     delete process.env[key];
   }
   Object.assign(process.env, fileEnvironment);
@@ -49,9 +42,7 @@ function loadSelectedEnvironment(environment: "local" | "production"): void {
       projectUrl.hostname === "localhost" ||
       projectUrl.hostname === "127.0.0.1")
   ) {
-    throw new Error(
-      "The production environment must target a hosted HTTPS project.",
-    );
+    throw new Error("The production environment must target a hosted HTTPS project.");
   }
 }
 
@@ -59,8 +50,7 @@ async function main(): Promise<void> {
   const options = parseBackfillArgs(process.argv.slice(2));
   loadSelectedEnvironment(options.environment);
   const apiKey = process.env.OPENAI_API_KEY;
-  if (!apiKey)
-    throw new Error("Missing OPENAI_API_KEY in the selected environment.");
+  if (!apiKey) throw new Error("Missing OPENAI_API_KEY in the selected environment.");
 
   const result = await runEnrichmentBackfill(createIngestDb(), apiKey, {
     ...options,

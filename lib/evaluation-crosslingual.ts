@@ -47,25 +47,15 @@ export function scoreCrosslingualPairs(input: {
   meanEnglish: number[];
   meanFinnish: number[];
 }): CrosslingualScores {
-  const {
-    englishItems,
-    finnishItems,
-    pairs,
-    randomPairs,
-    meanEnglish,
-    meanFinnish,
-  } = input;
-  if (pairs.length < 10)
-    throw new Error("at least 10 confirmed pairs are required");
+  const { englishItems, finnishItems, pairs, randomPairs, meanEnglish, meanFinnish } = input;
+  if (pairs.length < 10) throw new Error("at least 10 confirmed pairs are required");
   const englishById = new Map(englishItems.map((item) => [item.id, item]));
   const finnishById = new Map(finnishItems.map((item) => [item.id, item]));
   const matchedPairs = pairs.map((pair): CrosslingualMatchScore => {
     const english = englishById.get(pair.englishItemId);
     const finnish = finnishById.get(pair.finnishItemId);
     if (!english || !finnish) {
-      throw new Error(
-        "confirmed pair references an item outside its language pool",
-      );
+      throw new Error("confirmed pair references an item outside its language pool");
     }
     return {
       ...pair,
@@ -80,9 +70,7 @@ export function scoreCrosslingualPairs(input: {
     const english = englishById.get(pair.englishItemId);
     const finnish = finnishById.get(pair.finnishItemId);
     if (!english || !finnish) {
-      throw new Error(
-        "random pair references an item outside its language pool",
-      );
+      throw new Error("random pair references an item outside its language pool");
     }
     return {
       raw: cosineSimilarity(english.embedding, finnish.embedding),
@@ -93,24 +81,17 @@ export function scoreCrosslingualPairs(input: {
     };
   });
   const rawThreshold = percentile95(randomScores.map((score) => score.raw));
-  const centeredThreshold = percentile95(
-    randomScores.map((score) => score.centered),
-  );
-  const aboveRaw = matchedPairs.filter(
-    (pair) => pair.rawSimilarity > rawThreshold,
-  ).length;
+  const centeredThreshold = percentile95(randomScores.map((score) => score.centered));
+  const aboveRaw = matchedPairs.filter((pair) => pair.rawSimilarity > rawThreshold).length;
   const aboveCentered = matchedPairs.filter(
     (pair) => pair.centeredSimilarity > centeredThreshold,
   ).length;
   const gatePairs = matchedPairs.slice(0, 10);
-  const gateAboveRaw = gatePairs.filter(
-    (pair) => pair.rawSimilarity > rawThreshold,
-  ).length;
+  const gateAboveRaw = gatePairs.filter((pair) => pair.rawSimilarity > rawThreshold).length;
   const gateAboveCentered = gatePairs.filter(
     (pair) => pair.centeredSimilarity > centeredThreshold,
   ).length;
-  const passMethod =
-    gateAboveRaw >= 9 ? "raw" : gateAboveCentered >= 9 ? "centered" : null;
+  const passMethod = gateAboveRaw >= 9 ? "raw" : gateAboveCentered >= 9 ? "centered" : null;
   return {
     matchedPairs,
     randomPairCount: randomScores.length,
@@ -133,23 +114,13 @@ export function sampleRandomCrosslingualPairs(input: {
   count?: number;
   seed: number;
 }): CrosslingualPair[] {
-  const {
-    englishItems,
-    finnishItems,
-    excludedPairs,
-    count = 10_000,
-    seed,
-  } = input;
+  const { englishItems, finnishItems, excludedPairs, count = 10_000, seed } = input;
   const excluded = new Set(
-    excludedPairs.map(
-      (pair) => `${pair.englishItemId}\u0000${pair.finnishItemId}`,
-    ),
+    excludedPairs.map((pair) => `${pair.englishItemId}\u0000${pair.finnishItemId}`),
   );
-  const availableCount =
-    englishItems.length * finnishItems.length - excluded.size;
+  const availableCount = englishItems.length * finnishItems.length - excluded.size;
   const requested = Math.min(count, availableCount);
-  if (requested < 1)
-    throw new Error("no random cross-lingual pairs are available");
+  if (requested < 1) throw new Error("no random cross-lingual pairs are available");
   let state = seed >>> 0;
   const next = () => {
     state ^= state << 13;

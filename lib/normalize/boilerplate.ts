@@ -23,8 +23,7 @@ const PROMO_LINE_PATTERNS: RegExp[] = [
 ];
 
 /** Lines containing any URL are dropped (link and affiliate lines). */
-const URL_LINE_PATTERN =
-  /https?:\/\/\S+|\byoutu\.be\S*|\bamzn\.to\S*|\bwww\.\S+/i;
+const URL_LINE_PATTERN = /https?:\/\/\S+|\byoutu\.be\S*|\bamzn\.to\S*|\bwww\.\S+/i;
 
 /**
  * Remove YouTube-style boilerplate lines from cleaned description text.

@@ -19,10 +19,7 @@ interface ResponseInit {
 function makeResponse(init: ResponseInit = {}): Response {
   // 304/204/205 responses must have a null body; default to null so those
   // statuses can be constructed, and let tests pass an explicit body otherwise.
-  const defaultBody =
-    init.status === 304 || init.status === 204 || init.status === 205
-      ? null
-      : "";
+  const defaultBody = init.status === 304 || init.status === 204 || init.status === 205 ? null : "";
   return new Response(init.body ?? defaultBody, {
     status: init.status ?? 200,
     statusText: init.statusText,
@@ -42,22 +39,20 @@ function streamFrom(bytes: Uint8Array): ReadableStream<Uint8Array> {
 /** A `fetch` mock that records its calls and serves a fixed 200 by default. */
 function captureFetch() {
   const calls: Array<{ url: string; init: RequestInit | undefined }> = [];
-  const mock = vi.fn(
-    (input: string | URL | Request, init?: RequestInit) => {
-      calls.push({ url: String(input), init });
-      return Promise.resolve(
-        makeResponse({
-          status: 200,
-          body: "<rss/>",
-          headers: {
-            "content-type": "application/rss+xml",
-            etag: "new-etag",
-            "last-modified": "Wed, 28 Oct 2026 10:00:00 GMT",
-          },
-        }),
-      );
-    },
-  );
+  const mock = vi.fn((input: string | URL | Request, init?: RequestInit) => {
+    calls.push({ url: String(input), init });
+    return Promise.resolve(
+      makeResponse({
+        status: 200,
+        body: "<rss/>",
+        headers: {
+          "content-type": "application/rss+xml",
+          etag: "new-etag",
+          "last-modified": "Wed, 28 Oct 2026 10:00:00 GMT",
+        },
+      }),
+    );
+  });
   return { mock, calls };
 }
 
@@ -104,10 +99,7 @@ describe("fetchFeed", () => {
 
     await fetchFeed("https://example.com/feed");
 
-    const headers = (calls[0]?.init as RequestInit).headers as Record<
-      string,
-      string
-    >;
+    const headers = (calls[0]?.init as RequestInit).headers as Record<string, string>;
     expect(headers["User-Agent"]).toBe(DEFAULT_USER_AGENT);
     // No stored state: no conditional-GET headers.
     expect(headers["If-None-Match"]).toBeUndefined();
@@ -115,9 +107,7 @@ describe("fetchFeed", () => {
   });
 
   it("returns not_modified on 304", async () => {
-    const mock = vi.fn(() =>
-      Promise.resolve(makeResponse({ status: 304 })),
-    );
+    const mock = vi.fn(() => Promise.resolve(makeResponse({ status: 304 })));
     vi.stubGlobal("fetch", mock);
 
     const result = await fetchFeed("https://example.com/feed", {
@@ -167,9 +157,7 @@ describe("fetchFeed", () => {
   });
 
   it("reports a rejected fetch (e.g. DNS/network) as an error", async () => {
-    const mock = vi.fn(() =>
-      Promise.reject(new TypeError("fetch failed")),
-    );
+    const mock = vi.fn(() => Promise.reject(new TypeError("fetch failed")));
     vi.stubGlobal("fetch", mock);
 
     const result = await fetchFeed("https://missing.example.com/feed");
@@ -181,9 +169,7 @@ describe("fetchFeed", () => {
 
   it("enforces the size limit on a streamed body", async () => {
     const big = new Uint8Array(20).fill(65); // 20 bytes
-    const mock = vi.fn(() =>
-      Promise.resolve(makeResponse({ body: streamFrom(big) })),
-    );
+    const mock = vi.fn(() => Promise.resolve(makeResponse({ body: streamFrom(big) })));
     vi.stubGlobal("fetch", mock);
 
     const result = await fetchFeed("https://example.com/feed", {
@@ -229,10 +215,9 @@ describe("fetchFeed", () => {
 });
 
 describe("fetchFeeds", () => {
-  const feeds: FeedToFetch[] = Array.from(
-    { length: 6 },
-    (_, i) => ({ feedUrl: `https://example.com/feed${i}` }),
-  );
+  const feeds: FeedToFetch[] = Array.from({ length: 6 }, (_, i) => ({
+    feedUrl: `https://example.com/feed${i}`,
+  }));
 
   it("fetches every feed and preserves input order", async () => {
     const { mock } = captureFetch();

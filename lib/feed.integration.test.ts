@@ -12,9 +12,7 @@ const activeModel = "text-embedding-3-small@512";
 const otherModel = "older-model@512";
 const meanVectors = {
   fi: new Array<number>(EMBEDDING_DIMENSIONS).fill(0),
-  en: Array.from({ length: EMBEDDING_DIMENSIONS }, (_, index) =>
-    index === 4 ? 10 : 0,
-  ),
+  en: Array.from({ length: EMBEDDING_DIMENSIONS }, (_, index) => (index === 4 ? 10 : 0)),
 } as const;
 
 interface ItemDefinition {
@@ -44,9 +42,7 @@ interface LanguageMeanRow {
 }
 
 function axisVector(axis: number, sign = 1): number[] {
-  return Array.from({ length: EMBEDDING_DIMENSIONS }, (_, index) =>
-    index === axis ? sign : 0,
-  );
+  return Array.from({ length: EMBEDDING_DIMENSIONS }, (_, index) => (index === axis ? sign : 0));
 }
 
 function addVectors(left: number[], right: number[]): number[] {
@@ -155,18 +151,12 @@ describe.skipIf(!enabled || anonKey == null || serviceKey == null)(
         persistSession: false,
       },
     };
-    const anonymous: SupabaseClient | null = anonKey
-      ? createClient(url, anonKey, options)
-      : null;
+    const anonymous: SupabaseClient | null = anonKey ? createClient(url, anonKey, options) : null;
     const service: SupabaseClient | null = serviceKey
       ? createClient(url, serviceKey, options)
       : null;
-    const userAClient: SupabaseClient | null = anonKey
-      ? createClient(url, anonKey, options)
-      : null;
-    const userBClient: SupabaseClient | null = anonKey
-      ? createClient(url, anonKey, options)
-      : null;
+    const userAClient: SupabaseClient | null = anonKey ? createClient(url, anonKey, options) : null;
+    const userBClient: SupabaseClient | null = anonKey ? createClient(url, anonKey, options) : null;
 
     function clients() {
       if (!anonymous || !service || !userAClient || !userBClient) {
@@ -180,11 +170,7 @@ describe.skipIf(!enabled || anonKey == null || serviceKey == null)(
     const emailA = `feed-a-${suffix}@example.test`;
     const emailB = `feed-b-${suffix}@example.test`;
     const sourceIds: string[] = [];
-    const sourceNames = [
-      "Feed test source A",
-      "Feed test source B",
-      "Feed test source C",
-    ];
+    const sourceNames = ["Feed test source A", "Feed test source B", "Feed test source C"];
     const itemIds = new Map<string, string>();
     let userAId: string | undefined;
     let userBId: string | undefined;
@@ -201,8 +187,7 @@ describe.skipIf(!enabled || anonKey == null || serviceKey == null)(
         p_kind: kind,
         p_via: "button",
       });
-      if (error)
-        throw new Error(`Setting ${kind} feedback failed: ${error.message}`);
+      if (error) throw new Error(`Setting ${kind} feedback failed: ${error.message}`);
     }
 
     async function getFeed(
@@ -217,16 +202,12 @@ describe.skipIf(!enabled || anonKey == null || serviceKey == null)(
       const limitFixtureIds = includeLimitFixtures
         ? []
         : itemDefinitions
-            .filter((definition) =>
-              definition.key.startsWith("limit-candidate-"),
-            )
+            .filter((definition) => definition.key.startsWith("limit-candidate-"))
             .map((definition) => itemIds.get(definition.key)!);
       const { data, error } = await client.rpc("get_feed", {
         ...rpcParameters,
         p_limit: rpcParameters.p_limit ?? 100,
-        p_exclude: [
-          ...new Set([...limitFixtureIds, ...(rpcParameters.p_exclude ?? [])]),
-        ],
+        p_exclude: [...new Set([...limitFixtureIds, ...(rpcParameters.p_exclude ?? [])])],
       });
       if (error) throw new Error(`Loading feed failed: ${error.message}`);
       return (data ?? []) as FeedRow[];
@@ -279,9 +260,7 @@ describe.skipIf(!enabled || anonKey == null || serviceKey == null)(
             .eq("embedding_model", activeModel)
             .eq("language", language);
       if (result.error) {
-        throw new Error(
-          `Restoring ${language} mean failed: ${result.error.message}`,
-        );
+        throw new Error(`Restoring ${language} mean failed: ${result.error.message}`);
       }
     }
 
@@ -292,8 +271,7 @@ describe.skipIf(!enabled || anonKey == null || serviceKey == null)(
         password,
         email_confirm: true,
       });
-      if (userA.error)
-        throw new Error(`Creating user A failed: ${userA.error.message}`);
+      if (userA.error) throw new Error(`Creating user A failed: ${userA.error.message}`);
       userAId = userA.data.user.id;
 
       const userB = await service.auth.admin.createUser({
@@ -301,27 +279,22 @@ describe.skipIf(!enabled || anonKey == null || serviceKey == null)(
         password,
         email_confirm: true,
       });
-      if (userB.error)
-        throw new Error(`Creating user B failed: ${userB.error.message}`);
+      if (userB.error) throw new Error(`Creating user B failed: ${userB.error.message}`);
       userBId = userB.data.user.id;
 
       const [signInA, signInB] = await Promise.all([
         userAClient.auth.signInWithPassword({ email: emailA, password }),
         userBClient.auth.signInWithPassword({ email: emailB, password }),
       ]);
-      if (signInA.error)
-        throw new Error(`Signing in user A failed: ${signInA.error.message}`);
-      if (signInB.error)
-        throw new Error(`Signing in user B failed: ${signInB.error.message}`);
+      if (signInA.error) throw new Error(`Signing in user A failed: ${signInA.error.message}`);
+      if (signInB.error) throw new Error(`Signing in user B failed: ${signInB.error.message}`);
 
       const savedMeans = await service
         .from("embedding_language_means")
         .select("embedding_model,language,mean,item_count,computed_at")
         .eq("embedding_model", activeModel);
       if (savedMeans.error) {
-        throw new Error(
-          `Saving original means failed: ${savedMeans.error.message}`,
-        );
+        throw new Error(`Saving original means failed: ${savedMeans.error.message}`);
       }
       originalMeans = (savedMeans.data ?? []) as LanguageMeanRow[];
 
@@ -335,8 +308,7 @@ describe.skipIf(!enabled || anonKey == null || serviceKey == null)(
       const { error: meanError } = await service
         .from("embedding_language_means")
         .upsert(means, { onConflict: "embedding_model,language" });
-      if (meanError)
-        throw new Error(`Creating test means failed: ${meanError.message}`);
+      if (meanError) throw new Error(`Creating test means failed: ${meanError.message}`);
 
       const sources = await service
         .from("sources")
@@ -350,8 +322,7 @@ describe.skipIf(!enabled || anonKey == null || serviceKey == null)(
           })),
         )
         .select("id");
-      if (sources.error)
-        throw new Error(`Creating sources failed: ${sources.error.message}`);
+      if (sources.error) throw new Error(`Creating sources failed: ${sources.error.message}`);
       sourceIds.push(...sources.data.map((source) => source.id as string));
 
       const rows = itemDefinitions.map((definition) => {
@@ -370,16 +341,11 @@ describe.skipIf(!enabled || anonKey == null || serviceKey == null)(
           language: definition.language,
           published_at: publishedAt,
           embedding: embedding === null ? null : pgVector(embedding),
-          embedding_model:
-            definition.model === undefined ? activeModel : definition.model,
+          embedding_model: definition.model === undefined ? activeModel : definition.model,
         };
       });
-      const items = await service
-        .from("content_items")
-        .insert(rows)
-        .select("id,title");
-      if (items.error)
-        throw new Error(`Creating items failed: ${items.error.message}`);
+      const items = await service.from("content_items").insert(rows).select("id,title");
+      if (items.error) throw new Error(`Creating items failed: ${items.error.message}`);
       for (const item of items.data) {
         itemIds.set(item.title.replace("feed-test-", ""), item.id as string);
       }
@@ -395,9 +361,7 @@ describe.skipIf(!enabled || anonKey == null || serviceKey == null)(
           .order("id")
           .range(offset, offset + batchSize - 1);
         if (page.error) {
-          throw new Error(
-            `Loading non-fixture items failed: ${page.error.message}`,
-          );
+          throw new Error(`Loading non-fixture items failed: ${page.error.message}`);
         }
         const neutralFeedback = page.data
           .filter((item) => !fixtureIds.has(item.id))
@@ -410,13 +374,9 @@ describe.skipIf(!enabled || anonKey == null || serviceKey == null)(
             })),
           );
         if (neutralFeedback.length > 0) {
-          const { error } = await service
-            .from("feedback")
-            .insert(neutralFeedback);
+          const { error } = await service.from("feedback").insert(neutralFeedback);
           if (error) {
-            throw new Error(
-              `Isolating test candidates failed: ${error.message}`,
-            );
+            throw new Error(`Isolating test candidates failed: ${error.message}`);
           }
         }
         if (page.data.length < batchSize) break;
@@ -431,8 +391,7 @@ describe.skipIf(!enabled || anonKey == null || serviceKey == null)(
           .delete()
           .in("user_id", [userAId, userBId])
           .in("item_id", [...itemIds.values()]);
-        if (error)
-          throw new Error(`Clearing test feedback failed: ${error.message}`);
+        if (error) throw new Error(`Clearing test feedback failed: ${error.message}`);
       }
     });
 
@@ -457,11 +416,7 @@ describe.skipIf(!enabled || anonKey == null || serviceKey == null)(
 
       const feed = await getFeed(userAClient);
       const returnedIds = new Set(feed.map((row) => row.id));
-      for (const key of [
-        "liked-fi",
-        "candidate-close",
-        "candidate-unrelated",
-      ]) {
+      for (const key of ["liked-fi", "candidate-close", "candidate-unrelated"]) {
         expect(returnedIds.has(itemIds.get(key)!)).toBe(false);
       }
     });
@@ -472,9 +427,7 @@ describe.skipIf(!enabled || anonKey == null || serviceKey == null)(
       await setFeedback(userBClient, "foreign-like", "like");
 
       const feed = await getFeed(userAClient);
-      expect(
-        feed.findIndex((row) => row.id === itemIds.get("candidate-close")),
-      ).toBeLessThan(
+      expect(feed.findIndex((row) => row.id === itemIds.get("candidate-close"))).toBeLessThan(
         feed.findIndex((row) => row.id === itemIds.get("foreign-match")),
       );
       for (const row of feed) {
@@ -488,9 +441,7 @@ describe.skipIf(!enabled || anonKey == null || serviceKey == null)(
       await setFeedback(userAClient, "liked-fi", "like");
 
       const feed = await getFeed(userAClient);
-      expect(
-        feed.findIndex((row) => row.id === itemIds.get("candidate-close")),
-      ).toBeLessThan(
+      expect(feed.findIndex((row) => row.id === itemIds.get("candidate-close"))).toBeLessThan(
         feed.findIndex((row) => row.id === itemIds.get("candidate-unrelated")),
       );
     });
@@ -501,12 +452,8 @@ describe.skipIf(!enabled || anonKey == null || serviceKey == null)(
       await setFeedback(userAClient, "disliked-fi", "not_interested");
 
       const feed = await getFeed(userAClient);
-      const disliked = feed.find(
-        (row) => row.id === itemIds.get("candidate-close-dislike"),
-      );
-      const neutral = feed.find(
-        (row) => row.id === itemIds.get("candidate-neutral"),
-      );
+      const disliked = feed.find((row) => row.id === itemIds.get("candidate-close-dislike"));
+      const neutral = feed.find((row) => row.id === itemIds.get("candidate-neutral"));
       expect(disliked).toBeDefined();
       expect(neutral).toBeDefined();
       expect(neutral!.score).toBeGreaterThan(disliked!.score);
@@ -523,17 +470,11 @@ describe.skipIf(!enabled || anonKey == null || serviceKey == null)(
         key: [...itemIds.entries()].find(([, id]) => id === row.id)?.[0],
       }));
       expect(new Set(firstThree).size, JSON.stringify(sourceOrder)).toBe(3);
-      const neutralIndex = feed.findIndex(
-        (row) => row.id === itemIds.get("cold-a1"),
-      );
-      const dislikedIndex = feed.findIndex(
-        (row) => row.id === itemIds.get("cold-negative-match"),
-      );
+      const neutralIndex = feed.findIndex((row) => row.id === itemIds.get("cold-a1"));
+      const dislikedIndex = feed.findIndex((row) => row.id === itemIds.get("cold-negative-match"));
       expect(neutralIndex).toBeGreaterThanOrEqual(0);
       expect(dislikedIndex).toBeGreaterThan(neutralIndex);
-      expect(
-        feed.find((row) => row.id === itemIds.get("cold-a1"))?.reason,
-      ).toBe("recent");
+      expect(feed.find((row) => row.id === itemIds.get("cold-a1"))?.reason).toBe("recent");
     });
 
     it("uses language-centered vectors for cross-language similarity", async () => {
@@ -542,14 +483,8 @@ describe.skipIf(!enabled || anonKey == null || serviceKey == null)(
 
       const feed = await getFeed(userAClient);
       expect(
-        feed.findIndex(
-          (row) => row.id === itemIds.get("candidate-cross-related"),
-        ),
-      ).toBeLessThan(
-        feed.findIndex(
-          (row) => row.id === itemIds.get("candidate-same-unrelated"),
-        ),
-      );
+        feed.findIndex((row) => row.id === itemIds.get("candidate-cross-related")),
+      ).toBeLessThan(feed.findIndex((row) => row.id === itemIds.get("candidate-same-unrelated")));
     });
 
     it("matches get_feed order using explicit likes and dislikes", async () => {
@@ -560,16 +495,12 @@ describe.skipIf(!enabled || anonKey == null || serviceKey == null)(
       const feed = await getFeed(userAClient);
       const ranking = await rankItems(
         userAClient,
-        rankingFixtureKeys.filter(
-          (key) => key !== "liked-fi" && key !== "disliked-fi",
-        ),
+        rankingFixtureKeys.filter((key) => key !== "liked-fi" && key !== "disliked-fi"),
         ["liked-fi"],
         ["disliked-fi"],
       );
 
-      expect(ranking.map((row) => row.item_id)).toEqual(
-        feed.map((row) => row.id),
-      );
+      expect(ranking.map((row) => row.item_id)).toEqual(feed.map((row) => row.id));
     });
 
     it("hides a site-wide description until its summary and embedding are restored", async () => {
@@ -584,11 +515,8 @@ describe.skipIf(!enabled || anonKey == null || serviceKey == null)(
         .eq("id", id);
       expect(metadataError).toBeNull();
 
-      const otherFixtureIds = [...itemIds.values()].filter(
-        (fixtureId) => fixtureId !== id,
-      );
-      const loadFeed = () =>
-        getFeed(userAClient, { p_limit: 100, p_exclude: otherFixtureIds });
+      const otherFixtureIds = [...itemIds.values()].filter((fixtureId) => fixtureId !== id);
+      const loadFeed = () => getFeed(userAClient, { p_limit: 100, p_exclude: otherFixtureIds });
       expect((await loadFeed()).some((row) => row.id === id)).toBe(true);
 
       const db = createIngestDb({
@@ -608,11 +536,7 @@ describe.skipIf(!enabled || anonKey == null || serviceKey == null)(
         ),
       ).toBe(true);
       expect(
-        await db.saveEmbedding(
-          id,
-          addVectors(meanVectors.fi, axisVector(8)),
-          activeModel,
-        ),
+        await db.saveEmbedding(id, addVectors(meanVectors.fi, axisVector(8)), activeModel),
       ).toBe(true);
       expect((await loadFeed()).some((row) => row.id === id)).toBe(true);
     });
@@ -655,11 +579,7 @@ describe.skipIf(!enabled || anonKey == null || serviceKey == null)(
 
     it("ignores feedback for newest-first and random baselines", async () => {
       const { userAClient } = clients();
-      const candidates = [
-        "candidate-close",
-        "candidate-unrelated",
-        "candidate-neutral",
-      ];
+      const candidates = ["candidate-close", "candidate-unrelated", "candidate-neutral"];
       const newestWithFeedback = await rankItems(
         userAClient,
         candidates,
@@ -667,71 +587,41 @@ describe.skipIf(!enabled || anonKey == null || serviceKey == null)(
         ["disliked-fi"],
         { p_method: "newest_first" },
       );
-      const newestWithoutFeedback = await rankItems(
-        userAClient,
-        candidates,
-        [],
-        [],
-        { p_method: "newest_first" },
-      );
-      const randomFirst = await rankItems(
-        userAClient,
-        candidates,
-        ["liked-fi"],
-        ["disliked-fi"],
-        { p_method: "random", p_seed: 42 },
-      );
+      const newestWithoutFeedback = await rankItems(userAClient, candidates, [], [], {
+        p_method: "newest_first",
+      });
+      const randomFirst = await rankItems(userAClient, candidates, ["liked-fi"], ["disliked-fi"], {
+        p_method: "random",
+        p_seed: 42,
+      });
       const randomSecond = await rankItems(userAClient, candidates, [], [], {
         p_method: "random",
         p_seed: 42,
       });
-      const coldNearest = await rankItems(
-        userAClient,
-        candidates,
-        [],
-        ["disliked-fi"],
-        { p_as_of: publishedAt },
-      );
-      const coldAverage = await rankItems(
-        userAClient,
-        candidates,
-        [],
-        ["disliked-fi"],
-        { p_as_of: publishedAt, p_method: "average_vector" },
-      );
+      const coldNearest = await rankItems(userAClient, candidates, [], ["disliked-fi"], {
+        p_as_of: publishedAt,
+      });
+      const coldAverage = await rankItems(userAClient, candidates, [], ["disliked-fi"], {
+        p_as_of: publishedAt,
+        p_method: "average_vector",
+      });
 
       expect(newestWithFeedback.map((row) => row.item_id)).toEqual(
         newestWithoutFeedback.map((row) => row.item_id),
       );
-      expect(randomFirst.map((row) => row.item_id)).toEqual(
-        randomSecond.map((row) => row.item_id),
-      );
-      expect(newestWithoutFeedback.every((row) => row.score === null)).toBe(
-        true,
-      );
+      expect(randomFirst.map((row) => row.item_id)).toEqual(randomSecond.map((row) => row.item_id));
+      expect(newestWithoutFeedback.every((row) => row.score === null)).toBe(true);
       expect(randomFirst.every((row) => row.score === null)).toBe(true);
       expect(coldAverage).toEqual(coldNearest);
     });
 
     it("supports raw cosine, rejects unknown parameters, and breaks score ties by id", async () => {
       const { anonymous, service, userAClient } = clients();
-      const centered = await rankItems(
-        userAClient,
-        ["candidate-cross-related"],
-        ["liked-fi"],
-      );
-      const raw = await rankItems(
-        userAClient,
-        ["candidate-cross-related"],
-        ["liked-fi"],
-        [],
-        { p_params: { centered: false } },
-      );
-      const serviceRank = await rankItems(
-        service,
-        ["candidate-cross-related"],
-        ["liked-fi"],
-      );
+      const centered = await rankItems(userAClient, ["candidate-cross-related"], ["liked-fi"]);
+      const raw = await rankItems(userAClient, ["candidate-cross-related"], ["liked-fi"], [], {
+        p_params: { centered: false },
+      });
+      const serviceRank = await rankItems(service, ["candidate-cross-related"], ["liked-fi"]);
       const tied = await rankItems(
         userAClient,
         ["candidate-unrelated", "candidate-neutral"],
@@ -753,9 +643,7 @@ describe.skipIf(!enabled || anonKey == null || serviceKey == null)(
 
       expect(centered[0]?.score).not.toBeCloseTo(raw[0]?.score ?? 0, 3);
       expect(serviceRank).toHaveLength(1);
-      expect(tied.map((row) => row.item_id)).toEqual(
-        tied.map((row) => row.item_id).toSorted(),
-      );
+      expect(tied.map((row) => row.item_id)).toEqual(tied.map((row) => row.item_id).toSorted());
       expect(invalid.error).not.toBeNull();
       expect(anonymousResult.error).not.toBeNull();
     });
@@ -794,12 +682,8 @@ describe.skipIf(!enabled || anonKey == null || serviceKey == null)(
         p_limit: 1,
         p_exclude: excludedIds,
       });
-      const afterLikeKey = [...itemIds.entries()].find(
-        ([, id]) => id === afterLike[0]?.id,
-      )?.[0];
-      expect(afterLikeKey, `winning row score: ${afterLike[0]?.score}`).toBe(
-        "page-target",
-      );
+      const afterLikeKey = [...itemIds.entries()].find(([, id]) => id === afterLike[0]?.id)?.[0];
+      expect(afterLikeKey, `winning row score: ${afterLike[0]?.score}`).toBe("page-target");
       expect(excludedIds).not.toContain(afterLike[0]?.id);
     });
 
@@ -808,9 +692,7 @@ describe.skipIf(!enabled || anonKey == null || serviceKey == null)(
       await setFeedback(userAClient, "liked-fi", "like");
 
       const feed = await getFeed(userAClient);
-      const zeroCentered = feed.find(
-        (row) => row.id === itemIds.get("zero-centered"),
-      );
+      const zeroCentered = feed.find((row) => row.id === itemIds.get("zero-centered"));
       expect(zeroCentered).toBeDefined();
       expect(Number.isFinite(zeroCentered!.score)).toBe(true);
       expect(feed.every((row) => Number.isFinite(row.score))).toBe(true);
@@ -828,21 +710,15 @@ describe.skipIf(!enabled || anonKey == null || serviceKey == null)(
         .eq("embedding_model", activeModel)
         .eq("language", "en");
       if (deleteMeanError) {
-        throw new Error(
-          `Removing test English mean failed: ${deleteMeanError.message}`,
-        );
+        throw new Error(`Removing test English mean failed: ${deleteMeanError.message}`);
       }
 
       try {
         const feed = await getFeed(userAClient);
         expect(feed.length).toBeGreaterThan(0);
         expect(feed.every((row) => row.reason === "recent")).toBe(true);
-        expect(
-          feed.some((row) => row.id === itemIds.get("other-model-candidate")),
-        ).toBe(false);
-        expect(
-          feed.some((row) => row.id === itemIds.get("no-embedding-signal")),
-        ).toBe(false);
+        expect(feed.some((row) => row.id === itemIds.get("other-model-candidate"))).toBe(false);
+        expect(feed.some((row) => row.id === itemIds.get("no-embedding-signal"))).toBe(false);
       } finally {
         const { error } = await service.from("embedding_language_means").upsert(
           {
@@ -854,10 +730,7 @@ describe.skipIf(!enabled || anonKey == null || serviceKey == null)(
           },
           { onConflict: "embedding_model,language" },
         );
-        if (error)
-          throw new Error(
-            `Restoring test English mean failed: ${error.message}`,
-          );
+        if (error) throw new Error(`Restoring test English mean failed: ${error.message}`);
       }
     });
 

@@ -80,12 +80,11 @@ describe.skipIf(!enabled || anonKey == null || serviceKey == null)(
 
     beforeAll(async () => {
       const { service, authenticated, authenticatedB } = ready();
-      const { data: userData, error: userError } =
-        await service.auth.admin.createUser({
-          email,
-          password,
-          email_confirm: true,
-        });
+      const { data: userData, error: userError } = await service.auth.admin.createUser({
+        email,
+        password,
+        email_confirm: true,
+      });
       if (userError) {
         throw new Error(`creating RLS test user failed: ${userError.message}`);
       }
@@ -97,9 +96,7 @@ describe.skipIf(!enabled || anonKey == null || serviceKey == null)(
         email_confirm: true,
       });
       if (userB.error) {
-        throw new Error(
-          `creating RLS test user B failed: ${userB.error.message}`,
-        );
+        throw new Error(`creating RLS test user B failed: ${userB.error.message}`);
       }
       userBId = userB.data.user.id;
 
@@ -108,14 +105,10 @@ describe.skipIf(!enabled || anonKey == null || serviceKey == null)(
         authenticatedB.auth.signInWithPassword({ email: emailB, password }),
       ]);
       if (signIn.error) {
-        throw new Error(
-          `signing in RLS test user failed: ${signIn.error.message}`,
-        );
+        throw new Error(`signing in RLS test user failed: ${signIn.error.message}`);
       }
       if (signInB.error) {
-        throw new Error(
-          `signing in RLS test user B failed: ${signInB.error.message}`,
-        );
+        throw new Error(`signing in RLS test user B failed: ${signInB.error.message}`);
       }
       const { data: source, error: sourceError } = await service
         .from("sources")
@@ -129,9 +122,7 @@ describe.skipIf(!enabled || anonKey == null || serviceKey == null)(
         .select("id")
         .single();
       if (sourceError) {
-        throw new Error(
-          `creating RLS test source failed: ${sourceError.message}`,
-        );
+        throw new Error(`creating RLS test source failed: ${sourceError.message}`);
       }
       sourceId = source.id as string;
 
@@ -152,27 +143,20 @@ describe.skipIf(!enabled || anonKey == null || serviceKey == null)(
       }
       itemId = item.id as string;
 
-      const { error: meansError } = await service
-        .from("embedding_language_means")
-        .insert({
-          embedding_model: meansModel,
-          language: "en",
-          mean: `[${new Array<number>(512).fill(0).join(",")}]`,
-          item_count: 50,
-        });
+      const { error: meansError } = await service.from("embedding_language_means").insert({
+        embedding_model: meansModel,
+        language: "en",
+        mean: `[${new Array<number>(512).fill(0).join(",")}]`,
+        item_count: 50,
+      });
       if (meansError) {
-        throw new Error(
-          `creating RLS test language mean failed: ${meansError.message}`,
-        );
+        throw new Error(`creating RLS test language mean failed: ${meansError.message}`);
       }
     });
 
     afterAll(async () => {
       const { service } = ready();
-      await service
-        .from("embedding_language_means")
-        .delete()
-        .eq("embedding_model", meansModel);
+      await service.from("embedding_language_means").delete().eq("embedding_model", meansModel);
       await service.from("feedback").delete().eq("item_id", itemId);
       await service.from("content_items").delete().eq("id", itemId);
       await service.from("sources").delete().eq("id", sourceId);
@@ -217,10 +201,7 @@ describe.skipIf(!enabled || anonKey == null || serviceKey == null)(
 
     it("denies anonymous wildcard reads from both shared tables", async () => {
       const { anonymous } = ready();
-      const { error: sourceError } = await anonymous
-        .from("sources")
-        .select("*")
-        .eq("id", sourceId);
+      const { error: sourceError } = await anonymous.from("sources").select("*").eq("id", sourceId);
       const { error: itemError } = await anonymous
         .from("content_items")
         .select("*")
@@ -232,24 +213,20 @@ describe.skipIf(!enabled || anonKey == null || serviceKey == null)(
 
     it("denies authenticated inserts to both shared tables", async () => {
       const { authenticated } = ready();
-      const { error: sourceError } = await authenticated
-        .from("sources")
-        .insert({
-          name: "Forbidden source",
-          feed_url: `${feedUrl}/forbidden`,
-          kind: "rss",
-          language: "en",
-        });
-      const { error: itemError } = await authenticated
-        .from("content_items")
-        .insert({
-          source_id: sourceId,
-          type: "article",
-          url: `${itemUrl}/forbidden`,
-          title: "Forbidden item",
-          language: "en",
-          published_at: new Date().toISOString(),
-        });
+      const { error: sourceError } = await authenticated.from("sources").insert({
+        name: "Forbidden source",
+        feed_url: `${feedUrl}/forbidden`,
+        kind: "rss",
+        language: "en",
+      });
+      const { error: itemError } = await authenticated.from("content_items").insert({
+        source_id: sourceId,
+        type: "article",
+        url: `${itemUrl}/forbidden`,
+        title: "Forbidden item",
+        language: "en",
+        published_at: new Date().toISOString(),
+      });
 
       expect(sourceError?.code).toBe("42501");
       expect(itemError?.code).toBe("42501");

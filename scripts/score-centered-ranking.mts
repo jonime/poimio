@@ -16,8 +16,7 @@ function parseJudgments(csv: string, path: string): CenteredJudgingRow[] {
   if (!header) throw new Error(`${path} is empty`);
   const columns = new Map(header.map((name, index) => [name, index]));
   for (const required of ["persona", "url", "relevant"]) {
-    if (!columns.has(required))
-      throw new Error(`${path} is missing ${required}`);
+    if (!columns.has(required)) throw new Error(`${path} is missing ${required}`);
   }
   return records.map((record) => ({
     persona: record[columns.get("persona")!] ?? "",
@@ -38,10 +37,7 @@ async function main(): Promise<void> {
   const answerKey = JSON.parse(
     await readFile(resolve(directory, ".centered-answer-key.json"), "utf8"),
   ) as CenteredRankingAnswerKey;
-  const results = scoreCenteredEarlyRanking(
-    [...previousJudgments, ...newJudgments],
-    answerKey,
-  );
+  const results = scoreCenteredEarlyRanking([...previousJudgments, ...newJudgments], answerKey);
   const resultsPath = resolve(directory, "centered-results.json");
   await writeFile(resultsPath, `${JSON.stringify(results, null, 2)}\n`);
   console.log(JSON.stringify(results, null, 2));

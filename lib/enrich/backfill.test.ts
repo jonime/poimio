@@ -52,8 +52,7 @@ class FakeBackfillDb implements EnrichmentBackfillDb {
   requeuedIds: string[] = [];
   siteWideRequeuedIds: string[] = [];
   readonly embeddedIds = new Set<string>();
-  readonly successes: Array<{ id: string; summary: string; origin: string }> =
-    [];
+  readonly successes: Array<{ id: string; summary: string; origin: string }> = [];
   readonly failures: string[] = [];
 
   constructor(
@@ -68,9 +67,7 @@ class FakeBackfillDb implements EnrichmentBackfillDb {
     _now: Date,
     ids?: string[],
   ): Promise<EnrichmentItem[]> {
-    const selected = ids
-      ? this.due.filter((candidate) => ids.includes(candidate.id))
-      : this.due;
+    const selected = ids ? this.due.filter((candidate) => ids.includes(candidate.id)) : this.due;
     return selected.slice(0, limit);
   }
 
@@ -80,9 +77,7 @@ class FakeBackfillDb implements EnrichmentBackfillDb {
 
   async requeueExhaustedEnrichmentItems(ids: string[]): Promise<number> {
     this.writes++;
-    this.requeuedIds = ids.filter((id) =>
-      this.exhausted.some((candidate) => candidate.id === id),
-    );
+    this.requeuedIds = ids.filter((id) => this.exhausted.some((candidate) => candidate.id === id));
     this.due.push(
       ...this.exhausted
         .filter((candidate) => this.requeuedIds.includes(candidate.id))
@@ -109,9 +104,7 @@ class FakeBackfillDb implements EnrichmentBackfillDb {
   }
 
   async listUnembeddedItems(): Promise<UnembeddedItem[]> {
-    return this.unembedded.filter(
-      (candidate) => !this.embeddedIds.has(candidate.id),
-    );
+    return this.unembedded.filter((candidate) => !this.embeddedIds.has(candidate.id));
   }
 
   async saveEnrichedSummary(
@@ -168,12 +161,9 @@ describe("parseBackfillArgs", () => {
     expect(parseBackfillArgs([]).environment).toBe("local");
   });
 
-  it.each([["--limit=0"], ["--limit=21"], ["--other"]])(
-    "rejects invalid option %s",
-    (argument) => {
-      expect(() => parseBackfillArgs([argument])).toThrow();
-    },
-  );
+  it.each([["--limit=0"], ["--limit=21"], ["--other"]])("rejects invalid option %s", (argument) => {
+    expect(() => parseBackfillArgs([argument])).toThrow();
+  });
 });
 
 describe("runEnrichmentBackfill", () => {
@@ -276,12 +266,7 @@ describe("runEnrichmentBackfill", () => {
   });
 
   it("requeues after due and exhausted work, then enriches and embeds within the limit", async () => {
-    const db = new FakeBackfillDb(
-      [item("due")],
-      [item("exhausted", 3)],
-      [],
-      [item("site-wide")],
-    );
+    const db = new FakeBackfillDb([item("due")], [item("exhausted", 3)], [], [item("site-wide")]);
     const result = await runEnrichmentBackfill(db, "test-key", {
       retryFailed: true,
       requeueSiteWide: true,
@@ -292,11 +277,7 @@ describe("runEnrichmentBackfill", () => {
     });
 
     expect(db.siteWideRequeuedIds).toEqual(["site-wide"]);
-    expect(db.successes.map(({ id }) => id)).toEqual([
-      "due",
-      "exhausted",
-      "site-wide",
-    ]);
+    expect(db.successes.map(({ id }) => id)).toEqual(["due", "exhausted", "site-wide"]);
     expect(db.embeddedIds).toEqual(new Set(["due", "exhausted", "site-wide"]));
     expect(result).toMatchObject({
       processed: 3,
@@ -368,9 +349,7 @@ describe("runEnrichmentBackfill", () => {
     });
     expect(text).toContain("Processed: 3");
     expect(text).toContain("Succeeded: 2");
-    expect(text).toContain(
-      "Provenance: feed 1, page metadata 1, AI generated 1",
-    );
+    expect(text).toContain("Provenance: feed 1, page metadata 1, AI generated 1");
   });
 
   it("reports per-item and embedding progress without content or identifiers", async () => {

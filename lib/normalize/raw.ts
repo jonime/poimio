@@ -25,9 +25,7 @@ import { decodeEntities } from "./text.ts";
  */
 export function elementText(block: string, tag: string): string | null {
   const escaped = tag.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-  const match = block.match(
-    new RegExp(`<${escaped}\\b[^>]*>([\\s\\S]*?)<\\/${escaped}>`, "i"),
-  );
+  const match = block.match(new RegExp(`<${escaped}\\b[^>]*>([\\s\\S]*?)<\\/${escaped}>`, "i"));
   if (!match) return null;
   return unwrapCdata(match[1]);
 }
@@ -59,9 +57,7 @@ export function splitItemBlocks(xml: string, format: "rss" | "atom"): string[] {
  */
 export function extractAtomCategories(block: string): string[] {
   const terms: string[] = [];
-  for (const match of block.matchAll(
-    /<category\b([^>]*?)(?:\/>|>[\s\S]*?<\/category>)/gi,
-  )) {
+  for (const match of block.matchAll(/<category\b([^>]*?)(?:\/>|>[\s\S]*?<\/category>)/gi)) {
     const attrs = match[1] ?? "";
     const term = attrValue(attrs, "term");
     if (term != null) terms.push(decodeEntities(term).trim());
@@ -70,9 +66,7 @@ export function extractAtomCategories(block: string): string[] {
 }
 
 function attrValue(attrs: string, name: string): string | null {
-  const match = attrs.match(
-    new RegExp(`\\b${name}\\s*=\\s*("([^"]*)"|'([^']*)')`, "i"),
-  );
+  const match = attrs.match(new RegExp(`\\b${name}\\s*=\\s*("([^"]*)"|'([^']*)')`, "i"));
   if (!match) return null;
   return match[2] ?? match[3] ?? null;
 }

@@ -39,16 +39,8 @@ import {
   type FeedbackQueueSnapshot,
   type FeedbackState,
 } from "../../lib/feedback-queue";
-import {
-  explanationForFeedItem,
-  type FeedItem,
-} from "../../lib/feed-ui";
-import {
-  beginSwipe,
-  finishSwipe,
-  moveSwipe,
-  type SwipeGesture,
-} from "../../lib/swipe-gesture";
+import { explanationForFeedItem, type FeedItem } from "../../lib/feed-ui";
+import { beginSwipe, finishSwipe, moveSwipe, type SwipeGesture } from "../../lib/swipe-gesture";
 
 const pageSize = 30;
 const maximumItems = 1000;
@@ -85,10 +77,7 @@ function FeedCard({
       setSnapshot,
     );
   }
-  function chooseAction(
-    kind: FeedbackKind,
-    via: "button" | "swipe" = "button",
-  ) {
+  function chooseAction(kind: FeedbackKind, via: "button" | "swipe" = "button") {
     const queue = queueRef.current;
     if (!queue) return;
     const previous = queue.snapshot.displayed;
@@ -149,8 +138,7 @@ function FeedCard({
   }
 
   const collapsed =
-    snapshot.displayed?.kind === "not_interested" ||
-    snapshot.displayed?.kind === "seen";
+    snapshot.displayed?.kind === "not_interested" || snapshot.displayed?.kind === "seen";
 
   const swipeDelta = gesture?.lock === "horizontal" ? gesture.deltaX : 0;
   const revealOpacity = gesture
@@ -205,23 +193,13 @@ function FeedCard({
           item={item}
           renderedAt={renderedAt}
           footer={
-            <CardFooter
-              className="relative z-10 gap-1"
-              role="group"
-              aria-label="Rate this item"
-            >
+            <CardFooter className="relative z-10 gap-1" role="group" aria-label="Rate this item">
               {feedbackActions.map(({ kind, label, icon: Icon }) => {
                 const pressed = snapshot.displayed?.kind === kind;
                 return (
                   <Button
                     key={kind}
-                    variant={
-                      pressed
-                        ? kind === "like"
-                          ? "success"
-                          : "secondary"
-                        : "ghost"
-                    }
+                    variant={pressed ? (kind === "like" ? "success" : "secondary") : "ghost"}
                     size="sm"
                     type="button"
                     aria-label={label}
@@ -308,14 +286,11 @@ export default function FeedList({
       .then((nextItems) => {
         setItems((currentItems) => {
           const knownIds = new Set(currentItems.map((item) => item.id));
-          const uniqueItems = nextItems.filter(
-            (item) => !knownIds.has(item.id),
-          );
+          const uniqueItems = nextItems.filter((item) => !knownIds.has(item.id));
           return [...currentItems, ...uniqueItems].slice(0, maximumItems);
         });
         setHasMore(
-          nextItems.length === requestedLimit &&
-            items.length + nextItems.length < maximumItems,
+          nextItems.length === requestedLimit && items.length + nextItems.length < maximumItems,
         );
       })
       .catch(() => setError(true))
@@ -337,20 +312,13 @@ export default function FeedList({
               <InboxIcon />
             </EmptyMedia>
             <EmptyTitle>No new items right now.</EmptyTitle>
-            <EmptyDescription>
-              New articles and videos arrive every hour.
-            </EmptyDescription>
+            <EmptyDescription>New articles and videos arrive every hour.</EmptyDescription>
           </EmptyHeader>
         </Empty>
       ) : (
         <div className="flex flex-col gap-4">
           {items.map((item) => (
-            <FeedCard
-              item={item}
-              renderedAt={renderedAt}
-              key={item.id}
-              onUndo={showUndoToast}
-            />
+            <FeedCard item={item} renderedAt={renderedAt} key={item.id} onUndo={showUndoToast} />
           ))}
         </div>
       )}

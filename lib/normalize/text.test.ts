@@ -21,23 +21,19 @@ describe("decodeEntities", () => {
 
 describe("htmlToText", () => {
   it("strips tags, decodes entities, and collapses whitespace", () => {
-    expect(
-      htmlToText(
-        "  Hello&nbsp;world,   <b>bold</b>\ttext.  ",
-      ),
-    ).toBe("Hello world, bold text.");
-  });
-
-  it("turns block-level markup into newlines and drops empty lines", () => {
-    expect(htmlToText("<p>One.</p><p>Two.</p><p>   </p><br>Three")).toBe(
-      "One.\nTwo.\nThree",
+    expect(htmlToText("  Hello&nbsp;world,   <b>bold</b>\ttext.  ")).toBe(
+      "Hello world, bold text.",
     );
   });
 
+  it("turns block-level markup into newlines and drops empty lines", () => {
+    expect(htmlToText("<p>One.</p><p>Two.</p><p>   </p><br>Three")).toBe("One.\nTwo.\nThree");
+  });
+
   it("discards script and style content", () => {
-    expect(
-      htmlToText('Text <script>var x = "evil";</script><style>.a{}</style> after'),
-    ).toBe("Text after");
+    expect(htmlToText('Text <script>var x = "evil";</script><style>.a{}</style> after')).toBe(
+      "Text after",
+    );
   });
 
   it("returns an empty string for empty input", () => {
@@ -47,15 +43,13 @@ describe("htmlToText", () => {
 
 describe("isLinkOnly", () => {
   it("detects the Hacker News Comments-only description", () => {
-    expect(
-      isLinkOnly(
-        '<a href="https://news.ycombinator.com/item?id=50271640">Comments</a>',
-      ),
-    ).toBe(true);
+    expect(isLinkOnly('<a href="https://news.ycombinator.com/item?id=50271640">Comments</a>')).toBe(
+      true,
+    );
   });
 
   it("is false when there is real text alongside a link", () => {
-    expect(isLinkOnly("Some text <a href=\"x\">link</a> more")).toBe(false);
+    expect(isLinkOnly('Some text <a href="x">link</a> more')).toBe(false);
   });
 
   it("is false for plain text without links", () => {

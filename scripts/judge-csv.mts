@@ -18,9 +18,7 @@ async function main() {
   const path = resolve(args[0]!);
   let csv = await readFile(path, "utf8");
   const records = readJudgingCsv(csv);
-  const pending = records.flatMap((record, index) =>
-    record.relevant === "" ? [index] : [],
-  );
+  const pending = records.flatMap((record, index) => (record.relevant === "" ? [index] : []));
   if (!pending.length) {
     console.log("All records are already labeled. No changes made.");
     return;
@@ -49,11 +47,7 @@ async function main() {
         if (answer.done || choice === "q") return;
         if (choice === "s") break;
         const relevant =
-          choice === "1" || choice === "y"
-            ? "1"
-            : choice === "0" || choice === "n"
-              ? "0"
-              : null;
+          choice === "1" || choice === "y" ? "1" : choice === "0" || choice === "n" ? "0" : null;
         if (relevant === null) {
           console.log("Choose 1/y, 0/n, s, or q, then press Enter.");
           continue;

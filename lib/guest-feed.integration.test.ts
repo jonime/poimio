@@ -35,20 +35,39 @@ describe.skipIf(!enabled || !anonKey || !serviceKey)("public guest metadata", ()
     );
     expect(sources.error).toBeNull();
     const base = (id: string) => ({
-      id, source_id: activeId, title: "Public story", type: "article",
-      url: `https://guest-test.example/${id}`, language: "en",
-      summary: "A public summary", summary_origin: "feed",
-      enrichment_status: "completed", published_at: recent,
+      id,
+      source_id: activeId,
+      title: "Public story",
+      type: "article",
+      url: `https://guest-test.example/${id}`,
+      language: "en",
+      summary: "A public summary",
+      summary_origin: "feed",
+      enrichment_status: "completed",
+      published_at: recent,
     });
     const items = await service.from("content_items").insert([
       base(articleId),
       { ...base(videoId), type: "video" },
       { ...base(hiddenIds[0]!), source_id: inactiveId },
-      { ...base(hiddenIds[1]!), summary: null, summary_origin: null, enrichment_status: "pending" },
-      { ...base(hiddenIds[2]!), summary: "   ", summary_origin: null, enrichment_status: "pending" },
+      {
+        ...base(hiddenIds[1]!),
+        summary: null,
+        summary_origin: null,
+        enrichment_status: "pending",
+      },
+      {
+        ...base(hiddenIds[2]!),
+        summary: "   ",
+        summary_origin: null,
+        enrichment_status: "pending",
+      },
       { ...base(hiddenIds[3]!), url: `javascript:alert('${hiddenIds[3]}')` },
       { ...base(hiddenIds[4]!), published_at: new Date(Date.now() + 3_600_000).toISOString() },
-      { ...base(hiddenIds[5]!), published_at: new Date(Date.now() - 8 * 86_400_000).toISOString() },
+      {
+        ...base(hiddenIds[5]!),
+        published_at: new Date(Date.now() - 8 * 86_400_000).toISOString(),
+      },
     ]);
     expect(items.error).toBeNull();
   });
@@ -60,24 +79,43 @@ describe.skipIf(!enabled || !anonKey || !serviceKey)("public guest metadata", ()
   });
 
   it("allows the exact public projection and source join, with no internal columns", async () => {
-    const result = await anonymous!.from("content_items")
-      .select("id,source_id,url,title,summary,summary_origin,type,language,thumbnail_url,published_at,sources(id,name)")
+    const result = await anonymous!
+      .from("content_items")
+      .select(
+        "id,source_id,url,title,summary,summary_origin,type,language,thumbnail_url,published_at,sources(id,name)",
+      )
       .in("id", ids);
     expect(result.error).toBeNull();
     expect(result.data?.map((item) => item.id).sort()).toEqual([articleId, videoId].sort());
     expect(result.data?.[0]?.sources).toEqual({ id: activeId, name: `Guest preview ${activeId}` });
-    const sources = await anonymous!.from("sources").select("id,name").in("id", [activeId, inactiveId]);
+    const sources = await anonymous!
+      .from("sources")
+      .select("id,name")
+      .in("id", [activeId, inactiveId]);
     expect(sources.error).toBeNull();
     expect(sources.data?.map((source) => source.id)).toEqual([activeId]);
   });
 
   it("enforces exact article/video time boundaries using the database clock", () => {
     // One transaction freezes now(); rollback restores the disposable fixtures.
-    const output = execFileSync("docker", [
-      "exec", "-i", "supabase_db_ai-feed", "psql", "-U", "postgres", "-d", "postgres",
-      "-v", "ON_ERROR_STOP=1", "-At",
-    ], {
-      encoding: "utf8", input: `
+    const output = execFileSync(
+      "docker",
+      [
+        "exec",
+        "-i",
+        "supabase_db_ai-feed",
+        "psql",
+        "-U",
+        "postgres",
+        "-d",
+        "postgres",
+        "-v",
+        "ON_ERROR_STOP=1",
+        "-At",
+      ],
+      {
+        encoding: "utf8",
+        input: `
       begin;
       update public.content_items set published_at = now() - interval '7 days' where id = '${articleId}';
       update public.content_items set published_at = now() - interval '30 days' where id = '${videoId}';
@@ -97,16 +135,24 @@ describe.skipIf(!enabled || !anonKey || !serviceKey)("public guest metadata", ()
       set local role anon;
       select count(*) = 0 from public.content_items where id = '${articleId}';
       rollback;
-    ` });
+    `,
+      },
+    );
     expect(output.split("\n").filter((line) => line === "t")).toHaveLength(4);
     expect(output.split("\n")).not.toContain("f");
   });
 
   it.each([
-    ["sources", "*"], ["sources", "feed_url"], ["sources", "last_error"],
-    ["sources", "is_active"], ["content_items", "*"], ["content_items", "embedding"],
-    ["content_items", "embedding_model"], ["content_items", "enrichment_status"],
-    ["content_items", "enrichment_error"], ["content_items", "categories"],
+    ["sources", "*"],
+    ["sources", "feed_url"],
+    ["sources", "last_error"],
+    ["sources", "is_active"],
+    ["content_items", "*"],
+    ["content_items", "embedding"],
+    ["content_items", "embedding_model"],
+    ["content_items", "enrichment_status"],
+    ["content_items", "enrichment_error"],
+    ["content_items", "categories"],
     ["content_items", "created_at"],
   ])("denies anonymous %s.%s reads", async (table, column) => {
     const result = await anonymous!.from(table).select(column).limit(1);

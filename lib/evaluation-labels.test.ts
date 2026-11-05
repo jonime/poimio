@@ -20,11 +20,7 @@ const items: EvaluationLabelItem[] = [
   { id: "b", title: "Hockey", summary: "Yhteenveto", language: "fi" },
 ];
 
-function label(
-  personaId: string,
-  itemId: string,
-  relevant = false,
-): EvaluationLabel {
+function label(personaId: string, itemId: string, relevant = false): EvaluationLabel {
   return {
     personaId,
     itemId,
@@ -61,15 +57,10 @@ describe("evaluation labels", () => {
     );
     expect(() => parseLabelResponse("not json", ["a"])).toThrow(/valid JSON/u);
     expect(() =>
-      parseLabelResponse('{"labels":[{"item_id":"a","relevant":"yes"}]}', [
-        "a",
-      ]),
+      parseLabelResponse('{"labels":[{"item_id":"a","relevant":"yes"}]}', ["a"]),
     ).toThrow(/boolean/u);
     expect(() =>
-      parseLabelResponse('{"labels":[{"item_id":"a","relevant":true}]}', [
-        "a",
-        "b",
-      ]),
+      parseLabelResponse('{"labels":[{"item_id":"a","relevant":true}]}', ["a", "b"]),
     ).toThrow(/every requested item/u);
   });
 
@@ -77,12 +68,8 @@ describe("evaluation labels", () => {
     expect(labelCacheKey("ai", "a", "qwen-a", "v1")).not.toBe(
       labelCacheKey("ai", "a", "qwen-b", "v1"),
     );
-    expect(
-      parseLabelJsonLines(`${JSON.stringify(label("ai", "a"))}\n`),
-    ).toHaveLength(1);
-    expect(() => parseLabelJsonLines('{"itemId":false}\n')).toThrow(
-      /invalid schema/u,
-    );
+    expect(parseLabelJsonLines(`${JSON.stringify(label("ai", "a"))}\n`)).toHaveLength(1);
+    expect(() => parseLabelJsonLines('{"itemId":false}\n')).toThrow(/invalid schema/u);
   });
 
   it("requires a complete single-model, single-prompt label set", () => {
@@ -95,9 +82,9 @@ describe("evaluation labels", () => {
     const labelSet = validateLabelSet({ personas, items, labels: complete });
     expect(labelSet.labels).toHaveLength(4);
     expect(labelSet.hash).toMatch(/^[a-f0-9]{64}$/u);
-    expect(() =>
-      validateLabelSet({ personas, items, labels: complete.slice(1) }),
-    ).toThrow(/incomplete/u);
+    expect(() => validateLabelSet({ personas, items, labels: complete.slice(1) })).toThrow(
+      /incomplete/u,
+    );
     expect(() =>
       validateLabelSet({
         personas,

@@ -16,13 +16,17 @@ import { LocalSignInDialog } from "./login/local-sign-in-dialog";
 export const instant = false;
 
 function CallbackError() {
-  return <Alert variant="destructive">
-    <CircleAlertIcon aria-hidden="true" />
-    <AlertTitle>Sign-in could not be completed. Please try again.</AlertTitle>
-  </Alert>;
+  return (
+    <Alert variant="destructive">
+      <CircleAlertIcon aria-hidden="true" />
+      <AlertTitle>Sign-in could not be completed. Please try again.</AlertTitle>
+    </Alert>
+  );
 }
 
-export default async function Home({ searchParams }: {
+export default async function Home({
+  searchParams,
+}: {
   searchParams: Promise<{ error?: string | string[] }>;
 }) {
   // createClient enters the request-time boundary; identity and personal feed
@@ -37,15 +41,27 @@ export default async function Home({ searchParams }: {
     return (
       <main className="mx-auto flex w-full max-w-2xl flex-col gap-8 px-4 py-8 sm:py-12">
         <div className="flex flex-col items-center gap-5 text-center">
-          <Image src="/full.png" alt="Poimio" width={2172} height={724} priority
-            className="h-auto w-44" />
-          <p className="text-2xl font-semibold tracking-tight sm:text-3xl">The web, picked for you.</p>
-          <div className="w-full max-w-72"><SignInButton /></div>
+          <Image
+            src="/full.png"
+            alt="Poimio"
+            width={2172}
+            height={724}
+            priority
+            className="h-auto w-44"
+          />
+          <p className="text-2xl font-semibold tracking-tight sm:text-3xl">
+            The web, picked for you.
+          </p>
+          <div className="w-full max-w-72">
+            <SignInButton />
+          </div>
         </div>
         {params.error === "callback" && <CallbackError />}
         <section className="flex flex-col gap-4" aria-labelledby="preview-heading">
           <div className="flex flex-col gap-2">
-            <h1 id="preview-heading" className="text-2xl font-semibold tracking-tight">Latest picks</h1>
+            <h1 id="preview-heading" className="text-2xl font-semibold tracking-tight">
+              Latest picks
+            </h1>
             <p className="text-sm text-muted-foreground">
               A preview from our sources. Sign in to get recommendations based on your interests.
             </p>
@@ -54,10 +70,16 @@ export default async function Home({ searchParams }: {
         </section>
         <div className="flex flex-col items-center gap-4 pb-4 text-center">
           <p className="text-sm text-muted-foreground">Make your next picks personal.</p>
-          <div className="w-full max-w-72"><SignInButton /></div>
+          <div className="w-full max-w-72">
+            <SignInButton />
+          </div>
           <div className="flex items-center gap-4 text-sm text-muted-foreground">
-            <Link href="/privacy" className="underline underline-offset-4">Privacy policy</Link>
-            <a href="https://github.com/jonime/poimio" className="underline underline-offset-4">GitHub</a>
+            <Link href="/privacy" className="underline underline-offset-4">
+              Privacy policy
+            </Link>
+            <a href="https://github.com/jonime/poimio" className="underline underline-offset-4">
+              GitHub
+            </a>
           </div>
         </div>
         {isLocalPasswordLoginEnabled() && <LocalSignInDialog />}
@@ -72,19 +94,31 @@ export default async function Home({ searchParams }: {
       <AppHeader displayName={displayNameFromClaims(data?.claims)} />
       <main className="mx-auto flex w-full max-w-2xl flex-col gap-6 px-4 py-6">
         {params.error === "callback" && <CallbackError />}
-        {params.error === "sign-out" && <Alert variant="destructive">
-          <CircleAlertIcon aria-hidden="true" />
-          <AlertTitle>Sign-out failed. Please try again.</AlertTitle>
-        </Alert>}
+        {params.error === "sign-out" && (
+          <Alert variant="destructive">
+            <CircleAlertIcon aria-hidden="true" />
+            <AlertTitle>Sign-out failed. Please try again.</AlertTitle>
+          </Alert>
+        )}
         <section className="flex flex-col gap-4" aria-labelledby="feed-heading">
           <div className="flex items-center justify-between gap-4">
-            <h1 id="feed-heading" className="text-2xl font-semibold tracking-tight">Your feed</h1>
+            <h1 id="feed-heading" className="text-2xl font-semibold tracking-tight">
+              Your feed
+            </h1>
             <RefreshFeedButton />
           </div>
-          {feedError ? <Alert variant="destructive">
-            <CircleAlertIcon aria-hidden="true" />
-            <AlertTitle>The feed could not be loaded. Please try again.</AlertTitle>
-          </Alert> : <FeedList key={renderedAt} initialItems={(feedData ?? []) as FeedItem[]} renderedAt={renderedAt} />}
+          {feedError ? (
+            <Alert variant="destructive">
+              <CircleAlertIcon aria-hidden="true" />
+              <AlertTitle>The feed could not be loaded. Please try again.</AlertTitle>
+            </Alert>
+          ) : (
+            <FeedList
+              key={renderedAt}
+              initialItems={(feedData ?? []) as FeedItem[]}
+              renderedAt={renderedAt}
+            />
+          )}
         </section>
       </main>
     </>

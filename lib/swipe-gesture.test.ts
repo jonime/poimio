@@ -21,20 +21,14 @@ describe("swipe gesture decisions", () => {
   it("commits right swipes as Like only past 40 percent", () => {
     const gesture = moveSwipe(beginSwipe(0, 0, 200), 82, 2);
     expect(finishSwipe(gesture).action).toBe("like");
-    expect(
-      finishSwipe(moveSwipe(beginSwipe(0, 0, 200), 80, 0)).action,
-    ).toBeNull();
-    expect(
-      finishSwipe(moveSwipe(beginSwipe(0, 0, 200), 78, 0)).action,
-    ).toBeNull();
+    expect(finishSwipe(moveSwipe(beginSwipe(0, 0, 200), 80, 0)).action).toBeNull();
+    expect(finishSwipe(moveSwipe(beginSwipe(0, 0, 200), 78, 0)).action).toBeNull();
   });
 
   it("commits left swipes as Not interested only past 40 percent", () => {
     const gesture = moveSwipe(beginSwipe(200, 0, 200), 118, 2);
     expect(finishSwipe(gesture).action).toBe("not_interested");
-    expect(
-      finishSwipe(moveSwipe(beginSwipe(200, 0, 200), 120, 0)).action,
-    ).toBeNull();
+    expect(finishSwipe(moveSwipe(beginSwipe(200, 0, 200), 120, 0)).action).toBeNull();
   });
 
   it("cancels a gesture that never establishes a horizontal lock", () => {

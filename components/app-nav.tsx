@@ -21,12 +21,7 @@ export function AppNav() {
             key={item.href}
             variant={current ? "default" : "ghost"}
             nativeButton={false}
-            render={
-              <Link
-                href={item.href}
-                aria-current={current ? "page" : undefined}
-              />
-            }
+            render={<Link href={item.href} aria-current={current ? "page" : undefined} />}
           >
             {item.label}
           </Button>

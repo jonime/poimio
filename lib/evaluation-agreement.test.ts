@@ -42,35 +42,23 @@ describe("evaluation agreement", () => {
     expect(first).toEqual(repeated);
     expect(first.sets.selection).toHaveLength(60);
     expect(first.sets.reporting).toHaveLength(60);
-    expect(new Set(first.sets.selection.map((pair) => pair.pairId)).size).toBe(
-      60,
-    );
-    const selectionIds = new Set(
-      first.sets.selection.map((pair) => pair.pairId),
-    );
-    expect(
-      first.sets.reporting.some((pair) => selectionIds.has(pair.pairId)),
-    ).toBe(false);
+    expect(new Set(first.sets.selection.map((pair) => pair.pairId)).size).toBe(60);
+    const selectionIds = new Set(first.sets.selection.map((pair) => pair.pairId));
+    expect(first.sets.reporting.some((pair) => selectionIds.has(pair.pairId))).toBe(false);
     for (const persona of personas) {
       for (const sample of [first.sets.selection, first.sets.reporting]) {
-        const personaPairs = sample.filter(
-          (pair) => pair.personaId === persona.id,
-        );
+        const personaPairs = sample.filter((pair) => pair.personaId === persona.id);
         expect(personaPairs).toHaveLength(15);
-        expect(
-          personaPairs.filter((pair) => pair.language === "fi").length,
-        ).toBeGreaterThanOrEqual(7);
-        expect(
-          personaPairs.filter((pair) => pair.language === "en").length,
-        ).toBeGreaterThanOrEqual(7);
+        expect(personaPairs.filter((pair) => pair.language === "fi").length).toBeGreaterThanOrEqual(
+          7,
+        );
+        expect(personaPairs.filter((pair) => pair.language === "en").length).toBeGreaterThanOrEqual(
+          7,
+        );
       }
     }
-    expect(first.strata.every((stratum) => stratum.populationSize > 0)).toBe(
-      true,
-    );
-    expect(
-      first.sets.selection.every((pair) => pair.inclusionProbability > 0),
-    ).toBe(true);
+    expect(first.strata.every((stratum) => stratum.populationSize > 0)).toBe(true);
+    expect(first.sets.selection.every((pair) => pair.inclusionProbability > 0)).toBe(true);
   });
 
   it("calculates weighted agreement, kappa, precision, and recall", () => {
@@ -97,9 +85,7 @@ describe("evaluation agreement", () => {
         seed: 1,
       }),
     ).toThrow(/missing/u);
-    expect(() => scoreAgreement([pair("1", true, null, 0.5)])).toThrow(
-      /missing labels/u,
-    );
+    expect(() => scoreAgreement([pair("1", true, null, 0.5)])).toThrow(/missing labels/u);
   });
 });
 

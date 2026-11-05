@@ -28,8 +28,7 @@ interface RawLikedItem {
 
 export default async function LikedPage() {
   const supabase = await createClient();
-  const { data: claimsData, error: claimsError } =
-    await supabase.auth.getClaims();
+  const { data: claimsData, error: claimsError } = await supabase.auth.getClaims();
   if (claimsError || !claimsData?.claims?.sub) redirect("/");
 
   const { data, error } = await supabase
@@ -76,9 +75,7 @@ export default async function LikedPage() {
       {error ? (
         <Alert variant="destructive">
           <CircleAlertIcon aria-hidden="true" />
-          <AlertTitle>
-            Liked items could not be loaded. Please try again.
-          </AlertTitle>
+          <AlertTitle>Liked items could not be loaded. Please try again.</AlertTitle>
         </Alert>
       ) : (
         <LikedList items={likedItems} renderedAt={renderedAt} />

@@ -65,10 +65,7 @@ describe("evaluation replay protocol", () => {
 
   it("removes near duplicates before ranking using centered similarity", () => {
     const feedback = item("like", "en", [11, 0]);
-    const candidates = [
-      item("duplicate", "en", [10.9, 0.1]),
-      item("different", "en", [10, 1]),
-    ];
+    const candidates = [item("duplicate", "en", [10.9, 0.1]), item("different", "en", [10, 1])];
     const ids = nearDuplicateIds({
       candidates,
       feedbackItems: [feedback],
@@ -76,16 +73,9 @@ describe("evaluation replay protocol", () => {
       threshold: 0.9,
     });
     expect(ids).toEqual(new Set(["duplicate"]));
-    const scopes = candidateScopes(
-      [feedback, ...candidates],
-      new Set(["like"]),
-      ids,
-    );
+    const scopes = candidateScopes([feedback, ...candidates], new Set(["like"]), ids);
     expect(scopes.headline.map(({ id }) => id)).toEqual(["different"]);
-    expect(scopes.duplicateInclusive.map(({ id }) => id)).toEqual([
-      "duplicate",
-      "different",
-    ]);
+    expect(scopes.duplicateInclusive.map(({ id }) => id)).toEqual(["duplicate", "different"]);
   });
 
   it("reports missing P@10 cells and computes diversity and Jaccard", () => {

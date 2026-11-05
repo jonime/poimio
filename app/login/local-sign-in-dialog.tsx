@@ -30,9 +30,7 @@ export function LocalSignInDialog() {
       <DialogContent className="sm:max-w-sm">
         <DialogHeader>
           <DialogTitle>Local sign-in</DialogTitle>
-          <DialogDescription>
-            Email and password for local Supabase test users.
-          </DialogDescription>
+          <DialogDescription>Email and password for local Supabase test users.</DialogDescription>
         </DialogHeader>
         <PasswordSignInForm />
       </DialogContent>

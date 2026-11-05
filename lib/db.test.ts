@@ -47,10 +47,7 @@ class FakeIngestDb implements IngestDb {
     return this.sources.filter((s) => s.isActive);
   }
 
-  async insertItems(
-    source: Pick<Source, "id" | "language">,
-    items: ParsedItem[],
-  ): Promise<number> {
+  async insertItems(source: Pick<Source, "id" | "language">, items: ParsedItem[]): Promise<number> {
     this.insertCalls.push({ source, items });
     let inserted = 0;
     for (const it of items) {
@@ -197,9 +194,7 @@ describe("toContentItemRows", () => {
   });
 
   it("stores an empty summary as null", () => {
-    const [row] = toContentItemRows({ id: "src-1", language: "en" }, [
-      item({ summary: "" }),
-    ]);
+    const [row] = toContentItemRows({ id: "src-1", language: "en" }, [item({ summary: "" })]);
     expect(row?.summary).toBeNull();
   });
 
@@ -221,11 +216,11 @@ describe("createIngestDb", () => {
   });
 
   it("names only the missing variable when one is present", () => {
-    expect(() =>
-      createIngestDb({ NEXT_PUBLIC_SUPABASE_URL: "http://x" }),
-    ).toThrowError(/SUPABASE_SERVICE_ROLE_KEY/);
-    expect(() =>
-      createIngestDb({ SUPABASE_SERVICE_ROLE_KEY: "secret" }),
-    ).toThrowError(/NEXT_PUBLIC_SUPABASE_URL/);
+    expect(() => createIngestDb({ NEXT_PUBLIC_SUPABASE_URL: "http://x" })).toThrowError(
+      /SUPABASE_SERVICE_ROLE_KEY/,
+    );
+    expect(() => createIngestDb({ SUPABASE_SERVICE_ROLE_KEY: "secret" })).toThrowError(
+      /NEXT_PUBLIC_SUPABASE_URL/,
+    );
   });
 });

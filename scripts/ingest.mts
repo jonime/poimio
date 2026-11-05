@@ -4,9 +4,7 @@ import { formatIngestionSummary, runIngestion } from "../lib/ingest.ts";
 async function main(): Promise<void> {
   const apiKey = process.env.OPENAI_API_KEY;
   if (!apiKey) {
-    throw new Error(
-      "missing environment variable: OPENAI_API_KEY (see .env.example)",
-    );
+    throw new Error("missing environment variable: OPENAI_API_KEY (see .env.example)");
   }
 
   const result = await runIngestion(createIngestDb(), apiKey);

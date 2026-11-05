@@ -39,21 +39,13 @@ function localBaseUrl(value: string): URL {
     url.username.length > 0 ||
     url.password.length > 0
   ) {
-    throw new Error(
-      "Evaluation labels require HTTPS or a loopback HTTP model endpoint",
-    );
+    throw new Error("Evaluation labels require HTTPS or a loopback HTTP model endpoint");
   }
   return url;
 }
 
-async function loadSnapshot(
-  provisional: boolean,
-): Promise<EvaluationLabelItem[]> {
-  const snapshotDirectory = resolve(
-    root,
-    "evaluation/snapshot",
-    provisional ? "provisional" : ".",
-  );
+async function loadSnapshot(provisional: boolean): Promise<EvaluationLabelItem[]> {
+  const snapshotDirectory = resolve(root, "evaluation/snapshot", provisional ? "provisional" : ".");
   const [manifestText, sourceText, itemText, meanText] = await Promise.all([
     readFile(resolve(snapshotDirectory, "manifest.json"), "utf8"),
     readFile(resolve(snapshotDirectory, "sources.jsonl"), "utf8"),
@@ -86,34 +78,24 @@ async function loadSnapshot(
 async function resolveModel(baseUrl: URL, apiKey: string): Promise<string> {
   const configuredModel = process.env.LLM_MODEL?.trim();
   if (configuredModel) return configuredModel;
-  const response = await fetch(
-    new URL("models", `${baseUrl.href.replace(/\/$/u, "")}/`),
-    {
-      headers: { Authorization: `Bearer ${apiKey}` },
-      signal: AbortSignal.timeout(requestTimeoutMs),
-    },
-  );
+  const response = await fetch(new URL("models", `${baseUrl.href.replace(/\/$/u, "")}/`), {
+    headers: { Authorization: `Bearer ${apiKey}` },
+    signal: AbortSignal.timeout(requestTimeoutMs),
+  });
   if (!response.ok) {
-    throw new Error(
-      `listing local model IDs failed with HTTP ${response.status}`,
-    );
+    throw new Error(`listing local model IDs failed with HTTP ${response.status}`);
   }
   const payload: unknown = await response.json();
   if (!isRecord(payload) || !Array.isArray(payload.data)) {
     throw new Error("local model list has an invalid response schema");
   }
   const ids = payload.data.flatMap((entry: unknown) =>
-    entry !== null &&
-    typeof entry === "object" &&
-    "id" in entry &&
-    typeof entry.id === "string"
+    entry !== null && typeof entry === "object" && "id" in entry && typeof entry.id === "string"
       ? [entry.id]
       : [],
   );
   if (ids.length !== 1) {
-    throw new Error(
-      `set LLM_MODEL explicitly; local MTPLX reports ${ids.length} available models`,
-    );
+    throw new Error(`set LLM_MODEL explicitly; local MTPLX reports ${ids.length} available models`);
   }
   return ids[0]!;
 }
@@ -169,21 +151,13 @@ async function requestBatch(input: {
   if (!response.ok) {
     const body: unknown = await response.json().catch(() => null);
     const errorMessage =
-      isRecord(body) &&
-      isRecord(body.error) &&
-      typeof body.error.message === "string"
+      isRecord(body) && isRecord(body.error) && typeof body.error.message === "string"
         ? body.error.message.slice(0, 300)
         : "no server error message";
-    throw new Error(
-      `label request failed with HTTP ${response.status}: ${errorMessage}`,
-    );
+    throw new Error(`label request failed with HTTP ${response.status}: ${errorMessage}`);
   }
   const payload: unknown = await response.json();
-  if (
-    !isRecord(payload) ||
-    !Array.isArray(payload.choices) ||
-    payload.choices.length === 0
-  ) {
+  if (!isRecord(payload) || !Array.isArray(payload.choices) || payload.choices.length === 0) {
     throw new Error("label API response has no choices");
   }
   const choice = payload.choices[0];
@@ -227,9 +201,7 @@ async function main(): Promise<void> {
   if (baseUrl.protocol === "https:" && !process.env.LLM_API_KEY) {
     throw new Error("LLM_API_KEY is required for HTTPS evaluation endpoints");
   }
-  const personas = JSON.parse(
-    await readFile(personaPath, "utf8"),
-  ) as EvaluationPersona[];
+  const personas = JSON.parse(await readFile(personaPath, "utf8")) as EvaluationPersona[];
   const items = await loadSnapshot(provisional);
   const model = await resolveModel(baseUrl, apiKey);
   const cacheName = model.replace(/[^a-zA-Z0-9._-]/gu, "_");
@@ -241,30 +213,23 @@ async function main(): Promise<void> {
   const labels = await readExistingLabels(cachePath);
   if (
     labels.some(
-      (label) =>
-        label.model !== model ||
-        label.promptVersion !== EVALUATION_LABEL_PROMPT_VERSION,
+      (label) => label.model !== model || label.promptVersion !== EVALUATION_LABEL_PROMPT_VERSION,
     )
   ) {
     throw new Error(
       "label cache has a different model or prompt version; move it before starting a new label set",
     );
   }
-  const existingKeys = new Set(
-    labels.map((label) => `${label.personaId}\u0000${label.itemId}`),
-  );
+  const existingKeys = new Set(labels.map((label) => `${label.personaId}\u0000${label.itemId}`));
   const baseKeys = new Set<string>();
   for (const label of labels) {
     const key = `${label.personaId}\u0000${label.itemId}`;
-    if (baseKeys.has(key))
-      throw new Error("label cache contains duplicate pairs");
+    if (baseKeys.has(key)) throw new Error("label cache contains duplicate pairs");
     baseKeys.add(key);
   }
 
   for (const persona of personas) {
-    const missingItems = items.filter(
-      (item) => !existingKeys.has(`${persona.id}\u0000${item.id}`),
-    );
+    const missingItems = items.filter((item) => !existingKeys.has(`${persona.id}\u0000${item.id}`));
     const batchSize = evaluationLabelBatchSize(process.env.LLM_BATCH_SIZE);
     const batches = chunkItems(missingItems, batchSize);
     for (const [batchIndex, batch] of batches.entries()) {
@@ -302,12 +267,8 @@ async function main(): Promise<void> {
         `${records.map((record) => JSON.stringify(record)).join("\n")}\n`,
       );
       labels.push(...records);
-      records.forEach((record) =>
-        existingKeys.add(`${record.personaId}\u0000${record.itemId}`),
-      );
-      console.log(
-        `Labeled ${persona.id} batch ${batchIndex + 1}/${batches.length}`,
-      );
+      records.forEach((record) => existingKeys.add(`${record.personaId}\u0000${record.itemId}`));
+      console.log(`Labeled ${persona.id} batch ${batchIndex + 1}/${batches.length}`);
     }
     console.log(`Labeled ${persona.id}: ${items.length}/${items.length}`);
   }

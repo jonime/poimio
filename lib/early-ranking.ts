@@ -1,8 +1,4 @@
-export const EARLY_RANKING_METHODS = [
-  "nearest-liked",
-  "average-vector",
-  "newest-first",
-] as const;
+export const EARLY_RANKING_METHODS = ["nearest-liked", "average-vector", "newest-first"] as const;
 
 export type EarlyRankingMethod = (typeof EARLY_RANKING_METHODS)[number];
 
@@ -29,10 +25,7 @@ export interface EarlyRankingItem {
 
 export interface CenteredRankingAnswerKey {
   languageMeans: Record<RankingLanguage, number[]>;
-  personas: Record<
-    string,
-    Record<CenteredRankingMethod, Array<{ url: string; rank: number }>>
-  >;
+  personas: Record<string, Record<CenteredRankingMethod, Array<{ url: string; rank: number }>>>;
 }
 
 export interface CenteredJudgingRow {
@@ -65,10 +58,7 @@ export interface JudgingRow {
 }
 
 export interface RankingAnswerKey {
-  personas: Record<
-    string,
-    Record<EarlyRankingMethod, Array<{ blindId: string; rank: number }>>
-  >;
+  personas: Record<string, Record<EarlyRankingMethod, Array<{ blindId: string; rank: number }>>>;
 }
 
 export interface EarlyRankingScore {
@@ -121,8 +111,7 @@ function meanEmbedding(items: EarlyRankingItem[]): number[] {
     }
     for (let index = 0; index < mean.length; index += 1) {
       const value = item.embedding[index];
-      if (value === undefined)
-        throw new Error("embedding contains a missing value");
+      if (value === undefined) throw new Error("embedding contains a missing value");
       mean[index] = (mean[index] ?? 0) + value;
     }
   }
@@ -141,13 +130,10 @@ export function centerEmbeddingsByLanguage(items: EarlyRankingItem[]): {
     const mean = means[item.language];
     const centered = item.embedding.map((value, index) => {
       const meanValue = mean[index];
-      if (meanValue === undefined)
-        throw new Error("language mean has an inconsistent dimension");
+      if (meanValue === undefined) throw new Error("language mean has an inconsistent dimension");
       return value - meanValue;
     });
-    const norm = Math.sqrt(
-      centered.reduce((sum, value) => sum + value * value, 0),
-    );
+    const norm = Math.sqrt(centered.reduce((sum, value) => sum + value * value, 0));
     return {
       ...item,
       embedding: norm === 0 ? centered : centered.map((value) => value / norm),
@@ -167,38 +153,27 @@ export function rankEarlyItems(
     if (!item) throw new Error(`liked item ${id} is not in the sample`);
     return item;
   });
-  if (likedItems.length === 0)
-    throw new Error("at least one liked item is required");
+  if (likedItems.length === 0) throw new Error("at least one liked item is required");
 
   const likedIds = new Set(likedItemIds);
   const candidates = items.filter((item) => !likedIds.has(item.id));
 
   if (method === "newest-first") {
     return candidates.sort((left, right) => {
-      const timeDifference =
-        Date.parse(right.publishedAt) - Date.parse(left.publishedAt);
+      const timeDifference = Date.parse(right.publishedAt) - Date.parse(left.publishedAt);
       return timeDifference || left.id.localeCompare(right.id);
     });
   }
 
-  const average =
-    method === "average-vector" ? meanEmbedding(likedItems) : null;
+  const average = method === "average-vector" ? meanEmbedding(likedItems) : null;
   return candidates.sort((left, right) => {
     const leftScore =
       method === "nearest-liked"
-        ? Math.max(
-            ...likedItems.map((liked) =>
-              cosineSimilarity(left.embedding, liked.embedding),
-            ),
-          )
+        ? Math.max(...likedItems.map((liked) => cosineSimilarity(left.embedding, liked.embedding)))
         : cosineSimilarity(left.embedding, average ?? []);
     const rightScore =
       method === "nearest-liked"
-        ? Math.max(
-            ...likedItems.map((liked) =>
-              cosineSimilarity(right.embedding, liked.embedding),
-            ),
-          )
+        ? Math.max(...likedItems.map((liked) => cosineSimilarity(right.embedding, liked.embedding)))
         : cosineSimilarity(right.embedding, average ?? []);
     return rightScore - leftScore || left.id.localeCompare(right.id);
   });
@@ -206,9 +181,7 @@ export function rankEarlyItems(
 
 export function encodeCsv(rows: string[][]): string {
   return `${rows
-    .map((row) =>
-      row.map((value) => `"${value.replaceAll('"', '""')}"`).join(","),
-    )
+    .map((row) => row.map((value) => `"${value.replaceAll('"', '""')}"`).join(","))
     .join("\r\n")}\r\n`;
 }
 
@@ -261,8 +234,7 @@ export function scoreEarlyRanking(
   const relevance = new Map<string, boolean>();
   for (const row of judgingRows) {
     const key = `${row.persona}\u0000${row.blind_id}`;
-    if (relevance.has(key))
-      throw new Error(`duplicate judgment for ${row.blind_id}`);
+    if (relevance.has(key)) throw new Error(`duplicate judgment for ${row.blind_id}`);
     if (row.relevant !== "0" && row.relevant !== "1") {
       throw new Error(`relevant must be 0 or 1 for ${row.blind_id}`);
     }
@@ -274,18 +246,14 @@ export function scoreEarlyRanking(
     for (const method of EARLY_RANKING_METHODS) {
       const rankedItems = methods[method];
       if (!rankedItems || rankedItems.length !== 10) {
-        throw new Error(
-          `${persona}/${method} must have exactly 10 ranked items`,
-        );
+        throw new Error(`${persona}/${method} must have exactly 10 ranked items`);
       }
       let relevantCount = 0;
       for (const rankedItem of rankedItems) {
         const key = `${persona}\u0000${rankedItem.blindId}`;
         const judgedRelevant = relevance.get(key);
         if (judgedRelevant === undefined) {
-          throw new Error(
-            `missing judgment for ${persona}/${rankedItem.blindId}`,
-          );
+          throw new Error(`missing judgment for ${persona}/${rankedItem.blindId}`);
         }
         if (judgedRelevant) relevantCount += 1;
       }
@@ -301,13 +269,8 @@ export function scoreEarlyRanking(
   const macroAverage = Object.fromEntries(
     EARLY_RANKING_METHODS.map((method) => {
       const scores = perPersona.filter((score) => score.method === method);
-      if (scores.length === 0)
-        throw new Error("answer key must contain personas");
-      return [
-        method,
-        scores.reduce((sum, score) => sum + score.precisionAt10, 0) /
-          scores.length,
-      ];
+      if (scores.length === 0) throw new Error("answer key must contain personas");
+      return [method, scores.reduce((sum, score) => sum + score.precisionAt10, 0) / scores.length];
     }),
   ) as Record<EarlyRankingMethod, number>;
   const passed =
@@ -333,8 +296,7 @@ export function scoreCenteredEarlyRanking(
   const relevance = new Map<string, boolean>();
   for (const row of judgingRows) {
     const key = `${row.persona}\u0000${row.url}`;
-    if (relevance.has(key))
-      throw new Error(`duplicate judgment for ${row.persona}/${row.url}`);
+    if (relevance.has(key)) throw new Error(`duplicate judgment for ${row.persona}/${row.url}`);
     if (row.relevant !== "0" && row.relevant !== "1") {
       throw new Error(`relevant must be 0 or 1 for ${row.persona}/${row.url}`);
     }
@@ -346,15 +308,11 @@ export function scoreCenteredEarlyRanking(
     for (const method of CENTERED_RANKING_METHODS) {
       const rankedItems = methods[method];
       if (!rankedItems || rankedItems.length !== 10) {
-        throw new Error(
-          `${persona}/${method} must have exactly 10 ranked items`,
-        );
+        throw new Error(`${persona}/${method} must have exactly 10 ranked items`);
       }
       let relevantCount = 0;
       for (const rankedItem of rankedItems) {
-        const judgedRelevant = relevance.get(
-          `${persona}\u0000${rankedItem.url}`,
-        );
+        const judgedRelevant = relevance.get(`${persona}\u0000${rankedItem.url}`);
         if (judgedRelevant === undefined) {
           throw new Error(`missing judgment for ${persona}/${rankedItem.url}`);
         }
@@ -372,13 +330,8 @@ export function scoreCenteredEarlyRanking(
   const macroAverage = Object.fromEntries(
     CENTERED_RANKING_METHODS.map((method) => {
       const scores = perPersona.filter((score) => score.method === method);
-      if (scores.length === 0)
-        throw new Error("answer key must contain personas");
-      return [
-        method,
-        scores.reduce((sum, score) => sum + score.precisionAt10, 0) /
-          scores.length,
-      ];
+      if (scores.length === 0) throw new Error("answer key must contain personas");
+      return [method, scores.reduce((sum, score) => sum + score.precisionAt10, 0) / scores.length];
     }),
   ) as Record<CenteredRankingMethod, number>;
   const bestNearestLikedMethod =

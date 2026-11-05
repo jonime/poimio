@@ -8,13 +8,7 @@
  */
 
 /** Exact-match query parameters dropped by {@link normalizeUrl}. */
-const DROPPED_PARAM_NAMES = new Set([
-  "origin",
-  "at_medium",
-  "at_campaign",
-  "fbclid",
-  "gclid",
-]);
+const DROPPED_PARAM_NAMES = new Set(["origin", "at_medium", "at_campaign", "fbclid", "gclid"]);
 
 /**
  * Normalize a URL for storage and deduplication.

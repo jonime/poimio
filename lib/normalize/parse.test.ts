@@ -27,9 +27,7 @@ describe("parseFeed (saved fixtures)", () => {
       "Trump soittaa kampanjatilaisuuksissaan Neil Youngin kappaletta, jossa arvostellaan Amerikkaa – haastettiin oikeuteen",
     );
     expect(item.url).toBe("https://yle.fi/a/74-20253769");
-    expect(item.summary).toContain(
-      "edustaa kaikkea sitä, mitä Donald J. Trump ei edusta",
-    );
+    expect(item.summary).toContain("edustaa kaikkea sitä, mitä Donald J. Trump ei edusta");
     expect(item.publishedAt.toISOString()).toBe("2026-10-28T12:32:10.000Z");
     expect(item.categories).toContain("Ulkomaat");
     expect(item.categories).toContain("Donald Trump");
@@ -64,16 +62,12 @@ describe("parseFeed (saved fixtures)", () => {
     expect(feed.items.length).toBeGreaterThan(0);
 
     const item = feed.items[0];
-    expect(item.title).toBe(
-      "Almost all of Amazon’s new Echo gear is available now",
-    );
+    expect(item.title).toBe("Almost all of Amazon’s new Echo gear is available now");
     expect(item.url).toBe(
       "https://www.theverge.com/gadgets/1019686/amazon-echo-dot-studio-camera-frame-show-16-buy",
     );
     // Summary comes from the Atom <summary>, never the full <content>.
-    expect(item.summary).toContain(
-      "Amazon used to blast out dozens of products onstage",
-    );
+    expect(item.summary).toContain("Amazon used to blast out dozens of products onstage");
     expect(item.summary).not.toContain("Read the full story at The Verge");
     expect(item.publishedAt.toISOString()).toBe("2026-10-28T12:29:52.000Z");
     expect(item.categories).toEqual([
@@ -112,9 +106,7 @@ describe("parseFeed (saved fixtures)", () => {
     expect(feed.items.length).toBeGreaterThan(0);
 
     const item = feed.items[0];
-    expect(item.title).toBe(
-      "I Fact-Checked Every Stunt in the Tesla Roadster Reveal",
-    );
+    expect(item.title).toBe("I Fact-Checked Every Stunt in the Tesla Roadster Reveal");
     // The v parameter must survive normalization.
     expect(item.url).toBe("https://www.youtube.com/watch?v=hJSbro3EBnY");
     expect(item.type).toBe("video");
@@ -126,8 +118,6 @@ describe("parseFeed (saved fixtures)", () => {
     expect(item.summary).not.toMatch(/related videos/i);
     expect(item.publishedAt.toISOString()).toBe("2026-10-23T14:00:00.000Z");
     expect(item.categories).toEqual([]);
-    expect(item.thumbnailUrl).toBe(
-      "https://i1.ytimg.com/vi/hJSbro3EBnY/hqdefault.jpg",
-    );
+    expect(item.thumbnailUrl).toBe("https://i1.ytimg.com/vi/hJSbro3EBnY/hqdefault.jpg");
   });
 });

@@ -16,20 +16,10 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import {
-  Empty,
-  EmptyContent,
-  EmptyHeader,
-  EmptyMedia,
-  EmptyTitle,
-} from "@/components/ui/empty";
+import { Empty, EmptyContent, EmptyHeader, EmptyMedia, EmptyTitle } from "@/components/ui/empty";
 import { Spinner } from "@/components/ui/spinner";
 import { clearFeedback } from "@/app/feedback/actions";
-import {
-  formatRelativeTime,
-  safeHttpUrl,
-  type LikedFeedItem,
-} from "@/lib/feed-ui";
+import { formatRelativeTime, safeHttpUrl, type LikedFeedItem } from "@/lib/feed-ui";
 
 export default function LikedList({
   items,
@@ -64,11 +54,7 @@ export default function LikedList({
           <EmptyTitle>No liked items yet.</EmptyTitle>
         </EmptyHeader>
         <EmptyContent>
-          <Button
-            variant="outline"
-            nativeButton={false}
-            render={<Link href="/" />}
-          >
+          <Button variant="outline" nativeButton={false} render={<Link href="/" />}>
             Browse your feed
           </Button>
         </EmptyContent>
@@ -117,8 +103,7 @@ export default function LikedList({
                     <Badge variant="outline">AI summary</Badge>
                   )}
                   <time dateTime={item.liked_at}>
-                    Liked{" "}
-                    {formatRelativeTime(item.liked_at, new Date(renderedAt))}
+                    Liked {formatRelativeTime(item.liked_at, new Date(renderedAt))}
                   </time>
                 </CardDescription>
                 <CardTitle className="text-lg">
@@ -140,9 +125,7 @@ export default function LikedList({
               </CardHeader>
               {item.summary && (
                 <CardContent>
-                  <p className="line-clamp-3 break-words text-muted-foreground">
-                    {item.summary}
-                  </p>
+                  <p className="line-clamp-3 break-words text-muted-foreground">{item.summary}</p>
                 </CardContent>
               )}
               <CardFooter className="relative z-10">

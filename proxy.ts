@@ -35,9 +35,7 @@ export async function proxy(request: NextRequest) {
     request.nextUrl.pathname === "/auth/callback";
 
   if (!isPublicRoute && (error || !data?.claims?.sub)) {
-    const redirectResponse = NextResponse.redirect(
-      new URL("/", request.url),
-    );
+    const redirectResponse = NextResponse.redirect(new URL("/", request.url));
     for (const cookie of response.cookies.getAll()) {
       redirectResponse.cookies.set(cookie);
     }
@@ -49,7 +47,5 @@ export async function proxy(request: NextRequest) {
 }
 
 export const config = {
-  matcher: [
-    "/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)",
-  ],
+  matcher: ["/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)"],
 };

@@ -88,9 +88,7 @@ export interface SnapshotDateRange {
   toExclusive: string;
 }
 
-export function requireFinalSnapshot(
-  manifest: EvaluationSnapshotManifest,
-): void {
+export function requireFinalSnapshot(manifest: EvaluationSnapshotManifest): void {
   if (manifest.provisional !== false) {
     throw new Error("Freeze and test runs require a non-provisional snapshot");
   }
@@ -161,14 +159,8 @@ export function requireProductionUrl(value: string): URL {
 
 export function requireLocalSupabaseUrl(value: string): URL {
   const url = new URL(value);
-  if (
-    url.protocol !== "http:" ||
-    url.hostname !== "127.0.0.1" ||
-    url.port !== "55321"
-  ) {
-    throw new Error(
-      "Evaluation import is restricted to local Supabase at http://127.0.0.1:55321",
-    );
+  if (url.protocol !== "http:" || url.hostname !== "127.0.0.1" || url.port !== "55321") {
+    throw new Error("Evaluation import is restricted to local Supabase at http://127.0.0.1:55321");
   }
   return url;
 }
@@ -196,13 +188,9 @@ function assertColumns(
   label: string,
 ): void {
   rows.forEach((row, index) => {
-    const missing = requiredColumns.filter(
-      (column) => !Object.hasOwn(row, column),
-    );
+    const missing = requiredColumns.filter((column) => !Object.hasOwn(row, column));
     if (missing.length > 0) {
-      throw new Error(
-        `${label} row ${index + 1} is missing columns: ${missing.join(", ")}`,
-      );
+      throw new Error(`${label} row ${index + 1} is missing columns: ${missing.join(", ")}`);
     }
   });
 }
@@ -241,9 +229,7 @@ export function buildSnapshotManifest(input: {
   assertColumns(means, SNAPSHOT_MEAN_COLUMNS, "mean");
 
   const sortedItems = [...items].sort((left, right) => {
-    const timeOrder = String(left.published_at).localeCompare(
-      String(right.published_at),
-    );
+    const timeOrder = String(left.published_at).localeCompare(String(right.published_at));
     return timeOrder || String(left.id).localeCompare(String(right.id));
   });
   if (sortedItems.length === 0) {
@@ -267,13 +253,8 @@ export function buildSnapshotManifest(input: {
   );
   const meanVectorHashes = Object.fromEntries(
     [...means]
-      .sort((left, right) =>
-        meanHashKey(left).localeCompare(meanHashKey(right)),
-      )
-      .map((row) => [
-        meanHashKey(row),
-        sha256(JSON.stringify(canonicalize(row.mean))),
-      ]),
+      .sort((left, right) => meanHashKey(left).localeCompare(meanHashKey(right)))
+      .map((row) => [meanHashKey(row), sha256(JSON.stringify(canonicalize(row.mean)))]),
   );
   const byLanguage: Record<string, number> = {};
   const bySource: Record<string, number> = {};
@@ -342,10 +323,8 @@ export function validateSnapshotData(input: {
     createdAt: manifest.createdAt,
   });
   if (
-    JSON.stringify(expectedManifest.itemIds) !==
-      JSON.stringify(manifest.itemIds) ||
-    JSON.stringify(expectedManifest.windows) !==
-      JSON.stringify(manifest.windows) ||
+    JSON.stringify(expectedManifest.itemIds) !== JSON.stringify(manifest.itemIds) ||
+    JSON.stringify(expectedManifest.windows) !== JSON.stringify(manifest.windows) ||
     JSON.stringify(expectedManifest.counts) !== JSON.stringify(manifest.counts)
   ) {
     throw new Error("Snapshot windows or counts do not match the manifest");
@@ -362,10 +341,7 @@ export function validateSnapshotData(input: {
   }
 
   const expectedMeans = Object.fromEntries(
-    means.map((row) => [
-      meanHashKey(row),
-      sha256(JSON.stringify(canonicalize(row.mean))),
-    ]),
+    means.map((row) => [meanHashKey(row), sha256(JSON.stringify(canonicalize(row.mean)))]),
   );
   if (
     JSON.stringify(Object.entries(expectedMeans).sort()) !==
@@ -375,22 +351,15 @@ export function validateSnapshotData(input: {
   }
 
   const sourceIds = new Set(sources.map((row) => String(row.id)));
-  const missingSource = items.find(
-    (row) => !sourceIds.has(String(row.source_id)),
-  );
+  const missingSource = items.find((row) => !sourceIds.has(String(row.source_id)));
   if (missingSource) {
-    throw new Error(
-      `Snapshot is missing source ${String(missingSource.source_id)}`,
-    );
+    throw new Error(`Snapshot is missing source ${String(missingSource.source_id)}`);
   }
   const meanKeys = new Set(means.map(meanHashKey));
   const missingMean = items.find(
-    (row) =>
-      !meanKeys.has(`${String(row.embedding_model)}:${String(row.language)}`),
+    (row) => !meanKeys.has(`${String(row.embedding_model)}:${String(row.language)}`),
   );
   if (missingMean) {
-    throw new Error(
-      `Snapshot is missing a mean for item ${String(missingMean.id)}`,
-    );
+    throw new Error(`Snapshot is missing a mean for item ${String(missingMean.id)}`);
   }
 }

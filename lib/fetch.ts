@@ -18,8 +18,7 @@
 export const DEFAULT_TIMEOUT_MS = 15_000;
 export const DEFAULT_MAX_BYTES = 5 * 1024 * 1024; // 5 MB
 export const DEFAULT_CONCURRENCY = 4;
-export const DEFAULT_USER_AGENT =
-  "poimio/0.1 (Finnish & English news ingestion bot)";
+export const DEFAULT_USER_AGENT = "poimio/0.1 (Finnish & English news ingestion bot)";
 
 /** A feed to fetch, plus the conditional-GET state we stored on a previous run. */
 export interface FeedToFetch {
@@ -46,10 +45,7 @@ export interface FetchOptions {
 }
 
 /** Options for {@link fetchFeeds}: per-feed options plus the concurrency cap. */
-export interface FetchBatchOptions extends Omit<
-  FetchOptions,
-  "etag" | "lastModified"
-> {
+export interface FetchBatchOptions extends Omit<FetchOptions, "etag" | "lastModified"> {
   /** Maximum number of feeds fetched at once (default 4). */
   concurrency?: number;
 }
@@ -164,10 +160,7 @@ async function readBodyWithLimit(
  * This function never throws: it always resolves to a {@link FetchResult}, so a
  * failing source can be reported without stopping an ingestion run.
  */
-export async function fetchFeed(
-  feedUrl: string,
-  options: FetchOptions = {},
-): Promise<FetchResult> {
+export async function fetchFeed(feedUrl: string, options: FetchOptions = {}): Promise<FetchResult> {
   const timeoutMs = options.timeoutMs ?? DEFAULT_TIMEOUT_MS;
   const maxBytes = options.maxBytes ?? DEFAULT_MAX_BYTES;
   const userAgent = options.userAgent ?? DEFAULT_USER_AGENT;
@@ -178,8 +171,7 @@ export async function fetchFeed(
 
   const headers: Record<string, string> = {
     "User-Agent": userAgent,
-    Accept:
-      "application/rss+xml, application/atom+xml, application/xml, text/xml, */*",
+    Accept: "application/rss+xml, application/atom+xml, application/xml, text/xml, */*",
   };
   if (options.etag) headers["If-None-Match"] = options.etag;
   if (options.lastModified) headers["If-Modified-Since"] = options.lastModified;

@@ -17,11 +17,7 @@ class FakeEmbeddingDb {
     return this.items.filter((item) => !this.embeddings.has(item.id));
   }
 
-  async saveEmbedding(
-    id: string,
-    vector: number[],
-    model: string,
-  ): Promise<boolean> {
+  async saveEmbedding(id: string, vector: number[], model: string): Promise<boolean> {
     if (this.embeddings.has(id)) return false;
     this.embeddings.set(id, { vector, model });
     return true;
@@ -97,34 +93,25 @@ describe("embedPendingItems", () => {
   });
 
   it("leaves a failed batch pending and retries it on the next run", async () => {
-    const items = Array.from(
-      { length: EMBEDDING_BATCH_SIZE + 1 },
-      (_, index) => ({
-        id: `item-${index}`,
-        title: `Title ${index}`,
-        summary: `Summary ${index}`,
-        summaryOrigin: "feed" as const,
-      }),
-    );
+    const items = Array.from({ length: EMBEDDING_BATCH_SIZE + 1 }, (_, index) => ({
+      id: `item-${index}`,
+      title: `Title ${index}`,
+      summary: `Summary ${index}`,
+      summaryOrigin: "feed" as const,
+    }));
     const db = new FakeEmbeddingDb(items);
     let requestCount = 0;
     const fetchImpl: typeof fetch = async (_input, init) => {
       requestCount++;
       const request = JSON.parse(String(init?.body)) as { input: string[] };
       if (requestCount === 1) {
-        return new Response(
-          JSON.stringify({ error: { message: "temporary failure" } }),
-          {
-            status: 500,
-          },
-        );
+        return new Response(JSON.stringify({ error: { message: "temporary failure" } }), {
+          status: 500,
+        });
       }
-      return new Response(
-        JSON.stringify({ data: vectors(request.input.length) }),
-        {
-          status: 200,
-        },
-      );
+      return new Response(JSON.stringify({ data: vectors(request.input.length) }), {
+        status: 200,
+      });
     };
 
     const firstRun = await embedPendingItems(db, "test-key", {
@@ -144,12 +131,9 @@ describe("embedPendingItems", () => {
     const retryRun = await embedPendingItems(db, "test-key", {
       fetch: async (_input, init) => {
         const request = JSON.parse(String(init?.body)) as { input: string[] };
-        return new Response(
-          JSON.stringify({ data: vectors(request.input.length) }),
-          {
-            status: 200,
-          },
-        );
+        return new Response(JSON.stringify({ data: vectors(request.input.length) }), {
+          status: 200,
+        });
       },
     });
 

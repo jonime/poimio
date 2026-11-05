@@ -40,17 +40,13 @@ function canonicalize(value: unknown): unknown {
   return value;
 }
 
-export function frozenParametersHash(
-  frozen: FrozenEvaluationParameters,
-): string {
+export function frozenParametersHash(frozen: FrozenEvaluationParameters): string {
   return createHash("sha256")
     .update(JSON.stringify(canonicalize(frozen)))
     .digest("hex");
 }
 
-export function parseFrozenParameters(
-  content: string,
-): FrozenEvaluationParameters {
+export function parseFrozenParameters(content: string): FrozenEvaluationParameters {
   let parsed: unknown;
   try {
     parsed = JSON.parse(content);
@@ -101,37 +97,24 @@ export function validateTestRun(
   if (state.snapshotManifestHash !== frozen.snapshotManifestHash) {
     throw new Error("snapshot manifest hash does not match the freeze");
   }
-  if (
-    state.labelSetId !== frozen.labelSetId ||
-    state.labelSetHash !== frozen.labelSetHash
-  ) {
+  if (state.labelSetId !== frozen.labelSetId || state.labelSetHash !== frozen.labelSetHash) {
     throw new Error("label set does not match the freeze");
   }
   if (state.configHash !== frozen.configHash) {
     throw new Error("evaluation config hash does not match the freeze");
   }
   if (state.paramsProvided) {
-    throw new Error(
-      "test replay does not accept --params; use frozen parameters",
-    );
+    throw new Error("test replay does not accept --params; use frozen parameters");
   }
   const experimentId = frozenParametersHash(frozen);
   const sameExperimentPrefix = `test-${experimentId}.`;
-  if (
-    state.existingTestResults.some((name) =>
-      name.startsWith(sameExperimentPrefix),
-    )
-  ) {
+  if (state.existingTestResults.some((name) => name.startsWith(sameExperimentPrefix))) {
     throw new Error("a test result already exists for this experiment ID");
   }
-  const otherResults = state.existingTestResults.filter((name) =>
-    name.startsWith("test-"),
-  );
+  const otherResults = state.existingTestResults.filter((name) => name.startsWith("test-"));
   const reason = state.newExperimentReason?.trim();
   if (otherResults.length > 0 && !reason) {
-    throw new Error(
-      "another test result exists; pass --new-experiment with a reason",
-    );
+    throw new Error("another test result exists; pass --new-experiment with a reason");
   }
   return {
     experimentId,

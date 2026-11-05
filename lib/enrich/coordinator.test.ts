@@ -103,9 +103,7 @@ describe("runEnrichment", () => {
     const result = await runEnrichment(db, "test-key", {
       now: () => fixedNow,
       fetchPage: async () =>
-        page(
-          '<meta property="og:description" content="A factual description">',
-        ),
+        page('<meta property="og:description" content="A factual description">'),
       summarize,
     });
 
@@ -135,9 +133,7 @@ describe("runEnrichment", () => {
       fetchPage: async (url) =>
         url.includes("failed")
           ? { status: "error", error: "request timed out" }
-          : page(
-              `<article><h1>Article headline</h1><p>${articleText}</p></article>`,
-            ),
+          : page(`<article><h1>Article headline</h1><p>${articleText}</p></article>`),
       summarize,
     });
 
@@ -150,15 +146,10 @@ describe("runEnrichment", () => {
       summaryRequests: 1,
       byOrigin: { page_metadata: 0, ai_generated: 1 },
     });
-    expect(summarize).toHaveBeenCalledWith(
-      expect.stringContaining(articleText),
-      "test-key",
-    );
+    expect(summarize).toHaveBeenCalledWith(expect.stringContaining(articleText), "test-key");
     expect(db.failures[0]).toMatchObject({
       id: "failed",
-      nextAttemptAt: new Date(
-        fixedNow.getTime() + ENRICHMENT_RETRY_DELAYS_MS[0],
-      ),
+      nextAttemptAt: new Date(fixedNow.getTime() + ENRICHMENT_RETRY_DELAYS_MS[0]),
       exhausted: false,
     });
     expect(db.successes[0]?.origin).toBe("ai_generated");
@@ -180,10 +171,7 @@ describe("runEnrichment", () => {
     });
 
     expect(result.byOrigin).toEqual({ page_metadata: 0, ai_generated: 1 });
-    expect(summarize).toHaveBeenCalledWith(
-      expect.stringContaining(articleText),
-      "test-key",
-    );
+    expect(summarize).toHaveBeenCalledWith(expect.stringContaining(articleText), "test-key");
     expect(db.successes[0]).toMatchObject({
       summary: "Tiivis kuvaus uutisesta.",
       origin: "ai_generated",
@@ -191,9 +179,7 @@ describe("runEnrichment", () => {
   });
 
   it("does not ask the model to summarize title-only pages", async () => {
-    const db = new FakeEnrichmentDb([
-      { ...item("title-only"), title: "Only a title" },
-    ]);
+    const db = new FakeEnrichmentDb([{ ...item("title-only"), title: "Only a title" }]);
     const summarize = vi.fn(async () => "A generated description");
     const result = await runEnrichment(db, "test-key", {
       now: () => fixedNow,
@@ -238,15 +224,11 @@ describe("runEnrichment", () => {
 
       expect(result.unresolved).toBe(1);
       expect(failure?.expectedAttemptCount).toBe(attemptCount);
-      expect(failure?.exhausted).toBe(
-        attemptCount + 1 >= MAX_ENRICHMENT_ATTEMPTS,
-      );
+      expect(failure?.exhausted).toBe(attemptCount + 1 >= MAX_ENRICHMENT_ATTEMPTS);
       expect(failure?.nextAttemptAt).toEqual(
         attemptCount + 1 >= MAX_ENRICHMENT_ATTEMPTS
           ? null
-          : new Date(
-              fixedNow.getTime() + ENRICHMENT_RETRY_DELAYS_MS[attemptCount]!,
-            ),
+          : new Date(fixedNow.getTime() + ENRICHMENT_RETRY_DELAYS_MS[attemptCount]!),
       );
     },
   );
@@ -262,9 +244,7 @@ describe("summarizeArticleText", () => {
           output: [
             {
               type: "message",
-              content: [
-                { type: "output_text", text: "Tiivis kuvaus tutkimuksesta." },
-              ],
+              content: [{ type: "output_text", text: "Tiivis kuvaus tutkimuksesta." }],
             },
           ],
         }),
@@ -290,12 +270,9 @@ describe("summarizeArticleText", () => {
 
   it("does not expose remote error bodies", async () => {
     const mockFetch: typeof fetch = async () =>
-      new Response(
-        JSON.stringify({ error: { message: "private response detail" } }),
-        {
-          status: 500,
-        },
-      );
+      new Response(JSON.stringify({ error: { message: "private response detail" } }), {
+        status: 500,
+      });
 
     await expect(
       summarizeArticleText(articleText, "test-key", { fetch: mockFetch }),

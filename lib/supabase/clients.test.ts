@@ -37,9 +37,7 @@ beforeEach(() => {
   vi.resetAllMocks();
   vi.stubEnv("NEXT_PUBLIC_SUPABASE_URL", "http://127.0.0.1:54321");
   vi.stubEnv("NEXT_PUBLIC_SUPABASE_ANON_KEY", "test-anon-key");
-  cookieStore.getAll.mockReturnValue([
-    { name: "sb-session", value: "old-session" },
-  ]);
+  cookieStore.getAll.mockReturnValue([{ name: "sb-session", value: "old-session" }]);
   getClaims.mockResolvedValue({
     data: { claims: { sub: "user-a" } },
     error: null,
@@ -72,10 +70,7 @@ describe("Supabase clients", () => {
 
   it("creates the browser client with only public configuration", () => {
     createBrowserSupabase();
-    expect(createBrowserClient).toHaveBeenCalledWith(
-      "http://127.0.0.1:54321",
-      "test-anon-key",
-    );
+    expect(createBrowserClient).toHaveBeenCalledWith("http://127.0.0.1:54321", "test-anon-key");
   });
 
   it("creates a server client per request and reads request cookies", async () => {
@@ -115,9 +110,7 @@ describe("session refresh proxy", () => {
     const response = await proxy(new NextRequest("http://localhost:3001/liked"));
     expect(getClaims).toHaveBeenCalledExactlyOnceWith();
     expect(response.status).toBe(307);
-    expect(response.headers.get("location")).toBe(
-      "http://localhost:3001/",
-    );
+    expect(response.headers.get("location")).toBe("http://localhost:3001/");
     expect(response.cookies.getAll()).toEqual([]);
   });
 
@@ -127,36 +120,25 @@ describe("session refresh proxy", () => {
       error: new Error("Invalid signature"),
     });
     const response = await proxy(new NextRequest("http://localhost:3001/liked"));
-    expect(response.headers.get("location")).toBe(
-      "http://localhost:3001/",
-    );
+    expect(response.headers.get("location")).toBe("http://localhost:3001/");
   });
 
-  it.each([
-    "/",
-    "/login",
-    "/privacy",
-    "/privacy?source=google",
-    "/auth/callback?code=oauth-code",
-  ])("allows unauthenticated access to %s", async (path) => {
-    getClaims.mockResolvedValueOnce({ data: null, error: null });
-    const response = await proxy(
-      new NextRequest(`http://localhost:3001${path}`),
-    );
-    expect(response.status).toBe(200);
-    expect(response.headers.get("location")).toBeNull();
-  });
+  it.each(["/", "/login", "/privacy", "/privacy?source=google", "/auth/callback?code=oauth-code"])(
+    "allows unauthenticated access to %s",
+    async (path) => {
+      getClaims.mockResolvedValueOnce({ data: null, error: null });
+      const response = await proxy(new NextRequest(`http://localhost:3001${path}`));
+      expect(response.status).toBe(200);
+      expect(response.headers.get("location")).toBeNull();
+    },
+  );
 
   it.each(["/privacy-settings", "/privacy/private"])(
     "does not make neighbouring route %s public",
     async (path) => {
       getClaims.mockResolvedValueOnce({ data: null, error: null });
-      const response = await proxy(
-        new NextRequest(`http://localhost:3001${path}`),
-      );
-      expect(response.headers.get("location")).toBe(
-        "http://localhost:3001/",
-      );
+      const response = await proxy(new NextRequest(`http://localhost:3001${path}`));
+      expect(response.headers.get("location")).toBe("http://localhost:3001/");
     },
   );
 
@@ -168,12 +150,8 @@ describe("session refresh proxy", () => {
       );
       return { data: null, error: null };
     });
-    const response = await proxy(
-      new NextRequest("http://localhost:3001/liked?private=value"),
-    );
-    expect(response.headers.get("location")).toBe(
-      "http://localhost:3001/",
-    );
+    const response = await proxy(new NextRequest("http://localhost:3001/liked?private=value"));
+    expect(response.headers.get("location")).toBe("http://localhost:3001/");
     expect(response.cookies.get("sb-session")?.maxAge).toBe(0);
     expect(response.headers.get("cache-control")).toBe("private, no-store");
   });
@@ -185,8 +163,7 @@ describe("session refresh proxy", () => {
     getClaims.mockImplementationOnce(async () => {
       expect(await serverCookies().getAll()).toEqual(request.cookies.getAll());
       await serverCookies().setAll?.([refreshedCookie], {
-        "Cache-Control":
-          "private, no-cache, no-store, must-revalidate, max-age=0",
+        "Cache-Control": "private, no-cache, no-store, must-revalidate, max-age=0",
         Expires: "0",
         Pragma: "no-cache",
       });
@@ -199,9 +176,7 @@ describe("session refresh proxy", () => {
     expect(response.headers.get("x-middleware-request-cookie")).toContain(
       "sb-session=refreshed-session",
     );
-    expect(response.headers.get("x-middleware-request-cookie")).toContain(
-      "other=preserved",
-    );
+    expect(response.headers.get("x-middleware-request-cookie")).toContain("other=preserved");
     expect(response.cookies.get("sb-session")).toMatchObject({
       name: refreshedCookie.name,
       value: refreshedCookie.value,
@@ -237,12 +212,10 @@ describe("session refresh proxy", () => {
     },
   );
 
-  it.each([
-    "/_next/static/chunk.js",
-    "/_next/image",
-    "/favicon.ico",
-    "/image.png",
-  ])("excludes static asset %s", (url) => {
-    expect(unstable_doesMiddlewareMatch({ config, url })).toBe(false);
-  });
+  it.each(["/_next/static/chunk.js", "/_next/image", "/favicon.ico", "/image.png"])(
+    "excludes static asset %s",
+    (url) => {
+      expect(unstable_doesMiddlewareMatch({ config, url })).toBe(false);
+    },
+  );
 });

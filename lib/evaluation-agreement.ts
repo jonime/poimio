@@ -62,18 +62,12 @@ function seededShuffle<T>(items: T[], seed: string): T[] {
     state ^= state >>> 17;
     state ^= state << 5;
     const swapIndex = (state >>> 0) % (index + 1);
-    [shuffled[index], shuffled[swapIndex]] = [
-      shuffled[swapIndex]!,
-      shuffled[index]!,
-    ];
+    [shuffled[index], shuffled[swapIndex]] = [shuffled[swapIndex]!, shuffled[index]!];
   }
   return shuffled;
 }
 
-function allocateProportionally(
-  sizes: Map<string, number>,
-  quota: number,
-): Map<string, number> {
+function allocateProportionally(sizes: Map<string, number>, quota: number): Map<string, number> {
   const total = [...sizes.values()].reduce((sum, size) => sum + size, 0);
   if (quota > total) {
     throw new Error(`agreement stratum has ${total} pairs but needs ${quota}`);
@@ -87,11 +81,9 @@ function allocateProportionally(
     allocations.set(key, floor);
     return { key, fraction: exact - floor };
   });
-  let remaining =
-    quota - [...allocations.values()].reduce((sum, n) => sum + n, 0);
+  let remaining = quota - [...allocations.values()].reduce((sum, n) => sum + n, 0);
   fractions.sort(
-    (left, right) =>
-      right.fraction - left.fraction || left.key.localeCompare(right.key),
+    (left, right) => right.fraction - left.fraction || left.key.localeCompare(right.key),
   );
   while (remaining > 0) {
     let progressed = false;
@@ -104,8 +96,7 @@ function allocateProportionally(
         if (remaining === 0) break;
       }
     }
-    if (!progressed)
-      throw new Error("could not allocate agreement sample quota");
+    if (!progressed) throw new Error("could not allocate agreement sample quota");
   }
   return allocations;
 }
@@ -131,19 +122,11 @@ export function createAgreementDesign(input: {
   const model = labels[0]?.model;
   const promptVersion = labels[0]?.promptVersion;
   if (!model || !promptVersion) throw new Error("primary label set is empty");
-  if (
-    labels.some(
-      (label) => label.model !== model || label.promptVersion !== promptVersion,
-    )
-  ) {
-    throw new Error(
-      "agreement sampling requires one complete primary label set",
-    );
+  if (labels.some((label) => label.model !== model || label.promptVersion !== promptVersion)) {
+    throw new Error("agreement sampling requires one complete primary label set");
   }
   if (!Number.isInteger(perPersona) || perPersona < 2) {
-    throw new Error(
-      "per-persona sample size must be an integer of at least two",
-    );
+    throw new Error("per-persona sample size must be an integer of at least two");
   }
   const itemById = new Map(items.map((item) => [item.id, item]));
   const labelByPair = new Map(
@@ -187,9 +170,7 @@ export function createAgreementDesign(input: {
         return stratumPersona === persona.id && stratumLanguage === language;
       });
       const target = balancedLanguageQuota(language, personaIndex, perPersona);
-      const sizes = new Map(
-        languageStrata.map(([key, rows]) => [key, rows.length]),
-      );
+      const sizes = new Map(languageStrata.map(([key, rows]) => [key, rows.length]));
       const selectionAllocations = allocateProportionally(sizes, target);
       const remainingSizes = new Map(
         languageStrata.map(([key, rows]) => [
@@ -197,23 +178,17 @@ export function createAgreementDesign(input: {
           rows.length - (selectionAllocations.get(key) ?? 0),
         ]),
       );
-      const reportingAllocations = allocateProportionally(
-        remainingSizes,
-        target,
-      );
+      const reportingAllocations = allocateProportionally(remainingSizes, target);
       for (const [key, rows] of languageStrata) {
         const selectionCount = selectionAllocations.get(key) ?? 0;
         const reportingCount = reportingAllocations.get(key) ?? 0;
-        const selected = seededShuffle(rows, `${seed}:selection:${key}`).slice(
-          0,
-          selectionCount,
-        );
+        const selected = seededShuffle(rows, `${seed}:selection:${key}`).slice(0, selectionCount);
         const selectedIds = new Set(selected.map((pair) => pair.itemId));
         const remaining = rows.filter((pair) => !selectedIds.has(pair.itemId));
-        const reported = seededShuffle(
-          remaining,
-          `${seed}:reporting:${key}`,
-        ).slice(0, reportingCount);
+        const reported = seededShuffle(remaining, `${seed}:reporting:${key}`).slice(
+          0,
+          reportingCount,
+        );
         selected.forEach((pair) =>
           selection.push({
             ...pair,
@@ -266,38 +241,24 @@ export function createAgreementDesign(input: {
 }
 
 function weightedMetrics(pairs: AgreementPair[]): WeightedAgreementMetrics {
-  const weightedTotal = pairs.reduce(
-    (sum, pair) => sum + 1 / pair.inclusionProbability,
-    0,
-  );
-  const squaredWeights = pairs.reduce(
-    (sum, pair) => sum + 1 / pair.inclusionProbability ** 2,
-    0,
-  );
+  const weightedTotal = pairs.reduce((sum, pair) => sum + 1 / pair.inclusionProbability, 0);
+  const squaredWeights = pairs.reduce((sum, pair) => sum + 1 / pair.inclusionProbability ** 2, 0);
   const weightedAgree = pairs.reduce(
     (sum, pair) =>
-      sum +
-      (pair.modelRelevant === pair.manualRelevant
-        ? 1 / pair.inclusionProbability
-        : 0),
+      sum + (pair.modelRelevant === pair.manualRelevant ? 1 / pair.inclusionProbability : 0),
     0,
   );
   const modelRelevant = pairs.reduce(
-    (sum, pair) =>
-      sum + (pair.modelRelevant ? 1 / pair.inclusionProbability : 0),
+    (sum, pair) => sum + (pair.modelRelevant ? 1 / pair.inclusionProbability : 0),
     0,
   );
   const manualRelevant = pairs.reduce(
-    (sum, pair) =>
-      sum + (pair.manualRelevant ? 1 / pair.inclusionProbability : 0),
+    (sum, pair) => sum + (pair.manualRelevant ? 1 / pair.inclusionProbability : 0),
     0,
   );
   const weightedTruePositive = pairs.reduce(
     (sum, pair) =>
-      sum +
-      (pair.modelRelevant && pair.manualRelevant
-        ? 1 / pair.inclusionProbability
-        : 0),
+      sum + (pair.modelRelevant && pair.manualRelevant ? 1 / pair.inclusionProbability : 0),
     0,
   );
   const expectedAgreement =
@@ -310,12 +271,9 @@ function weightedMetrics(pairs: AgreementPair[]): WeightedAgreementMetrics {
     weightedCohenKappa:
       expectedAgreement === 1
         ? null
-        : (weightedAgree / weightedTotal - expectedAgreement) /
-          (1 - expectedAgreement),
-    weightedPrecision:
-      modelRelevant === 0 ? null : weightedTruePositive / modelRelevant,
-    weightedRecall:
-      manualRelevant === 0 ? null : weightedTruePositive / manualRelevant,
+        : (weightedAgree / weightedTotal - expectedAgreement) / (1 - expectedAgreement),
+    weightedPrecision: modelRelevant === 0 ? null : weightedTruePositive / modelRelevant,
+    weightedRecall: manualRelevant === 0 ? null : weightedTruePositive / manualRelevant,
     effectiveSampleSize: weightedTotal ** 2 / squaredWeights,
   };
 }
@@ -333,9 +291,7 @@ export function scoreAgreement(pairs: AgreementPair[]): AgreementScore {
   ) {
     throw new Error("agreement sample has missing labels or invalid weights");
   }
-  const completePairs = pairs as Array<
-    AgreementPair & { manualRelevant: boolean }
-  >;
+  const completePairs = pairs as Array<AgreementPair & { manualRelevant: boolean }>;
   const fi = completePairs.filter((pair) => pair.language === "fi");
   const en = completePairs.filter((pair) => pair.language === "en");
   return {

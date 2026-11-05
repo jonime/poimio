@@ -25,9 +25,7 @@ const item: FeedItem = {
 
 describe("feed UI helpers", () => {
   it("explains similar and recent recommendations", () => {
-    expect(explanationForFeedItem(item)).toBe(
-      "Similar to A liked article, which you liked",
-    );
+    expect(explanationForFeedItem(item)).toBe("Similar to A liked article, which you liked");
     expect(
       explanationForFeedItem({
         ...item,
@@ -38,9 +36,7 @@ describe("feed UI helpers", () => {
   });
 
   it("allows only absolute HTTP and HTTPS URLs", () => {
-    expect(safeHttpUrl("https://example.com/path")).toBe(
-      "https://example.com/path",
-    );
+    expect(safeHttpUrl("https://example.com/path")).toBe("https://example.com/path");
     expect(safeHttpUrl("http://example.com")).toBe("http://example.com/");
     expect(safeHttpUrl("javascript:alert(1)")).toBeNull();
     expect(safeHttpUrl("//example.com/path")).toBeNull();
@@ -50,9 +46,7 @@ describe("feed UI helpers", () => {
 
   it("formats relative time for the card", () => {
     const now = new Date("2026-10-29T12:00:00.000Z");
-    expect(formatRelativeTime("2026-10-29T11:00:00.000Z", now)).toBe(
-      "1 hour ago",
-    );
+    expect(formatRelativeTime("2026-10-29T11:00:00.000Z", now)).toBe("1 hour ago");
     expect(formatRelativeTime("invalid", now)).toBe("Unknown time");
   });
 });

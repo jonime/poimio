@@ -25,8 +25,7 @@ export async function signInWithPassword(
     return "Enter a valid email address and password.";
   }
 
-  const failureMessage =
-    "Sign-in failed. Check your email and password and try again.";
+  const failureMessage = "Sign-in failed. Check your email and password and try again.";
   try {
     const supabase = await createClient();
     const { error } = await supabase.auth.signInWithPassword({

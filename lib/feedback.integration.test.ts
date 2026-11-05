@@ -42,9 +42,7 @@ function parseSupabaseQueryResult(output: string): { rows: unknown[] } {
     const start = output.indexOf("{", searchFrom);
     if (start === -1) {
       const observed = observedObjectKeys.join("; ") || "none";
-      throw new Error(
-        `Supabase CLI returned no query rows object (object keys: ${observed}).`,
-      );
+      throw new Error(`Supabase CLI returned no query rows object (object keys: ${observed}).`);
     }
 
     let depth = 0;
@@ -77,11 +75,7 @@ function parseSupabaseQueryResult(output: string): { rows: unknown[] } {
 
     try {
       const candidate: unknown = JSON.parse(output.slice(start, end + 1));
-      if (
-        typeof candidate === "object" &&
-        candidate !== null &&
-        "rows" in candidate
-      ) {
+      if (typeof candidate === "object" && candidate !== null && "rows" in candidate) {
         const rows = candidate.rows;
         if (Array.isArray(rows)) return { rows };
       }
@@ -109,30 +103,22 @@ describe("parseSupabaseQueryResult", () => {
   });
 
   it("accepts a direct feedback schema row from the CLI", () => {
-    const row = Object.fromEntries(
-      feedbackSchemaColumns.map((column) => [column, true]),
-    );
-    expect(
-      parseSupabaseQueryResult(`Connecting...\n${JSON.stringify([row])}`),
-    ).toEqual({ rows: [row] });
+    const row = Object.fromEntries(feedbackSchemaColumns.map((column) => [column, true]));
+    expect(parseSupabaseQueryResult(`Connecting...\n${JSON.stringify([row])}`)).toEqual({
+      rows: [row],
+    });
   });
 });
 
 describe.skipIf(!enabled || anonKey == null || serviceKey == null)(
   "feedback schema and row-level security against local Supabase",
   () => {
-    const anonymous: SupabaseClient | null = anonKey
-      ? createClient(url, anonKey, options)
-      : null;
+    const anonymous: SupabaseClient | null = anonKey ? createClient(url, anonKey, options) : null;
     const service: SupabaseClient | null = serviceKey
       ? createClient(url, serviceKey, options)
       : null;
-    const userAClient: SupabaseClient | null = anonKey
-      ? createClient(url, anonKey, options)
-      : null;
-    const userBClient: SupabaseClient | null = anonKey
-      ? createClient(url, anonKey, options)
-      : null;
+    const userAClient: SupabaseClient | null = anonKey ? createClient(url, anonKey, options) : null;
+    const userBClient: SupabaseClient | null = anonKey ? createClient(url, anonKey, options) : null;
 
     function ready() {
       if (!anonymous || !service || !userAClient || !userBClient) {
@@ -159,8 +145,7 @@ describe.skipIf(!enabled || anonKey == null || serviceKey == null)(
         password,
         email_confirm: true,
       });
-      if (userA.error)
-        throw new Error(`Creating user A failed: ${userA.error.message}`);
+      if (userA.error) throw new Error(`Creating user A failed: ${userA.error.message}`);
       userAId = userA.data.user.id;
 
       const userB = await service.auth.admin.createUser({
@@ -168,18 +153,15 @@ describe.skipIf(!enabled || anonKey == null || serviceKey == null)(
         password,
         email_confirm: true,
       });
-      if (userB.error)
-        throw new Error(`Creating user B failed: ${userB.error.message}`);
+      if (userB.error) throw new Error(`Creating user B failed: ${userB.error.message}`);
       userBId = userB.data.user.id;
 
       const [signInA, signInB] = await Promise.all([
         userAClient.auth.signInWithPassword({ email: emailA, password }),
         userBClient.auth.signInWithPassword({ email: emailB, password }),
       ]);
-      if (signInA.error)
-        throw new Error(`Signing in user A failed: ${signInA.error.message}`);
-      if (signInB.error)
-        throw new Error(`Signing in user B failed: ${signInB.error.message}`);
+      if (signInA.error) throw new Error(`Signing in user A failed: ${signInA.error.message}`);
+      if (signInB.error) throw new Error(`Signing in user B failed: ${signInB.error.message}`);
 
       const source = await service
         .from("sources")
@@ -192,10 +174,7 @@ describe.skipIf(!enabled || anonKey == null || serviceKey == null)(
         })
         .select("id")
         .single();
-      if (source.error)
-        throw new Error(
-          `Creating fixture source failed: ${source.error.message}`,
-        );
+      if (source.error) throw new Error(`Creating fixture source failed: ${source.error.message}`);
       sourceId = source.data.id;
 
       const item = await service
@@ -210,8 +189,7 @@ describe.skipIf(!enabled || anonKey == null || serviceKey == null)(
         })
         .select("id")
         .single();
-      if (item.error)
-        throw new Error(`Creating fixture item failed: ${item.error.message}`);
+      if (item.error) throw new Error(`Creating fixture item failed: ${item.error.message}`);
       itemId = item.data.id;
     });
 
@@ -405,23 +383,19 @@ describe.skipIf(!enabled || anonKey == null || serviceKey == null)(
         .eq("item_id", itemId)
         .single();
       if (bReadError || !bRow) {
-        throw new Error(
-          `Reading user B feedback failed: ${bReadError?.message ?? "row missing"}`,
-        );
+        throw new Error(`Reading user B feedback failed: ${bReadError?.message ?? "row missing"}`);
       }
       expect(bRow.kind).toBe("like");
     });
 
     it("rejects forged owners and immutable item IDs", async () => {
       const { service, userAClient } = ready();
-      const { error: forgedInsert } = await userAClient
-        .from("feedback")
-        .insert({
-          user_id: userBId,
-          item_id: itemId,
-          kind: "like",
-          via: "button",
-        });
+      const { error: forgedInsert } = await userAClient.from("feedback").insert({
+        user_id: userBId,
+        item_id: itemId,
+        kind: "like",
+        via: "button",
+      });
       expect(forgedInsert?.code).toBe("42501");
 
       const { error: itemUpdate } = await userAClient
@@ -430,10 +404,7 @@ describe.skipIf(!enabled || anonKey == null || serviceKey == null)(
         .eq("item_id", itemId);
       expect(itemUpdate?.code).toBe("42501");
 
-      const { error: itemDelete } = await service
-        .from("content_items")
-        .delete()
-        .eq("id", itemId);
+      const { error: itemDelete } = await service.from("content_items").delete().eq("id", itemId);
       expect(itemDelete?.code).toBe("23503");
     });
 
@@ -470,9 +441,7 @@ describe.skipIf(!enabled || anonKey == null || serviceKey == null)(
       });
       expect(writeError).toBeNull();
 
-      const { error: deleteUserError } = await service.auth.admin.deleteUser(
-        userBId!,
-      );
+      const { error: deleteUserError } = await service.auth.admin.deleteUser(userBId!);
       expect(deleteUserError).toBeNull();
       userBId = undefined;
 

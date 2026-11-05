@@ -14,11 +14,7 @@ export interface SwipeResult {
   deltaX: number;
 }
 
-export function beginSwipe(
-  startX: number,
-  startY: number,
-  width: number,
-): SwipeGesture {
+export function beginSwipe(startX: number, startY: number, width: number): SwipeGesture {
   return {
     startX,
     startY,

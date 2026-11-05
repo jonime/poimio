@@ -1,19 +1,9 @@
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
-import type {
-  EnrichmentDb,
-  EnrichmentItem,
-  IngestDb,
-  Source,
-  SourceStatusPatch,
-} from "./db";
+import type { EnrichmentDb, EnrichmentItem, IngestDb, Source, SourceStatusPatch } from "./db";
 import type { ParsedItem } from "./normalize/parse";
 import type { FetchResult } from "./fetch";
-import {
-  formatIngestionSummary,
-  runIngestion,
-  type IngestionSummary,
-} from "./ingest";
+import { formatIngestionSummary, runIngestion, type IngestionSummary } from "./ingest";
 
 const feedXml = `<?xml version="1.0"?>
 <rss version="2.0"><channel><title>Test</title><link>https://example.com</link>
@@ -73,10 +63,7 @@ class FakeIngestDb implements IngestDb, EnrichmentDb {
     return false;
   }
 
-  async insertItems(
-    _source: Pick<Source, "id" | "language">,
-    items: ParsedItem[],
-  ) {
+  async insertItems(_source: Pick<Source, "id" | "language">, items: ParsedItem[]) {
     this.events.push("insert");
     this.inserted.push(items);
     return this.insertCount ?? items.length;
@@ -91,23 +78,16 @@ describe("runIngestion", () => {
   it("excludes Shorts from the YouTube fixture before insertion", async () => {
     const db = new FakeIngestDb([source("youtube", "YouTube")]);
     const body = readFileSync(
-      new URL(
-        "../test/fixtures/feeds/youtube-engineering-explained.xml",
-        import.meta.url,
-      ),
+      new URL("../test/fixtures/feeds/youtube-engineering-explained.xml", import.meta.url),
       "utf-8",
     );
     const result = await runIngestion(db, "test-key", {
-      fetchBatch: async () => [
-        { status: "ok", body, contentType: "application/atom+xml" },
-      ],
+      fetchBatch: async () => [{ status: "ok", body, contentType: "application/atom+xml" }],
     });
 
     expect(db.inserted[0]).toHaveLength(9);
     expect(
-      db.inserted[0].every((item) =>
-        item.url.startsWith("https://www.youtube.com/watch?v="),
-      ),
+      db.inserted[0].every((item) => item.url.startsWith("https://www.youtube.com/watch?v=")),
     ).toBe(true);
     expect(result.sources[0].newItems).toBe(9);
   });
@@ -124,10 +104,7 @@ describe("runIngestion", () => {
       fetchBatch: async () => [
         {
           status: "ok",
-          body: feedXml.replace(
-            "https://example.com/one",
-            url.replaceAll("&", "&amp;"),
-          ),
+          body: feedXml.replace("https://example.com/one", url.replaceAll("&", "&amp;")),
           contentType: "application/rss+xml",
         },
       ],
@@ -183,12 +160,7 @@ describe("runIngestion", () => {
       },
     ]);
     expect(db.inserted).toHaveLength(1);
-    expect(db.updates.map(({ id }) => id)).toEqual([
-      "fresh",
-      "unchanged",
-      "failed",
-      "malformed",
-    ]);
+    expect(db.updates.map(({ id }) => id)).toEqual(["fresh", "unchanged", "failed", "malformed"]);
     expect(result.embeddings).toEqual({ embedded: 0, failedBatches: [] });
   });
 

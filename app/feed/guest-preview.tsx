@@ -19,14 +19,15 @@ export async function GuestPreview() {
   } catch {
     // Keep auth usable and provider/internal details out of the public page.
   }
-  if (!feed?.items.length) return (
-    <Empty>
-      <EmptyHeader>
-        <EmptyTitle>Preview temporarily unavailable.</EmptyTitle>
-        <EmptyDescription>Sign in to open your feed.</EmptyDescription>
-      </EmptyHeader>
-    </Empty>
-  );
+  if (!feed?.items.length)
+    return (
+      <Empty>
+        <EmptyHeader>
+          <EmptyTitle>Preview temporarily unavailable.</EmptyTitle>
+          <EmptyDescription>Sign in to open your feed.</EmptyDescription>
+        </EmptyHeader>
+      </Empty>
+    );
   return (
     <div className="flex flex-col gap-4">
       {feed.items.map((item) => (

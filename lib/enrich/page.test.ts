@@ -55,24 +55,15 @@ describe("fetchPageHtml", () => {
   it("rejects URL credentials and mixed or private DNS answers before connecting", async () => {
     const credentialOptions = options();
     expect(
-      (
-        await fetchPageHtml(
-          "https://user:pass@example.com/story",
-          credentialOptions,
-        )
-      ).status,
+      (await fetchPageHtml("https://user:pass@example.com/story", credentialOptions)).status,
     ).toBe("error");
     expect(credentialOptions.resolve).not.toHaveBeenCalled();
 
     const dnsOptions = options();
-    dnsOptions.resolve.mockResolvedValue([
-      publicAddress,
-      { address: "10.0.0.3", family: 4 },
-    ]);
-    expect(
-      (await fetchPageHtml("https://feed.example.com/story", dnsOptions))
-        .status,
-    ).toBe("error");
+    dnsOptions.resolve.mockResolvedValue([publicAddress, { address: "10.0.0.3", family: 4 }]);
+    expect((await fetchPageHtml("https://feed.example.com/story", dnsOptions)).status).toBe(
+      "error",
+    );
     expect(dnsOptions.request).not.toHaveBeenCalled();
   });
 
@@ -81,10 +72,7 @@ describe("fetchPageHtml", () => {
     async (address) => {
       const deps = options();
       deps.resolve.mockResolvedValue([{ address, family: 6 }]);
-      const result = await fetchPageHtml(
-        "https://feed.example.com/story",
-        deps,
-      );
+      const result = await fetchPageHtml("https://feed.example.com/story", deps);
       expect(result.status).toBe("error");
       expect(deps.request).not.toHaveBeenCalled();
     },
@@ -121,9 +109,7 @@ describe("fetchPageHtml", () => {
 
   it("validates every redirect destination before issuing its request", async () => {
     const deps = options(
-      vi.fn(async () =>
-        response(302, { location: "http://127.0.0.1/private" }, ""),
-      ),
+      vi.fn(async () => response(302, { location: "http://127.0.0.1/private" }, "")),
     );
     const result = await fetchPageHtml("https://feed.example.com/story", deps);
     expect(result.status).toBe("error");
@@ -176,21 +162,16 @@ describe("fetchPageHtml", () => {
 
     expect(result.status).toBe("ok");
     expect(resolve).toHaveBeenCalledTimes(2);
-    expect(connectedAddresses).toEqual([
-      publicAddress.address,
-      publicAddress.address,
-    ]);
+    expect(connectedAddresses).toEqual([publicAddress.address, publicAddress.address]);
   });
 
   it("enforces timeout, response-size, content-type, and redirect limits", async () => {
     const timeoutRequest = vi.fn(
       (_url, _lookup, requestOptions) =>
         new Promise<PageResponse>((_resolve, reject) => {
-          requestOptions.signal.addEventListener(
-            "abort",
-            () => reject(new Error("aborted")),
-            { once: true },
-          );
+          requestOptions.signal.addEventListener("abort", () => reject(new Error("aborted")), {
+            once: true,
+          });
         }),
     );
     const timeout = await fetchPageHtml("https://feed.example.com/story", {
@@ -200,20 +181,12 @@ describe("fetchPageHtml", () => {
     expect(timeout).toEqual({ status: "error", error: "request timed out" });
 
     const oversized = await fetchPageHtml("https://feed.example.com/story", {
-      ...options(
-        vi.fn(async () =>
-          response(200, {}, "x".repeat(PAGE_FETCH_MAX_BYTES + 1)),
-        ),
-      ),
+      ...options(vi.fn(async () => response(200, {}, "x".repeat(PAGE_FETCH_MAX_BYTES + 1)))),
     });
     expect(oversized).toEqual({ status: "error", error: "response too large" });
 
     const wrongType = await fetchPageHtml("https://feed.example.com/story", {
-      ...options(
-        vi.fn(async () =>
-          response(200, { "content-type": "application/json" }, "{}"),
-        ),
-      ),
+      ...options(vi.fn(async () => response(200, { "content-type": "application/json" }, "{}"))),
     });
     expect(wrongType).toEqual({
       status: "error",
@@ -237,10 +210,7 @@ describe("fetchPageHtml", () => {
       active--;
       return response();
     });
-    const urls = Array.from(
-      { length: 8 },
-      (_, index) => `https://feed${index}.example.com/story`,
-    );
+    const urls = Array.from({ length: 8 }, (_, index) => `https://feed${index}.example.com/story`);
 
     const results = await fetchPages(urls, {
       ...options(request),
@@ -271,17 +241,17 @@ describe("extractPageContent", () => {
       <meta name="description" content="Standard">
       <meta name="twitter:description" content="Twitter">
       <meta property="og:description" content="Open Graph">`;
-    expect(
-      extractPageContent(allUsable, "https://example.com/story").description,
-    ).toBe("Open Graph");
+    expect(extractPageContent(allUsable, "https://example.com/story").description).toBe(
+      "Open Graph",
+    );
 
     const noOpenGraph = `
       <meta property="og:description" content=" ">
       <meta name="twitter:description" content="Twitter">
       <meta name="description" content="Standard">`;
-    expect(
-      extractPageContent(noOpenGraph, "https://example.com/story").description,
-    ).toBe("Twitter");
+    expect(extractPageContent(noOpenGraph, "https://example.com/story").description).toBe(
+      "Twitter",
+    );
   });
 
   it("rejects listed site-wide metadata and falls through to readable text", () => {
@@ -314,9 +284,9 @@ describe("extractPageContent", () => {
     ["description", "name", "description"],
   ])("accepts %s metadata", (key, attribute, value) => {
     const html = `<meta ${attribute}="${value}" content="Useful description">`;
-    expect(
-      extractPageContent(html, "https://example.com/story").description,
-    ).toBe("Useful description");
+    expect(extractPageContent(html, "https://example.com/story").description).toBe(
+      "Useful description",
+    );
   });
 
   it("extracts bounded readable article text only when metadata is unusable", () => {
@@ -337,9 +307,7 @@ describe("extractPageContent", () => {
   });
 
   it("does not invent content for empty or unreadable pages", () => {
-    expect(
-      extractPageContent("<html><body></body></html>", "https://example.com/"),
-    ).toEqual({
+    expect(extractPageContent("<html><body></body></html>", "https://example.com/")).toEqual({
       description: null,
       articleText: null,
     });

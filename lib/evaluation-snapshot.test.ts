@@ -93,9 +93,7 @@ describe("evaluation snapshot", () => {
     expect(manifest.windows.test.itemIds).toEqual(["item-4"]);
     expect(manifest.counts.byLanguage).toEqual({ en: 4 });
     expect(manifest.provisional).toBe(false);
-    expect(() =>
-      validateSnapshotData({ manifest, sources: [source], items, means }),
-    ).not.toThrow();
+    expect(() => validateSnapshotData({ manifest, sources: [source], items, means })).not.toThrow();
   });
 
   it("rejects item hashes, missing columns, and schema mismatches", () => {
@@ -142,21 +140,13 @@ describe("evaluation snapshot", () => {
   });
 
   it("requires a two-week range and restricts database URLs by operation", () => {
-    expect(() => parseSnapshotDateRange("2026-10-01", "2026-10-14")).toThrow(
-      /14 days/u,
-    );
+    expect(() => parseSnapshotDateRange("2026-10-01", "2026-10-14")).toThrow(/14 days/u);
     expect(parseSnapshotDateRange("2026-10-01", "2026-10-16").from).toBe(
       "2026-10-01T00:00:00.000Z",
     );
-    expect(() => requireProductionUrl("http://127.0.0.1:55321")).toThrow(
-      /production URL/u,
-    );
-    expect(() =>
-      requireLocalSupabaseUrl("https://example.supabase.co"),
-    ).toThrow(/local Supabase/u);
-    expect(requireLocalSupabaseUrl("http://127.0.0.1:55321").port).toBe(
-      "55321",
-    );
+    expect(() => requireProductionUrl("http://127.0.0.1:55321")).toThrow(/production URL/u);
+    expect(() => requireLocalSupabaseUrl("https://example.supabase.co")).toThrow(/local Supabase/u);
+    expect(requireLocalSupabaseUrl("http://127.0.0.1:55321").port).toBe("55321");
   });
 
   it("allows a short range only for a marked provisional snapshot", () => {
@@ -164,12 +154,12 @@ describe("evaluation snapshot", () => {
       from: "2026-10-01T00:00:00.000Z",
       toExclusive: "2026-10-03T00:00:00.000Z",
     };
-    expect(() =>
-      parseSnapshotDateRange(shortRange.from, shortRange.toExclusive),
-    ).toThrow(/14 days/u);
-    expect(
-      parseSnapshotDateRange(shortRange.from, shortRange.toExclusive, true),
-    ).toEqual(shortRange);
+    expect(() => parseSnapshotDateRange(shortRange.from, shortRange.toExclusive)).toThrow(
+      /14 days/u,
+    );
+    expect(parseSnapshotDateRange(shortRange.from, shortRange.toExclusive, true)).toEqual(
+      shortRange,
+    );
     const shortItems = [
       item("short-1", shortRange.from),
       item("short-2", "2026-10-02T00:00:00.000Z"),
@@ -190,9 +180,7 @@ describe("evaluation snapshot", () => {
       provisional: true,
     });
     expect(provisionalManifest.provisional).toBe(true);
-    expect(() => requireFinalSnapshot(provisionalManifest)).toThrow(
-      /non-provisional/u,
-    );
+    expect(() => requireFinalSnapshot(provisionalManifest)).toThrow(/non-provisional/u);
     validateSnapshotData({
       manifest: provisionalManifest,
       sources: [source],

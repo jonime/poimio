@@ -130,12 +130,7 @@ function ipv6Bytes(address: string): Uint8Array | null {
     if (last?.includes(".")) {
       const ipv4 = ipv4Number(last);
       if (ipv4 === null) return null;
-      groups.splice(
-        -1,
-        1,
-        (ipv4 >>> 16).toString(16),
-        (ipv4 & 0xffff).toString(16),
-      );
+      groups.splice(-1, 1, (ipv4 >>> 16).toString(16), (ipv4 & 0xffff).toString(16));
     }
     if (groups.some((group) => !/^[0-9a-f]{1,4}$/.test(group))) return null;
     return groups.map((group) => Number.parseInt(group, 16));
@@ -172,22 +167,15 @@ function isPublicAddress(address: string): boolean {
   const bytes = ipv6Bytes(address);
   if (bytes === null) return false;
   const mappedPrefix =
-    bytes.slice(0, 10).every((byte) => byte === 0) &&
-    bytes[10] === 0xff &&
-    bytes[11] === 0xff;
+    bytes.slice(0, 10).every((byte) => byte === 0) && bytes[10] === 0xff && bytes[11] === 0xff;
   if (mappedPrefix) {
-    return !isBlockedIpv4(
-      [bytes[12], bytes[13], bytes[14], bytes[15]].join("."),
-    );
+    return !isBlockedIpv4([bytes[12], bytes[13], bytes[14], bytes[15]].join("."));
   }
 
   const globalUnicast = (bytes[0]! & 0xe0) === 0x20;
   const specialPurpose =
     (bytes[0] === 0x20 && bytes[1] === 0x01 && (bytes[2]! & 0xfe) === 0) ||
-    (bytes[0] === 0x20 &&
-      bytes[1] === 0x01 &&
-      bytes[2] === 0x0d &&
-      bytes[3] === 0xb8) ||
+    (bytes[0] === 0x20 && bytes[1] === 0x01 && bytes[2] === 0x0d && bytes[3] === 0xb8) ||
     (bytes[0] === 0x20 && bytes[1] === 0x02) ||
     (bytes[0] === 0x3f && bytes[1] === 0xff && (bytes[2]! & 0xf0) === 0);
   return globalUnicast && !specialPurpose;
@@ -244,11 +232,7 @@ function pinnedLookup(addresses: LookupAddress[]): PinnedLookup {
     }
     const address = addresses[0];
     if (!address) {
-      callback(
-        Object.assign(new Error("No validated address"), { code: "ENOTFOUND" }),
-        "",
-        0,
-      );
+      callback(Object.assign(new Error("No validated address"), { code: "ENOTFOUND" }), "", 0);
       return;
     }
     callback(null, address.address, address.family);
@@ -277,10 +261,7 @@ function requestPage(
       },
       (response) => {
         const contentLength = Number(response.headers["content-length"]);
-        if (
-          Number.isFinite(contentLength) &&
-          contentLength > options.maxBytes
-        ) {
+        if (Number.isFinite(contentLength) && contentLength > options.maxBytes) {
           response.destroy(new PageFetchError("response too large"));
           reject(new PageFetchError("response too large"));
           return;
@@ -305,11 +286,7 @@ function requestPage(
           });
         });
         response.on("error", (error) => {
-          reject(
-            error instanceof PageFetchError
-              ? error
-              : new PageFetchError("request failed"),
-          );
+          reject(error instanceof PageFetchError ? error : new PageFetchError("request failed"));
         });
       },
     );
@@ -326,10 +303,7 @@ function requestPage(
   });
 }
 
-function headerValue(
-  headers: IncomingHttpHeaders,
-  name: string,
-): string | null {
+function headerValue(headers: IncomingHttpHeaders, name: string): string | null {
   const value = headers[name.toLowerCase()];
   return Array.isArray(value) ? (value[0] ?? null) : (value ?? null);
 }
@@ -379,10 +353,7 @@ export async function fetchPageHtml(
     for (;;) {
       const host = url.hostname.replace(/^\[|\]$/g, "");
       const addresses = await withAbort(resolve(host), controller.signal);
-      if (
-        addresses.length === 0 ||
-        addresses.some((entry) => !isPublicAddress(entry.address))
-      ) {
+      if (addresses.length === 0 || addresses.some((entry) => !isPublicAddress(entry.address))) {
         throw new PageFetchError("internal destination blocked");
       }
 
@@ -398,8 +369,7 @@ export async function fetchPageHtml(
         }),
         controller.signal,
       );
-      if (controller.signal.aborted)
-        throw new PageFetchError("request timed out");
+      if (controller.signal.aborted) throw new PageFetchError("request timed out");
       if (response.body.byteLength > maxBytes) {
         throw new PageFetchError("response too large");
       }
@@ -407,8 +377,7 @@ export async function fetchPageHtml(
       if (REDIRECT_STATUSES.has(response.status)) {
         const location = headerValue(response.headers, "location");
         if (!location) throw new PageFetchError("redirect without a location");
-        if (redirects >= maxRedirects)
-          throw new PageFetchError("too many redirects");
+        if (redirects >= maxRedirects) throw new PageFetchError("too many redirects");
         let nextUrl: URL;
         try {
           nextUrl = new URL(location, url);
@@ -424,11 +393,7 @@ export async function fetchPageHtml(
         throw new PageFetchError(`HTTP ${response.status}`);
       }
       const contentType = headerValue(response.headers, "content-type") ?? "";
-      if (
-        !/^\s*(text\/html|application\/xhtml\+xml)(?:\s*;|\s*$)/i.test(
-          contentType,
-        )
-      ) {
+      if (!/^\s*(text\/html|application\/xhtml\+xml)(?:\s*;|\s*$)/i.test(contentType)) {
         throw new PageFetchError("unsupported content type");
       }
       return {
@@ -439,10 +404,8 @@ export async function fetchPageHtml(
       };
     }
   } catch (error) {
-    const message =
-      error instanceof PageFetchError ? error.message : "request failed";
-    if (controller.signal.aborted)
-      return { status: "error", error: "request timed out" };
+    const message = error instanceof PageFetchError ? error.message : "request failed";
+    if (controller.signal.aborted) return { status: "error", error: "request timed out" };
     return { status: "error", error: message.slice(0, 500) };
   } finally {
     clearTimeout(timer);
@@ -455,23 +418,17 @@ export async function fetchPages(
 ): Promise<PageFetchResult[]> {
   const concurrency = Math.max(
     1,
-    Math.min(
-      options.concurrency ?? PAGE_FETCH_CONCURRENCY,
-      PAGE_FETCH_CONCURRENCY,
-    ),
+    Math.min(options.concurrency ?? PAGE_FETCH_CONCURRENCY, PAGE_FETCH_CONCURRENCY),
   );
   const results = new Array<PageFetchResult>(urls.length);
   let cursor = 0;
-  const workers = Array.from(
-    { length: Math.min(concurrency, urls.length) },
-    async () => {
-      for (;;) {
-        const index = cursor++;
-        if (index >= urls.length) return;
-        results[index] = await fetchPageHtml(urls[index]!, options);
-      }
-    },
-  );
+  const workers = Array.from({ length: Math.min(concurrency, urls.length) }, async () => {
+    for (;;) {
+      const index = cursor++;
+      if (index >= urls.length) return;
+      results[index] = await fetchPageHtml(urls[index]!, options);
+    }
+  });
   await Promise.all(workers);
   return results;
 }
@@ -494,8 +451,7 @@ function normalizedDescription(candidate: string | null): string | null {
     !text ||
     SITE_WIDE_DESCRIPTIONS.some(
       (description) =>
-        text.toLowerCase().replace(/\.$/, "") ===
-        description.toLowerCase().replace(/\.$/, ""),
+        text.toLowerCase().replace(/\.$/, "") === description.toLowerCase().replace(/\.$/, ""),
     )
   ) {
     return null;
@@ -503,10 +459,7 @@ function normalizedDescription(candidate: string | null): string | null {
   return truncateSummary(text, DEFAULT_SUMMARY_MAX_LENGTH);
 }
 
-export function extractPageContent(
-  html: string,
-  pageUrl: string,
-): ExtractedPageContent {
+export function extractPageContent(html: string, pageUrl: string): ExtractedPageContent {
   const dom = new JSDOM(html, { url: pageUrl });
   try {
     const document = dom.window.document;
@@ -526,9 +479,7 @@ export function extractPageContent(
       : "";
     return {
       description: null,
-      articleText: articleText
-        ? articleText.slice(0, MAX_ARTICLE_TEXT_LENGTH)
-        : null,
+      articleText: articleText ? articleText.slice(0, MAX_ARTICLE_TEXT_LENGTH) : null,
     };
   } finally {
     dom.window.close();

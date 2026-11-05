@@ -1,10 +1,4 @@
-import type {
-  BackfillDb,
-  EnrichmentItem,
-  IngestDb,
-  SummaryOrigin,
-  UnembeddedItem,
-} from "../db.ts";
+import type { BackfillDb, EnrichmentItem, IngestDb, SummaryOrigin, UnembeddedItem } from "../db.ts";
 import {
   embedPendingItems,
   type EmbeddingBatchFailure,
@@ -75,10 +69,7 @@ function emptyOrigins(): Record<SummaryOrigin, number> {
   return { feed: 0, page_metadata: 0, ai_generated: 0 };
 }
 
-function countOrigin(
-  origins: Record<SummaryOrigin, number>,
-  origin: SummaryOrigin | null,
-): void {
+function countOrigin(origins: Record<SummaryOrigin, number>, origin: SummaryOrigin | null): void {
   if (origin !== null) origins[origin]++;
 }
 
@@ -89,11 +80,9 @@ function describeDryRun(
   siteWideMatches: number,
   missingEmbeddings: UnembeddedItem[],
 ): BackfillResult {
-  const selected =
-    due.length + exhausted.length + siteWide.length + missingEmbeddings.length;
+  const selected = due.length + exhausted.length + siteWide.length + missingEmbeddings.length;
   const byOrigin = emptyOrigins();
-  for (const item of missingEmbeddings)
-    countOrigin(byOrigin, item.summaryOrigin);
+  for (const item of missingEmbeddings) countOrigin(byOrigin, item.summaryOrigin);
   return {
     dryRun: true,
     processed: 0,
@@ -125,18 +114,13 @@ export async function runEnrichmentBackfill(
   const now = options.now ?? (() => new Date());
   const limit = Math.max(
     1,
-    Math.min(
-      options.limit ?? MAX_ENRICHMENT_ITEMS_PER_RUN,
-      MAX_ENRICHMENT_ITEMS_PER_RUN,
-    ),
+    Math.min(options.limit ?? MAX_ENRICHMENT_ITEMS_PER_RUN, MAX_ENRICHMENT_ITEMS_PER_RUN),
   );
   const selectedAt = now();
   const due = await db.listDueEnrichmentItems(limit, selectedAt);
   let remaining = limit - due.length;
   const exhausted =
-    options.retryFailed && remaining > 0
-      ? await db.listExhaustedEnrichmentItems(remaining)
-      : [];
+    options.retryFailed && remaining > 0 ? await db.listExhaustedEnrichmentItems(remaining) : [];
   remaining -= exhausted.length;
   const siteWideCandidates = options.requeueSiteWide
     ? await db.listSiteWideDescriptionItems(MAX_ENRICHMENT_ITEMS_PER_RUN)
@@ -147,11 +131,7 @@ export async function runEnrichmentBackfill(
   const missingEmbeddings = allMissingEmbeddings.slice(0, remaining);
   reportProgress({
     phase: "selection",
-    total:
-      due.length +
-      exhausted.length +
-      siteWide.length +
-      missingEmbeddings.length,
+    total: due.length + exhausted.length + siteWide.length + missingEmbeddings.length,
     due: due.length,
     exhausted: exhausted.length,
     siteWideMatches: siteWideCandidates.length,
@@ -159,13 +139,7 @@ export async function runEnrichmentBackfill(
   });
 
   if (options.dryRun) {
-    return describeDryRun(
-      due,
-      exhausted,
-      siteWide,
-      siteWideCandidates.length,
-      missingEmbeddings,
-    );
+    return describeDryRun(due, exhausted, siteWide, siteWideCandidates.length, missingEmbeddings);
   }
 
   if (exhausted.length > 0) {
@@ -199,14 +173,10 @@ export async function runEnrichmentBackfill(
     now,
     limit: enrichmentIds.length,
     itemIds: enrichmentIds,
-    onProgress: (progress) =>
-      reportProgress({ phase: "description", ...progress }),
+    onProgress: (progress) => reportProgress({ phase: "description", ...progress }),
   });
   const embeddingIds = [
-    ...new Set([
-      ...missingEmbeddings.map((item) => item.id),
-      ...enrichment.succeededIds,
-    ]),
+    ...new Set([...missingEmbeddings.map((item) => item.id), ...enrichment.succeededIds]),
   ];
   if (embeddingIds.length > 0) {
     reportProgress({
@@ -238,8 +208,7 @@ export async function runEnrichmentBackfill(
     embeddingIds.length - embedding.embedded - embeddingFailureCount,
   );
   const byOrigin = emptyOrigins();
-  for (const item of missingEmbeddings)
-    countOrigin(byOrigin, item.summaryOrigin);
+  for (const item of missingEmbeddings) countOrigin(byOrigin, item.summaryOrigin);
   byOrigin.page_metadata += enrichment.byOrigin.page_metadata;
   byOrigin.ai_generated += enrichment.byOrigin.ai_generated;
 
@@ -270,13 +239,10 @@ export async function runEnrichmentBackfill(
 }
 
 function parsePositiveLimit(value: string): number {
-  if (!/^\d+$/.test(value))
-    throw new Error("--limit must be a positive integer.");
+  if (!/^\d+$/.test(value)) throw new Error("--limit must be a positive integer.");
   const limit = Number(value);
   if (limit < 1 || limit > MAX_ENRICHMENT_ITEMS_PER_RUN) {
-    throw new Error(
-      `--limit must be between 1 and ${MAX_ENRICHMENT_ITEMS_PER_RUN}.`,
-    );
+    throw new Error(`--limit must be between 1 and ${MAX_ENRICHMENT_ITEMS_PER_RUN}.`);
   }
   return limit;
 }
@@ -326,9 +292,7 @@ export function formatBackfillResult(result: BackfillResult): string {
   return lines.join("\n");
 }
 
-export function formatBackfillProgress(
-  progress: BackfillProgressEvent,
-): string {
+export function formatBackfillProgress(progress: BackfillProgressEvent): string {
   switch (progress.phase) {
     case "selection":
       return `Selected ${progress.total} item(s): ${progress.due} due, ${progress.exhausted} exhausted, ${progress.siteWideMatches} site-wide matches, ${progress.embeddingRecovery} embedding recovery.`;
@@ -339,8 +303,7 @@ export function formatBackfillProgress(
         return `Description ${progress.current}/${progress.total}: processing.`;
       }
       if (progress.status === "completed") {
-        const source =
-          progress.origin === "ai_generated" ? "AI summary" : "page metadata";
+        const source = progress.origin === "ai_generated" ? "AI summary" : "page metadata";
         return `Description ${progress.current}/${progress.total}: saved (${source}).`;
       }
       if (progress.status === "unresolved") {

@@ -1,8 +1,5 @@
 import type { EnrichmentDb, EnrichmentItem, SummaryOrigin } from "../db.ts";
-import {
-  DEFAULT_SUMMARY_MAX_LENGTH,
-  truncateSummary,
-} from "../normalize/text.ts";
+import { DEFAULT_SUMMARY_MAX_LENGTH, truncateSummary } from "../normalize/text.ts";
 import {
   extractPageContent,
   fetchPageHtml,
@@ -15,10 +12,7 @@ export const MAX_ENRICHMENT_ITEMS_PER_RUN = 20;
 export const MAX_SUMMARY_REQUESTS_PER_RUN = 20;
 export const MAX_SUMMARY_OUTPUT_TOKENS = 200;
 export const MAX_ENRICHMENT_ATTEMPTS = 3;
-export const ENRICHMENT_RETRY_DELAYS_MS = [
-  60 * 60 * 1000,
-  6 * 60 * 60 * 1000,
-] as const;
+export const ENRICHMENT_RETRY_DELAYS_MS = [60 * 60 * 1000, 6 * 60 * 60 * 1000] as const;
 export const SUMMARY_REQUEST_TIMEOUT_MS = 15_000;
 
 const SUMMARY_ENDPOINT = "https://api.openai.com/v1/responses";
@@ -69,11 +63,7 @@ function responseOutputText(payload: unknown): string | null {
   for (const output of payload.output) {
     if (!isRecord(output) || !Array.isArray(output.content)) continue;
     for (const content of output.content) {
-      if (
-        isRecord(content) &&
-        content.type === "output_text" &&
-        typeof content.text === "string"
-      ) {
+      if (isRecord(content) && content.type === "output_text" && typeof content.text === "string") {
         textParts.push(content.text);
       }
     }
@@ -102,9 +92,7 @@ export async function summarizeArticleText(
       tools: [],
       store: false,
     }),
-    signal: AbortSignal.timeout(
-      options.timeoutMs ?? SUMMARY_REQUEST_TIMEOUT_MS,
-    ),
+    signal: AbortSignal.timeout(options.timeoutMs ?? SUMMARY_REQUEST_TIMEOUT_MS),
   });
   if (!response.ok) {
     throw new Error(`summary service returned HTTP ${response.status}`);
@@ -123,18 +111,14 @@ export async function summarizeArticleText(
   return truncateSummary(summary, DEFAULT_SUMMARY_MAX_LENGTH);
 }
 
-function articleContainsMoreThanTitle(
-  item: EnrichmentItem,
-  articleText: string,
-): boolean {
+function articleContainsMoreThanTitle(item: EnrichmentItem, articleText: string): boolean {
   const normalize = (value: string) =>
     value.replace(/\s+/g, " ").trim().toLocaleLowerCase(item.language);
   return normalize(articleText) !== normalize(item.title);
 }
 
 function failureDetail(error: unknown): string {
-  const message =
-    error instanceof Error ? error.message : "description enrichment failed";
+  const message = error instanceof Error ? error.message : "description enrichment failed";
   return (message.trim() || "description enrichment failed").slice(0, 500);
 }
 
@@ -143,8 +127,7 @@ function getFailureSchedule(attemptCount: number, now: Date) {
   const delay = ENRICHMENT_RETRY_DELAYS_MS[attemptCount - 1];
   return {
     exhausted,
-    nextAttemptAt:
-      exhausted || delay === undefined ? null : new Date(now.getTime() + delay),
+    nextAttemptAt: exhausted || delay === undefined ? null : new Date(now.getTime() + delay),
   };
 }
 
@@ -156,10 +139,7 @@ export async function runEnrichment(
   const now = options.now ?? (() => new Date());
   const limit = Math.max(
     0,
-    Math.min(
-      options.limit ?? MAX_ENRICHMENT_ITEMS_PER_RUN,
-      MAX_ENRICHMENT_ITEMS_PER_RUN,
-    ),
+    Math.min(options.limit ?? MAX_ENRICHMENT_ITEMS_PER_RUN, MAX_ENRICHMENT_ITEMS_PER_RUN),
   );
   const maxSummaryRequests = Math.max(
     0,
@@ -168,11 +148,7 @@ export async function runEnrichment(
       MAX_SUMMARY_REQUESTS_PER_RUN,
     ),
   );
-  const candidates = await db.listDueEnrichmentItems(
-    limit,
-    now(),
-    options.itemIds,
-  );
+  const candidates = await db.listDueEnrichmentItems(limit, now(), options.itemIds);
   const result: EnrichmentRunResult = {
     selected: candidates.length,
     processed: 0,
@@ -220,10 +196,7 @@ export async function runEnrichment(
           continue;
         }
         result.summaryRequests++;
-        summary = await (options.summarize ?? summarizeArticleText)(
-          extracted.articleText,
-          apiKey,
-        );
+        summary = await (options.summarize ?? summarizeArticleText)(extracted.articleText, apiKey);
         origin = "ai_generated";
       }
 

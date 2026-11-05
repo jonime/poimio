@@ -48,15 +48,11 @@ function parseArguments(args: string[]): {
 } {
   const command = args[0];
   if (command !== "propose" && command !== "score") {
-    throw new Error(
-      "usage: pnpm eval:crosslingual propose|score [--provisional]",
-    );
+    throw new Error("usage: pnpm eval:crosslingual propose|score [--provisional]");
   }
   const options = args.slice(1);
   if (options.some((argument) => argument !== "--provisional")) {
-    throw new Error(
-      `Unknown option: ${options.find((argument) => argument !== "--provisional")}`,
-    );
+    throw new Error(`Unknown option: ${options.find((argument) => argument !== "--provisional")}`);
   }
   return { command, provisional: options.includes("--provisional") };
 }
@@ -67,29 +63,18 @@ function parseVector(value: unknown, label: string): number[] {
     : typeof value === "string"
       ? value.slice(1, -1).split(",").map(Number)
       : [];
-  if (
-    vector.length !== 512 ||
-    vector.some((entry) => !Number.isFinite(entry))
-  ) {
+  if (vector.length !== 512 || vector.some((entry) => !Number.isFinite(entry))) {
     throw new Error(`${label} has an invalid 512-dimensional vector`);
   }
   return vector;
 }
 
 function snapshotDirectory(provisional: boolean): string {
-  return resolve(
-    root,
-    "evaluation/snapshot",
-    provisional ? "provisional" : ".",
-  );
+  return resolve(root, "evaluation/snapshot", provisional ? "provisional" : ".");
 }
 
 function outputDirectory(provisional: boolean): string {
-  return resolve(
-    root,
-    "evaluation/crosslingual",
-    provisional ? "provisional" : ".",
-  );
+  return resolve(root, "evaluation/crosslingual", provisional ? "provisional" : ".");
 }
 
 async function loadSnapshot(provisional: boolean): Promise<{
@@ -157,17 +142,12 @@ async function loadSnapshot(provisional: boolean): Promise<{
   const means = new Map(
     meanRows.map((row) => [
       `${String(row.embedding_model)}:${String(row.language)}`,
-      parseVector(
-        row.mean,
-        `mean ${String(row.embedding_model)}:${String(row.language)}`,
-      ),
+      parseVector(row.mean, `mean ${String(row.embedding_model)}:${String(row.language)}`),
     ]),
   );
   const embeddingModels = new Set(items.map((item) => item.embeddingModel));
   if (embeddingModels.size !== 1) {
-    throw new Error(
-      "cross-lingual snapshot must use exactly one embedding model",
-    );
+    throw new Error("cross-lingual snapshot must use exactly one embedding model");
   }
   return {
     items,
@@ -180,8 +160,7 @@ async function loadSnapshot(provisional: boolean): Promise<{
 
 function snapshotPools(snapshot: Awaited<ReturnType<typeof loadSnapshot>>) {
   const englishSource = snapshot.sources.find(
-    (source) =>
-      source.name === "Yle — News in English" && source.language === "en",
+    (source) => source.name === "Yle — News in English" && source.language === "en",
   );
   if (!englishSource) {
     throw new Error("snapshot is missing the Yle — News in English source");
@@ -191,9 +170,7 @@ function snapshotPools(snapshot: Awaited<ReturnType<typeof loadSnapshot>>) {
   );
   const finnishSourceIds = new Set(
     snapshot.sources
-      .filter(
-        (source) => source.name.startsWith("Yle —") && source.language === "fi",
-      )
+      .filter((source) => source.name.startsWith("Yle —") && source.language === "fi")
       .map((source) => source.id),
   );
   const finnishItems = snapshot.items.filter(
@@ -222,15 +199,11 @@ function localOrTlsUrl(value: string): URL {
 async function getModel(baseUrl: URL, apiKey: string): Promise<string> {
   const configured = process.env.LLM_MODEL?.trim();
   if (configured) return configured;
-  const response = await fetch(
-    new URL("models", `${baseUrl.href.replace(/\/$/u, "")}/`),
-    {
-      headers: { Authorization: `Bearer ${apiKey}` },
-      signal: AbortSignal.timeout(120_000),
-    },
-  );
-  if (!response.ok)
-    throw new Error(`listing LLM models failed with HTTP ${response.status}`);
+  const response = await fetch(new URL("models", `${baseUrl.href.replace(/\/$/u, "")}/`), {
+    headers: { Authorization: `Bearer ${apiKey}` },
+    signal: AbortSignal.timeout(120_000),
+  });
+  if (!response.ok) throw new Error(`listing LLM models failed with HTTP ${response.status}`);
   const payload: unknown = await response.json();
   if (
     payload === null ||
@@ -241,17 +214,12 @@ async function getModel(baseUrl: URL, apiKey: string): Promise<string> {
     throw new Error("LLM model list has an invalid response schema");
   }
   const ids = payload.data.flatMap((entry: unknown) =>
-    entry !== null &&
-    typeof entry === "object" &&
-    "id" in entry &&
-    typeof entry.id === "string"
+    entry !== null && typeof entry === "object" && "id" in entry && typeof entry.id === "string"
       ? [entry.id]
       : [],
   );
   if (ids.length !== 1) {
-    throw new Error(
-      `set LLM_MODEL explicitly; found ${ids.length} available models`,
-    );
+    throw new Error(`set LLM_MODEL explicitly; found ${ids.length} available models`);
   }
   return ids[0]!;
 }
@@ -268,10 +236,7 @@ async function chooseFinnishCandidate(input: {
   for (let attempt = 1; attempt <= 3; attempt += 1) {
     try {
       const response = await fetch(
-        new URL(
-          "chat/completions",
-          `${input.baseUrl.href.replace(/\/$/u, "")}/`,
-        ),
+        new URL("chat/completions", `${input.baseUrl.href.replace(/\/$/u, "")}/`),
         {
           method: "POST",
           headers: {
@@ -307,9 +272,7 @@ async function chooseFinnishCandidate(input: {
         },
       );
       if (!response.ok) {
-        throw new Error(
-          `cross-lingual proposal request failed with HTTP ${response.status}`,
-        );
+        throw new Error(`cross-lingual proposal request failed with HTTP ${response.status}`);
       }
       const payload: unknown = await response.json();
       const content =
@@ -326,15 +289,13 @@ async function chooseFinnishCandidate(input: {
         typeof payload.choices[0].message.content === "string"
           ? payload.choices[0].message.content
           : null;
-      if (content === null)
-        throw new Error("proposal response has no text content");
+      if (content === null) throw new Error("proposal response has no text content");
       const parsed: unknown = JSON.parse(content);
       if (
         parsed === null ||
         typeof parsed !== "object" ||
         !("finnish_item_id" in parsed) ||
-        (parsed.finnish_item_id !== null &&
-          typeof parsed.finnish_item_id !== "string")
+        (parsed.finnish_item_id !== null && typeof parsed.finnish_item_id !== "string")
       ) {
         throw new Error("proposal response has an invalid finnish_item_id");
       }
@@ -365,16 +326,13 @@ async function proposePairs(provisional: boolean): Promise<void> {
   const eligibleEnglish = englishItems.filter((english) => {
     const time = Date.parse(english.publishedAt);
     const candidates = finnishItems.filter(
-      (finnish) =>
-        Math.abs(Date.parse(finnish.publishedAt) - time) <= 2 * dayMs,
+      (finnish) => Math.abs(Date.parse(finnish.publishedAt) - time) <= 2 * dayMs,
     );
     candidatesByEnglish.set(english.id, candidates);
     return candidates.length > 0;
   });
   if (eligibleEnglish.length === 0) {
-    throw new Error(
-      "no Finnish candidates fall within two days of English Yle items",
-    );
+    throw new Error("no Finnish candidates fall within two days of English Yle items");
   }
 
   const baseUrl = localOrTlsUrl(process.env.LLM_BASE_URL ?? defaultBaseUrl);
@@ -395,11 +353,7 @@ async function proposePairs(provisional: boolean): Promise<void> {
   for (const [index, english] of eligibleEnglish.entries()) {
     const candidateWinners: SnapshotContentItem[] = [];
     const candidates = candidatesByEnglish.get(english.id)!;
-    for (
-      let offset = 0;
-      offset < candidates.length;
-      offset += candidateChunkSize
-    ) {
+    for (let offset = 0; offset < candidates.length; offset += candidateChunkSize) {
       const selected = await chooseFinnishCandidate({
         baseUrl,
         apiKey,
@@ -422,21 +376,13 @@ async function proposePairs(provisional: boolean): Promise<void> {
       englishTitle: english.title,
       finnishTitle: finnish?.title ?? "",
     });
-    console.log(
-      `Proposed ${index + 1}/${eligibleEnglish.length} English items`,
-    );
+    console.log(`Proposed ${index + 1}/${eligibleEnglish.length} English items`);
   }
 
   const directory = outputDirectory(provisional);
   await mkdir(directory, { recursive: true });
   const csv = encodeCsv([
-    [
-      "english_item_id",
-      "english_title",
-      "finnish_item_id",
-      "finnish_title",
-      "confirmed",
-    ],
+    ["english_item_id", "english_title", "finnish_item_id", "finnish_title", "confirmed"],
     ...proposed.map((pair) => [
       pair.englishItemId,
       pair.englishTitle,
@@ -458,8 +404,7 @@ function confirmedPairs(csv: string): CrosslingualPair[] {
   if (!header) throw new Error("cross-lingual proposal CSV is empty");
   const columns = new Map(header.map((value, index) => [value, index]));
   for (const required of ["english_item_id", "finnish_item_id", "confirmed"]) {
-    if (!columns.has(required))
-      throw new Error(`proposal CSV is missing ${required}`);
+    if (!columns.has(required)) throw new Error(`proposal CSV is missing ${required}`);
   }
   const pairs: CrosslingualPair[] = [];
   const seen = new Set<string>();
@@ -468,27 +413,21 @@ function confirmedPairs(csv: string): CrosslingualPair[] {
     const confirmed = get("confirmed");
     if (confirmed === "0") continue;
     if (confirmed !== "1") {
-      throw new Error(
-        `proposal row ${index + 2} must be confirmed as 1 or rejected as 0`,
-      );
+      throw new Error(`proposal row ${index + 2} must be confirmed as 1 or rejected as 0`);
     }
     const pair = {
       englishItemId: get("english_item_id"),
       finnishItemId: get("finnish_item_id"),
     };
     if (!pair.englishItemId || !pair.finnishItemId) {
-      throw new Error(
-        `confirmed proposal row ${index + 2} has an empty item ID`,
-      );
+      throw new Error(`confirmed proposal row ${index + 2} has an empty item ID`);
     }
     const key = `${pair.englishItemId}\u0000${pair.finnishItemId}`;
-    if (seen.has(key))
-      throw new Error("proposal CSV contains a duplicate confirmed pair");
+    if (seen.has(key)) throw new Error("proposal CSV contains a duplicate confirmed pair");
     seen.add(key);
     pairs.push(pair);
   }
-  if (pairs.length < 10)
-    throw new Error("at least 10 confirmed pairs are required");
+  if (pairs.length < 10) throw new Error("at least 10 confirmed pairs are required");
   return pairs;
 }
 
@@ -496,10 +435,7 @@ async function scorePairs(provisional: boolean): Promise<void> {
   const snapshot = await loadSnapshot(provisional);
   const { englishItems, finnishItems } = snapshotPools(snapshot);
   const pairs = confirmedPairs(
-    await readFile(
-      resolve(outputDirectory(provisional), "proposals.csv"),
-      "utf8",
-    ),
+    await readFile(resolve(outputDirectory(provisional), "proposals.csv"), "utf8"),
   );
   const itemById = new Map(snapshot.items.map((item) => [item.id, item]));
   if (
@@ -511,10 +447,7 @@ async function scorePairs(provisional: boolean): Promise<void> {
         !finnish ||
         english.language !== "en" ||
         finnish.language !== "fi" ||
-        Math.abs(
-          Date.parse(english.publishedAt) - Date.parse(finnish.publishedAt),
-        ) >
-          2 * dayMs
+        Math.abs(Date.parse(english.publishedAt) - Date.parse(finnish.publishedAt)) > 2 * dayMs
       );
     })
   ) {
@@ -525,9 +458,7 @@ async function scorePairs(provisional: boolean): Promise<void> {
   const englishMean = snapshot.means.get(`${snapshot.embeddingModel}:en`);
   const finnishMean = snapshot.means.get(`${snapshot.embeddingModel}:fi`);
   if (!englishMean || !finnishMean) {
-    throw new Error(
-      "snapshot is missing language means for its embedding model",
-    );
+    throw new Error("snapshot is missing language means for its embedding model");
   }
   const randomPairs = sampleRandomCrosslingualPairs({
     englishItems,
@@ -545,12 +476,7 @@ async function scorePairs(provisional: boolean): Promise<void> {
     meanFinnish: finnishMean,
   });
   const csv = encodeCsv([
-    [
-      "english_item_id",
-      "finnish_item_id",
-      "raw_similarity",
-      "centered_similarity",
-    ],
+    ["english_item_id", "finnish_item_id", "raw_similarity", "centered_similarity"],
     ...scores.matchedPairs.map((pair) => [
       pair.englishItemId,
       pair.finnishItemId,
@@ -572,11 +498,9 @@ async function scorePairs(provisional: boolean): Promise<void> {
   };
   const directory = outputDirectory(provisional);
   await mkdir(directory, { recursive: true });
-  await writeFile(
-    resolve(directory, "score.json"),
-    `${JSON.stringify(result, null, 2)}\n`,
-    { flag: "wx" },
-  );
+  await writeFile(resolve(directory, "score.json"), `${JSON.stringify(result, null, 2)}\n`, {
+    flag: "wx",
+  });
   await writeFile(resolve(directory, "score.csv"), csv, { flag: "wx" });
   console.log(
     `Scored ${pairs.length} confirmed pairs against ${scores.randomPairCount} random pairs; pass=${scores.passed} (${scores.passMethod ?? "none"}).`,

@@ -32,14 +32,20 @@
       "complexity": {
         "noUselessCatch": "error",
         "noUselessEscapeInRegex": "error",
-        "noUselessTypeConstraint": "error"
+        "noUselessFragments": "error",
+        "noUselessSwitchCase": "error",
+        "noUselessTypeConstraint": "error",
+        "useLiteralKeys": "error"
       },
       "correctness": {
         "noBeforeInteractiveScriptOutsideDocument": "warn",
         "noNextAsyncClientComponent": "warn",
         "noConstantCondition": "error",
+        "noConstantMathMinMaxClamp": "error",
         "noEmptyCharacterClassInRegex": "error",
+        "noEmptyPattern": "error",
         "noInvalidUseBeforeDeclaration": "error",
+        "noNonoctalDecimalEscape": "error",
         "noPrecisionLoss": "error",
         "noUnsafeFinally": "error",
         "noUnsafeOptionalChaining": "error",
@@ -52,9 +58,12 @@
           }
         },
         "noUnusedImports": "error",
+        "noVoidTypeReturn": "error",
         "useInlineScriptId": "error"
       },
       "performance": {
+        "noAccumulatingSpread": "error",
+        "noDelete": "error",
         "noImgElement": "warn",
         "noSyncScripts": "error",
         "noUnwantedPolyfillio": "warn",
@@ -78,6 +87,7 @@
         "noAssignInExpressions": "error",
         "noCompareNegZero": "error",
         "noConfusingLabels": "error",
+        "noControlCharactersInRegex": "error",
         "noDebugger": "error",
         "noDoubleEquals": "error",
         "noDocumentImportInPage": "error",
@@ -93,7 +103,9 @@
         "noMisleadingInstantiator": "error",
         "noMisrefactoredShorthandAssign": "error",
         "noNonNullAssertedOptionalChain": "error",
+        "noOctalEscape": "error",
         "noPrototypeBuiltins": "error",
+        "noRedundantUseStrict": "error",
         "noSelfCompare": "error",
         "noShadowRestrictedNames": "error",
         "noSparseArray": "error",
@@ -101,8 +113,10 @@
         "noUnsafeDeclarationMerging": "error",
         "noUnusedExpressions": "off",
         "useGoogleFontDisplay": "warn",
+        "useIsArray": "error",
         "useIterableCallbackReturn": "error",
-        "useNamespaceKeyword": "error"
+        "useNamespaceKeyword": "error",
+        "useNumberToFixedDigitsArgument": "error"
       }
     },
     "includes": ["**"]

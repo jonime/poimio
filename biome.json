@@ -28,7 +28,7 @@
       "test": "recommended"
     },
     "rules": {
-      "preset": "none",
+      "preset": "recommended",
       "a11y": {
         "noAccessKey": "error",
         "noPositiveTabindex": "error",
@@ -96,6 +96,7 @@
         "noHeadElement": "warn",
         "noInferrableTypes": "error",
         "noNamespace": "error",
+        "noNonNullAssertion": "warn",
         "useArrayLiterals": "error",
         "useAsConstAssertion": "error",
         "useImportType": "error",
@@ -356,6 +357,10 @@
           }
         }
       }
+    },
+    {
+      "includes": ["components/ui/field.tsx"],
+      "linter": { "rules": { "a11y": { "useSemanticElements": "off" } } }
     }
   ],
   "assist": {

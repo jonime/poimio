@@ -32,7 +32,7 @@ const item: FeedItem = {
 };
 let dom: JSDOM;
 let container: HTMLElement;
-let root: Root;
+let root: Root | undefined;
 
 beforeEach(async () => {
   vi.clearAllMocks();
@@ -53,9 +53,10 @@ beforeEach(async () => {
     vi.stubGlobal(name, value);
   container = view.document.createElement("div");
   view.document.body.append(container);
-  root = createRoot(container);
+  const mountedRoot = createRoot(container);
+  root = mountedRoot;
   await act(async () =>
-    root.render(
+    mountedRoot.render(
       createElement(FeedList, {
         initialItems: [item],
         renderedAt: "2026-11-03T11:00:00Z",

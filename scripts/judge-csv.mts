@@ -42,7 +42,7 @@ async function main() {
       console.log(
         `\n${"-".repeat(60)}\nRecord ${index + 1}/${records.length}\n\nPersona: ${record.persona}\n${record.description}\n\nTitle: ${record.title}\n\nSummary:\n${record.summary}\n`,
       );
-      while (true) {
+      for (;;) {
         stdout.write("Relevant? [1/y] yes  [0/n] no  [s] skip  [q] quit: ");
         const answer = await answers.next();
         const choice = answer.value?.trim().toLowerCase();

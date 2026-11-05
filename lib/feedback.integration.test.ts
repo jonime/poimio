@@ -39,7 +39,7 @@ const feedbackSchemaColumns = [
 function parseSupabaseQueryResult(output: string): { rows: unknown[] } {
   let searchFrom = 0;
   const observedObjectKeys: string[] = [];
-  while (true) {
+  for (;;) {
     const start = output.indexOf("{", searchFrom);
     if (start === -1) {
       const observed = observedObjectKeys.join("; ") || "none";

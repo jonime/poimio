@@ -78,6 +78,10 @@
         "useInlineScriptId": "error",
         "useValidTypeof": "error"
       },
+      "nursery": {
+        "noFloatingPromises": "error",
+        "noMisusedPromises": "error"
+      },
       "performance": {
         "noAccumulatingSpread": "error",
         "noDelete": "error",
@@ -135,6 +139,7 @@
         "noShadowRestrictedNames": "error",
         "noSparseArray": "error",
         "noThenProperty": "error",
+        "noUnnecessaryConditions": "error",
         "noUnsafeDeclarationMerging": "error",
         "noUnusedExpressions": "off",
         "useDefaultSwitchClauseLast": "error",
@@ -319,7 +324,7 @@
             "noDuplicateJsxProps": "error",
             "noHeadImportInDocument": "error",
             "noReactStringRefs": "error",
-            "noUnknownAttribute": "off",
+            "noUnknownAttribute": "error",
             "useGoogleFontDisplay": "warn"
           }
         }

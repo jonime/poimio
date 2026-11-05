@@ -131,6 +131,7 @@ function FeedCard({
   }
 
   function onClickCapture(event: ReactMouseEvent<HTMLElement>) {
+    // biome-ignore lint/suspicious/noUnnecessaryConditions: Pointer handlers and the timeout mutate this ref.
     if (!suppressClick.current) return;
     event.preventDefault();
     event.stopPropagation();

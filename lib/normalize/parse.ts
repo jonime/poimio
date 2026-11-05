@@ -162,7 +162,7 @@ export async function parseFeed(xml: string, options: ParseOptions = {}): Promis
 
   const parser = new Parser();
   const feed = await parser.parseString(xml);
-  const items = feed.items ?? [];
+  const items = feed.items;
   const blocks = splitItemBlocks(xml, format);
   // Pairing is positional: rss-parser preserves document order. If the
   // counts ever disagree we normalize without the raw-block fields rather

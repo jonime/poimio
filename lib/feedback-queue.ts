@@ -58,11 +58,13 @@ export class FeedbackMutationQueue {
   }
 
   whenIdle(): Promise<void> {
+    // biome-ignore lint/suspicious/noUnnecessaryConditions: Queue processing mutates running across calls.
     if (!this.running && this.pending.length === 0) return Promise.resolve();
     return new Promise((resolve) => this.idleWaiters.push(resolve));
   }
 
   private async processQueue(): Promise<void> {
+    // biome-ignore lint/suspicious/noUnnecessaryConditions: Prevent concurrent processing while a save is pending.
     if (this.running) return;
     this.running = true;
     this.saving = true;

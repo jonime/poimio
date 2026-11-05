@@ -68,7 +68,8 @@ Poimio is a personal content discovery app: it ingests Finnish and English RSS/A
 - Never edit an applied migration; add a new one.
 - Ask before adding a new dependency.
 - Keep LLM calls out of request-time ranking.
-- Commands: `pnpm dev`, `pnpm build`, `pnpm lint`, `pnpm typecheck`, `pnpm test`, `pnpm test:integration` (local Supabase).
+- Biome handles linting and formatting; its configuration is in `biome.json`.
+- Commands: `pnpm dev`, `pnpm build`, `pnpm lint`, `pnpm format` (writes formatted files), `pnpm typecheck`, `pnpm test`, `pnpm test:integration` (local Supabase).
 - Ingestion command: `pnpm ingest`.
 
 <!-- BEGIN:nextjs-agent-rules -->

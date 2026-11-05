@@ -29,12 +29,27 @@
     },
     "rules": {
       "preset": "none",
+      "a11y": {
+        "noAccessKey": "error",
+        "noPositiveTabindex": "error",
+        "useValidAnchor": "error",
+        "useValidAutocomplete": "error",
+        "useValidLang": "error"
+      },
       "complexity": {
+        "noBannedTypes": "error",
+        "noExtraBooleanCast": "error",
+        "noFlatMapIdentity": "error",
         "noUselessCatch": "error",
+        "noUselessConstructor": "error",
         "noUselessEscapeInRegex": "error",
         "noUselessFragments": "error",
+        "noUselessLoneBlockStatements": "error",
+        "noUselessRename": "error",
+        "noUselessStringConcat": "error",
         "noUselessSwitchCase": "error",
         "noUselessTypeConstraint": "error",
+        "noUselessUndefinedInitialization": "error",
         "useLiteralKeys": "error"
       },
       "correctness": {
@@ -47,6 +62,7 @@
         "noInvalidUseBeforeDeclaration": "error",
         "noNonoctalDecimalEscape": "error",
         "noPrecisionLoss": "error",
+        "noStringCaseMismatch": "error",
         "noUnsafeFinally": "error",
         "noUnsafeOptionalChaining": "error",
         "noUnusedFunctionParameters": "error",
@@ -59,7 +75,8 @@
         },
         "noUnusedImports": "error",
         "noVoidTypeReturn": "error",
-        "useInlineScriptId": "error"
+        "useInlineScriptId": "error",
+        "useValidTypeof": "error"
       },
       "performance": {
         "noAccumulatingSpread": "error",
@@ -70,16 +87,19 @@
         "useGoogleFontPreconnect": "warn"
       },
       "security": {
+        "noBlankTarget": "error",
         "noDangerouslySetInnerHtml": "error",
         "noGlobalEval": "error"
       },
       "style": {
         "noCommonJs": "error",
         "noHeadElement": "warn",
+        "noInferrableTypes": "error",
         "noNamespace": "error",
         "useArrayLiterals": "error",
         "useAsConstAssertion": "error",
-        "useImportType": "error"
+        "useImportType": "error",
+        "useThrowNewError": "error"
       },
       "suspicious": {
         "noArrayIndexKey": "off",
@@ -87,6 +107,7 @@
         "noAssignInExpressions": "error",
         "noCompareNegZero": "error",
         "noConfusingLabels": "error",
+        "noConstEnum": "error",
         "noControlCharactersInRegex": "error",
         "noDebugger": "error",
         "noDoubleEquals": "error",
@@ -94,9 +115,12 @@
         "noDuplicateCase": "error",
         "noDuplicateElseIf": "error",
         "noDuplicateEnumValues": "error",
+        "noEmptyInterface": "error",
         "noExplicitAny": "error",
         "noExtraNonNullAssertion": "error",
         "noFallthroughSwitchClause": "error",
+        "noGlobalIsFinite": "error",
+        "noGlobalIsNan": "error",
         "noHeadImportInDocument": "error",
         "noImplicitAnyLet": "error",
         "noMisleadingCharacterClass": "error",
@@ -112,6 +136,7 @@
         "noThenProperty": "error",
         "noUnsafeDeclarationMerging": "error",
         "noUnusedExpressions": "off",
+        "useDefaultSwitchClauseLast": "error",
         "useGoogleFontDisplay": "warn",
         "useIsArray": "error",
         "useIterableCallbackReturn": "error",

@@ -29,13 +29,19 @@
     },
     "rules": {
       "preset": "none",
-      "complexity": { "noUselessTypeConstraint": "error" },
+      "complexity": {
+        "noUselessCatch": "error",
+        "noUselessEscapeInRegex": "error",
+        "noUselessTypeConstraint": "error"
+      },
       "correctness": {
         "noBeforeInteractiveScriptOutsideDocument": "warn",
         "noNextAsyncClientComponent": "warn",
         "noConstantCondition": "error",
-        "noUnsafeFinally": "warn",
-        "noUnsafeOptionalChaining": "warn",
+        "noPrecisionLoss": "error",
+        "noUnsafeFinally": "error",
+        "noUnsafeOptionalChaining": "error",
+        "noUnusedFunctionParameters": "error",
         "noUnusedVariables": {
           "level": "error",
           "options": {
@@ -52,14 +58,17 @@
         "noUnwantedPolyfillio": "warn",
         "useGoogleFontPreconnect": "warn"
       },
-      "security": { "noDangerouslySetInnerHtml": "error" },
+      "security": {
+        "noDangerouslySetInnerHtml": "error",
+        "noGlobalEval": "error"
+      },
       "style": {
         "noCommonJs": "error",
         "noHeadElement": "warn",
         "noNamespace": "error",
         "useArrayLiterals": "error",
         "useAsConstAssertion": "error",
-        "useImportType": "warn"
+        "useImportType": "error"
       },
       "suspicious": {
         "noArrayIndexKey": "off",
@@ -68,21 +77,24 @@
         "noCompareNegZero": "error",
         "noConfusingLabels": "error",
         "noDebugger": "error",
-        "noDoubleEquals": "warn",
+        "noDoubleEquals": "error",
         "noDocumentImportInPage": "error",
         "noDuplicateEnumValues": "error",
         "noExplicitAny": "error",
         "noExtraNonNullAssertion": "error",
         "noFallthroughSwitchClause": "error",
         "noHeadImportInDocument": "error",
-        "noImplicitAnyLet": "warn",
+        "noImplicitAnyLet": "error",
         "noMisleadingCharacterClass": "error",
         "noMisleadingInstantiator": "error",
         "noNonNullAssertedOptionalChain": "error",
+        "noSelfCompare": "error",
+        "noShadowRestrictedNames": "error",
+        "noSparseArray": "error",
         "noUnsafeDeclarationMerging": "error",
         "noUnusedExpressions": "off",
         "useGoogleFontDisplay": "warn",
-        "useIterableCallbackReturn": "warn",
+        "useIterableCallbackReturn": "error",
         "useNamespaceKeyword": "error"
       }
     },

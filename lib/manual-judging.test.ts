@@ -27,7 +27,7 @@ describe("manual CSV judging", () => {
   it("preserves unquoted fields, existing labels, and missing final newline", () => {
     const csv = "persona_id,persona_description,title,summary,relevant\np,d,t,s,0\np,d,t,s,";
     const updated = setJudgingRelevance(csv, 1, "1");
-    expect(updated).toBe(csv + "1");
+    expect(updated).toBe(`${csv}1`);
     expect(setJudgingRelevance(updated, 0, "1")).toBe(updated.replace("s,0", "s,1"));
   });
 

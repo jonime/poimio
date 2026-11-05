@@ -15,6 +15,7 @@ import {
   type SnapshotRow,
   validateSnapshotData,
 } from "../lib/evaluation-snapshot.ts";
+import { requireDefined } from "../lib/required.ts";
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const defaultBaseUrl = "http://127.0.0.1:8888/v1";
@@ -153,7 +154,7 @@ async function loadSnapshot(provisional: boolean): Promise<{
     items,
     sources,
     means,
-    embeddingModel: [...embeddingModels][0]!,
+    embeddingModel: requireDefined([...embeddingModels][0], "snapshot embedding model"),
     manifestHash: createHash("sha256").update(manifestText).digest("hex"),
   };
 }
@@ -221,7 +222,7 @@ async function getModel(baseUrl: URL, apiKey: string): Promise<string> {
   if (ids.length !== 1) {
     throw new Error(`set LLM_MODEL explicitly; found ${ids.length} available models`);
   }
-  return ids[0]!;
+  return requireDefined(ids[0], "LLM model ID");
 }
 
 async function chooseFinnishCandidate(input: {
@@ -352,7 +353,10 @@ async function proposePairs(provisional: boolean): Promise<void> {
   const candidateChunkSize = 20;
   for (const [index, english] of eligibleEnglish.entries()) {
     const candidateWinners: SnapshotContentItem[] = [];
-    const candidates = candidatesByEnglish.get(english.id)!;
+    const candidates = requireDefined(
+      candidatesByEnglish.get(english.id),
+      `candidate list for ${english.id}`,
+    );
     for (let offset = 0; offset < candidates.length; offset += candidateChunkSize) {
       const selected = await chooseFinnishCandidate({
         baseUrl,
@@ -409,7 +413,8 @@ function confirmedPairs(csv: string): CrosslingualPair[] {
   const pairs: CrosslingualPair[] = [];
   const seen = new Set<string>();
   for (const [index, row] of records.entries()) {
-    const get = (column: string) => row[columns.get(column)!] ?? "";
+    const get = (column: string) =>
+      row[requireDefined(columns.get(column), `CSV column ${column}`)] ?? "";
     const confirmed = get("confirmed");
     if (confirmed === "0") continue;
     if (confirmed !== "1") {

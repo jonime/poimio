@@ -3,6 +3,7 @@ import { resolve } from "node:path";
 import { stdin, stdout } from "node:process";
 import { createInterface } from "node:readline";
 import { readJudgingCsv, setJudgingRelevance } from "../lib/manual-judging.ts";
+import { requireDefined } from "../lib/required.ts";
 
 async function main() {
   const args = process.argv.slice(2);
@@ -12,10 +13,11 @@ async function main() {
     );
     return;
   }
-  if (args.length !== 1 || args[0]!.startsWith("-")) {
+  const argument = args[0];
+  if (args.length !== 1 || argument === undefined || argument.startsWith("-")) {
     throw new Error("Usage: pnpm eval:judge <file.csv>");
   }
-  const path = resolve(args[0]!);
+  const path = resolve(argument);
   let csv = await readFile(path, "utf8");
   const records = readJudgingCsv(csv);
   const pending = records.flatMap((record, index) => (record.relevant === "" ? [index] : []));
@@ -36,7 +38,7 @@ async function main() {
   let saved = 0;
   try {
     for (const index of pending) {
-      const record = records[index]!;
+      const record = requireDefined(records[index], `judging record ${index + 1}`);
       console.log(
         `\n${"-".repeat(60)}\nRecord ${index + 1}/${records.length}\n\nPersona: ${record.persona}\n${record.description}\n\nTitle: ${record.title}\n\nSummary:\n${record.summary}\n`,
       );

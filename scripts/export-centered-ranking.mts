@@ -15,6 +15,7 @@ import {
   rankEarlyItems,
 } from "../lib/early-ranking.ts";
 import { EMBEDDING_DIMENSIONS, EMBEDDING_MODEL_VERSION } from "../lib/embeddings.ts";
+import { requireDefined } from "../lib/required.ts";
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const directory = resolve(root, "evaluation/early-ranking");
@@ -65,7 +66,9 @@ function seededShuffle<T>(items: T[], initialSeed: number): T[] {
     value ^= value + Math.imul(value ^ (value >>> 7), value | 61);
     const random = ((value ^ (value >>> 14)) >>> 0) / 4294967296;
     const swapIndex = Math.floor(random * (index + 1));
-    [shuffled[index], shuffled[swapIndex]] = [shuffled[swapIndex]!, shuffled[index]!];
+    const current = requireDefined(shuffled[index], `shuffle item ${index}`);
+    shuffled[index] = requireDefined(shuffled[swapIndex], `shuffle item ${swapIndex}`);
+    shuffled[swapIndex] = current;
   }
   return shuffled;
 }
@@ -78,9 +81,9 @@ function readJudgments(csv: string): CenteredJudgingRow[] {
     if (!columns.has(required)) throw new Error(`judging.csv is missing ${required}`);
   }
   return records.map((record) => ({
-    persona: record[columns.get("persona")!] ?? "",
-    url: record[columns.get("url")!] ?? "",
-    relevant: record[columns.get("relevant")!] ?? "",
+    persona: record[requireDefined(columns.get("persona"), "persona column")] ?? "",
+    url: record[requireDefined(columns.get("url"), "url column")] ?? "",
+    relevant: record[requireDefined(columns.get("relevant"), "relevant column")] ?? "",
   }));
 }
 

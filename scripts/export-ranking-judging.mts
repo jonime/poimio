@@ -11,6 +11,7 @@ import {
   rankEarlyItems,
 } from "../lib/early-ranking.ts";
 import { EMBEDDING_DIMENSIONS, EMBEDDING_MODEL_VERSION } from "../lib/embeddings.ts";
+import { requireDefined } from "../lib/required.ts";
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const directory = resolve(root, "evaluation/early-ranking");
@@ -60,7 +61,9 @@ function seededShuffle<T>(items: T[], initialSeed: number): T[] {
     value ^= value + Math.imul(value ^ (value >>> 7), value | 61);
     const random = ((value ^ (value >>> 14)) >>> 0) / 4294967296;
     const swapIndex = Math.floor(random * (index + 1));
-    [shuffled[index], shuffled[swapIndex]] = [shuffled[swapIndex]!, shuffled[index]!];
+    const current = requireDefined(shuffled[index], `shuffle item ${index}`);
+    shuffled[index] = requireDefined(shuffled[swapIndex], `shuffle item ${swapIndex}`);
+    shuffled[swapIndex] = current;
   }
   return shuffled;
 }
@@ -193,7 +196,7 @@ async function main(): Promise<void> {
       EARLY_RANKING_METHODS.map((method) => [
         method,
         rankedByMethod[method].map((item, index) => ({
-          blindId: blindIdByItemId.get(item.id)!,
+          blindId: requireDefined(blindIdByItemId.get(item.id), `blind ID for item ${item.id}`),
           rank: index + 1,
         })),
       ]),

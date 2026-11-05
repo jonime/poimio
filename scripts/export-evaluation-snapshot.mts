@@ -11,6 +11,7 @@ import {
   type SnapshotRow,
   stringifyJsonLines,
 } from "../lib/evaluation-snapshot.ts";
+import { requireDefined } from "../lib/required.ts";
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const pageSize = 500;
@@ -24,7 +25,7 @@ function parseArguments(args: string[]): {
     provisional: false,
   };
   for (let index = 0; index < args.length; index += 1) {
-    const argument = args[index]!;
+    const argument = requireDefined(args[index], "CLI argument");
     if (argument === "--from" || argument.startsWith("--from=")) {
       const from = argument === "--from" ? args[++index] : argument.slice("--from=".length);
       if (from === undefined) throw new Error("--from requires a value");

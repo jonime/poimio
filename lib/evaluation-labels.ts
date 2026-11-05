@@ -144,10 +144,10 @@ export function validateLabelSet(input: {
   labels: EvaluationLabel[];
 }): LabelSet {
   const { personas, items, labels } = input;
-  if (labels.length === 0) throw new Error("Label set is empty");
-  const model = labels[0]!.model;
-  const promptVersion = labels[0]!.promptVersion;
-  const provisional = labels[0]!.provisional === true;
+  const firstLabel = labels[0];
+  if (!firstLabel) throw new Error("Label set is empty");
+  const { model, promptVersion } = firstLabel;
+  const provisional = firstLabel.provisional === true;
   if (
     labels.some(
       (label) =>

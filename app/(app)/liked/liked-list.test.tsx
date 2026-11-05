@@ -1,5 +1,6 @@
 // @vitest-environment jsdom
 
+import assert from "node:assert/strict";
 import { act } from "react";
 import { createRoot } from "react-dom/client";
 import { afterEach, beforeEach, expect, it, vi } from "vitest";
@@ -67,7 +68,9 @@ it("keeps the like visible and shows an error if Unlike fails", async () => {
   });
 
   await act(async () => {
-    container.querySelector("button")!.click();
+    const button = container.querySelector("button");
+    assert(button, "Unlike button must be rendered");
+    button.click();
   });
   expect(clearFeedback).toHaveBeenCalledExactlyOnceWith(item.id);
   expect(container.textContent).toContain(item.title);

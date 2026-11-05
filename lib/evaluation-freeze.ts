@@ -118,6 +118,6 @@ export function validateTestRun(
   }
   return {
     experimentId,
-    newExperimentReason: otherResults.length > 0 ? reason! : null,
+    newExperimentReason: otherResults.length > 0 ? (reason ?? null) : null,
   };
 }

@@ -1,5 +1,6 @@
 import { describe, expect, it, vi } from "vitest";
 import type { EnrichmentDb, EnrichmentItem } from "../db.ts";
+import { requireDefined } from "../required.ts";
 import {
   DESCRIPTION_SUMMARY_MODEL,
   ENRICHMENT_RETRY_DELAYS_MS,
@@ -228,7 +229,10 @@ describe("runEnrichment", () => {
       expect(failure?.nextAttemptAt).toEqual(
         attemptCount + 1 >= MAX_ENRICHMENT_ATTEMPTS
           ? null
-          : new Date(fixedNow.getTime() + ENRICHMENT_RETRY_DELAYS_MS[attemptCount]!),
+          : new Date(
+              fixedNow.getTime() +
+                requireDefined(ENRICHMENT_RETRY_DELAYS_MS[attemptCount], "retry delay"),
+            ),
       );
     },
   );

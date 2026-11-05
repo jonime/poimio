@@ -7,6 +7,7 @@ import {
   parseCsv,
   scoreCenteredEarlyRanking,
 } from "../lib/early-ranking.ts";
+import { requireDefined } from "../lib/required.ts";
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const directory = resolve(root, "evaluation/early-ranking");
@@ -19,9 +20,9 @@ function parseJudgments(csv: string, path: string): CenteredJudgingRow[] {
     if (!columns.has(required)) throw new Error(`${path} is missing ${required}`);
   }
   return records.map((record) => ({
-    persona: record[columns.get("persona")!] ?? "",
-    url: record[columns.get("url")!] ?? "",
-    relevant: record[columns.get("relevant")!] ?? "",
+    persona: record[requireDefined(columns.get("persona"), "persona column")] ?? "",
+    url: record[requireDefined(columns.get("url"), "url column")] ?? "",
+    relevant: record[requireDefined(columns.get("relevant"), "relevant column")] ?? "",
   }));
 }
 

@@ -250,7 +250,8 @@ function parsePositiveLimit(value: string): number {
 export function parseBackfillArgs(args: string[]): BackfillCliOptions {
   const options: BackfillCliOptions = { environment: "local" };
   for (let index = 0; index < args.length; index++) {
-    const argument = args[index]!;
+    const argument = args[index];
+    if (argument === undefined) throw new Error("Missing backfill argument.");
     if (argument === "--dry-run") {
       options.dryRun = true;
     } else if (argument === "--retry-failed") {

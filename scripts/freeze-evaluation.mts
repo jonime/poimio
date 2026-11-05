@@ -21,6 +21,7 @@ import {
   sha256,
   validateSnapshotData,
 } from "../lib/evaluation-snapshot.ts";
+import { requireDefined } from "../lib/required.ts";
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const snapshotDirectory = resolve(root, "evaluation/snapshot");
@@ -33,7 +34,7 @@ const seeds = Array.from({ length: 10 }, (_, index) => index);
 function parseArguments(args: string[]): string | undefined {
   let paramsPath: string | undefined;
   for (let index = 0; index < args.length; index += 1) {
-    const argument = args[index]!;
+    const argument = requireDefined(args[index], "CLI argument");
     if (argument === "--params" || argument.startsWith("--params=")) {
       paramsPath = argument === "--params" ? args[++index] : argument.slice("--params=".length);
     } else {
@@ -69,12 +70,13 @@ async function findCompleteLabelSet(personas: EvaluationPersona[], items: Evalua
   if (complete.length !== 1) {
     throw new Error(`freezing requires exactly one complete label set; found ${complete.length}`);
   }
+  const selected = requireDefined(complete[0], "complete label set");
   return {
-    ...complete[0]!,
+    ...selected,
     labelSet: validateLabelSet({
       personas,
       items,
-      labels: complete[0]!.labels,
+      labels: selected.labels,
     }),
   };
 }

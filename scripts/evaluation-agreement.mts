@@ -19,6 +19,7 @@ import {
   type SnapshotRow,
   validateSnapshotData,
 } from "../lib/evaluation-snapshot.ts";
+import { requireDefined } from "../lib/required.ts";
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const personaPath = resolve(root, "evaluation/personas.json");
@@ -42,7 +43,7 @@ function parseArguments(args: string[]): CliOptions {
   let labelsPath: string | undefined;
   let provisional = false;
   for (let index = 1; index < args.length; index += 1) {
-    const argument = args[index]!;
+    const argument = requireDefined(args[index], "CLI argument");
     if (argument === "--set" || argument.startsWith("--set=")) {
       set = argument === "--set" ? args[++index] : argument.slice(6);
     } else if (argument === "--labels" || argument.startsWith("--labels=")) {
@@ -168,7 +169,7 @@ async function findCompleteLabelFile(
       `selection export needs one complete label set; found ${completeFiles.length}; pass --labels when multiple sets exist`,
     );
   }
-  return completeFiles[0]!;
+  return requireDefined(completeFiles[0], "complete label file");
 }
 
 interface ExportPair {
@@ -198,8 +199,8 @@ function csvRows(
       "relevant",
     ],
     ...set.map((pair) => {
-      const persona = personaById.get(pair.personaId)!;
-      const item = itemById.get(pair.itemId)!;
+      const persona = requireDefined(personaById.get(pair.personaId), `persona ${pair.personaId}`);
+      const item = requireDefined(itemById.get(pair.itemId), `item ${pair.itemId}`);
       return [
         pair.pairId,
         persona.id,
@@ -316,7 +317,8 @@ function parseHumanLabels(csv: string): Array<{
     if (!column.has(required)) throw new Error(`agreement CSV is missing ${required}`);
   }
   return records.map((record, index) => {
-    const get = (name: string) => record[column.get(name)!] ?? "";
+    const get = (name: string) =>
+      record[requireDefined(column.get(name), `CSV column ${name}`)] ?? "";
     const relevant = get("relevant");
     const probability = Number(get("inclusion_probability"));
     const language = get("language");

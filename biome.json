@@ -53,8 +53,8 @@
         "useLiteralKeys": "error"
       },
       "correctness": {
-        "noBeforeInteractiveScriptOutsideDocument": "warn",
-        "noNextAsyncClientComponent": "warn",
+        "noBeforeInteractiveScriptOutsideDocument": "error",
+        "noNextAsyncClientComponent": "error",
         "noConstantCondition": "error",
         "noConstantMathMinMaxClamp": "error",
         "noEmptyCharacterClassInRegex": "error",
@@ -83,7 +83,7 @@
         "noDelete": "error",
         "noImgElement": "warn",
         "noSyncScripts": "error",
-        "noUnwantedPolyfillio": "warn",
+        "noUnwantedPolyfillio": "error",
         "useGoogleFontPreconnect": "warn"
       },
       "security": {
@@ -93,10 +93,10 @@
       },
       "style": {
         "noCommonJs": "error",
-        "noHeadElement": "warn",
+        "noHeadElement": "error",
         "noInferrableTypes": "error",
         "noNamespace": "error",
-        "noNonNullAssertion": "warn",
+        "noNonNullAssertion": "error",
         "useArrayLiterals": "error",
         "useAsConstAssertion": "error",
         "useImportType": "error",
@@ -288,31 +288,31 @@
       "linter": {
         "rules": {
           "a11y": {
-            "noAriaUnsupportedElements": "warn",
-            "useAltText": "warn",
-            "useAriaPropsForRole": "warn",
-            "useAriaPropsSupportedByRole": "warn",
-            "useValidAriaProps": "warn",
-            "useValidAriaValues": "warn"
+            "noAriaUnsupportedElements": "error",
+            "useAltText": "error",
+            "useAriaPropsForRole": "error",
+            "useAriaPropsSupportedByRole": "error",
+            "useValidAriaProps": "error",
+            "useValidAriaValues": "error"
           },
           "correctness": {
-            "noBeforeInteractiveScriptOutsideDocument": "warn",
+            "noBeforeInteractiveScriptOutsideDocument": "error",
             "noChildrenProp": "error",
-            "noNextAsyncClientComponent": "warn",
+            "noNextAsyncClientComponent": "error",
             "noRenderReturnValue": "error",
-            "useExhaustiveDependencies": "warn",
+            "useExhaustiveDependencies": "error",
             "useHookAtTopLevel": "error",
             "useInlineScriptId": "error",
             "useJsxKeyInIterable": "error"
           },
           "performance": {
             "noImgElement": "warn",
-            "noSyncScripts": "warn",
-            "noUnwantedPolyfillio": "warn",
+            "noSyncScripts": "error",
+            "noUnwantedPolyfillio": "error",
             "useGoogleFontPreconnect": "warn"
           },
           "security": { "noDangerouslySetInnerHtmlWithChildren": "error" },
-          "style": { "noHeadElement": "warn" },
+          "style": { "noHeadElement": "error" },
           "suspicious": {
             "noCommentText": "error",
             "noDocumentImportInPage": "error",

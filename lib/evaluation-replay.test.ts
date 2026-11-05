@@ -1,3 +1,4 @@
+import assert from "node:assert/strict";
 import { describe, expect, it } from "vitest";
 import {
   candidateScopes,
@@ -36,7 +37,8 @@ describe("evaluation replay protocol", () => {
       seed: 1,
       personaId: "p1",
     });
-    const first = feedbackPrefix(sequence, 1)!;
+    const first = feedbackPrefix(sequence, 1);
+    assert(first, "First feedback prefix must exist");
     const third = feedbackPrefix(
       {
         ...sequence,

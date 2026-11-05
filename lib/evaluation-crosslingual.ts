@@ -1,4 +1,5 @@
 import { cosineSimilarity } from "./early-ranking.ts";
+import { requireDefined } from "./required.ts";
 
 export interface CrosslingualVectorItem {
   id: string;
@@ -30,13 +31,15 @@ function subtract(left: number[], right: number[]): number[] {
   if (left.length !== right.length) {
     throw new Error("embedding dimensions do not match language means");
   }
-  return left.map((value, index) => value - right[index]!);
+  return left.map(
+    (value, index) => value - requireDefined(right[index], `mean component ${index}`),
+  );
 }
 
 function percentile95(values: number[]): number {
   if (values.length === 0) throw new Error("random pair sample is empty");
   const sorted = [...values].sort((left, right) => left - right);
-  return sorted[Math.ceil(sorted.length * 0.95) - 1]!;
+  return requireDefined(sorted[Math.ceil(sorted.length * 0.95) - 1], "95th percentile");
 }
 
 export function scoreCrosslingualPairs(input: {
@@ -130,8 +133,14 @@ export function sampleRandomCrosslingualPairs(input: {
   };
   const selected = new Map<string, CrosslingualPair>();
   while (selected.size < requested) {
-    const english = englishItems[Math.floor(next() * englishItems.length)]!;
-    const finnish = finnishItems[Math.floor(next() * finnishItems.length)]!;
+    const english = requireDefined(
+      englishItems[Math.floor(next() * englishItems.length)],
+      "English random-pair item",
+    );
+    const finnish = requireDefined(
+      finnishItems[Math.floor(next() * finnishItems.length)],
+      "Finnish random-pair item",
+    );
     const key = `${english.id}\u0000${finnish.id}`;
     if (!excluded.has(key))
       selected.set(key, {

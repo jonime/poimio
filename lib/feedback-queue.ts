@@ -69,7 +69,8 @@ export class FeedbackMutationQueue {
     this.notify();
 
     while (this.pending.length > 0) {
-      const nextState = this.pending.shift()!;
+      const nextState = this.pending.shift();
+      if (nextState === undefined) break;
       try {
         await this.save(copyState(nextState));
         this.confirmed = copyState(nextState);

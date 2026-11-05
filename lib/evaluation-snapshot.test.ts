@@ -1,3 +1,4 @@
+import assert from "node:assert/strict";
 import { describe, expect, it } from "vitest";
 import {
   buildSnapshotManifest,
@@ -104,7 +105,11 @@ describe("evaluation snapshot", () => {
       means,
     });
     const changedItems = [...items];
-    changedItems[0] = { ...changedItems[0]!, title: "tampered" };
+    const firstItem = changedItems[0];
+    const firstMean = means[0];
+    assert(firstItem, "Snapshot fixture item must exist");
+    assert(firstMean, "Snapshot fixture mean must exist");
+    changedItems[0] = { ...firstItem, title: "tampered" };
     expect(() =>
       validateSnapshotData({
         manifest,
@@ -118,7 +123,7 @@ describe("evaluation snapshot", () => {
         manifest,
         sources: [source],
         items,
-        means: [{ ...means[0]!, mean: "[1,0]" }],
+        means: [{ ...firstMean, mean: "[1,0]" }],
       }),
     ).toThrow(/mean-vector hashes/u);
     expect(() =>

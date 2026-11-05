@@ -110,5 +110,5 @@ export function truncateSummary(
   // Prefer a word boundary, but don't cut into the first half of the limit
   // if no reasonable boundary exists.
   const boundary = lastSpace > maxLength / 2 ? lastSpace : cut.length;
-  return cut.slice(0, boundary).trimEnd() + "…";
+  return `${cut.slice(0, boundary).trimEnd()}…`;
 }

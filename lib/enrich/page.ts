@@ -172,12 +172,14 @@ function isPublicAddress(address: string): boolean {
     return !isBlockedIpv4([bytes[12], bytes[13], bytes[14], bytes[15]].join("."));
   }
 
-  const globalUnicast = (bytes[0]! & 0xe0) === 0x20;
+  const [first, second, third, fourth] = bytes;
+  if (first === undefined || third === undefined) return false;
+  const globalUnicast = (first & 0xe0) === 0x20;
   const specialPurpose =
-    (bytes[0] === 0x20 && bytes[1] === 0x01 && (bytes[2]! & 0xfe) === 0) ||
-    (bytes[0] === 0x20 && bytes[1] === 0x01 && bytes[2] === 0x0d && bytes[3] === 0xb8) ||
-    (bytes[0] === 0x20 && bytes[1] === 0x02) ||
-    (bytes[0] === 0x3f && bytes[1] === 0xff && (bytes[2]! & 0xf0) === 0);
+    (first === 0x20 && second === 0x01 && (third & 0xfe) === 0) ||
+    (first === 0x20 && second === 0x01 && third === 0x0d && fourth === 0xb8) ||
+    (first === 0x20 && second === 0x02) ||
+    (first === 0x3f && second === 0xff && (third & 0xf0) === 0);
   return globalUnicast && !specialPurpose;
 }
 
@@ -425,8 +427,9 @@ export async function fetchPages(
   const workers = Array.from({ length: Math.min(concurrency, urls.length) }, async () => {
     for (;;) {
       const index = cursor++;
-      if (index >= urls.length) return;
-      results[index] = await fetchPageHtml(urls[index]!, options);
+      const url = urls[index];
+      if (url === undefined) return;
+      results[index] = await fetchPageHtml(url, options);
     }
   });
   await Promise.all(workers);

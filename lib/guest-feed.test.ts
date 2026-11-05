@@ -1,3 +1,4 @@
+import assert from "node:assert/strict";
 import { createClient } from "@supabase/supabase-js";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { guestFeedColumns, readGuestFeed, selectGuestFeed } from "./guest-feed";
@@ -31,7 +32,9 @@ describe("public feed selection", () => {
     const items = selectGuestFeed(rows);
     expect(items).toHaveLength(12);
     expect(items.map((item) => item.language)).toEqual(Array(6).fill(["fi", "en"]).flat());
-    expect(Object.keys(items[0]!).sort()).toEqual(
+    const firstItem = items[0];
+    assert(firstItem, "Public feed must contain an item");
+    expect(Object.keys(firstItem).sort()).toEqual(
       [
         "id",
         "url",
@@ -60,7 +63,9 @@ describe("public feed selection", () => {
 
   it("fills language shortages and removes duplicate IDs", () => {
     const rows = Array.from({ length: 14 }, (_, i) => row(`en-${i}`, "en", "en"));
-    const items = selectGuestFeed([row("fi"), ...rows, rows[0]!]);
+    const duplicate = rows[0];
+    assert(duplicate, "Duplicate fixture row must exist");
+    const items = selectGuestFeed([row("fi"), ...rows, duplicate]);
     expect(items).toHaveLength(12);
     expect(items.filter((item) => item.language === "fi")).toHaveLength(1);
     expect(new Set(items.map((item) => item.id)).size).toBe(12);

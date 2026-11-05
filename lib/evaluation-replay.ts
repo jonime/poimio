@@ -1,4 +1,5 @@
 import { cosineSimilarity } from "./early-ranking.ts";
+import { requireDefined } from "./required.ts";
 
 export interface ReplayItem {
   id: string;
@@ -49,7 +50,9 @@ function deterministicShuffle<T>(items: T[], seed: string): T[] {
     state ^= state >>> 17;
     state ^= state << 5;
     const swap = (state >>> 0) % (index + 1);
-    [shuffled[index], shuffled[swap]] = [shuffled[swap]!, shuffled[index]!];
+    const current = requireDefined(shuffled[index], `shuffle item ${index}`);
+    shuffled[index] = requireDefined(shuffled[swap], `shuffle item ${swap}`);
+    shuffled[swap] = current;
   }
   return shuffled;
 }
@@ -97,7 +100,9 @@ function centered(item: ReplayItem, meanByLanguage: Record<"fi" | "en", number[]
   if (mean.length !== item.embedding.length) {
     throw new Error("embedding dimensions do not match language mean");
   }
-  return item.embedding.map((value, index) => value - mean[index]!);
+  return item.embedding.map(
+    (value, index) => value - requireDefined(mean[index], `mean component ${index}`),
+  );
 }
 
 export function nearDuplicateIds(input: {
@@ -178,8 +183,9 @@ export function pairedDifferenceStatistics(
   valuesBySeed: Map<number, number>,
   baselineBySeed: Map<number, number>,
 ): SeedStatistics | null {
-  const differences = [...valuesBySeed]
-    .filter(([seed]) => baselineBySeed.has(seed))
-    .map(([seed, value]) => value - baselineBySeed.get(seed)!);
+  const differences = [...valuesBySeed].flatMap(([seed, value]) => {
+    const baseline = baselineBySeed.get(seed);
+    return baseline === undefined ? [] : [value - baseline];
+  });
   return seedStatistics(differences);
 }

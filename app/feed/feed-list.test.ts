@@ -1,9 +1,11 @@
+import assert from "node:assert/strict";
 import { JSDOM } from "jsdom";
 import { act, createElement } from "react";
 import { createRoot, type Root } from "react-dom/client";
 import { afterEach, beforeEach, expect, it, vi } from "vitest";
 import { toast } from "@/components/ui/toast";
 import type { FeedItem } from "@/lib/feed-ui";
+import { requireDefined } from "@/lib/required";
 import { clearFeedback, setFeedback } from "../feedback/actions";
 import FeedList from "./feed-list";
 
@@ -69,14 +71,15 @@ afterEach(async () => {
 });
 
 it("keeps the shared card's Like and Seen buttons independent of the article link", async () => {
-  const like = container.querySelector<HTMLButtonElement>('button[aria-label="Like"]')!;
+  const like = container.querySelector<HTMLButtonElement>('button[aria-label="Like"]');
+  assert(like, "Like button must be rendered");
   await act(async () => like.click());
   expect(setFeedback).toHaveBeenLastCalledWith(item.id, "like", "button");
   expect(like.getAttribute("aria-pressed")).toBe("true");
   expect(container.querySelector("a")?.getAttribute("href")).toBe(item.url);
-  await act(async () =>
-    container.querySelector<HTMLButtonElement>('button[aria-label="Seen"]')!.click(),
-  );
+  const seen = container.querySelector<HTMLButtonElement>('button[aria-label="Seen"]');
+  assert(seen, "Seen button must be rendered");
+  await act(async () => seen.click());
   expect(setFeedback).toHaveBeenLastCalledWith(item.id, "seen", "button");
   expect(container.querySelector("[hidden]")).not.toBeNull();
 });
@@ -85,7 +88,7 @@ it.each([
   [200, "like"],
   [-200, "not_interested"],
 ] as const)("preserves touch swipe %i and Undo through the shared card", async (delta, kind) => {
-  const article = container.querySelector("article")!;
+  const article = requireDefined(container.querySelector("article"), "rendered article");
   vi.spyOn(article, "getBoundingClientRect").mockReturnValue({ width: 300 } as DOMRect);
   Object.defineProperty(article, "setPointerCapture", { value: vi.fn() });
   async function pointer(name: string, x: number) {

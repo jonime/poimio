@@ -89,7 +89,7 @@ describe("evaluation labels", () => {
       validateLabelSet({
         personas,
         items,
-        labels: [...complete, { ...complete[0]!, model: "other-model" }],
+        labels: [...complete, { ...label("ai", "a", true), model: "other-model" }],
       }),
     ).toThrow(/duplicate pair|more than one model/u);
     expect(() =>

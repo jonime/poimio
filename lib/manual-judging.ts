@@ -1,4 +1,5 @@
 import { parseCsv } from "./early-ranking.ts";
+import { requireDefined } from "./required.ts";
 
 interface CsvField {
   start: number;
@@ -45,11 +46,12 @@ export function readJudgingCsv(csv: string) {
 
   const relevantIndex = header.indexOf("relevant");
   return records.map((record, index) => {
-    const spans = rows[index + 1]!;
+    const spans = requireDefined(rows[index + 1], `CSV row ${index + 1}`);
     if (record.length !== header.length || spans.length !== header.length) {
       throw new Error(`CSV record ${index + 1} has the wrong number of columns`);
     }
-    const get = (name: string) => record[header.indexOf(name)]!;
+    const get = (name: string) =>
+      requireDefined(record[header.indexOf(name)], `CSV field ${name} in row ${index + 1}`);
     const relevant = get("relevant");
     if (relevant !== "" && relevant !== "0" && relevant !== "1") {
       throw new Error(`CSV record ${index + 1}: relevant must be blank, 0, or 1`);
@@ -60,7 +62,7 @@ export function readJudgingCsv(csv: string) {
       title: get("title"),
       summary: get("summary"),
       relevant,
-      field: spans[relevantIndex]!,
+      field: requireDefined(spans[relevantIndex], `relevance span in CSV row ${index + 1}`),
     };
   });
 }

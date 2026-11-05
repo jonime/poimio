@@ -245,7 +245,7 @@ export function scoreEarlyRanking(
   for (const [persona, methods] of Object.entries(answerKey.personas)) {
     for (const method of EARLY_RANKING_METHODS) {
       const rankedItems = methods[method];
-      if (!rankedItems || rankedItems.length !== 10) {
+      if (rankedItems?.length !== 10) {
         throw new Error(`${persona}/${method} must have exactly 10 ranked items`);
       }
       let relevantCount = 0;
@@ -307,7 +307,7 @@ export function scoreCenteredEarlyRanking(
   for (const [persona, methods] of Object.entries(answerKey.personas)) {
     for (const method of CENTERED_RANKING_METHODS) {
       const rankedItems = methods[method];
-      if (!rankedItems || rankedItems.length !== 10) {
+      if (rankedItems?.length !== 10) {
         throw new Error(`${persona}/${method} must have exactly 10 ranked items`);
       }
       let relevantCount = 0;

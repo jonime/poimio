@@ -1,4 +1,5 @@
 import type { IngestDb, UnembeddedItem } from "./db.ts";
+import { requireDefined } from "./required.ts";
 
 export const EMBEDDING_MODEL = "text-embedding-3-small";
 export const EMBEDDING_DIMENSIONS = 512;
@@ -109,7 +110,8 @@ export async function embedPendingItems(
     }
 
     for (const [index, item] of batch.entries()) {
-      if (await db.saveEmbedding(item.id, vectors[index]!, EMBEDDING_MODEL_VERSION)) {
+      const vector = requireDefined(vectors[index], `embedding for item ${item.id}`);
+      if (await db.saveEmbedding(item.id, vector, EMBEDDING_MODEL_VERSION)) {
         result.embedded++;
       }
     }

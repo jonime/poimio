@@ -1,4 +1,5 @@
 /** Integration coverage for the feedback schema and owner-only access. */
+import assert from "node:assert/strict";
 import { execFileSync } from "node:child_process";
 import { randomUUID } from "node:crypto";
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
@@ -50,7 +51,7 @@ function parseSupabaseQueryResult(output: string): { rows: unknown[] } {
     let escaped = false;
     let end = -1;
     for (let index = start; index < output.length; index += 1) {
-      const character = output[index]!;
+      const character = output.charAt(index);
       if (inString) {
         if (escaped) escaped = false;
         else if (character === "\\") escaped = true;
@@ -433,6 +434,7 @@ describe.skipIf(!enabled || anonKey == null || serviceKey == null)(
 
     it("deletes a user's feedback when the user is deleted", async () => {
       const { service, userBClient } = ready();
+      assert(userBId, "User B fixture ID must exist");
       const deletedUserId = userBId;
       const { error: writeError } = await userBClient.rpc("set_feedback", {
         p_item_id: itemId,
@@ -441,14 +443,14 @@ describe.skipIf(!enabled || anonKey == null || serviceKey == null)(
       });
       expect(writeError).toBeNull();
 
-      const { error: deleteUserError } = await service.auth.admin.deleteUser(userBId!);
+      const { error: deleteUserError } = await service.auth.admin.deleteUser(deletedUserId);
       expect(deleteUserError).toBeNull();
       userBId = undefined;
 
       const { data, error } = await service
         .from("feedback")
         .select("item_id")
-        .eq("user_id", deletedUserId!);
+        .eq("user_id", deletedUserId);
       expect(error).toBeNull();
       expect(data).toEqual([]);
     });

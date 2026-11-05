@@ -18,6 +18,7 @@ import {
   type SnapshotRow,
   validateSnapshotData,
 } from "../lib/evaluation-snapshot.ts";
+import { requireDefined } from "../lib/required.ts";
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const personaPath = resolve(root, "evaluation/personas.json");
@@ -97,7 +98,7 @@ async function resolveModel(baseUrl: URL, apiKey: string): Promise<string> {
   if (ids.length !== 1) {
     throw new Error(`set LLM_MODEL explicitly; local MTPLX reports ${ids.length} available models`);
   }
-  return ids[0]!;
+  return requireDefined(ids[0], "LLM model ID");
 }
 
 async function requestBatch(input: {
@@ -259,7 +260,7 @@ async function main(): Promise<void> {
         itemId: item.id,
         model,
         promptVersion: EVALUATION_LABEL_PROMPT_VERSION,
-        relevant: batchLabels.get(item.id)!,
+        relevant: requireDefined(batchLabels.get(item.id), `label for ${item.id}`),
         provisional,
       }));
       await appendFile(

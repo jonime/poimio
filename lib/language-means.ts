@@ -54,7 +54,12 @@ export function addLanguageEmbedding(
   accumulator.counts[language]++;
   const sum = accumulator.sums[language];
   for (let index = 0; index < EMBEDDING_DIMENSIONS; index++) {
-    sum[index] = sum[index]! + embedding[index]!;
+    const total = sum[index];
+    const component = embedding[index];
+    if (total === undefined || component === undefined) {
+      throw new Error(`missing embedding component at index ${index}`);
+    }
+    sum[index] = total + component;
   }
 }
 

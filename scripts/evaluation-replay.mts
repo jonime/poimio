@@ -32,6 +32,7 @@ import {
   sha256,
   validateSnapshotData,
 } from "../lib/evaluation-snapshot.ts";
+import { requireDefined } from "../lib/required.ts";
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const labelsDirectory = resolve(root, "evaluation/labels");
@@ -90,7 +91,7 @@ function parseArguments(args: string[]): ReplayOptions {
   let newExperimentReason: string | undefined;
   let provisional = false;
   for (let index = 0; index < args.length; index += 1) {
-    const argument = args[index]!;
+    const argument = requireDefined(args[index], "CLI argument");
     if (argument === "--window" || argument.startsWith("--window=")) {
       window = argument === "--window" ? args[++index] : argument.slice(9);
     } else if (argument === "--params" || argument.startsWith("--params=")) {
@@ -172,7 +173,7 @@ async function findLabelFile(
   if (complete.length !== 1) {
     throw new Error(`replay needs exactly one complete label set; found ${complete.length}`);
   }
-  return complete[0]!;
+  return requireDefined(complete[0], "complete label file");
 }
 
 async function loadSnapshot(provisional: boolean, testWindow: boolean, labelsPath?: string) {
@@ -231,7 +232,7 @@ async function loadSnapshot(provisional: boolean, testWindow: boolean, labelsPat
   );
   const models = new Set(itemRows.map((row) => String(row.embedding_model)));
   if (models.size !== 1) throw new Error("replay snapshot must use one embedding model");
-  const model = [...models][0]!;
+  const model = requireDefined([...models][0], "snapshot embedding model");
   const meanByLanguage = {
     fi: meanRowsByLanguage.get(`${model}:fi`),
     en: meanRowsByLanguage.get(`${model}:en`),
@@ -454,7 +455,7 @@ async function main(): Promise<void> {
   const top10ByPersona = new Map<string, string[]>();
 
   for (const persona of snapshot.personas) {
-    const relevance = labelsByPersona.get(persona.id)!;
+    const relevance = requireDefined(labelsByPersona.get(persona.id), `labels for ${persona.id}`);
     const relevantFeedbackIds = feedbackItems
       .filter((item) => relevance.get(item.id) === true)
       .map((item) => item.id);
@@ -653,14 +654,21 @@ async function main(): Promise<void> {
     groups.set(groupBy(cell), group);
   }
   const summary = [...groups].map(([key, rows]) => {
-    const values = rows.map((row) => row.precisionAt10!);
-    const stats = seedStatistics(values)!;
+    const values = rows.map((row) => requireDefined(row.precisionAt10, `precision for ${key}`));
+    const stats = requireDefined(seedStatistics(values), `seed statistics for ${key}`);
     const avgRows = rows;
     const [runType, direction, scope, personaId, kString, method] = key.split("|");
     const averageKey = [runType, direction, scope, personaId, kString, "average_vector"].join("|");
     const paired = pairedDifferenceStatistics(
-      new Map(rows.map((row) => [row.seed, row.precisionAt10!])),
-      new Map((groups.get(averageKey) ?? avgRows).map((row) => [row.seed, row.precisionAt10!])),
+      new Map(
+        rows.map((row) => [row.seed, requireDefined(row.precisionAt10, `precision for ${key}`)]),
+      ),
+      new Map(
+        (groups.get(averageKey) ?? avgRows).map((row) => [
+          row.seed,
+          requireDefined(row.precisionAt10, `precision for ${averageKey}`),
+        ]),
+      ),
     );
     return {
       runType,
@@ -677,18 +685,16 @@ async function main(): Promise<void> {
   const overlap = [];
   for (const method of methods) {
     for (const seed of seedsToRun) {
-      for (let left = 0; left < snapshot.personas.length; left += 1) {
-        for (let right = left + 1; right < snapshot.personas.length; right += 1) {
-          const leftPersona = snapshot.personas[left]!.id;
-          const rightPersona = snapshot.personas[right]!.id;
-          const leftIds = top10ByPersona.get(`${method.name}:${seed}:${leftPersona}`);
-          const rightIds = top10ByPersona.get(`${method.name}:${seed}:${rightPersona}`);
+      for (const [left, leftPersona] of snapshot.personas.entries()) {
+        for (const rightPersona of snapshot.personas.slice(left + 1)) {
+          const leftIds = top10ByPersona.get(`${method.name}:${seed}:${leftPersona.id}`);
+          const rightIds = top10ByPersona.get(`${method.name}:${seed}:${rightPersona.id}`);
           if (leftIds && rightIds) {
             overlap.push({
               method: method.name,
               seed,
-              personaA: leftPersona,
-              personaB: rightPersona,
+              personaA: leftPersona.id,
+              personaB: rightPersona.id,
               jaccard: jaccard(leftIds, rightIds),
             });
           }

@@ -3,6 +3,7 @@ import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { createClient } from "@supabase/supabase-js";
 import { EMBEDDING_MODEL_VERSION } from "../lib/embeddings.ts";
+import { requireDefined } from "../lib/required.ts";
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const samplePath = resolve(root, "evaluation/early-ranking/sample.json");
@@ -62,7 +63,7 @@ async function main(): Promise<void> {
     throw new Error(`persona seed ${missingPinnedId} is not embedded in Supabase`);
   }
   const pinnedSet = new Set(pinnedIds);
-  const pinnedRows = pinnedIds.map((id) => rowById.get(id)!);
+  const pinnedRows = pinnedIds.map((id) => requireDefined(rowById.get(id), `pinned item ${id}`));
   const remaining = rows.filter((row) => !pinnedSet.has(row.id));
   const selected = [...pinnedRows, ...remaining.slice(0, sampleSize - pinnedRows.length)];
   if (selected.length !== sampleSize) {

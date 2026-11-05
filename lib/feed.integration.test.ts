@@ -1,8 +1,10 @@
+import assert from "node:assert/strict";
 import { randomUUID } from "node:crypto";
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 import { createIngestDb } from "./db.ts";
 import { EMBEDDING_DIMENSIONS } from "./embeddings.ts";
+import { requireDefined } from "./required.ts";
 
 const enabled = process.env.SUPABASE_INTEGRATION === "1";
 const url = process.env.SUPABASE_URL ?? "http://127.0.0.1:55321";
@@ -46,7 +48,9 @@ function axisVector(axis: number, sign = 1): number[] {
 }
 
 function addVectors(left: number[], right: number[]): number[] {
-  return left.map((value, index) => value + right[index]!);
+  return left.map(
+    (value, index) => value + requireDefined(right[index], `fixture vector component ${index}`),
+  );
 }
 
 function pgVector(vector: number[]): string {
@@ -203,7 +207,9 @@ describe.skipIf(!enabled || anonKey == null || serviceKey == null)(
         ? []
         : itemDefinitions
             .filter((definition) => definition.key.startsWith("limit-candidate-"))
-            .map((definition) => itemIds.get(definition.key)!);
+            .map((definition) =>
+              requireDefined(itemIds.get(definition.key), `fixture item ${definition.key}`),
+            );
       const { data, error } = await client.rpc("get_feed", {
         ...rpcParameters,
         p_limit: rpcParameters.p_limit ?? 100,
@@ -417,7 +423,9 @@ describe.skipIf(!enabled || anonKey == null || serviceKey == null)(
       const feed = await getFeed(userAClient);
       const returnedIds = new Set(feed.map((row) => row.id));
       for (const key of ["liked-fi", "candidate-close", "candidate-unrelated"]) {
-        expect(returnedIds.has(itemIds.get(key)!)).toBe(false);
+        expect(returnedIds.has(requireDefined(itemIds.get(key), `fixture item ${key}`))).toBe(
+          false,
+        );
       }
     });
 
@@ -454,9 +462,9 @@ describe.skipIf(!enabled || anonKey == null || serviceKey == null)(
       const feed = await getFeed(userAClient);
       const disliked = feed.find((row) => row.id === itemIds.get("candidate-close-dislike"));
       const neutral = feed.find((row) => row.id === itemIds.get("candidate-neutral"));
-      expect(disliked).toBeDefined();
-      expect(neutral).toBeDefined();
-      expect(neutral!.score).toBeGreaterThan(disliked!.score);
+      assert(disliked, "Disliked candidate must exist");
+      assert(neutral, "Neutral candidate must exist");
+      expect(neutral.score).toBeGreaterThan(disliked.score);
     });
 
     it("round-robins cold-start sources and moves disliked topics last", async () => {
@@ -505,7 +513,7 @@ describe.skipIf(!enabled || anonKey == null || serviceKey == null)(
 
     it("hides a site-wide description until its summary and embedding are restored", async () => {
       const { service, userAClient } = clients();
-      const id = itemIds.get("sitewide-requeue")!;
+      const id = requireDefined(itemIds.get("sitewide-requeue"), "site-wide requeue fixture");
       const { error: metadataError } = await service
         .from("content_items")
         .update({
@@ -521,7 +529,7 @@ describe.skipIf(!enabled || anonKey == null || serviceKey == null)(
 
       const db = createIngestDb({
         NEXT_PUBLIC_SUPABASE_URL: url,
-        SUPABASE_SERVICE_ROLE_KEY: serviceKey!,
+        SUPABASE_SERVICE_ROLE_KEY: requireDefined(serviceKey, "local service-role key"),
       });
       expect(await db.requeueSiteWideDescriptionItems([id])).toBe(1);
       expect((await loadFeed()).some((row) => row.id === id)).toBe(false);
@@ -674,8 +682,10 @@ describe.skipIf(!enabled || anonKey == null || serviceKey == null)(
         p_exclude: excludedIds,
       });
       expect(beforeLike).toHaveLength(1);
-      expect(excludedIds).not.toContain(beforeLike[0]!.id);
-      expect(beforeLike[0]!.id).not.toBe(itemIds.get("page-target"));
+      const beforeLikeItem = beforeLike[0];
+      assert(beforeLikeItem, "Feed page must contain an item before liking");
+      expect(excludedIds).not.toContain(beforeLikeItem.id);
+      expect(beforeLikeItem.id).not.toBe(itemIds.get("page-target"));
 
       await setFeedback(userAClient, "page-like", "like");
       const afterLike = await getFeed(userAClient, {
@@ -693,8 +703,8 @@ describe.skipIf(!enabled || anonKey == null || serviceKey == null)(
 
       const feed = await getFeed(userAClient);
       const zeroCentered = feed.find((row) => row.id === itemIds.get("zero-centered"));
-      expect(zeroCentered).toBeDefined();
-      expect(Number.isFinite(zeroCentered!.score)).toBe(true);
+      assert(zeroCentered, "Zero-centered fixture must appear in feed");
+      expect(Number.isFinite(zeroCentered.score)).toBe(true);
       expect(feed.every((row) => Number.isFinite(row.score))).toBe(true);
     });
 

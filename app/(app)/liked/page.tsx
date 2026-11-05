@@ -41,8 +41,7 @@ export default async function LikedPage() {
   const likedItems = ((data ?? []) as RawLikedItem[]).flatMap((row) => {
     const item = Array.isArray(row.item) ? row.item[0] : row.item;
     if (
-      !item ||
-      item.enrichment_status !== "completed" ||
+      item?.enrichment_status !== "completed" ||
       !item.summary?.trim() ||
       item.summary_origin === null
     ) {

@@ -179,7 +179,7 @@ export function parseJsonLines<T>(content: string, label: string): T[] {
 }
 
 export function stringifyJsonLines(rows: SnapshotRow[]): string {
-  return rows.map((row) => JSON.stringify(row)).join("\n") + "\n";
+  return `${rows.map((row) => JSON.stringify(row)).join("\n")}\n`;
 }
 
 function assertColumns(
@@ -232,11 +232,13 @@ export function buildSnapshotManifest(input: {
     const timeOrder = String(left.published_at).localeCompare(String(right.published_at));
     return timeOrder || String(left.id).localeCompare(String(right.id));
   });
-  if (sortedItems.length === 0) {
+  const firstItem = sortedItems[0];
+  const lastItem = sortedItems.at(-1);
+  if (!firstItem || !lastItem) {
     throw new Error("The snapshot contains no eligible items");
   }
-  const firstPublished = Date.parse(String(sortedItems[0]!.published_at));
-  const lastPublished = Date.parse(String(sortedItems.at(-1)!.published_at));
+  const firstPublished = Date.parse(String(firstItem.published_at));
+  const lastPublished = Date.parse(String(lastItem.published_at));
   if (
     !Number.isFinite(firstPublished) ||
     !Number.isFinite(lastPublished) ||

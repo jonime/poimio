@@ -3,6 +3,7 @@ import type {
   EvaluationLabelItem,
   EvaluationPersona,
 } from "./evaluation-labels.ts";
+import { requireDefined } from "./required.ts";
 
 export interface AgreementPair {
   pairId: string;
@@ -62,7 +63,9 @@ function seededShuffle<T>(items: T[], seed: string): T[] {
     state ^= state >>> 17;
     state ^= state << 5;
     const swapIndex = (state >>> 0) % (index + 1);
-    [shuffled[index], shuffled[swapIndex]] = [shuffled[swapIndex]!, shuffled[index]!];
+    const current = requireDefined(shuffled[index], `shuffle item ${index}`);
+    shuffled[index] = requireDefined(shuffled[swapIndex], `shuffle item ${swapIndex}`);
+    shuffled[swapIndex] = current;
   }
   return shuffled;
 }
@@ -128,7 +131,6 @@ export function createAgreementDesign(input: {
   if (!Number.isInteger(perPersona) || perPersona < 2) {
     throw new Error("per-persona sample size must be an integer of at least two");
   }
-  const itemById = new Map(items.map((item) => [item.id, item]));
   const labelByPair = new Map(
     labels.map((label) => [`${label.personaId}\u0000${label.itemId}`, label]),
   );
@@ -139,13 +141,12 @@ export function createAgreementDesign(input: {
       if (!label) {
         throw new Error(`primary labels are missing ${persona.id}/${item.id}`);
       }
-      const pairItem = itemById.get(item.id)!;
-      const stratumKey = `${persona.id}|${pairItem.language}|${Number(label.relevant)}`;
+      const stratumKey = `${persona.id}|${item.language}|${Number(label.relevant)}`;
       const pair: AgreementPair = {
         pairId: `${persona.id}:${item.id}`,
         personaId: persona.id,
         itemId: item.id,
-        language: pairItem.language,
+        language: item.language,
         modelRelevant: label.relevant,
         manualRelevant: null,
         stratumKey,

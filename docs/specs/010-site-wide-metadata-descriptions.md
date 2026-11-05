@@ -1,6 +1,6 @@
 # 010 — Reject site-wide metadata descriptions
 
-**Status:** Approved
+**Status:** Done
 **Milestone:** Final (small fix)  
 **Depends on:** 005 (description enrichment and backfill)  
 **Estimate:** about 3 h

@@ -1,3 +1,4 @@
+import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
@@ -23,6 +24,7 @@ describe("parseFeed (saved fixtures)", () => {
     expect(feed.items.length).toBeGreaterThan(0);
 
     const item = feed.items[0];
+    assert(item);
     expect(item.title).toBe(
       "Trump soittaa kampanjatilaisuuksissaan Neil Youngin kappaletta, jossa arvostellaan Amerikkaa – haastettiin oikeuteen",
     );
@@ -42,6 +44,7 @@ describe("parseFeed (saved fixtures)", () => {
     expect(feed.items.length).toBeGreaterThan(0);
 
     const item = feed.items[0];
+    assert(item);
     expect(item.title).toBe(
       "Luxury cruise passengers stranded in Cambodia due to soaring fuel costs",
     );
@@ -62,6 +65,7 @@ describe("parseFeed (saved fixtures)", () => {
     expect(feed.items.length).toBeGreaterThan(0);
 
     const item = feed.items[0];
+    assert(item);
     expect(item.title).toBe("Almost all of Amazon’s new Echo gear is available now");
     expect(item.url).toBe(
       "https://www.theverge.com/gadgets/1019686/amazon-echo-dot-studio-camera-frame-show-16-buy",
@@ -87,6 +91,7 @@ describe("parseFeed (saved fixtures)", () => {
     expect(feed.items.length).toBeGreaterThan(0);
 
     const item = feed.items[0];
+    assert(item);
     expect(item.title).toBe(
       "Ten days later, Git on macOS still trusts the compromised eMudhra certificates",
     );
@@ -106,6 +111,7 @@ describe("parseFeed (saved fixtures)", () => {
     expect(feed.items.length).toBeGreaterThan(0);
 
     const item = feed.items[0];
+    assert(item);
     expect(item.title).toBe("I Fact-Checked Every Stunt in the Tesla Roadster Reveal");
     // The v parameter must survive normalization.
     expect(item.url).toBe("https://www.youtube.com/watch?v=hJSbro3EBnY");

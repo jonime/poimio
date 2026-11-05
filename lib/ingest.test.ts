@@ -87,9 +87,9 @@ describe("runIngestion", () => {
 
     expect(db.inserted[0]).toHaveLength(9);
     expect(
-      db.inserted[0].every((item) => item.url.startsWith("https://www.youtube.com/watch?v=")),
+      db.inserted[0]?.every((item) => item.url.startsWith("https://www.youtube.com/watch?v=")),
     ).toBe(true);
-    expect(result.sources[0].newItems).toBe(9);
+    expect(result.sources[0]?.newItems).toBe(9);
   });
 
   it.each([
@@ -111,7 +111,7 @@ describe("runIngestion", () => {
     });
 
     expect(db.inserted[0]).toHaveLength(count);
-    expect(result.sources[0].newItems).toBe(count);
+    expect(result.sources[0]?.newItems).toBe(count);
   });
 
   it("summarizes fetched, unchanged, failed, and malformed sources independently", async () => {

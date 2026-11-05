@@ -87,7 +87,10 @@ export function selectGuestFeed(rows: unknown[]): GuestFeedItem[] {
     }
     const queue: Candidate[] = [];
     for (let round = 0; queue.length < 12; round++) {
-      const items = [...sources.values()].flatMap((items) => (items[round] ? [items[round]] : []));
+      const items = [...sources.values()].flatMap((sourceItems) => {
+        const item = sourceItems[round];
+        return item ? [item] : [];
+      });
       if (!items.length) break;
       items.sort(
         (a, b) =>

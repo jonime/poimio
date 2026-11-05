@@ -26,13 +26,13 @@ import { decodeEntities } from "./text.ts";
 export function elementText(block: string, tag: string): string | null {
   const escaped = tag.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
   const match = block.match(new RegExp(`<${escaped}\\b[^>]*>([\\s\\S]*?)<\\/${escaped}>`, "i"));
-  if (!match) return null;
-  return unwrapCdata(match[1]);
+  const inner = match?.[1];
+  return inner === undefined ? null : unwrapCdata(inner);
 }
 
 function unwrapCdata(inner: string): string {
   const cdata = inner.match(/^<!\[CDATA\[([\s\S]*?)\]\]>$/);
-  return cdata ? cdata[1] : inner;
+  return cdata?.[1] ?? inner;
 }
 
 /**

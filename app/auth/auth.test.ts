@@ -298,9 +298,7 @@ describe("local password sign-in action", () => {
         password: " local-password ",
       });
       expect(auth.getClaims).toHaveBeenCalledExactlyOnceWith();
-      expect(auth.signInWithPassword.mock.invocationCallOrder[0]).toBeLessThan(
-        auth.getClaims.mock.invocationCallOrder[0],
-      );
+      expect(auth.signInWithPassword).toHaveBeenCalledBefore(auth.getClaims);
     },
   );
 
@@ -379,9 +377,7 @@ describe("sign-out action", () => {
     await expect(signOut()).rejects.toThrow("REDIRECT:/");
     expect(auth.getClaims).toHaveBeenCalledExactlyOnceWith();
     expect(auth.signOut).toHaveBeenCalledExactlyOnceWith({ scope: "local" });
-    expect(auth.getClaims.mock.invocationCallOrder[0]).toBeLessThan(
-      auth.signOut.mock.invocationCallOrder[0],
-    );
+    expect(auth.getClaims).toHaveBeenCalledBefore(auth.signOut);
   });
 
   it.each([
@@ -414,9 +410,7 @@ describe("OAuth callback", () => {
     const response = await GET(new Request("http://localhost:3001/auth/callback?code=valid-code"));
     expect(auth.exchangeCodeForSession).toHaveBeenCalledExactlyOnceWith("valid-code");
     expect(auth.getClaims).toHaveBeenCalledExactlyOnceWith();
-    expect(auth.exchangeCodeForSession.mock.invocationCallOrder[0]).toBeLessThan(
-      auth.getClaims.mock.invocationCallOrder[0],
-    );
+    expect(auth.exchangeCodeForSession).toHaveBeenCalledBefore(auth.getClaims);
     expect(response.headers.get("location")).toBe("http://localhost:3001/");
     expect(response.headers.get("cache-control")).toBe("private, no-store");
   });

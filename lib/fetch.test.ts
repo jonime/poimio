@@ -227,8 +227,8 @@ describe("fetchFeeds", () => {
     const results = await fetchFeeds(feeds);
 
     expect(results).toHaveLength(6);
-    for (let i = 0; i < 6; i++) {
-      expect(results[i].status).toBe("ok");
+    for (const result of results) {
+      expect(result.status).toBe("ok");
     }
     expect(mock).toHaveBeenCalledTimes(6);
   });
@@ -269,9 +269,8 @@ describe("fetchFeeds", () => {
     const results = await fetchFeeds(feeds);
 
     expect(results).toHaveLength(6);
-    for (let i = 0; i < 6; i++) {
-      const result = results[i];
-      if (i === 2) {
+    for (const [index, result] of results.entries()) {
+      if (index === 2) {
         expect(result.status).toBe("error");
         if (result.status !== "error") throw new Error("expected error");
         expect(result.error).toContain("network down");

@@ -262,8 +262,8 @@ export async function fetchFeeds(
   const workers = Array.from({ length: workerCount }, async () => {
     for (;;) {
       const index = cursor++;
-      if (index >= feeds.length) return;
       const feed = feeds[index];
+      if (!feed) return;
       // fetchFeed resolves to a FetchResult (never throws), so one failure
       // cannot reject this worker or the run as a whole.
       results[index] = await fetchFeed(feed.feedUrl, {

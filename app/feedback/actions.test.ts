@@ -38,9 +38,7 @@ describe("setFeedback", () => {
     async (kind) => {
       await setFeedback(validItemId, kind, "button");
       expect(revalidatePath).toHaveBeenCalledExactlyOnceWith("/liked");
-      expect(vi.mocked(revalidatePath).mock.invocationCallOrder[0]).toBeGreaterThan(
-        rpc.mock.invocationCallOrder[0],
-      );
+      expect(rpc).toHaveBeenCalledBefore(vi.mocked(revalidatePath));
     },
   );
 
@@ -100,9 +98,7 @@ describe("setFeedback", () => {
       p_kind: "not_interested",
       p_via: "swipe",
     });
-    expect(rpc.mock.invocationCallOrder[0]).toBeGreaterThan(
-      auth.getClaims.mock.invocationCallOrder[0],
-    );
+    expect(auth.getClaims).toHaveBeenCalledBefore(rpc);
     expect(createClient).toHaveBeenCalledExactlyOnceWith();
     expect(from).not.toHaveBeenCalled();
   });
@@ -140,9 +136,7 @@ describe("clearFeedback", () => {
     expect(deleteQuery).toHaveBeenCalledExactlyOnceWith();
     expect(eq).toHaveBeenNthCalledWith(1, "user_id", "user-a");
     expect(eq).toHaveBeenNthCalledWith(2, "item_id", validItemId);
-    expect(auth.getClaims.mock.invocationCallOrder[0]).toBeLessThan(
-      from.mock.invocationCallOrder[0],
-    );
+    expect(auth.getClaims).toHaveBeenCalledBefore(from);
     expect(createClient).toHaveBeenCalledExactlyOnceWith();
     expect(rpc).not.toHaveBeenCalled();
     expect(revalidatePath).toHaveBeenCalledExactlyOnceWith("/liked");

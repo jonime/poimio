@@ -133,7 +133,7 @@ describe("fetchFeed", () => {
 
   it("times out when the request does not complete in time", async () => {
     const mock = vi.fn(
-      (input: string | URL | Request, init?: RequestInit) =>
+      (_input: string | URL | Request, init?: RequestInit) =>
         new Promise<Response>((_resolve, reject) => {
           const signal = init?.signal;
           signal?.addEventListener("abort", () =>

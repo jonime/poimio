@@ -282,7 +282,7 @@ describe("extractPageContent", () => {
     ["og:description", "property", "og:description"],
     ["twitter:description", "name", "twitter:description"],
     ["description", "name", "description"],
-  ])("accepts %s metadata", (key, attribute, value) => {
+  ])("accepts %s metadata", (_key, attribute, value) => {
     const html = `<meta ${attribute}="${value}" content="Useful description">`;
     expect(extractPageContent(html, "https://example.com/story").description).toBe(
       "Useful description",

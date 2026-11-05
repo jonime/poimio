@@ -23,6 +23,7 @@
     "eval:replay": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --experimental-strip-types --env-file=.env.local scripts/evaluation-replay.mts",
     "eval:freeze": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --experimental-strip-types scripts/freeze-evaluation.mts",
     "lint": "biome lint .",
+    "lint:fix": "biome lint --write .",
     "format": "biome format --write .",
     "typecheck": "tsc --noEmit",
     "test": "vitest run",

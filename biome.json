@@ -40,6 +40,7 @@
             "ignoreUsingDeclarations": false
           }
         },
+        "noUnusedImports": "error",
         "useInlineScriptId": "error"
       },
       "performance": {
@@ -53,10 +54,12 @@
         "noHeadElement": "warn",
         "noNamespace": "error",
         "useArrayLiterals": "error",
-        "useAsConstAssertion": "error"
+        "useAsConstAssertion": "error",
+        "useImportType": "warn"
       },
       "suspicious": {
         "noArrayIndexKey": "off",
+        "noDebugger": "error",
         "noDocumentImportInPage": "error",
         "noDuplicateEnumValues": "error",
         "noExplicitAny": "error",

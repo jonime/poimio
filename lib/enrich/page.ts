@@ -1,7 +1,7 @@
-import { lookup as dnsLookup } from "node:dns/promises";
 import type { LookupAddress, LookupOptions } from "node:dns";
-import { request as httpRequest } from "node:http";
+import { lookup as dnsLookup } from "node:dns/promises";
 import type { IncomingHttpHeaders } from "node:http";
+import { request as httpRequest } from "node:http";
 import { request as httpsRequest } from "node:https";
 import { isIP } from "node:net";
 import { Readability } from "@mozilla/readability";

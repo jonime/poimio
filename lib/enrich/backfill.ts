@@ -1,15 +1,15 @@
 import type { BackfillDb, EnrichmentItem, IngestDb, SummaryOrigin, UnembeddedItem } from "../db.ts";
 import {
-  embedPendingItems,
   type EmbeddingBatchFailure,
   type EmbeddingOptions,
+  embedPendingItems,
 } from "../embeddings.ts";
 import {
-  MAX_ENRICHMENT_ITEMS_PER_RUN,
-  runEnrichment,
   type EnrichmentOptions,
   type EnrichmentProgress,
   type EnrichmentRunResult,
+  MAX_ENRICHMENT_ITEMS_PER_RUN,
+  runEnrichment,
 } from "./coordinator.ts";
 
 export type EnrichmentBackfillDb = BackfillDb &

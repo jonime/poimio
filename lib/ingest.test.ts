@@ -1,9 +1,9 @@
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 import type { EnrichmentDb, EnrichmentItem, IngestDb, Source, SourceStatusPatch } from "./db";
-import type { ParsedItem } from "./normalize/parse";
 import type { FetchResult } from "./fetch";
-import { formatIngestionSummary, runIngestion, type IngestionSummary } from "./ingest";
+import { formatIngestionSummary, type IngestionSummary, runIngestion } from "./ingest";
+import type { ParsedItem } from "./normalize/parse";
 
 const feedXml = `<?xml version="1.0"?>
 <rss version="2.0"><channel><title>Test</title><link>https://example.com</link>

@@ -1,13 +1,13 @@
-import { beforeEach, describe, expect, it, vi } from "vitest";
-import { renderToStaticMarkup } from "react-dom/server";
 import { createElement } from "react";
-import Home from "../page";
+import { renderToStaticMarkup } from "react-dom/server";
+import { beforeEach, describe, expect, it, vi } from "vitest";
+import { AppHeader } from "@/components/app-header";
 import AppLayout from "../(app)/layout";
 import { GuestPreview } from "../feed/guest-preview";
 import Login from "../login/page";
-import PrivacyPage, { metadata as privacyMetadata } from "../privacy/page";
-import { AppHeader } from "@/components/app-header";
 import { PasswordSignInForm } from "../login/password-sign-in-form";
+import Home from "../page";
+import PrivacyPage, { metadata as privacyMetadata } from "../privacy/page";
 import { signInWithPassword, signOut } from "./actions";
 import { GET } from "./callback/route";
 

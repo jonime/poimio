@@ -1,8 +1,8 @@
 import { describe, expect, it } from "vitest";
 import {
+  type CrosslingualVectorItem,
   sampleRandomCrosslingualPairs,
   scoreCrosslingualPairs,
-  type CrosslingualVectorItem,
 } from "./evaluation-crosslingual.ts";
 
 function item(id: string, language: "fi" | "en", embedding: number[]): CrosslingualVectorItem {

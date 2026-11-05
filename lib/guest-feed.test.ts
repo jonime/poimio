@@ -1,5 +1,5 @@
-import { afterEach, describe, expect, it, vi } from "vitest";
 import { createClient } from "@supabase/supabase-js";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import { guestFeedColumns, readGuestFeed, selectGuestFeed } from "./guest-feed";
 
 function row(id: string, source = id, language = "fi", published = "2026-11-03T10:00:00Z") {

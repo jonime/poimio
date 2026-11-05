@@ -1,9 +1,9 @@
-import Link from "next/link";
-import Image from "next/image";
 import { LogOutIcon } from "lucide-react";
+import Image from "next/image";
+import Link from "next/link";
+import { signOut } from "@/app/auth/actions";
 import { AppNav } from "@/components/app-nav";
 import { Button } from "@/components/ui/button";
-import { signOut } from "@/app/auth/actions";
 
 export function AppHeader({ displayName }: { displayName?: string | null }) {
   const firstName = displayName?.trim().split(/\s+/)[0];

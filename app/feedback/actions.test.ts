@@ -1,6 +1,6 @@
+import { revalidatePath } from "next/cache";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { clearFeedback, setFeedback } from "./actions";
-import { revalidatePath } from "next/cache";
 
 vi.mock("next/cache", () => ({ revalidatePath: vi.fn() }));
 

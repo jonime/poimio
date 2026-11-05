@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import { EMBEDDING_DIMENSIONS } from "./embeddings.ts";
 import {
   addLanguageEmbedding,
   createLanguageMeanAccumulator,
@@ -6,7 +7,6 @@ import {
   MIN_LANGUAGE_MEAN_ITEMS,
   parseEmbeddingVector,
 } from "./language-means.ts";
-import { EMBEDDING_DIMENSIONS } from "./embeddings.ts";
 
 function vector(value: number): number[] {
   return new Array<number>(EMBEDDING_DIMENSIONS).fill(value);

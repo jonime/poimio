@@ -1,23 +1,23 @@
-import { mkdir, readFile, readdir, writeFile } from "node:fs/promises";
+import { mkdir, readdir, readFile, writeFile } from "node:fs/promises";
 import { dirname, isAbsolute, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { encodeCsv, parseCsv } from "../lib/early-ranking.ts";
 import {
+  type AgreementPair,
   createAgreementDesign,
   scoreAgreement,
-  type AgreementPair,
 } from "../lib/evaluation-agreement.ts";
 import {
-  parseLabelJsonLines,
-  validateLabelSet,
   type EvaluationLabelItem,
   type EvaluationPersona,
+  parseLabelJsonLines,
+  validateLabelSet,
 } from "../lib/evaluation-labels.ts";
 import {
-  parseJsonLines,
-  validateSnapshotData,
   type EvaluationSnapshotManifest,
+  parseJsonLines,
   type SnapshotRow,
+  validateSnapshotData,
 } from "../lib/evaluation-snapshot.ts";
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), "..");

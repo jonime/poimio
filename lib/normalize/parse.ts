@@ -22,10 +22,10 @@
  */
 
 import Parser from "rss-parser";
-import { normalizeUrl } from "./url.ts";
-import { decodeEntities, htmlToText, isLinkOnly, truncateSummary } from "./text.ts";
 import { removeYouTubeBoilerplate } from "./boilerplate.ts";
 import { elementText, extractAtomCategories, extractThumbnailUrl, splitItemBlocks } from "./raw.ts";
+import { decodeEntities, htmlToText, isLinkOnly, truncateSummary } from "./text.ts";
+import { normalizeUrl } from "./url.ts";
 
 /** A normalized feed item, shaped for the `content_items` table. */
 export interface ParsedItem {

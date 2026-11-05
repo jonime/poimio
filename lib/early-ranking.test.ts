@@ -1,15 +1,15 @@
 import { describe, expect, it } from "vitest";
 import {
   CENTERED_RANKING_METHODS,
+  type CenteredRankingAnswerKey,
   centerEmbeddingsByLanguage,
+  type EarlyRankingItem,
   encodeCsv,
   parseCsv,
+  type RankingAnswerKey,
   rankEarlyItems,
   scoreCenteredEarlyRanking,
   scoreEarlyRanking,
-  type CenteredRankingAnswerKey,
-  type EarlyRankingItem,
-  type RankingAnswerKey,
 } from "./early-ranking";
 
 function item(id: string, embedding: number[], publishedAt: string): EarlyRankingItem {

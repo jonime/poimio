@@ -1,5 +1,5 @@
-import { beforeEach, describe, expect, it, vi } from "vitest";
 import { renderToStaticMarkup } from "react-dom/server";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import LikedPage from "./page";
 
 const { auth, createClient, from, select, eq, order } = vi.hoisted(() => ({

@@ -6,8 +6,8 @@ import {
   requireFinalSnapshot,
   requireLocalSupabaseUrl,
   requireProductionUrl,
-  validateSnapshotData,
   type SnapshotRow,
+  validateSnapshotData,
 } from "./evaluation-snapshot.ts";
 
 const source: SnapshotRow = {

@@ -4,9 +4,9 @@ import {
   DEFAULT_MAX_BYTES,
   DEFAULT_TIMEOUT_MS,
   DEFAULT_USER_AGENT,
+  type FeedToFetch,
   fetchFeed,
   fetchFeeds,
-  type FeedToFetch,
 } from "./fetch";
 
 interface ResponseInit {

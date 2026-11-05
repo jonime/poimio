@@ -1,10 +1,10 @@
 import { describe, expect, it } from "vitest";
 import {
+  type FrozenEvaluationParameters,
   frozenParametersHash,
   parseFrozenParameters,
-  validateTestRun,
-  type FrozenEvaluationParameters,
   type TestRunState,
+  validateTestRun,
 } from "./evaluation-freeze.ts";
 
 const frozen: FrozenEvaluationParameters = {

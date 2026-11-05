@@ -1,10 +1,10 @@
-import { beforeEach, afterEach, describe, expect, it, vi } from "vitest";
 import { createBrowserClient, createServerClient } from "@supabase/ssr";
-import { connection, NextRequest } from "next/server";
 import { unstable_doesMiddlewareMatch } from "next/experimental/testing/server";
+import { connection, NextRequest } from "next/server";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { config, proxy } from "../../proxy";
 import { createClient as createBrowserSupabase } from "./client";
 import { createClient as createServerSupabase } from "./server";
-import { config, proxy } from "../../proxy";
 
 const { cookieStore, getClaims } = vi.hoisted(() => ({
   cookieStore: { getAll: vi.fn(), set: vi.fn() },

@@ -1,17 +1,17 @@
+import { CircleAlertIcon } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
-import { CircleAlertIcon } from "lucide-react";
 import { AppHeader } from "@/components/app-header";
 import { Alert, AlertTitle } from "@/components/ui/alert";
-import { createClient } from "@/lib/supabase/server";
 import { displayNameFromClaims } from "@/lib/app-access";
-import { isLocalPasswordLoginEnabled } from "@/lib/supabase/local-password-login";
 import type { FeedItem } from "@/lib/feed-ui";
+import { isLocalPasswordLoginEnabled } from "@/lib/supabase/local-password-login";
+import { createClient } from "@/lib/supabase/server";
 import FeedList from "./feed/feed-list";
 import { GuestPreview } from "./feed/guest-preview";
 import { RefreshFeedButton } from "./feed/refresh-feed-button";
-import { SignInButton } from "./login/sign-in-button";
 import { LocalSignInDialog } from "./login/local-sign-in-dialog";
+import { SignInButton } from "./login/sign-in-button";
 
 export const instant = false;
 

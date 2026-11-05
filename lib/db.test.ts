@@ -1,12 +1,12 @@
 import { describe, expect, it } from "vitest";
 import {
   createIngestDb,
+  type IngestDb,
   patchForOutcome,
   recordSourceOutcome,
-  toContentItemRows,
-  type IngestDb,
   type Source,
   type SourceStatusPatch,
+  toContentItemRows,
 } from "./db";
 import type { ParsedItem } from "./normalize/parse";
 

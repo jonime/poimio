@@ -14,8 +14,9 @@
  *
  * The test creates a throwaway user and fixture rows, then removes them.
  */
-import { afterAll, beforeAll, describe, expect, it } from "vitest";
+
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
+import { afterAll, beforeAll, describe, expect, it } from "vitest";
 
 const enabled = process.env.SUPABASE_INTEGRATION === "1";
 const url = process.env.SUPABASE_URL ?? "http://127.0.0.1:55321";

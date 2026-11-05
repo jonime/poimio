@@ -1,14 +1,6 @@
 "use client";
 
 import {
-  useEffect,
-  useRef,
-  useState,
-  type CSSProperties,
-  type MouseEvent as ReactMouseEvent,
-  type PointerEvent as ReactPointerEvent,
-} from "react";
-import {
   CheckIcon,
   CircleAlertIcon,
   InboxIcon,
@@ -16,11 +8,18 @@ import {
   ThumbsDownIcon,
   ThumbsUpIcon,
 } from "lucide-react";
-import { cn } from "@/lib/utils";
+import {
+  type CSSProperties,
+  type MouseEvent as ReactMouseEvent,
+  type PointerEvent as ReactPointerEvent,
+  useEffect,
+  useRef,
+  useState,
+} from "react";
+import { ContentCard } from "@/components/content-card";
 import { Alert, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { CardFooter } from "@/components/ui/card";
-import { ContentCard } from "@/components/content-card";
 import {
   Empty,
   EmptyDescription,
@@ -30,17 +29,18 @@ import {
 } from "@/components/ui/empty";
 import { Spinner } from "@/components/ui/spinner";
 import { toast } from "@/components/ui/toast";
-import { clearFeedback, setFeedback } from "../feedback/actions";
-import { loadMoreFeed } from "./actions";
-import { RefreshFeedButton } from "./refresh-feed-button";
+import { cn } from "@/lib/utils";
+import { explanationForFeedItem, type FeedItem } from "../../lib/feed-ui";
 import {
-  FeedbackMutationQueue,
   type FeedbackKind,
+  FeedbackMutationQueue,
   type FeedbackQueueSnapshot,
   type FeedbackState,
 } from "../../lib/feedback-queue";
-import { explanationForFeedItem, type FeedItem } from "../../lib/feed-ui";
 import { beginSwipe, finishSwipe, moveSwipe, type SwipeGesture } from "../../lib/swipe-gesture";
+import { clearFeedback, setFeedback } from "../feedback/actions";
+import { loadMoreFeed } from "./actions";
+import { RefreshFeedButton } from "./refresh-feed-button";
 
 const pageSize = 30;
 const maximumItems = 1000;

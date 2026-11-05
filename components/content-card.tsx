@@ -1,10 +1,10 @@
-import type { ReactNode } from "react";
 import Image from "next/image";
+import type { ReactNode } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { cn } from "@/lib/utils";
 import { formatRelativeTime, safeHttpUrl } from "@/lib/feed-ui";
 import type { GuestFeedItem } from "@/lib/guest-feed";
+import { cn } from "@/lib/utils";
 
 /** Static card presentation shared by the server preview and interactive feed. */
 export function ContentCard({

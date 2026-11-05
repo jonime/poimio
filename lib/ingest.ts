@@ -1,12 +1,12 @@
-import type { FetchBatchOptions, FetchResult } from "./fetch.ts";
-import { fetchFeeds } from "./fetch.ts";
-import { embedPendingItems, type EmbeddingOptions, type EmbeddingRunResult } from "./embeddings.ts";
-import { recordSourceOutcome, type EnrichmentDb, type IngestDb, type Source } from "./db.ts";
+import { type EnrichmentDb, type IngestDb, recordSourceOutcome, type Source } from "./db.ts";
+import { type EmbeddingOptions, type EmbeddingRunResult, embedPendingItems } from "./embeddings.ts";
 import {
-  runEnrichment,
   type EnrichmentOptions,
   type EnrichmentRunResult,
+  runEnrichment,
 } from "./enrich/coordinator.ts";
+import type { FetchBatchOptions, FetchResult } from "./fetch.ts";
+import { fetchFeeds } from "./fetch.ts";
 import { parseFeed } from "./normalize/parse.ts";
 
 export interface SourceIngestionSummary {

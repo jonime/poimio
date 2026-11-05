@@ -1,7 +1,7 @@
 "use server";
 
-import { createClient } from "../../lib/supabase/server";
 import type { FeedItem } from "../../lib/feed-ui";
+import { createClient } from "../../lib/supabase/server";
 
 const uuidPattern = /^[0-9a-f]{8}-(?:[0-9a-f]{4}-){3}[0-9a-f]{12}$/i;
 const pageSize = 30;

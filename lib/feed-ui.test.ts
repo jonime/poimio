@@ -1,9 +1,9 @@
 import { describe, expect, it } from "vitest";
 import {
   explanationForFeedItem,
+  type FeedItem,
   formatRelativeTime,
   safeHttpUrl,
-  type FeedItem,
 } from "./feed-ui.ts";
 
 const item: FeedItem = {

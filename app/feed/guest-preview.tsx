@@ -1,8 +1,8 @@
 import { cacheLife } from "next/cache";
-import { Empty, EmptyDescription, EmptyHeader, EmptyTitle } from "@/components/ui/empty";
-import { createAnonymousClient } from "@/lib/supabase/anonymous";
-import { readGuestFeed } from "@/lib/guest-feed";
 import { ContentCard } from "@/components/content-card";
+import { Empty, EmptyDescription, EmptyHeader, EmptyTitle } from "@/components/ui/empty";
+import { readGuestFeed } from "@/lib/guest-feed";
+import { createAnonymousClient } from "@/lib/supabase/anonymous";
 
 async function cachedGuestFeed() {
   "use cache";

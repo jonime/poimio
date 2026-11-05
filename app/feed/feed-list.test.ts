@@ -1,11 +1,11 @@
-import { afterEach, beforeEach, expect, it, vi } from "vitest";
+import { JSDOM } from "jsdom";
 import { act, createElement } from "react";
 import { createRoot, type Root } from "react-dom/client";
-import { JSDOM } from "jsdom";
-import { setFeedback, clearFeedback } from "../feedback/actions";
+import { afterEach, beforeEach, expect, it, vi } from "vitest";
 import { toast } from "@/components/ui/toast";
-import FeedList from "./feed-list";
 import type { FeedItem } from "@/lib/feed-ui";
+import { clearFeedback, setFeedback } from "../feedback/actions";
+import FeedList from "./feed-list";
 
 vi.mock("../feedback/actions", () => ({ setFeedback: vi.fn(), clearFeedback: vi.fn() }));
 vi.mock("./actions", () => ({ loadMoreFeed: vi.fn() }));

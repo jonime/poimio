@@ -4,16 +4,16 @@ import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { encodeCsv, parseCsv } from "../lib/early-ranking.ts";
 import {
-  sampleRandomCrosslingualPairs,
-  scoreCrosslingualPairs,
   type CrosslingualPair,
   type CrosslingualVectorItem,
+  sampleRandomCrosslingualPairs,
+  scoreCrosslingualPairs,
 } from "../lib/evaluation-crosslingual.ts";
 import {
-  parseJsonLines,
-  validateSnapshotData,
   type EvaluationSnapshotManifest,
+  parseJsonLines,
   type SnapshotRow,
+  validateSnapshotData,
 } from "../lib/evaluation-snapshot.ts";
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), "..");

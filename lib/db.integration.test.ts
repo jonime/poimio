@@ -14,13 +14,14 @@
  * For the cloud project, also set `SUPABASE_URL` to the project URL. The
  * tests create throwaway rows and clean them up afterwards.
  */
-import { afterAll, beforeAll, describe, expect, it } from "vitest";
+
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
+import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import {
-  createIngestDb,
-  recordSourceOutcome,
   type BackfillDb,
+  createIngestDb,
   type IngestDb,
+  recordSourceOutcome,
   type Source,
 } from "./db";
 import type { ParsedItem } from "./normalize/parse";

@@ -1,5 +1,5 @@
-import type { ReactNode } from "react";
 import { redirect } from "next/navigation";
+import type { ReactNode } from "react";
 import { AppHeader } from "@/components/app-header";
 import { displayNameFromClaims, getAppAccessRedirect } from "@/lib/app-access";
 import { createClient } from "@/lib/supabase/server";

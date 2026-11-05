@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import type { UnembeddedItem } from "./db";
 import {
   EMBEDDING_BATCH_SIZE,
   EMBEDDING_DIMENSIONS,
@@ -6,7 +7,6 @@ import {
   EMBEDDING_MODEL_VERSION,
   embedPendingItems,
 } from "./embeddings";
-import type { UnembeddedItem } from "./db";
 
 class FakeEmbeddingDb {
   embeddings = new Map<string, { vector: number[]; model: string }>();

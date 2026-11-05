@@ -1,7 +1,7 @@
 import { readFile, writeFile } from "node:fs/promises";
 import { resolve } from "node:path";
-import { createInterface } from "node:readline";
 import { stdin, stdout } from "node:process";
+import { createInterface } from "node:readline";
 import { readJudgingCsv, setJudgingRelevance } from "../lib/manual-judging.ts";
 
 async function main() {

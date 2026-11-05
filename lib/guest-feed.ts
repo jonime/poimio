@@ -1,5 +1,5 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
-import { safeHttpUrl, type FeedItem } from "./feed-ui";
+import { type FeedItem, safeHttpUrl } from "./feed-ui";
 
 export type GuestFeedItem = Pick<
   FeedItem,

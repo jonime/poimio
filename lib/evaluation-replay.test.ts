@@ -7,9 +7,9 @@ import {
   nearDuplicateIds,
   pairedDifferenceStatistics,
   precisionAt10,
+  type ReplayItem,
   seedStatistics,
   top10Diversity,
-  type ReplayItem,
 } from "./evaluation-replay.ts";
 
 function item(

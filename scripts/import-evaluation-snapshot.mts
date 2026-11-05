@@ -1,13 +1,13 @@
-import { createClient } from "@supabase/supabase-js";
 import { readFile } from "node:fs/promises";
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
+import { createClient } from "@supabase/supabase-js";
 import {
+  type EvaluationSnapshotManifest,
   parseJsonLines,
   requireLocalSupabaseUrl,
-  validateSnapshotData,
-  type EvaluationSnapshotManifest,
   type SnapshotRow,
+  validateSnapshotData,
 } from "../lib/evaluation-snapshot.ts";
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), "..");

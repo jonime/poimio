@@ -1,7 +1,7 @@
 import { execFileSync } from "node:child_process";
 import { randomUUID } from "node:crypto";
-import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { createClient } from "@supabase/supabase-js";
+import { afterAll, beforeAll, describe, expect, it } from "vitest";
 
 const enabled = process.env.SUPABASE_INTEGRATION === "1";
 const url = process.env.SUPABASE_URL ?? "http://127.0.0.1:55321";

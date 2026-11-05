@@ -1,25 +1,25 @@
 import { execFileSync } from "node:child_process";
-import { mkdir, readFile, readdir, writeFile } from "node:fs/promises";
+import { mkdir, readdir, readFile, writeFile } from "node:fs/promises";
 import { dirname, isAbsolute, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import {
   EVALUATION_FREEZE_SCHEMA_VERSION,
-  frozenParametersHash,
   type FrozenEvaluationParameters,
+  frozenParametersHash,
 } from "../lib/evaluation-freeze.ts";
 import {
-  parseLabelJsonLines,
-  validateLabelSet,
   type EvaluationLabelItem,
   type EvaluationPersona,
+  parseLabelJsonLines,
+  validateLabelSet,
 } from "../lib/evaluation-labels.ts";
 import {
+  type EvaluationSnapshotManifest,
   parseJsonLines,
   requireFinalSnapshot,
+  type SnapshotRow,
   sha256,
   validateSnapshotData,
-  type EvaluationSnapshotManifest,
-  type SnapshotRow,
 } from "../lib/evaluation-snapshot.ts";
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), "..");

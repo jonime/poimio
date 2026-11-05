@@ -1,5 +1,5 @@
-import { afterEach, expect, it, vi } from "vitest";
 import { createClient } from "@supabase/supabase-js";
+import { afterEach, expect, it, vi } from "vitest";
 import { createAnonymousClient } from "./anonymous";
 
 vi.mock("@supabase/supabase-js", () => ({ createClient: vi.fn() }));

@@ -1,14 +1,14 @@
 import { describe, expect, it } from "vitest";
 import {
   chunkItems,
+  type EvaluationLabel,
+  type EvaluationLabelItem,
+  type EvaluationPersona,
   evaluationLabelBatchSize,
   labelCacheKey,
   parseLabelJsonLines,
   parseLabelResponse,
   validateLabelSet,
-  type EvaluationLabel,
-  type EvaluationLabelItem,
-  type EvaluationPersona,
 } from "./evaluation-labels.ts";
 
 const personas: EvaluationPersona[] = [

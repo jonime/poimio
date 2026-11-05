@@ -2,10 +2,10 @@ import { readFile, writeFile } from "node:fs/promises";
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import {
-  parseCsv,
-  scoreCenteredEarlyRanking,
   type CenteredJudgingRow,
   type CenteredRankingAnswerKey,
+  parseCsv,
+  scoreCenteredEarlyRanking,
 } from "../lib/early-ranking.ts";
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), "..");

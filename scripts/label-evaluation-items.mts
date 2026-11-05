@@ -4,19 +4,19 @@ import { fileURLToPath } from "node:url";
 import {
   chunkItems,
   EVALUATION_LABEL_PROMPT_VERSION,
+  type EvaluationLabel,
+  type EvaluationLabelItem,
+  type EvaluationPersona,
   evaluationLabelBatchSize,
   parseLabelJsonLines,
   parseLabelResponse,
   validateLabelSet,
-  type EvaluationLabel,
-  type EvaluationLabelItem,
-  type EvaluationPersona,
 } from "../lib/evaluation-labels.ts";
 import {
-  parseJsonLines,
-  validateSnapshotData,
   type EvaluationSnapshotManifest,
+  parseJsonLines,
   type SnapshotRow,
+  validateSnapshotData,
 } from "../lib/evaluation-snapshot.ts";
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), "..");

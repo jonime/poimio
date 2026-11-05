@@ -1,10 +1,16 @@
 import { execFileSync } from "node:child_process";
-import { mkdir, readFile, readdir, writeFile } from "node:fs/promises";
+import { mkdir, readdir, readFile, writeFile } from "node:fs/promises";
 import { dirname, isAbsolute, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 import { encodeCsv } from "../lib/early-ranking.ts";
 import { parseFrozenParameters, validateTestRun } from "../lib/evaluation-freeze.ts";
+import {
+  type EvaluationLabelItem,
+  type EvaluationPersona,
+  parseLabelJsonLines,
+  validateLabelSet,
+} from "../lib/evaluation-labels.ts";
 import {
   candidateScopes,
   createFeedbackSequence,
@@ -13,24 +19,18 @@ import {
   nearDuplicateIds,
   pairedDifferenceStatistics,
   precisionAt10,
+  type ReplayItem,
   seedStatistics,
   top10Diversity,
-  type ReplayItem,
 } from "../lib/evaluation-replay.ts";
 import {
-  parseLabelJsonLines,
-  validateLabelSet,
-  type EvaluationLabelItem,
-  type EvaluationPersona,
-} from "../lib/evaluation-labels.ts";
-import {
+  type EvaluationSnapshotManifest,
   parseJsonLines,
   requireFinalSnapshot,
   requireLocalSupabaseUrl,
+  type SnapshotRow,
   sha256,
   validateSnapshotData,
-  type EvaluationSnapshotManifest,
-  type SnapshotRow,
 } from "../lib/evaluation-snapshot.ts";
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), "..");

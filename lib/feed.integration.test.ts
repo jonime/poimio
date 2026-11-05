@@ -1,6 +1,6 @@
 import { randomUUID } from "node:crypto";
-import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
+import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 import { createIngestDb } from "./db.ts";
 import { EMBEDDING_DIMENSIONS } from "./embeddings.ts";
 

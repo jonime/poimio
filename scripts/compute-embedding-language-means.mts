@@ -1,13 +1,13 @@
 import { createClient } from "@supabase/supabase-js";
+import { EMBEDDING_MODEL_VERSION } from "../lib/embeddings.ts";
 import {
   addLanguageEmbedding,
+  type ContentLanguage,
   createLanguageMeanAccumulator,
   finishLanguageMeans,
   MIN_LANGUAGE_MEAN_ITEMS,
   parseEmbeddingVector,
-  type ContentLanguage,
 } from "../lib/language-means.ts";
-import { EMBEDDING_MODEL_VERSION } from "../lib/embeddings.ts";
 
 const pageSize = 1000;
 

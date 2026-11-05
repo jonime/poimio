@@ -1,8 +1,8 @@
-import { redirect } from "next/navigation";
 import { CircleAlertIcon } from "lucide-react";
+import { redirect } from "next/navigation";
 import { Alert, AlertTitle } from "@/components/ui/alert";
-import { createClient } from "@/lib/supabase/server";
 import type { LikedFeedItem } from "@/lib/feed-ui";
+import { createClient } from "@/lib/supabase/server";
 import LikedList from "./liked-list";
 
 export const instant = false;

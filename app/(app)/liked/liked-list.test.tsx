@@ -3,8 +3,8 @@
 import { act } from "react";
 import { createRoot } from "react-dom/client";
 import { afterEach, beforeEach, expect, it, vi } from "vitest";
-import type { LikedFeedItem } from "@/lib/feed-ui";
 import { clearFeedback } from "@/app/feedback/actions";
+import type { LikedFeedItem } from "@/lib/feed-ui";
 import LikedList from "./liked-list";
 
 vi.mock("@/app/feedback/actions", () => ({ clearFeedback: vi.fn() }));

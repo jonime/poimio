@@ -33,6 +33,7 @@
       "correctness": {
         "noBeforeInteractiveScriptOutsideDocument": "warn",
         "noNextAsyncClientComponent": "warn",
+        "noConstantCondition": "error",
         "noUnusedVariables": {
           "level": "error",
           "options": {
@@ -49,6 +50,7 @@
         "noUnwantedPolyfillio": "warn",
         "useGoogleFontPreconnect": "warn"
       },
+      "security": { "noDangerouslySetInnerHtml": "error" },
       "style": {
         "noCommonJs": "error",
         "noHeadElement": "warn",
@@ -60,6 +62,7 @@
       "suspicious": {
         "noArrayIndexKey": "off",
         "noDebugger": "error",
+        "noDoubleEquals": "warn",
         "noDocumentImportInPage": "error",
         "noDuplicateEnumValues": "error",
         "noExplicitAny": "error",

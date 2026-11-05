@@ -1,8 +1,8 @@
 import { describe, expect, it } from "vitest";
 import {
+  type AgreementPair,
   createAgreementDesign,
   scoreAgreement,
-  type AgreementPair,
 } from "./evaluation-agreement.ts";
 import type {
   EvaluationLabel,

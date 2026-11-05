@@ -22,8 +22,8 @@ function makeResponse(init: ResponseInit = {}): Response {
   const defaultBody = init.status === 304 || init.status === 204 || init.status === 205 ? null : "";
   return new Response(init.body ?? defaultBody, {
     status: init.status ?? 200,
-    statusText: init.statusText,
-    headers: init.headers,
+    statusText: init.statusText ?? "",
+    headers: init.headers ?? {},
   });
 }
 

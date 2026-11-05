@@ -108,7 +108,7 @@ export async function runIngestion(
     summary.fetched = 1;
     let parsed: Awaited<ReturnType<typeof parseFeed>>;
     try {
-      parsed = await parseFeed(result.body, { fetchTime: options.now?.() });
+      parsed = await parseFeed(result.body, options.now ? { fetchTime: options.now() } : {});
     } catch (error) {
       const message = describeError(error);
       summary.errors.push(message);
@@ -131,8 +131,8 @@ export async function runIngestion(
       {
         kind: "fetched",
         newItems: summary.newItems,
-        etag: result.etag,
-        lastModified: result.lastModified,
+        ...(result.etag === undefined ? {} : { etag: result.etag }),
+        ...(result.lastModified === undefined ? {} : { lastModified: result.lastModified }),
       },
       options.now?.(),
     );
@@ -140,7 +140,7 @@ export async function runIngestion(
 
   const enrichment = await runEnrichment(db, openAiApiKey, {
     ...options.enrichment,
-    now: options.now,
+    ...(options.now === undefined ? {} : { now: options.now }),
   });
   const embeddings = await embedPendingItems(db, openAiApiKey, options.embedding);
   return { sources: summaries, enrichment, embeddings };

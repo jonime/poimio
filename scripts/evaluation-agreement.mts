@@ -59,7 +59,12 @@ function parseArguments(args: string[]): CliOptions {
   if (command === "score" && !labelsPath) {
     throw new Error("--labels <file> is required when scoring");
   }
-  return { command, set, labelsPath, provisional };
+  return {
+    command,
+    set,
+    ...(labelsPath === undefined ? {} : { labelsPath }),
+    provisional,
+  };
 }
 
 function artifactDirectory(provisional: boolean): string {

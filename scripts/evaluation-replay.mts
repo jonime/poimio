@@ -120,7 +120,13 @@ function parseArguments(args: string[]): ReplayOptions {
   if (window === "test" && provisional) {
     throw new Error("test replay refuses provisional snapshots");
   }
-  return { window, paramsPath, labelsPath, newExperimentReason, provisional };
+  return {
+    window,
+    ...(paramsPath === undefined ? {} : { paramsPath }),
+    ...(labelsPath === undefined ? {} : { labelsPath }),
+    ...(newExperimentReason === undefined ? {} : { newExperimentReason }),
+    provisional,
+  };
 }
 
 function parseVector(value: unknown, label: string): number[] {
@@ -415,7 +421,9 @@ async function main(): Promise<void> {
       configHash: sha256(configText),
       paramsProvided: options.paramsPath !== undefined,
       existingTestResults,
-      newExperimentReason: options.newExperimentReason,
+      ...(options.newExperimentReason === undefined
+        ? {}
+        : { newExperimentReason: options.newExperimentReason }),
     });
     threshold = frozen.nearDuplicateThreshold;
     params = frozen.parameters;

@@ -26,9 +26,13 @@ function parseArguments(args: string[]): {
   for (let index = 0; index < args.length; index += 1) {
     const argument = args[index]!;
     if (argument === "--from" || argument.startsWith("--from=")) {
-      parsed.from = argument === "--from" ? args[++index] : argument.slice("--from=".length);
+      const from = argument === "--from" ? args[++index] : argument.slice("--from=".length);
+      if (from === undefined) throw new Error("--from requires a value");
+      parsed.from = from;
     } else if (argument === "--to" || argument.startsWith("--to=")) {
-      parsed.toExclusive = argument === "--to" ? args[++index] : argument.slice("--to=".length);
+      const toExclusive = argument === "--to" ? args[++index] : argument.slice("--to=".length);
+      if (toExclusive === undefined) throw new Error("--to requires a value");
+      parsed.toExclusive = toExclusive;
     } else if (argument === "--provisional") {
       parsed.provisional = true;
     } else {

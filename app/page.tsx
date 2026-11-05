@@ -91,7 +91,7 @@ export default async function Home({
   const renderedAt = new Date().toISOString();
   return (
     <>
-      <AppHeader displayName={displayNameFromClaims(data?.claims)} />
+      <AppHeader displayName={displayNameFromClaims(data?.claims) ?? null} />
       <main className="mx-auto flex w-full max-w-2xl flex-col gap-6 px-4 py-6">
         {params.error === "callback" && <CallbackError />}
         {params.error === "sign-out" && (

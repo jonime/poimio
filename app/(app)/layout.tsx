@@ -14,7 +14,7 @@ export default async function AppLayout({ children }: { children: ReactNode }) {
 
   return (
     <>
-      <AppHeader displayName={displayNameFromClaims(data?.claims)} />
+      <AppHeader displayName={displayNameFromClaims(data?.claims) ?? null} />
       {children}
     </>
   );

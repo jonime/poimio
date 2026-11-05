@@ -36,7 +36,7 @@ describe.skipIf(!enabled || serviceKey == null)("IngestDb against a real databas
   // key. `null` only happens in that skipped case, where no test runs.
   const client: SupabaseClient | null = serviceKey ? createClient(url, serviceKey) : null;
   const db: (IngestDb & BackfillDb) | null =
-    client != null
+    client != null && serviceKey !== undefined
       ? createIngestDb({
           NEXT_PUBLIC_SUPABASE_URL: url,
           SUPABASE_SERVICE_ROLE_KEY: serviceKey,

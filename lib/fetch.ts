@@ -218,8 +218,8 @@ export async function fetchFeed(feedUrl: string, options: FetchOptions = {}): Pr
       status: "ok",
       body,
       contentType: response.headers.get("content-type") ?? "",
-      etag,
-      lastModified,
+      ...(etag === undefined ? {} : { etag }),
+      ...(lastModified === undefined ? {} : { lastModified }),
     };
   } catch (error) {
     if (timedOut) {
@@ -250,9 +250,9 @@ export async function fetchFeeds(
 ): Promise<FetchResult[]> {
   const concurrency = Math.max(1, options.concurrency ?? DEFAULT_CONCURRENCY);
   const perFeed: FetchOptions = {
-    timeoutMs: options.timeoutMs,
-    maxBytes: options.maxBytes,
-    userAgent: options.userAgent,
+    timeoutMs: options.timeoutMs ?? DEFAULT_TIMEOUT_MS,
+    maxBytes: options.maxBytes ?? DEFAULT_MAX_BYTES,
+    userAgent: options.userAgent ?? DEFAULT_USER_AGENT,
   };
 
   const results = new Array<FetchResult>(feeds.length);
@@ -268,8 +268,8 @@ export async function fetchFeeds(
       // cannot reject this worker or the run as a whole.
       results[index] = await fetchFeed(feed.feedUrl, {
         ...perFeed,
-        etag: feed.etag,
-        lastModified: feed.lastModified,
+        etag: feed.etag ?? null,
+        lastModified: feed.lastModified ?? null,
       });
     }
   });

@@ -1,0 +1,14 @@
+# Poimio
+
+> Poimio is a content discovery app for Finnish and English articles and videos, with recommendations based on a user's likes.
+
+## When to use Poimio
+
+- [Browse recent picks](https://www.poimio.cc/): Use the guest preview when looking for recent articles or videos from Poimio's selected sources. Send a GET request with `Accept: text/html` to read titles, summaries and links. Follow the original publisher links for the full content.
+- [Read the product overview](https://www.poimio.cc/): Send a GET request with `Accept: text/markdown` for a concise description of Poimio.
+- [Get personal recommendations](https://www.poimio.cc/): Direct the user to sign in with Google in their browser to see their personalized feed and manage feedback. The guest preview is shared across visitors.
+
+## Optional
+
+- [Privacy policy](https://www.poimio.cc/privacy): Learn how accounts and feedback are handled.
+- [Project README](https://raw.githubusercontent.com/jonime/poimio/main/README.md): Read about the project and its architecture.

@@ -133,14 +133,17 @@ describe("session refresh proxy", () => {
     },
   );
 
-  it.each(["/privacy-settings", "/privacy/private"])(
-    "does not make neighbouring route %s public",
-    async (path) => {
-      getClaims.mockResolvedValueOnce({ data: null, error: null });
-      const response = await proxy(new NextRequest(`http://localhost:3001${path}`));
-      expect(response.headers.get("location")).toBe("http://localhost:3001/");
-    },
-  );
+  it.each([
+    ["GET", "text/html", false],
+    ["GET", "text/markdown", true],
+    ["POST", "text/markdown", false],
+  ])("preserves session refresh for %s %s with RSC=%s", async (method, accept, rsc) => {
+    const headers = new Headers({ accept });
+    if (rsc) headers.set("rsc", "1");
+    const response = await proxy(new NextRequest("http://localhost:3001/", { method, headers }));
+    expect(getClaims).toHaveBeenCalledExactlyOnceWith();
+    expect(response.headers.get("x-middleware-next")).toBe("1");
+  });
 
   it("preserves cookie deletions on redirects without carrying query parameters", async () => {
     getClaims.mockImplementationOnce(async () => {
@@ -205,17 +208,23 @@ describe("session refresh proxy", () => {
     expect(response.headers.get("cache-control")).toBe("private, no-store");
   });
 
-  it.each(["/", "/login", "/privacy", "/auth/callback", "/api/example"])(
+  it.each(["/", "/login", "/privacy", "/auth/callback", "/liked"])(
     "refreshes sessions on application route %s",
     (url) => {
       expect(unstable_doesMiddlewareMatch({ config, url })).toBe(true);
     },
   );
 
-  it.each(["/_next/static/chunk.js", "/_next/image", "/favicon.ico", "/image.png"])(
-    "excludes static asset %s",
-    (url) => {
-      expect(unstable_doesMiddlewareMatch({ config, url })).toBe(false);
-    },
-  );
+  it.each([
+    "/_next/static/chunk.js",
+    "/_next/image",
+    "/favicon.ico",
+    "/image.png",
+    "/llms.txt",
+    "/api/example",
+    "/privacy/private",
+    "/privacy-settings",
+  ])("leaves %s to framework routing", (url) => {
+    expect(unstable_doesMiddlewareMatch({ config, url })).toBe(false);
+  });
 });

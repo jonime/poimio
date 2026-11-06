@@ -6,7 +6,7 @@ import AppLayout from "../(app)/layout";
 import { GuestPreview } from "../feed/guest-preview";
 import Login from "../login/page";
 import { PasswordSignInForm } from "../login/password-sign-in-form";
-import Home from "../page";
+import Home, { metadata as homeMetadata } from "../page";
 import PrivacyPage, { metadata as privacyMetadata } from "../privacy/page";
 import { signInWithPassword, signOut } from "./actions";
 import { GET } from "./callback/route";
@@ -201,6 +201,22 @@ describe("signed-in page", () => {
 describe("guest home", () => {
   beforeEach(() => {
     auth.getClaims.mockResolvedValue({ data: null, error: null });
+  });
+
+  it("publishes consistent homepage identity in the heading, metadata, and JSON-LD", async () => {
+    const html = renderToStaticMarkup(await Home({ searchParams: Promise.resolve({}) }));
+    expect(html).toMatch(/<h1[^>]*>Your content discovery app<\/h1>/);
+    expect(homeMetadata.title).toBe("Poimio | Content discovery app");
+    expect(homeMetadata.alternates?.canonical).toBe("https://www.poimio.cc/");
+    const json = html.match(/<script type="application\/ld\+json">(.+?)<\/script>/)?.[1];
+    expect(JSON.parse(json ?? "")).toMatchObject({
+      "@context": "https://schema.org",
+      "@type": "SoftwareApplication",
+      name: "Poimio",
+      description: homeMetadata.description,
+      keywords: "content discovery app",
+      url: homeMetadata.alternates?.canonical,
+    });
   });
 
   it("streams the top sign-in button before the preview resolves", async () => {

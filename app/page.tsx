@@ -1,4 +1,5 @@
 import { CircleAlertIcon } from "lucide-react";
+import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
 import { Suspense } from "react";
@@ -6,6 +7,7 @@ import { AppHeader } from "@/components/app-header";
 import { Alert, AlertTitle } from "@/components/ui/alert";
 import { displayNameFromClaims } from "@/lib/app-access";
 import type { FeedItem } from "@/lib/feed-ui";
+import { homeDescription, homeTitle, productTerm, siteUrl } from "@/lib/public-home";
 import { isLocalPasswordLoginEnabled } from "@/lib/supabase/local-password-login";
 import { createClient } from "@/lib/supabase/server";
 import FeedList from "./feed/feed-list";
@@ -15,6 +17,24 @@ import { LocalSignInDialog } from "./login/local-sign-in-dialog";
 import { SignInButton } from "./login/sign-in-button";
 
 export const instant = false;
+
+export const metadata: Metadata = {
+  title: homeTitle,
+  description: homeDescription,
+  alternates: { canonical: siteUrl },
+};
+
+const application = {
+  "@context": "https://schema.org",
+  "@type": "SoftwareApplication",
+  name: "Poimio",
+  url: siteUrl,
+  description: homeDescription,
+  keywords: productTerm,
+  applicationCategory: "LifestyleApplication",
+  operatingSystem: "Web",
+  sameAs: "https://github.com/jonime/poimio",
+};
 
 function CallbackError() {
   return (
@@ -45,6 +65,11 @@ export default async function Home({
     }
     return (
       <main className="mx-auto flex w-full max-w-2xl flex-col gap-8 px-4 py-8 sm:py-12">
+        <script
+          type="application/ld+json"
+          // biome-ignore lint/security/noDangerouslySetInnerHtml: Static JSON-LD escapes markup before serialization into HTML.
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(application).replace(/</g, "\\u003c") }}
+        />
         <div className="flex flex-col items-center gap-5 text-center">
           <Image
             src="/full.png"
@@ -54,9 +79,7 @@ export default async function Home({
             priority
             className="h-auto w-44"
           />
-          <p className="text-2xl font-semibold tracking-tight sm:text-3xl">
-            The web, picked for you.
-          </p>
+          <h1 className="text-2xl font-semibold tracking-tight sm:text-3xl">Your {productTerm}</h1>
           <div className="w-full max-w-72">
             <SignInButton />
           </div>
@@ -65,9 +88,9 @@ export default async function Home({
         <Suspense fallback={null}>
           <section className="flex flex-col gap-4" aria-labelledby="preview-heading">
             <div className="flex flex-col gap-2">
-              <h1 id="preview-heading" className="text-2xl font-semibold tracking-tight">
+              <h2 id="preview-heading" className="text-2xl font-semibold tracking-tight">
                 Latest picks
-              </h1>
+              </h2>
               <p className="text-sm text-muted-foreground">
                 A preview from our sources. Sign in to get recommendations based on your interests.
               </p>

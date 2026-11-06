@@ -1,8 +1,31 @@
 import { createServerClient } from "@supabase/ssr";
 import { type NextRequest, NextResponse } from "next/server";
+import { homeMarkdown } from "./lib/public-home";
+import { markdown, preferredRepresentation } from "./lib/public-representation";
 import { requireDefined } from "./lib/required.ts";
 
 export async function proxy(request: NextRequest) {
+  const isHome = request.nextUrl.pathname === "/";
+  if (
+    isHome &&
+    (request.method === "GET" || request.method === "HEAD") &&
+    !request.headers.has("rsc")
+  ) {
+    const representation = preferredRepresentation(request.headers.get("accept"));
+    if (representation === markdown || representation === null) {
+      return new NextResponse(
+        representation === markdown && request.method === "GET" ? homeMarkdown : null,
+        {
+          status: representation === markdown ? 200 : 406,
+          headers: {
+            "Cache-Control": "no-store",
+            ...(representation === markdown && { "Content-Type": `${markdown}; charset=utf-8` }),
+            Vary: "Accept, RSC",
+          },
+        },
+      );
+    }
+  }
   const authStart = performance.now();
   let response = NextResponse.next({ request });
   const supabase = createServerClient(
@@ -33,13 +56,7 @@ export async function proxy(request: NextRequest) {
   if (process.env.VERCEL === "1" && request.nextUrl.pathname === "/") {
     console.info("home_proxy_auth_ms", Math.round(performance.now() - authStart));
   }
-  const isPublicRoute =
-    request.nextUrl.pathname === "/" ||
-    request.nextUrl.pathname === "/login" ||
-    request.nextUrl.pathname === "/privacy" ||
-    request.nextUrl.pathname === "/auth/callback";
-
-  if (!isPublicRoute && (error || !data?.claims?.sub)) {
+  if (request.nextUrl.pathname === "/liked" && (error || !data?.claims?.sub)) {
     const redirectResponse = NextResponse.redirect(new URL("/", request.url));
     for (const cookie of response.cookies.getAll()) {
       redirectResponse.cookies.set(cookie);
@@ -52,5 +69,5 @@ export async function proxy(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ["/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)"],
+  matcher: ["/", "/login", "/privacy", "/auth/callback", "/liked"],
 };

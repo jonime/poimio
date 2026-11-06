@@ -205,9 +205,15 @@ describe("guest home", () => {
 
   it("publishes consistent homepage identity in the heading, metadata, and JSON-LD", async () => {
     const html = renderToStaticMarkup(await Home({ searchParams: Promise.resolve({}) }));
-    expect(html).toMatch(/<h1[^>]*>Your content discovery app<\/h1>/);
+    expect(html).toMatch(/<h1[^>]*>Poimio, your content discovery app<\/h1>/);
     expect(homeMetadata.title).toBe("Poimio | Content discovery app");
     expect(homeMetadata.alternates?.canonical).toBe("https://www.poimio.cc/");
+    expect(homeMetadata.openGraph).toMatchObject({
+      type: "website",
+      title: homeMetadata.title,
+      url: homeMetadata.alternates?.canonical,
+      images: [{ url: "https://www.poimio.cc/full.png", type: "image/png" }],
+    });
     const json = html.match(/<script type="application\/ld\+json">(.+?)<\/script>/)?.[1];
     expect(JSON.parse(json ?? "")).toMatchObject({
       "@context": "https://schema.org",
@@ -216,6 +222,17 @@ describe("guest home", () => {
       description: homeMetadata.description,
       keywords: "content discovery app",
       url: homeMetadata.alternates?.canonical,
+      publisher: {
+        "@type": "Person",
+        name: "Joni Mertoniemi",
+        url: "https://www.poimio.cc/about",
+        contactPoint: {
+          "@type": "ContactPoint",
+          contactType: "privacy",
+          email: "privacy@poimio.cc",
+          url: "https://www.poimio.cc/contact",
+        },
+      },
     });
   });
 
@@ -243,10 +260,12 @@ describe("guest home", () => {
     expect(remaining + decoder.decode()).toContain("Public preview cards");
   });
 
-  it("links to the public privacy policy", async () => {
+  it("links to the public trust pages", async () => {
     const html = renderToStaticMarkup(await Home({ searchParams: Promise.resolve({}) }));
     expect(html).toContain('href="/privacy"');
     expect(html).toContain("Privacy policy");
+    expect(html).toContain('href="/about"');
+    expect(html).toContain('href="/contact"');
   });
 
   it("offers Google as the only sign-in method outside local development", async () => {

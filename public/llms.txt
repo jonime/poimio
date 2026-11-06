@@ -10,5 +10,7 @@
 
 ## Optional
 
+- [About Poimio](https://www.poimio.cc/about): Learn what Poimio does and who operates it.
+- [Contact](https://www.poimio.cc/contact): Find channels for public project feedback and private account or privacy requests.
 - [Privacy policy](https://www.poimio.cc/privacy): Learn how accounts and feedback are handled.
 - [Project README](https://raw.githubusercontent.com/jonime/poimio/main/README.md): Read about the project and its architecture.

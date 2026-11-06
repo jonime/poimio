@@ -5,6 +5,8 @@ Poimio is an AI-powered personal content discovery app. It collects news, articl
 > **Status:** Prototype deployed at [poimio.cc](https://poimio.cc). Specs 001–005 and 008 are done; the evaluation harness ([spec 006](docs/specs/006-evaluation.md)) is in progress.  
 > Solo project for an AI course (7 weeks, 135 h): plan due 8 Nov, prototype with demo video due 22 Nov, final version due 13 Dec 2026.
 
+**Agent readiness:** Poimio scored **100/100** on 6 November 2026. [Is Agentic scan](https://is-agentic.com/scan/poimio.cc)
+
 ## How it uses AI
 
 - **Multilingual embeddings** (`text-embedding-3-small`, 512 dimensions) represent every item. Each language's mean vector is subtracted, so interests transfer between Finnish and English content.

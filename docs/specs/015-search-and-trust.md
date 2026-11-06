@@ -15,4 +15,5 @@ Follow-up to [spec 014](014-agent-readiness.md) after the live Ora audit reached
 
 ## Release verification
 
-- [ ] Submit the canonical sitemap with verified Search Console access, inspect homepage indexing, and rerun the Ora audit after recrawl.
+- [x] Verify the live audit result. Poimio scored **100/100** on 6 November 2026. [Is Agentic scan](https://is-agentic.com/scan/poimio.cc)
+- [ ] Submit the canonical sitemap with verified Search Console access and inspect homepage indexing.

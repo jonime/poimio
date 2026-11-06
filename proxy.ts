@@ -3,6 +3,7 @@ import { type NextRequest, NextResponse } from "next/server";
 import { requireDefined } from "./lib/required.ts";
 
 export async function proxy(request: NextRequest) {
+  const authStart = performance.now();
   let response = NextResponse.next({ request });
   const supabase = createServerClient(
     requireDefined(process.env.NEXT_PUBLIC_SUPABASE_URL, "NEXT_PUBLIC_SUPABASE_URL"),
@@ -29,6 +30,9 @@ export async function proxy(request: NextRequest) {
   );
 
   const { data, error } = await supabase.auth.getClaims();
+  if (process.env.VERCEL === "1" && request.nextUrl.pathname === "/") {
+    console.info("home_proxy_auth_ms", Math.round(performance.now() - authStart));
+  }
   const isPublicRoute =
     request.nextUrl.pathname === "/" ||
     request.nextUrl.pathname === "/login" ||

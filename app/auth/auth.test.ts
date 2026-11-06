@@ -1,5 +1,5 @@
 import { createElement } from "react";
-import { renderToStaticMarkup } from "react-dom/server";
+import { renderToReadableStream, renderToStaticMarkup } from "react-dom/server";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { AppHeader } from "@/components/app-header";
 import AppLayout from "../(app)/layout";
@@ -23,7 +23,9 @@ const { auth, createClient, rpc } = vi.hoisted(() => ({
 }));
 
 vi.mock("../../lib/supabase/server", () => ({ createClient }));
-vi.mock("../feed/guest-preview", () => ({ GuestPreview: vi.fn() }));
+vi.mock("../feed/guest-preview", () => ({
+  GuestPreview: vi.fn(() => createElement("div", null, "Public preview cards")),
+}));
 vi.mock("next/navigation", () => ({
   redirect: (destination: string): never => {
     throw new Error(`REDIRECT:${destination}`);
@@ -45,7 +47,6 @@ beforeEach(() => {
   auth.signOut.mockResolvedValue({ error: null });
   auth.signInWithPassword.mockResolvedValue({ error: null });
   rpc.mockResolvedValue({ data: [], error: null });
-  vi.mocked(GuestPreview).mockResolvedValue(createElement("div", null, "Public preview cards"));
   auth.exchangeCodeForSession.mockResolvedValue({ error: null });
 });
 
@@ -201,6 +202,31 @@ describe("guest home", () => {
   beforeEach(() => {
     auth.getClaims.mockResolvedValue({ data: null, error: null });
   });
+
+  it("streams the top sign-in button before the preview resolves", async () => {
+    const preview = Promise.withResolvers<Awaited<ReturnType<typeof GuestPreview>>>();
+    vi.mocked(GuestPreview).mockReturnValue(preview.promise);
+
+    const stream = await renderToReadableStream(await Home({ searchParams: Promise.resolve({}) }), {
+      signal: AbortSignal.timeout(2_000),
+    });
+    const reader = stream.getReader();
+    const decoder = new TextDecoder();
+    try {
+      const { value } = await reader.read();
+      const shell = decoder.decode(value, { stream: true });
+      expect(shell).toContain("Sign in with Google");
+      expect(shell).not.toContain("Public preview cards");
+    } finally {
+      preview.resolve(createElement("div", null, "Public preview cards"));
+    }
+    let remaining = "";
+    for (let chunk = await reader.read(); !chunk.done; chunk = await reader.read()) {
+      remaining += decoder.decode(chunk.value, { stream: true });
+    }
+    expect(remaining + decoder.decode()).toContain("Public preview cards");
+  });
+
   it("links to the public privacy policy", async () => {
     const html = renderToStaticMarkup(await Home({ searchParams: Promise.resolve({}) }));
     expect(html).toContain('href="/privacy"');

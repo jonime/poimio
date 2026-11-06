@@ -1,6 +1,7 @@
 import { CircleAlertIcon } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
+import { Suspense } from "react";
 import { AppHeader } from "@/components/app-header";
 import { Alert, AlertTitle } from "@/components/ui/alert";
 import { displayNameFromClaims } from "@/lib/app-access";
@@ -31,13 +32,17 @@ export default async function Home({
 }) {
   // createClient enters the request-time boundary; identity and personal feed
   // data never enter the shared public preview cache.
+  const authStart = performance.now();
   const supabase = await createClient();
   const { data, error } = await supabase.auth.getClaims();
+  const authDuration = Math.round(performance.now() - authStart);
   const params = await searchParams;
   const isVerifiedUser = !error && typeof data?.claims?.sub === "string" && !!data.claims.sub;
 
   if (!isVerifiedUser) {
-    const preview = await GuestPreview();
+    if (process.env.VERCEL === "1") {
+      console.info("guest_home_auth_ms", authDuration);
+    }
     return (
       <main className="mx-auto flex w-full max-w-2xl flex-col gap-8 px-4 py-8 sm:py-12">
         <div className="flex flex-col items-center gap-5 text-center">
@@ -57,31 +62,33 @@ export default async function Home({
           </div>
         </div>
         {params.error === "callback" && <CallbackError />}
-        <section className="flex flex-col gap-4" aria-labelledby="preview-heading">
-          <div className="flex flex-col gap-2">
-            <h1 id="preview-heading" className="text-2xl font-semibold tracking-tight">
-              Latest picks
-            </h1>
-            <p className="text-sm text-muted-foreground">
-              A preview from our sources. Sign in to get recommendations based on your interests.
-            </p>
+        <Suspense fallback={null}>
+          <section className="flex flex-col gap-4" aria-labelledby="preview-heading">
+            <div className="flex flex-col gap-2">
+              <h1 id="preview-heading" className="text-2xl font-semibold tracking-tight">
+                Latest picks
+              </h1>
+              <p className="text-sm text-muted-foreground">
+                A preview from our sources. Sign in to get recommendations based on your interests.
+              </p>
+            </div>
+            <GuestPreview />
+          </section>
+          <div className="flex flex-col items-center gap-4 pb-4 text-center">
+            <p className="text-sm text-muted-foreground">Make your next picks personal.</p>
+            <div className="w-full max-w-72">
+              <SignInButton />
+            </div>
+            <div className="flex items-center gap-4 text-sm text-muted-foreground">
+              <Link href="/privacy" className="underline underline-offset-4">
+                Privacy policy
+              </Link>
+              <a href="https://github.com/jonime/poimio" className="underline underline-offset-4">
+                GitHub
+              </a>
+            </div>
           </div>
-          {preview}
-        </section>
-        <div className="flex flex-col items-center gap-4 pb-4 text-center">
-          <p className="text-sm text-muted-foreground">Make your next picks personal.</p>
-          <div className="w-full max-w-72">
-            <SignInButton />
-          </div>
-          <div className="flex items-center gap-4 text-sm text-muted-foreground">
-            <Link href="/privacy" className="underline underline-offset-4">
-              Privacy policy
-            </Link>
-            <a href="https://github.com/jonime/poimio" className="underline underline-offset-4">
-              GitHub
-            </a>
-          </div>
-        </div>
+        </Suspense>
         {isLocalPasswordLoginEnabled() && <LocalSignInDialog />}
       </main>
     );

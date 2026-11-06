@@ -107,7 +107,7 @@ database access limit. This is acceptable for intentionally public metadata.
 - Use existing safe-URL validation before selection: discard unsafe item URLs
   and turn unsafe thumbnail URLs into null. Render fewer cards when necessary.
   Do not read feedback or embeddings, call `get_feed`, or invoke an LLM.
-- Cache the reader/rendered preview using `use cache` and
+- Cache the anonymous reader using `use cache: remote` on Vercel and
   `cacheLife({ stale: 300, revalidate: 1800, expire: 86400 })`. New ingestion
   becomes visible on subsequent cache revalidation without a publishing step.
 - Capture the preview render time inside the cached scope for consistent
@@ -117,7 +117,7 @@ database access limit. This is acceptable for intentionally public metadata.
   **Preview temporarily unavailable. Sign in to open your feed.** Keep sign-in
   usable. Do not fall back to privileged credentials or personalized queries.
 - Shared caching reduces database queries; it does not guarantee one global
-  query per interval. Cold instances, cache expiry, and deployments can fetch
+  query per interval. Cache eviction, expiry, and deployments can trigger reads
   again. Auth/proxy work and page/asset delivery can remain request-specific.
   Do not cache the whole identity-dependent home response publicly.
 
@@ -189,6 +189,13 @@ require `pnpm test:integration` against local Supabase with zero skipped.
      user's personalized data to another visitor. Verify caching via the
      preview query/cache behavior, not whole-page headers alone. Document
      rollout and review the diff; the human commits.
+- [ ] 6. Share the anonymous preview data through Vercel Runtime Cache and
+     stream the guest sign-in header independently of the preview. Preserve
+     verified auth, the existing cache lifetime, and the anonymous data
+     boundary. Record auth, preview load, and upstream read durations in
+     Vercel logs without user or content data. Pass lint, typecheck, tests,
+     and build. After deployment, compare time to first guest card against
+     the production baseline and verify that a warm preview skips the reader.
 
 ## Rollout and rollback
 

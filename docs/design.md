@@ -315,6 +315,8 @@ The feed is a single column of compact cards, responsive for phone and desktop. 
 - Rated items (any action) do not return in the feed. A _Liked_ page lists liked items.
 - _Seen_ is a button only, so that swipe-left keeps a single meaning.
 
+The Liked page searches the titles, full summaries, and source names of items already loaded by the page. It trims the query and matches it as a case-insensitive substring in any one field, preserving accents, punctuation, and newest-liked-first order. The result count is relative to the loaded list, which can be smaller than the user's full liked history. The query stays active when the mounted list refreshes after Unlike and starts empty on a new mount.
+
 ### 7.2 Gesture safeguards
 
 Swipe-to-dismiss is a common habit (e.g. in email), so a left swipe meaning "already seen" could be recorded as _Not interested_. Safeguards:

@@ -3,7 +3,7 @@
 import { CircleAlertIcon, HeartIcon, HeartOffIcon } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
-import { useState } from "react";
+import { useId, useState } from "react";
 import { clearFeedback } from "@/app/feedback/actions";
 import { Alert, AlertTitle } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
@@ -16,7 +16,16 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { Empty, EmptyContent, EmptyHeader, EmptyMedia, EmptyTitle } from "@/components/ui/empty";
+import {
+  Empty,
+  EmptyContent,
+  EmptyDescription,
+  EmptyHeader,
+  EmptyMedia,
+  EmptyTitle,
+} from "@/components/ui/empty";
+import { Field, FieldGroup, FieldLabel } from "@/components/ui/field";
+import { Input } from "@/components/ui/input";
 import { Spinner } from "@/components/ui/spinner";
 import { formatRelativeTime, type LikedFeedItem, safeHttpUrl } from "@/lib/feed-ui";
 import { cn } from "@/lib/utils";
@@ -30,6 +39,8 @@ export default function LikedList({
 }) {
   const [pendingId, setPendingId] = useState<string | null>(null);
   const [error, setError] = useState(false);
+  const [query, setQuery] = useState("");
+  const searchId = useId();
 
   async function unlike(itemId: string) {
     if (pendingId) return;
@@ -62,6 +73,15 @@ export default function LikedList({
     );
   }
 
+  const normalizedQuery = query.trim().toLowerCase();
+  const matchingItems = normalizedQuery
+    ? items.filter((item) =>
+        [item.title, item.summary ?? "", item.source_name].some((field) =>
+          field.toLowerCase().includes(normalizedQuery),
+        ),
+      )
+    : items;
+
   return (
     <>
       {error && (
@@ -70,8 +90,33 @@ export default function LikedList({
           <AlertTitle>Could not remove this like. Please try again.</AlertTitle>
         </Alert>
       )}
+      <div className="flex flex-col items-start gap-2">
+        <FieldGroup>
+          <Field>
+            <FieldLabel htmlFor={searchId}>Search liked items</FieldLabel>
+            <Input
+              id={searchId}
+              type="search"
+              placeholder="Search titles, summaries, or sources"
+              value={query}
+              onChange={(event) => setQuery(event.currentTarget.value)}
+            />
+          </Field>
+        </FieldGroup>
+        <p role="status" className="text-sm text-muted-foreground">
+          Showing {matchingItems.length} of {items.length} loaded liked items
+        </p>
+      </div>
       <div className="flex flex-col gap-4">
-        {items.map((item) => {
+        {matchingItems.length === 0 && (
+          <Empty className="border">
+            <EmptyHeader>
+              <EmptyTitle>No matching liked items.</EmptyTitle>
+              <EmptyDescription>Try another search or clear it.</EmptyDescription>
+            </EmptyHeader>
+          </Empty>
+        )}
+        {matchingItems.map((item) => {
           const itemUrl = safeHttpUrl(item.url);
           const thumbnailUrl = safeHttpUrl(item.thumbnail_url);
           return (

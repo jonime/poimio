@@ -1,6 +1,6 @@
 # 013 — Search liked items
 
-**Status:** Approved  
+**Status:** Done
 **Milestone:** Final (small enhancement)  
 **Depends on:** 003 (liked page)  
 **Estimate:** 1–2 h
@@ -19,7 +19,7 @@ Help users find an article or video they previously liked by searching the Liked
 ## In scope
 
 - Instant client-side search over the loaded liked items' titles, full summaries, and source names.
-- A labeled search field, result count, clear button, and no-match state.
+- A labeled search field, result count, and no-match state.
 - Regression coverage for search together with refreshed server items and Unlike.
 
 ## Out of scope
@@ -40,7 +40,7 @@ Help users find an article or video they previously liked by searching the Liked
 **Controls and states**
 
 - When there are loaded items, show a visible “Search liked items” label and `type="search"` input above the cards. Placeholder: “Search titles, summaries, or sources”. Do not autofocus.
-- Compose existing shadcn `FieldGroup`, `Field`, `FieldLabel`, and `Input`. Place an existing `Button` labeled “Clear search” below the field, without positioning it inside the input; show it whenever the raw query is nonempty. Clearing empties the query and returns focus to the input.
+- Compose existing shadcn `FieldGroup`, `Field`, `FieldLabel`, and `Input`. Users clear the query in the search field itself so the controls keep the same height while typing.
 - Show “Showing X of Y loaded liked items” below the controls, using a polite status region. X is the match count and Y is the current `items.length`.
 - For zero matches with a nonempty loaded list, retain the controls/count and show the existing `Empty` composition with “No matching liked items.” and “Try another search or clear it.”
 - When `items` itself is empty, show the existing “No liked items yet.” state and Browse your feed link, without search controls. This also applies after removing the last like.
@@ -50,15 +50,15 @@ Help users find an article or video they previously liked by searching the Liked
 ## Acceptance criteria
 
 1. Typing filters immediately by title, full summary (including text beyond the visible clamp), or source name. Matching is case-insensitive, trims query edges, handles null summaries, and treats punctuation literally. Blank queries restore all loaded items in their original order.
-2. The input has an associated visible label. Clear search works by keyboard, restores the full list, and returns focus to the input. The count updates correctly and is exposed as a polite status message.
+2. The input has an associated visible label. Clearing the input with the keyboard restores the full list. The count updates correctly and is exposed as a polite status message.
 3. Zero matches show the search-specific empty state while keeping controls available. Zero loaded likes show only the existing empty-list experience. The layout has no horizontal overflow at 375px.
 4. With an active query, rerendering a mounted list with fresh server items preserves the query and updates results/count, including transitions to zero matches and zero likes. Unlike still targets the correct item; failed Unlike keeps the matching item and shows the existing error.
 5. Existing liked-page freshness tests and the new interaction tests pass. `pnpm lint`, `pnpm typecheck`, and `pnpm test` pass. No new integration tests are required because data access and security boundaries do not change.
 
 ## Tasks
 
-- [ ] 1. Implement the search controls, matching, count, and empty states in `LikedList`; extend its existing component tests for criteria 1–4 and run the checks in criterion 5.
-- [ ] 2. Verify keyboard use and the 375px layout; document the loaded-list search behavior in design.md §7 and record the implementation in docs/ai-log.md after confirming the exact model with the user. Run lint, typecheck, and test before marking the task complete.
+- [x] 1. Implement the search controls, matching, count, and empty states in `LikedList`; extend its existing component tests for criteria 1–4 and run the checks in criterion 5.
+- [x] 2. Verify keyboard use and the 375px layout; document the loaded-list search behavior in design.md §7 and record the implementation in docs/ai-log.md after confirming the exact model with the user. Run lint, typecheck, and test before marking the task complete.
 
 ## Decisions
 

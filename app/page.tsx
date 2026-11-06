@@ -8,6 +8,7 @@ import { Alert, AlertTitle } from "@/components/ui/alert";
 import { displayNameFromClaims } from "@/lib/app-access";
 import type { FeedItem } from "@/lib/feed-ui";
 import { homeDescription, homeTitle, productTerm, siteUrl } from "@/lib/public-home";
+import { operatorName, privacyEmail } from "@/lib/public-operator";
 import { isLocalPasswordLoginEnabled } from "@/lib/supabase/local-password-login";
 import { createClient } from "@/lib/supabase/server";
 import FeedList from "./feed/feed-list";
@@ -22,6 +23,22 @@ export const metadata: Metadata = {
   title: homeTitle,
   description: homeDescription,
   alternates: { canonical: siteUrl },
+  openGraph: {
+    type: "website",
+    url: siteUrl,
+    title: homeTitle,
+    description: homeDescription,
+    siteName: "Poimio",
+    images: [
+      {
+        url: `${siteUrl}full.png`,
+        type: "image/png",
+        width: 2172,
+        height: 724,
+        alt: "Poimio wordmark",
+      },
+    ],
+  },
 };
 
 const application = {
@@ -34,6 +51,17 @@ const application = {
   applicationCategory: "LifestyleApplication",
   operatingSystem: "Web",
   sameAs: "https://github.com/jonime/poimio",
+  publisher: {
+    "@type": "Person",
+    name: operatorName,
+    url: `${siteUrl}about`,
+    contactPoint: {
+      "@type": "ContactPoint",
+      contactType: "privacy",
+      email: privacyEmail,
+      url: `${siteUrl}contact`,
+    },
+  },
 };
 
 function CallbackError() {
@@ -79,7 +107,9 @@ export default async function Home({
             priority
             className="h-auto w-44"
           />
-          <h1 className="text-2xl font-semibold tracking-tight sm:text-3xl">Your {productTerm}</h1>
+          <h1 className="text-2xl font-semibold tracking-tight sm:text-3xl">
+            Poimio, your {productTerm}
+          </h1>
           <div className="w-full max-w-72">
             <SignInButton />
           </div>
@@ -102,7 +132,13 @@ export default async function Home({
             <div className="w-full max-w-72">
               <SignInButton />
             </div>
-            <div className="flex items-center gap-4 text-sm text-muted-foreground">
+            <div className="flex flex-wrap items-center justify-center gap-4 text-sm text-muted-foreground">
+              <Link href="/about" className="underline underline-offset-4">
+                About
+              </Link>
+              <Link href="/contact" className="underline underline-offset-4">
+                Contact
+              </Link>
               <Link href="/privacy" className="underline underline-offset-4">
                 Privacy policy
               </Link>

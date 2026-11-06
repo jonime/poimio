@@ -10,5 +10,7 @@ Poimio is a ${productTerm}. ${homeDescription}
 
 - [Guest preview](${siteUrl}) — request HTML to browse recent picks and open their original sources.
 - [Agent guidance](${siteUrl}llms.txt)
+- [About Poimio](${siteUrl}about)
+- [Contact](${siteUrl}contact)
 - [Privacy policy](${siteUrl}privacy)
 `;

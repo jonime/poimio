@@ -37,6 +37,8 @@ describe("public HTTP representations", () => {
     if (method === "GET") {
       expect(body).toContain("# Poimio");
       expect(body).toContain("https://www.poimio.cc/llms.txt");
+      expect(body).toContain("https://www.poimio.cc/about");
+      expect(body).toContain("https://www.poimio.cc/contact");
     } else {
       expect(body).toBe("");
     }
@@ -91,5 +93,7 @@ describe("public HTTP representations", () => {
     expect(useCases).toContain("Accept: text/markdown");
     expect(useCases).toContain("Accept: text/html");
     expect(useCases).toContain("sign in with Google");
+    expect(file).toContain("[About Poimio](https://www.poimio.cc/about)");
+    expect(file).toContain("[Contact](https://www.poimio.cc/contact)");
   });
 });

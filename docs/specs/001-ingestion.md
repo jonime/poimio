@@ -5,6 +5,8 @@
 **Depends on:** —  
 **Estimate:** 21 h
 
+Follow-up: [spec 016](016-vercel-scheduled-ingestion.md) proposes moving hourly ingestion to Vercel Schedules.
+
 ## Goal
 
 Fetch the active feeds, normalize and deduplicate their items, embed them, and store them in Supabase, so that the feed and recommender have content to work with. Also verify early that the embedding model handles Finnish and English well and that nearest-liked ranking is promising (gate 1).

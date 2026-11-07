@@ -17,13 +17,7 @@
 
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
-import {
-  type BackfillDb,
-  createIngestDb,
-  type IngestDb,
-  recordSourceOutcome,
-  type Source,
-} from "./db";
+import { createIngestDb, recordSourceOutcome, type Source } from "./db";
 import type { ParsedItem } from "./normalize/parse";
 
 const enabled = process.env.SUPABASE_INTEGRATION === "1";
@@ -35,7 +29,7 @@ describe.skipIf(!enabled || serviceKey == null)("IngestDb against a real databas
   // even when the suite is skipped, and `createClient` throws on a null
   // key. `null` only happens in that skipped case, where no test runs.
   const client: SupabaseClient | null = serviceKey ? createClient(url, serviceKey) : null;
-  const db: (IngestDb & BackfillDb) | null =
+  const db =
     client != null && serviceKey !== undefined
       ? createIngestDb({
           NEXT_PUBLIC_SUPABASE_URL: url,
@@ -44,12 +38,59 @@ describe.skipIf(!enabled || serviceKey == null)("IngestDb against a real databas
       : null;
 
   /** Narrows the nullable handles; tests only run when ready. */
-  function ready(): { client: SupabaseClient; db: IngestDb & BackfillDb } {
+  function ready(): { client: SupabaseClient; db: ReturnType<typeof createIngestDb> } {
     if (client == null || db == null) {
       throw new Error("integration environment not ready");
     }
     return { client, db };
   }
+
+  it("only grants one scheduled ingestion lease and ignores release by another run", async () => {
+    const { db } = ready();
+    const first = crypto.randomUUID();
+    const second = crypto.randomUUID();
+    const results = await Promise.all([
+      db.claimScheduledIngestion(first),
+      db.claimScheduledIngestion(second),
+    ]);
+    const [holder, other] = results[0] ? [first, second] : [second, first];
+    try {
+      expect(results.filter(Boolean)).toHaveLength(1);
+      await db.releaseScheduledIngestion(other);
+      expect(await db.claimScheduledIngestion(other)).toBe(false);
+      await db.releaseScheduledIngestion(holder);
+      expect(await db.claimScheduledIngestion(other)).toBe(true);
+    } finally {
+      await db.releaseScheduledIngestion(holder);
+      await db.releaseScheduledIngestion(other);
+    }
+  });
+
+  it("reclaims an expired lease and denies public access to the lease", async () => {
+    const { client, db } = ready();
+    const expired = crypto.randomUUID();
+    const replacement = crypto.randomUUID();
+    const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+    if (!anonKey) throw new Error("Local Supabase anon key is required");
+    const anonymous = createClient(url, anonKey);
+    const { error: expiredError } = await client
+      .from("scheduled_ingestion_lease")
+      .update({ lease_id: expired, expires_at: new Date(0).toISOString() })
+      .eq("singleton", true);
+    expect(expiredError).toBeNull();
+    try {
+      expect((await anonymous.from("scheduled_ingestion_lease").select()).error).toBeTruthy();
+      expect(
+        (await anonymous.rpc("claim_scheduled_ingestion", { lease_id: replacement })).error,
+      ).toBeTruthy();
+      expect(await db.claimScheduledIngestion(replacement)).toBe(true);
+      await db.releaseScheduledIngestion(expired);
+      expect(await db.claimScheduledIngestion(expired)).toBe(false);
+    } finally {
+      await db.releaseScheduledIngestion(expired);
+      await db.releaseScheduledIngestion(replacement);
+    }
+  });
 
   /** Unique per run, so the tests never collide with real content. */
   const prefix = `https://poimio-integration.example/${Date.now()}`;

@@ -3,6 +3,13 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Button } from "@/components/ui/button";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuGroup,
+  DropdownMenuLinkItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 const navItems = [
   { href: "/", label: "Feed" },
@@ -27,6 +34,25 @@ export function AppNav() {
           </Button>
         );
       })}
+      <DropdownMenu modal={false}>
+        <DropdownMenuTrigger render={<Button variant="ghost" />}>More</DropdownMenuTrigger>
+        <DropdownMenuContent>
+          <DropdownMenuGroup>
+            <DropdownMenuLinkItem render={<Link href="/about" />} closeOnClick>
+              About
+            </DropdownMenuLinkItem>
+            <DropdownMenuLinkItem render={<Link href="/contact" />} closeOnClick>
+              Contact
+            </DropdownMenuLinkItem>
+            <DropdownMenuLinkItem render={<Link href="/privacy" />} closeOnClick>
+              Privacy policy
+            </DropdownMenuLinkItem>
+            <DropdownMenuLinkItem href="https://github.com/jonime/poimio" closeOnClick>
+              GitHub
+            </DropdownMenuLinkItem>
+          </DropdownMenuGroup>
+        </DropdownMenuContent>
+      </DropdownMenu>
     </nav>
   );
 }

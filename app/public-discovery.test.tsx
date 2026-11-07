@@ -1,10 +1,16 @@
 import { renderToStaticMarkup } from "react-dom/server";
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import AboutPage, { metadata as aboutMetadata } from "./about/page";
 import ContactPage, { metadata as contactMetadata } from "./contact/page";
 import PrivacyPage, { metadata as privacyMetadata } from "./privacy/page";
 import robots from "./robots";
 import sitemap from "./sitemap";
+
+vi.mock("@/lib/supabase/server", () => ({
+  createClient: async () => ({
+    auth: { getClaims: async () => ({ data: null, error: null }) },
+  }),
+}));
 
 describe("public trust pages and crawler metadata", () => {
   it.each([

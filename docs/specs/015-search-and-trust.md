@@ -12,6 +12,8 @@ Follow-up to [spec 014](014-agent-readiness.md) after the live Ora audit reached
 - [x] 4. Supply Open Graph website metadata and an absolute URL to the existing branded PNG. Preserve the canonical link and English document language.
 - [x] 5. Publish linked About and Contact pages using the Privacy page's visual layout. Each trust page has at least 500 characters of meaningful visible content and works without sign-in. Link them from the HTML and Markdown homepages and the agent guide.
 - [x] 6. Run lint, typecheck, tests, a production build, and local HTTP checks of all affected routes and machine-readable content.
+- [x] 7. Add a More menu to the shared signed-in header on Feed and Liked. Link to About, Contact, Privacy policy, and GitHub. Verify keyboard access, narrow-screen layout, and all four destinations. Run lint, typecheck, and tests.
+- [x] 8. Give About, Contact, and Privacy policy a shared layout with the app header for signed-in users and a Poimio logo and Home link for guests. Remove the Back to Poimio footer. Verify both views on all three public URLs and run lint, typecheck, and tests.
 
 ## Release verification
 

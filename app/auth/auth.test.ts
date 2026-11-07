@@ -85,13 +85,15 @@ describe("signed-in page", () => {
     expect(GuestPreview).not.toHaveBeenCalled();
   });
 
-  it("shows only the first name, navigation, and sign-out in the shared header", () => {
+  it("shows the first name, navigation, More menu, and sign-out in the shared header", () => {
     const html = renderToStaticMarkup(createElement(AppHeader, { displayName: "Joni Mertoniemi" }));
     expect(html).toContain(">Joni</span>");
     expect(html).not.toContain("Mertoniemi");
     expect(html).not.toContain("user-a@example.com");
     expect(html).toContain("Sign out");
     expect(html).toContain("Liked");
+    expect(html).toContain('aria-haspopup="menu"');
+    expect(html).toContain(">More</button>");
     expect(html).toContain('aria-current="page"');
   });
 
@@ -320,8 +322,11 @@ describe("guest home", () => {
 });
 
 describe("privacy page", () => {
-  it("renders the policy and contact without loading user data", () => {
-    const html = renderToStaticMarkup(createElement(PrivacyPage));
+  it("renders the policy and contact with a Home link for guests", async () => {
+    auth.getClaims.mockResolvedValueOnce({ data: null, error: null });
+    const stream = await renderToReadableStream(createElement(PrivacyPage));
+    await stream.allReady;
+    const html = await new Response(stream).text();
     expect(privacyMetadata.title).toBe("Privacy Policy | Poimio");
     expect(html).toContain("Privacy Policy");
     expect(html).toContain("Joni Mertoniemi");
@@ -331,8 +336,20 @@ describe("privacy page", () => {
     expect(html).toContain("Supabase");
     expect(html).toContain("Vercel");
     expect(html).toContain('href="/"');
-    expect(createClient).not.toHaveBeenCalled();
-    expect(auth.getClaims).not.toHaveBeenCalled();
+    expect(html).toContain(">Home</a>");
+    expect(html).not.toContain("Sign out");
+    expect(html).not.toContain("Back to Poimio");
+    expect(auth.getClaims).toHaveBeenCalledExactlyOnceWith();
+    expect(rpc).not.toHaveBeenCalled();
+  });
+
+  it("renders the app header with a verified session", async () => {
+    const stream = await renderToReadableStream(createElement(PrivacyPage));
+    await stream.allReady;
+    const html = await new Response(stream).text();
+    expect(html).toContain(">More</button>");
+    expect(html).toContain("Sign out");
+    expect(html).not.toContain("Back to Poimio");
   });
 });
 

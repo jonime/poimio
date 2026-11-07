@@ -208,7 +208,7 @@ describe("session refresh proxy", () => {
     expect(response.headers.get("cache-control")).toBe("private, no-store");
   });
 
-  it.each(["/", "/login", "/privacy", "/auth/callback", "/liked"])(
+  it.each(["/", "/login", "/about", "/contact", "/privacy", "/auth/callback", "/liked"])(
     "refreshes sessions on application route %s",
     (url) => {
       expect(unstable_doesMiddlewareMatch({ config, url })).toBe(true);
@@ -223,8 +223,6 @@ describe("session refresh proxy", () => {
     "/llms.txt",
     "/sitemap.xml",
     "/robots.txt",
-    "/about",
-    "/contact",
     "/api/example",
     "/privacy/private",
     "/privacy-settings",

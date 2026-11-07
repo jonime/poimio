@@ -1,6 +1,6 @@
 # 015 — Search discovery and trust pages
 
-**Status:** Implemented and verified locally
+**Status:** Done
 
 Follow-up to [spec 014](014-agent-readiness.md) after the live Ora audit reached 94/100. Use the existing canonical www hostname and the existing public access boundary.
 
@@ -16,4 +16,4 @@ Follow-up to [spec 014](014-agent-readiness.md) after the live Ora audit reached
 ## Release verification
 
 - [x] Verify the live audit result. Poimio scored **100/100** on 6 November 2026. [Is Agentic scan](https://is-agentic.com/scan/poimio.cc)
-- [ ] Submit the canonical sitemap with verified Search Console access and inspect homepage indexing.
+- [x] Submit the canonical sitemap with verified Search Console access and inspect homepage indexing.

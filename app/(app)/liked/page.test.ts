@@ -1,5 +1,6 @@
 import { renderToReadableStream } from "react-dom/server";
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import AppLayout from "../layout";
 import LikedPage from "./page";
 
 const { auth, createClient, from, select, eq, order } = vi.hoisted(() => ({
@@ -13,6 +14,7 @@ const { auth, createClient, from, select, eq, order } = vi.hoisted(() => ({
 
 vi.mock("@/lib/supabase/server", () => ({ createClient }));
 vi.mock("next/navigation", () => ({
+  usePathname: () => "/liked",
   redirect: (destination: string): never => {
     throw new Error(`REDIRECT:${destination}`);
   },
@@ -109,18 +111,25 @@ describe("liked page", () => {
     expect(html).toContain("Unlike");
   });
 
-  it("streams the heading while the verified user's likes are loading", async () => {
+  it("renders the shared navigation and heading while the verified user's likes are loading", async () => {
     let resolveLikes: (result: { data: []; error: null }) => void = () => {};
     order.mockReturnValueOnce(
       new Promise((resolve) => {
         resolveLikes = resolve;
       }),
     );
-    const stream = await renderToReadableStream(await LikedPage());
+    const stream = await renderToReadableStream(AppLayout({ children: LikedPage() }));
     const reader = stream.getReader();
     try {
-      const firstChunk = await reader.read();
-      const shell = new TextDecoder().decode(firstChunk.value);
+      const decoder = new TextDecoder();
+      let shell = "";
+      while (!shell.includes("Sign out") || !shell.includes("Loading liked items...")) {
+        const chunk = await reader.read();
+        if (chunk.done) break;
+        shell += decoder.decode(chunk.value, { stream: true });
+      }
+      expect(shell).toContain("Sign out");
+      expect(shell).toContain('aria-current="page"');
       expect(shell).toContain("Liked items");
       expect(shell).toContain("Loading liked items...");
       expect(auth.getClaims).toHaveBeenCalledBefore(from);

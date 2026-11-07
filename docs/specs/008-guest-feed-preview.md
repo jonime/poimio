@@ -123,14 +123,13 @@ database access limit. This is acceptable for intentionally public metadata.
 
 ### One home route and UI
 
-- Move the home route out of `(app)` into `app/page.tsx`, removing the old home
-  route so only one page resolves to `/`. Verify identity using `getClaims()`:
-  guests see sign-in plus preview; verified users see the existing personalized
-  feed, refresh button, and authenticated app header.
-- Keep the protected layout for `/liked` and other private pages. Share current
-  header/display-name handling with the authenticated home branch. Only query
-  `get_feed` after identity verification. Every action/handler still verifies
-  its own caller regardless of public root routing.
+- Keep a single public home route at `/`. Verify identity using `getClaims()`:
+  guests see sign-in plus preview; verified users see the personalized feed,
+  refresh button, and authenticated app header.
+- Feed and Liked share a header layout under [spec 003](003-feed-ui.md), task 13.
+  The proxy still redirects guests from `/liked`, and the liked-data component
+  verifies identity before querying. Only query `get_feed` after identity
+  verification. Every action and handler still verifies its own caller.
 - Make the exact `/` pathname public in the proxy. Redirect anonymous private
   page requests to `/`. Keep `/login` as a redirect only for old links,
   preserving only recognized `error=callback`; remove its standalone page UI.

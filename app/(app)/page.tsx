@@ -3,20 +3,19 @@ import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
 import { Suspense } from "react";
-import { AppHeader } from "@/components/app-header";
 import { Alert, AlertTitle } from "@/components/ui/alert";
 import { Skeleton } from "@/components/ui/skeleton";
-import { displayNameFromClaims } from "@/lib/app-access";
 import type { FeedItem } from "@/lib/feed-ui";
 import { homeDescription, homeTitle, productTerm, siteUrl } from "@/lib/public-home";
 import { operatorName, privacyEmail } from "@/lib/public-operator";
 import { isLocalPasswordLoginEnabled } from "@/lib/supabase/local-password-login";
 import { createClient } from "@/lib/supabase/server";
-import FeedList from "./feed/feed-list";
-import { GuestPreview } from "./feed/guest-preview";
-import { RefreshFeedButton } from "./feed/refresh-feed-button";
-import { LocalSignInDialog } from "./login/local-sign-in-dialog";
-import { SignInButton } from "./login/sign-in-button";
+import FeedList from "../feed/feed-list";
+import { GuestPreview } from "../feed/guest-preview";
+import { RefreshFeedButton } from "../feed/refresh-feed-button";
+import { LocalSignInDialog } from "../login/local-sign-in-dialog";
+import { SignInButton } from "../login/sign-in-button";
+import HomeLoading from "./home-loading";
 
 export const instant = true;
 
@@ -74,7 +73,15 @@ function CallbackError() {
   );
 }
 
-export default async function Home({
+export default function Home(props: { searchParams: Promise<{ error?: string | string[] }> }) {
+  return (
+    <Suspense fallback={<HomeLoading />}>
+      <HomeContent {...props} />
+    </Suspense>
+  );
+}
+
+async function HomeContent({
   searchParams,
 }: {
   searchParams: Promise<{ error?: string | string[] }>;
@@ -155,39 +162,36 @@ export default async function Home({
   }
 
   return (
-    <>
-      <AppHeader displayName={displayNameFromClaims(data?.claims) ?? null} />
-      <main className="mx-auto flex w-full max-w-2xl flex-col gap-6 px-4 py-6">
-        {params.error === "callback" && <CallbackError />}
-        {params.error === "sign-out" && (
-          <Alert variant="destructive">
-            <CircleAlertIcon aria-hidden="true" />
-            <AlertTitle>Sign-out failed. Please try again.</AlertTitle>
-          </Alert>
-        )}
-        <section className="flex flex-col gap-4" aria-labelledby="feed-heading">
-          <div className="flex items-center justify-between gap-4">
-            <h1 id="feed-heading" className="text-2xl font-semibold tracking-tight">
-              Your feed
-            </h1>
-            <RefreshFeedButton />
-          </div>
-          <Suspense
-            fallback={
-              <div className="flex flex-col gap-4" aria-busy="true">
-                <p role="status" className="sr-only">
-                  Loading your feed...
-                </p>
-                <Skeleton className="h-48 w-full" />
-                <Skeleton className="h-48 w-full" />
-              </div>
-            }
-          >
-            <PersonalFeed supabase={supabase} />
-          </Suspense>
-        </section>
-      </main>
-    </>
+    <main className="mx-auto flex w-full max-w-2xl flex-col gap-6 px-4 py-6">
+      {params.error === "callback" && <CallbackError />}
+      {params.error === "sign-out" && (
+        <Alert variant="destructive">
+          <CircleAlertIcon aria-hidden="true" />
+          <AlertTitle>Sign-out failed. Please try again.</AlertTitle>
+        </Alert>
+      )}
+      <section className="flex flex-col gap-4" aria-labelledby="feed-heading">
+        <div className="flex items-center justify-between gap-4">
+          <h1 id="feed-heading" className="text-2xl font-semibold tracking-tight">
+            Your feed
+          </h1>
+          <RefreshFeedButton />
+        </div>
+        <Suspense
+          fallback={
+            <div className="flex flex-col gap-4" aria-busy="true">
+              <p role="status" className="sr-only">
+                Loading your feed...
+              </p>
+              <Skeleton className="h-48 w-full" />
+              <Skeleton className="h-48 w-full" />
+            </div>
+          }
+        >
+          <PersonalFeed supabase={supabase} />
+        </Suspense>
+      </section>
+    </main>
   );
 }
 

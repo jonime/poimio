@@ -1,3 +1,4 @@
+import { SpeedInsights } from "@vercel/speed-insights/next";
 import type { Metadata } from "next";
 import { Geist } from "next/font/google";
 import type { ReactNode } from "react";
@@ -21,6 +22,7 @@ export default function RootLayout({ children }: { children: ReactNode }) {
     <html lang="en" className={cn("font-sans", geist.variable)}>
       <body className="min-h-svh bg-muted antialiased">
         <Toaster>{children}</Toaster>
+        <SpeedInsights />
       </body>
     </html>
   );

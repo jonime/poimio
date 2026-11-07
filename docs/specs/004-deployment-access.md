@@ -229,3 +229,23 @@ for this database-free change. All 87 focused auth/proxy tests passed. Browser
 checks at 1280px and 375px confirmed the page title, loaded branding, no horizontal
 overflow, and working login/privacy navigation. Policy wording remains subject
 to human review before publication; Google OAuth configuration was not changed.
+
+## Amendment: Vercel Speed Insights (7 Nov 2026)
+
+### Acceptance criteria
+
+- The Next.js root layout includes the approved `@vercel/speed-insights` SDK.
+- The public privacy policy describes the browser performance data sent to Vercel.
+- `pnpm lint`, `pnpm typecheck`, and `pnpm test` pass.
+
+### Tasks
+
+- [x] 13. Integrate the Speed Insights SDK and update the privacy policy.
+
+Task 13 validation: lint, typecheck, all 384 unit tests, and `pnpm build --webpack`
+passed. The default Turbopack build could not bind a local worker port in the
+sandbox.
+
+Enable Speed Insights in the Poimio Vercel dashboard before the next production
+deployment. After deployment, open Poimio and verify that the Speed Insights
+dashboard receives performance measurements.

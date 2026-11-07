@@ -10,6 +10,9 @@ The original implementation below is historical; the amendment at the end of
 this spec supersedes its allowlist requirements. Authentication and owner-only
 RLS remain mandatory.
 
+**Deployment update (7 Nov 2026):** The Production CI gate amendment supersedes
+the original build trigger and promotion workflow below.
+
 ## Goal
 
 Make the application available on the internet (Vercel + hosted Supabase) for invited users only, with automated tests — including the security integration tests — gating every production deployment.
@@ -261,3 +264,12 @@ shell step passed only for two successful jobs across all 16 result pairs.
 `actionlint` passed with the existing Supabase `background` and `wait` diagnostics
 excluded. Verify the check on the first `main` run and select it in Vercel before
 switching away from the current deployment and promotion jobs.
+
+- [x] 15. Enable Vercel Git deployments for `main` only and remove the GitHub
+  Actions build and promotion jobs after the required check is configured.
+
+The project owner confirmed adding **Production CI gate** in Vercel. Vercel
+builds pushes to `main` and promotes after the build succeeds and the required
+check passes. The GitHub jobs still run the unit and local Supabase integration
+tests, and non-production CI runs still build the app. Verify automatic promotion
+on the first Git-triggered production deployment.

@@ -177,18 +177,17 @@ In the hosted Supabase Dashboard, verify the project before changing settings:
 
 ### Vercel and GitHub Actions
 
-Configure only these public variables in the Vercel production environment:
+Configure these public variables in the Vercel production environment:
 
 - `NEXT_PUBLIC_SUPABASE_URL`
 - `NEXT_PUBLIC_SUPABASE_ANON_KEY`
 
-Do not configure `SUPABASE_SERVICE_ROLE_KEY` or `OPENAI_API_KEY` in Vercel. Disable Vercel Git deployments and preview deployments. On pushes to `main`, GitHub Actions starts a remote Vercel production build in parallel with checks and database integration tests, using `--skip-domain` to keep the current production domain unchanged. Only after all three jobs pass does Actions promote that exact deployment, without rebuilding. Other pushes and pull requests keep the local CI build. Superseded workflow runs are canceled, and promotion skips commits that are no longer the head of `main`. Enable deployment protection for staged deployment URLs, which exist before promotion and use production settings.
+Scope the scheduled ingestion credentials to server-side Production use as described in [spec 016](docs/specs/016-vercel-scheduled-ingestion.md).
 
-Add these repository secrets in GitHub Actions; names only are shown here:
+Link the Vercel project to this GitHub repository, track `main` in the Production environment, and enable automatic production domain assignment. Under Deployment Checks, require the GitHub check **Production CI gate**. Each push to `main` starts a Vercel production build and runs GitHub Actions in parallel. Vercel assigns the production domains after the build is ready and both CI jobs have passed for that commit. Git deployments are limited to `main`, and other pushes and pull requests that run CI keep the local build check. Protect deployment URLs that are reachable before production promotion. [Vercel Deployment Checks](https://vercel.com/docs/deployment-checks#github-checks)
 
-- `VERCEL_TOKEN`
-- `VERCEL_ORG_ID`
-- `VERCEL_PROJECT_ID`
+The manual GitHub Actions ingestion fallback uses these repository secrets:
+
 - `NEXT_PUBLIC_SUPABASE_URL` (scheduled ingestion)
 - `SUPABASE_SERVICE_ROLE_KEY` (scheduled ingestion)
 - `OPENAI_API_KEY` (scheduled ingestion)
@@ -197,4 +196,4 @@ Add these repository secrets in GitHub Actions; names only are shown here:
 
 The Supabase GitHub integration applies migrations on pushes to `main`, independently of the application deployment. Before pushing a migration, run `supabase db reset` and `pnpm test:integration` locally; integration tests must pass with zero skipped. Keep migrations backward-compatible with the deployed application. Never edit an applied migration.
 
-To roll back application behavior, revert the responsible commit and push to `main`; the normal CI gates must pass before Actions deploys the reverted application. Treat database changes as forward-only: correct an applied migration with a new migration rather than trying to reverse or edit migration history. Confirm the application and database remain compatible before deploying either side.
+To roll back application behavior, revert the responsible commit and push to `main`. Vercel releases the reverted build after the production CI gate passes. Treat database changes as forward-only: correct an applied migration with a new migration rather than trying to reverse or edit migration history. Confirm the application and database remain compatible before deploying either side.

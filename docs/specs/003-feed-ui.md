@@ -158,6 +158,7 @@ Each criterion belongs to one task, so tasks can be completed in order.
 - [x] 10. Selected-state visibility (user-requested follow-up): use a high-contrast active navigation button and a green selected Like button labeled "Liked", preserving `aria-current` and `aria-pressed`. Verify visually and pass the existing checks.
 - [x] 11. Liked-page freshness (user-requested bug fix): invalidate `/liked` after successful feedback changes and render refreshed server items directly, so tab navigation and Unlike show current data without a reload (criterion 8.2).
 - [x] 12. Navigation follow-up (7 Nov 2026): enable instant-navigation validation for Feed and Liked, and stream neutral loading states while verified, uncached feed and liked-item queries complete. Preserve independent identity checks and liked-page freshness.
+- [x] 13. Keep one shared header mounted across Feed, Liked, About, Contact, and Privacy. Show Liked’s heading and list placeholder while verified data loads, keep the guest homepage and guest information navigation distinct, and retain the independent data authorization and feedback invalidation. Verify browser navigation and run lint, typecheck, and tests.
 
 Task 11 validation (2 Nov 2026): regression tests cover successful-feedback invalidation, failed writes leaving the cache intact, a mounted liked list receiving fresh server items, and failed Unlike preserving the item. Lint, typecheck, and 295 unit tests passed; local Supabase integration tests passed with 43 tests and 0 skipped.
 

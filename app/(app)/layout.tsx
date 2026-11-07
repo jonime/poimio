@@ -1,21 +1,31 @@
-import { redirect } from "next/navigation";
-import type { ReactNode } from "react";
+import { type ReactNode, Suspense } from "react";
 import { AppHeader } from "@/components/app-header";
-import { displayNameFromClaims, getAppAccessRedirect } from "@/lib/app-access";
+import { displayNameFromClaims } from "@/lib/app-access";
 import { createClient } from "@/lib/supabase/server";
+import { GuestHeader } from "./guest-header";
 
-export default async function AppLayout({ children }: { children: ReactNode }) {
-  const supabase = await createClient();
-  const { data, error } = await supabase.auth.getClaims();
-  const isVerifiedUser = !error && typeof data?.claims?.sub === "string";
-
-  const redirectTo = getAppAccessRedirect(isVerifiedUser);
-  if (redirectTo) redirect(redirectTo);
-
+export default function AppLayout({ children }: { children: ReactNode }) {
   return (
     <>
-      <AppHeader displayName={displayNameFromClaims(data?.claims) ?? null} />
+      <Suspense fallback={null}>
+        <SessionHeader />
+      </Suspense>
       {children}
     </>
   );
+}
+
+async function SessionHeader() {
+  const supabase = await createClient();
+  const { data, error } = await supabase.auth.getClaims();
+  const claims = data?.claims;
+  if (error || typeof claims?.sub !== "string" || !claims.sub) {
+    return (
+      <GuestHeader>
+        <AppHeader guest />
+      </GuestHeader>
+    );
+  }
+
+  return <AppHeader displayName={displayNameFromClaims(claims) ?? null} />;
 }

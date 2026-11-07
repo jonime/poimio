@@ -1,22 +1,19 @@
 import { renderToStaticMarkup } from "react-dom/server";
-import { describe, expect, it, vi } from "vitest";
-import AboutPage, { metadata as aboutMetadata, ensureStatic as aboutStatic } from "./about/page";
+import { describe, expect, it } from "vitest";
+import AboutPage, {
+  metadata as aboutMetadata,
+  ensureStatic as aboutStatic,
+} from "./(app)/about/page";
 import ContactPage, {
   metadata as contactMetadata,
   ensureStatic as contactStatic,
-} from "./contact/page";
+} from "./(app)/contact/page";
 import PrivacyPage, {
   metadata as privacyMetadata,
   ensureStatic as privacyStatic,
-} from "./privacy/page";
+} from "./(app)/privacy/page";
 import robots from "./robots";
 import sitemap from "./sitemap";
-
-vi.mock("@/lib/supabase/server", () => ({
-  createClient: async () => ({
-    auth: { getClaims: async () => ({ data: null, error: null }) },
-  }),
-}));
 
 describe("public trust pages and crawler metadata", () => {
   it("requires static shells for public information pages", () => {
@@ -38,7 +35,6 @@ describe("public trust pages and crawler metadata", () => {
     ).toBeGreaterThanOrEqual(500);
     expect(html).toContain(title);
     expect(html).toContain("Joni Mertoniemi");
-    expect(html).toContain('href="/"');
     expect(metadata.alternates?.canonical).toBe(`https://www.poimio.cc/${path}`);
   });
 

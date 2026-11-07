@@ -1,8 +1,3 @@
-export function getAppAccessRedirect(isVerifiedUser: boolean): "/" | null {
-  if (!isVerifiedUser) return "/";
-  return null;
-}
-
 export function displayNameFromClaims(claims: unknown): string | undefined {
   if (typeof claims !== "object" || claims === null) return undefined;
   const record = claims as Record<string, unknown>;

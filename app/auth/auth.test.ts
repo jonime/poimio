@@ -1,17 +1,17 @@
-import { createElement } from "react";
+import { createElement, type ReactNode } from "react";
 import { renderToReadableStream, renderToStaticMarkup } from "react-dom/server";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { AppHeader } from "@/components/app-header";
 import AppLayout from "../(app)/layout";
+import Home, { metadata as homeMetadata } from "../(app)/page";
+import PrivacyPage, { metadata as privacyMetadata } from "../(app)/privacy/page";
 import { GuestPreview } from "../feed/guest-preview";
 import Login from "../login/page";
 import { PasswordSignInForm } from "../login/password-sign-in-form";
-import Home, { metadata as homeMetadata } from "../page";
-import PrivacyPage, { metadata as privacyMetadata } from "../privacy/page";
 import { signInWithPassword, signOut } from "./actions";
 import { GET } from "./callback/route";
 
-const { auth, createClient, rpc } = vi.hoisted(() => ({
+const { auth, createClient, rpc, usePathname } = vi.hoisted(() => ({
   auth: {
     getClaims: vi.fn(),
     signInWithPassword: vi.fn(),
@@ -20,6 +20,7 @@ const { auth, createClient, rpc } = vi.hoisted(() => ({
   },
   rpc: vi.fn(),
   createClient: vi.fn(),
+  usePathname: vi.fn(),
 }));
 
 vi.mock("../../lib/supabase/server", () => ({ createClient }));
@@ -30,7 +31,7 @@ vi.mock("next/navigation", () => ({
   redirect: (destination: string): never => {
     throw new Error(`REDIRECT:${destination}`);
   },
-  usePathname: () => "/",
+  usePathname,
   useRouter: () => ({ refresh: vi.fn() }),
 }));
 
@@ -42,6 +43,7 @@ const verifiedClaims = {
 beforeEach(() => {
   vi.unstubAllEnvs();
   vi.resetAllMocks();
+  usePathname.mockReturnValue("/");
   createClient.mockResolvedValue({ auth, rpc });
   auth.getClaims.mockResolvedValue(verifiedClaims);
   auth.signOut.mockResolvedValue({ error: null });
@@ -50,32 +52,44 @@ beforeEach(() => {
   auth.exchangeCodeForSession.mockResolvedValue({ error: null });
 });
 
-async function renderHome(error?: string) {
-  const searchParams = error ? { error } : {};
-  const stream = await renderToReadableStream(
-    await Home({ searchParams: Promise.resolve(searchParams) }),
-  );
+function homePage(error?: string) {
+  return Home({ searchParams: Promise.resolve(error ? { error } : {}) });
+}
+
+function withAppLayout(children: ReactNode) {
+  return AppLayout({ children });
+}
+
+async function renderPage(page: ReturnType<typeof withAppLayout>) {
+  const stream = await renderToReadableStream(page);
   await stream.allReady;
   return new Response(stream).text();
 }
 
+function renderHome(error?: string) {
+  return renderPage(homePage(error));
+}
+
 describe("signed-in page", () => {
-  it("independently verifies identity before rendering the feed", async () => {
-    await Home({ searchParams: Promise.resolve({}) });
+  it("independently verifies identity before loading the feed", async () => {
+    await renderHome();
     expect(auth.getClaims).toHaveBeenCalledExactlyOnceWith();
+    expect(auth.getClaims).toHaveBeenCalledBefore(rpc);
     expect(GuestPreview).not.toHaveBeenCalled();
   });
 
   it("keeps public and personal output separate through sign-in and sign-out", async () => {
-    auth.getClaims.mockResolvedValueOnce({ data: null, error: null });
-    const guest = renderToStaticMarkup(await Home({ searchParams: Promise.resolve({}) }));
-    const signedIn = await renderHome();
-    auth.getClaims.mockResolvedValueOnce({ data: null, error: null });
-    const signedOut = renderToStaticMarkup(await Home({ searchParams: Promise.resolve({}) }));
+    auth.getClaims.mockResolvedValue({ data: null, error: null });
+    const guest = await renderPage(withAppLayout(homePage()));
+    auth.getClaims.mockResolvedValue(verifiedClaims);
+    const signedIn = await renderPage(withAppLayout(homePage()));
+    auth.getClaims.mockResolvedValue({ data: null, error: null });
+    const signedOut = await renderPage(withAppLayout(homePage()));
     expect(guest).toContain("Public preview cards");
     expect(signedOut).toContain("Public preview cards");
     for (const html of [guest, signedOut]) {
       expect(html).not.toContain("Sign out");
+      expect(html).not.toContain("Main navigation");
       expect(html).not.toContain("Your feed");
     }
     expect(signedIn).toContain("Your feed");
@@ -190,7 +204,7 @@ describe("signed-in page", () => {
     "shows a public preview for missing or unverified identity independently of proxy",
     async (result) => {
       auth.getClaims.mockResolvedValueOnce(result);
-      const html = renderToStaticMarkup(await Home({ searchParams: Promise.resolve({}) }));
+      const html = await renderHome();
       expect(html).toContain("Latest picks");
       expect(html).toContain("Public preview cards");
       expect(html).not.toContain("Your feed");
@@ -207,12 +221,12 @@ describe("signed-in page", () => {
   it("streams the verified header and feed controls while recommendations load", async () => {
     const feed = Promise.withResolvers<{ data: []; error: null }>();
     rpc.mockReturnValueOnce(feed.promise);
-    const stream = await renderToReadableStream(await Home({ searchParams: Promise.resolve({}) }));
+    const stream = await renderToReadableStream(withAppLayout(homePage()));
     const reader = stream.getReader();
     try {
       const decoder = new TextDecoder();
       let shell = "";
-      while (!shell.includes("Loading your feed...")) {
+      while (!shell.includes("Loading your feed...") || !shell.includes("Sign out")) {
         const chunk = await reader.read();
         if (chunk.done) break;
         shell += decoder.decode(chunk.value, { stream: true });
@@ -235,8 +249,10 @@ describe("guest home", () => {
   });
 
   it("publishes consistent homepage identity in the heading, metadata, and JSON-LD", async () => {
-    const html = renderToStaticMarkup(await Home({ searchParams: Promise.resolve({}) }));
-    expect(html).toMatch(/<h1[^>]*>Poimio, your content discovery app<\/h1>/);
+    const html = await renderHome();
+    expect(html.replaceAll("<!-- -->", "")).toMatch(
+      /<h1[^>]*>Poimio, your content discovery app<\/h1>/,
+    );
     expect(homeMetadata.title).toBe("Poimio | Content discovery app");
     expect(homeMetadata.alternates?.canonical).toBe("https://www.poimio.cc/");
     expect(homeMetadata.openGraph).toMatchObject({
@@ -271,14 +287,18 @@ describe("guest home", () => {
     const preview = Promise.withResolvers<Awaited<ReturnType<typeof GuestPreview>>>();
     vi.mocked(GuestPreview).mockReturnValue(preview.promise);
 
-    const stream = await renderToReadableStream(await Home({ searchParams: Promise.resolve({}) }), {
+    const stream = await renderToReadableStream(homePage(), {
       signal: AbortSignal.timeout(2_000),
     });
     const reader = stream.getReader();
     const decoder = new TextDecoder();
     try {
-      const { value } = await reader.read();
-      const shell = decoder.decode(value, { stream: true });
+      let shell = "";
+      while (!shell.includes("Sign in with Google")) {
+        const chunk = await reader.read();
+        if (chunk.done) break;
+        shell += decoder.decode(chunk.value, { stream: true });
+      }
       expect(shell).toContain("Sign in with Google");
       expect(shell).not.toContain("Public preview cards");
     } finally {
@@ -292,7 +312,7 @@ describe("guest home", () => {
   });
 
   it("links to the public trust pages", async () => {
-    const html = renderToStaticMarkup(await Home({ searchParams: Promise.resolve({}) }));
+    const html = await renderHome();
     expect(html).toContain('href="/privacy"');
     expect(html).toContain("Privacy policy");
     expect(html).toContain('href="/about"');
@@ -300,7 +320,7 @@ describe("guest home", () => {
   });
 
   it("offers Google as the only sign-in method outside local development", async () => {
-    const html = renderToStaticMarkup(await Home({ searchParams: Promise.resolve({}) }));
+    const html = await renderHome();
     expect(html).toContain("Sign in with Google");
     expect(html.match(/<button/g)).toHaveLength(2);
     expect(html).not.toContain('type="password"');
@@ -311,7 +331,7 @@ describe("guest home", () => {
     async (hostname) => {
       vi.stubEnv("NODE_ENV", "development");
       vi.stubEnv("NEXT_PUBLIC_SUPABASE_URL", `http://${hostname}:55321`);
-      const html = renderToStaticMarkup(await Home({ searchParams: Promise.resolve({}) }));
+      const html = await renderHome();
       expect(html).toContain("Sign in with Google");
       expect(html).toContain("Local sign-in");
       expect(html.match(/<button/g)).toHaveLength(3);
@@ -336,26 +356,24 @@ describe("guest home", () => {
   ])("hides password login in %s with %s", async (mode, url) => {
     vi.stubEnv("NODE_ENV", mode);
     vi.stubEnv("NEXT_PUBLIC_SUPABASE_URL", url);
-    const html = renderToStaticMarkup(await Home({ searchParams: Promise.resolve({}) }));
+    const html = await renderHome();
     expect(html).toContain("Sign in with Google");
     expect(html).not.toContain('type="password"');
     expect(html.match(/<button/g)).toHaveLength(2);
   });
 
   it("displays a generic callback error rather than provider details", async () => {
-    const html = renderToStaticMarkup(
-      await Home({ searchParams: Promise.resolve({ error: "callback" }) }),
-    );
+    const html = await renderHome("callback");
     expect(html).toContain("Sign-in could not be completed. Please try again.");
   });
 });
 
 describe("privacy page", () => {
+  beforeEach(() => usePathname.mockReturnValue("/privacy"));
+
   it("renders the policy and contact with Home and More navigation for guests", async () => {
     auth.getClaims.mockResolvedValueOnce({ data: null, error: null });
-    const stream = await renderToReadableStream(createElement(PrivacyPage));
-    await stream.allReady;
-    const html = await new Response(stream).text();
+    const html = await renderPage(withAppLayout(createElement(PrivacyPage)));
     expect(privacyMetadata.title).toBe("Privacy Policy | Poimio");
     expect(html).toContain("Privacy Policy");
     expect(html).toContain("Joni Mertoniemi");
@@ -375,9 +393,7 @@ describe("privacy page", () => {
   });
 
   it("renders the app header with a verified session", async () => {
-    const stream = await renderToReadableStream(createElement(PrivacyPage));
-    await stream.allReady;
-    const html = await new Response(stream).text();
+    const html = await renderPage(withAppLayout(createElement(PrivacyPage)));
     expect(html).toContain(">More</button>");
     expect(html).toContain("Sign out");
     expect(html).not.toContain("Back to Poimio");
@@ -502,15 +518,6 @@ describe("sign-out action", () => {
   it("returns to the signed-in page with a generic error if sign-out fails", async () => {
     auth.signOut.mockResolvedValueOnce({ error: new Error("Provider error") });
     await expect(signOut()).rejects.toThrow("REDIRECT:/?error=sign-out");
-  });
-});
-
-describe("protected app layout", () => {
-  it("redirects missing identity to the public home independently of proxy", async () => {
-    auth.getClaims.mockResolvedValueOnce({ data: null, error: null });
-    await expect(AppLayout({ children: createElement("p", null, "Private page") })).rejects.toThrow(
-      "REDIRECT:/",
-    );
   });
 });
 

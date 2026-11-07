@@ -83,6 +83,7 @@ export interface PageFetchOptions {
   maxBytes?: number;
   maxRedirects?: number;
   userAgent?: string;
+  allowUrl?: (url: URL) => boolean;
 }
 
 export interface PageFetchBatchOptions extends PageFetchOptions {
@@ -353,6 +354,9 @@ export async function fetchPageHtml(
     let redirects = 0;
 
     for (;;) {
+      if (options.allowUrl && !options.allowUrl(url)) {
+        throw new PageFetchError("destination outside publisher rule");
+      }
       const host = url.hostname.replace(/^\[|\]$/g, "");
       const addresses = await withAbort(resolve(host), controller.signal);
       if (addresses.length === 0 || addresses.some((entry) => !isPublicAddress(entry.address))) {

@@ -8,6 +8,7 @@
     "build": "next build",
     "start": "next start --port 3001",
     "ingest": "node --env-file-if-exists=.env.local scripts/ingest.mts",
+    "thumbnails:backfill": "node scripts/thumbnail-backfill.mts",
     "enrich:backfill": "node scripts/enrich-backfill.mts",
     "embeddings:means": "node --env-file-if-exists=.env.local scripts/compute-embedding-language-means.mts",
     "ranking:freeze": "node --env-file-if-exists=.env.local scripts/freeze-ranking-sample.mts",

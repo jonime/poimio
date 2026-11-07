@@ -1,6 +1,6 @@
 # 017 — Article thumbnail quality and coverage
 
-- **Status:** Approved
+- **Status:** Done
 - **Milestone:** Final
 - **Depends on:** [001 — Ingestion](001-ingestion.md), [005 — Description enrichment](005-description-enrichment.md), [008 — Guest feed preview](008-guest-feed-preview.md)
 
@@ -43,13 +43,35 @@ The Yle skeet story above it had no image in Poimio, although the linked page ad
 
 ## Tasks
 
-- [ ] 1. Sample recent NASA News Releases to verify usable preview images, reliable ownership and size signals, and exact article and image hosts. Document the pilot rule and attribution. Save representative feed and page fixtures for small, missing, valid and generic images.
-- [ ] 2. Select suitable feed variants and add bounded article-page fallback to scheduled ingestion. Verify selection and failure behavior with fixtures.
-- [ ] 3. Add the bounded backfill and verify persistence, reruns and concurrent updates on local Supabase.
-- [ ] 4. Verify the guest and signed-in cards with local data and run the required checks.
+- [x] 1. Sample recent NASA News Releases to verify usable preview images, reliable ownership and size signals, and exact article and image hosts. Document the pilot rule and attribution. Save representative feed and page fixtures for small, missing, valid and generic images.
+- [x] 2. Select suitable feed variants and add bounded article-page fallback to scheduled ingestion. Verify selection and failure behavior with fixtures.
+- [x] 3. Add the bounded backfill and verify persistence, reruns and concurrent updates on local Supabase.
+- [x] 4. Verify the guest and signed-in cards with local data and run the required checks.
 
 ## Decisions
 
 - **NASA News Releases** is the only initial live pilot for article-page fallback and backfill. Use clearly NASA-owned images, credit NASA, and skip APOD entries and images with third-party or unclear ownership. Enable the rule once task 1 verifies that recent releases provide enough information to apply it reliably. [NASA media guidelines](https://www.nasa.gov/nasa-brand-center/images-and-media/)
 - **BBC World News** is a fixture for upgrading an undersized feed image. Live article image upgrades require confirmation from BBC that the larger variants can be reused. [BBC syndication documentation](https://information-syndication.api.bbc.com/)
 - **Yle** is a fixture for rejecting roundup images. Yle's RSS terms exclude displaying news article photos on other websites, so leave article-page image lookup disabled for Yle. [Yle RSS terms](https://yle.fi/a/20-10008076)
+
+## NASA pilot verification
+
+The ten-item NASA feed snapshot on 7 November 2026 contained APOD and other stories without feed images. None of those entries used the press-release URL pattern. The News Releases listing provided the standalone releases used to verify the pilot. Match the exact feed URL and limit lookups to HTTPS `www.nasa.gov/news-release/<slug>/`. Require the final page to use NASA's `type-press-release` article template and declare `og:type=article`. [NASA feed](https://www.nasa.gov/news-release/feed/) · [News Releases listing](https://www.nasa.gov/news-release/)
+
+- The Cygnus launch release declared a 1920 px preview on `images-assets.nasa.gov/image/`. The USDA agreement release declared an 1829 px preview on `www.nasa.gov/wp-content/uploads/`. Both pages credit NASA in the caption attached to the same image. The NASA News Releases badge identifies NASA alongside the image in both feeds. [Cygnus launch release](https://www.nasa.gov/news-release/nasa-invites-media-to-northrop-grumman-crs-25-station-resupply-launch/) · [USDA agreement release](https://www.nasa.gov/news-release/nasa-usda-sign-agreement-advancing-earth-science-agriculture/)
+- The Ka-band awards release used the NASA insignia as its preview. The Florida students announcement credited SpaceX, and the Dragonfly release shared credit with Johns Hopkins APL. Require an exact NASA-only credit on the matching image and exclude logos and generic defaults. [Ka-band awards release](https://www.nasa.gov/news-release/nasa-announces-ka-band-satellite-relay-awards-for-space-communications/) · [Florida students announcement](https://www.nasa.gov/learning-resources/nasa-astronauts-to-answer-questions-from-florida-students-2/) · [Dragonfly release](https://www.nasa.gov/news-release/send-your-name-to-titan-aboard-nasas-dragonfly-mission/)
+- Require declared Open Graph width on both image hosts. For legacy size detection, the NASA uploads URL's `resize=300,227` variant was served at 300 × 227 px. The image library served its original 1920 px image even with `w=400`, so its URL parameters do not establish legacy size.
+- The test fixtures preserve relevant markup from the sampled pages and feed, including the BBC responsive variants and Yle roundup. [Thumbnail fixtures](../../test/fixtures/thumbnails/)
+
+## Backfill command
+
+- Preview the next batch with `pnpm thumbnails:backfill --dry-run`.
+- Apply one batch with `pnpm thumbnails:backfill`. Pass the reported cursor with `--cursor '<cursor>'` to continue past the last candidate.
+- Both commands use `.env.local`. To select hosted Supabase explicitly, use `node --env-file=.env.production.local scripts/thumbnail-backfill.mts --dry-run`.
+- The report counts candidates, eligible previews found, upgrades saved, confirmed omissions, fetch failures, and concurrent changes that prevented a write.
+
+## Verification
+
+- Scheduled ingestion fixture tests covered feed variants, the page lookup budget, enrichment reuse, publisher scope, and failed or unsafe lookups.
+- The local Supabase suite verified dry run, missing and legacy image upgrades, pagination across tied publication times, and a concurrent write. The test compared full rows to verify that the updates affected only the thumbnail field. The public access tests passed.
+- In Chrome at a 1280 px viewport, the upgraded NASA image decoded at 1829 px and filled its 640 px card in both the guest preview and signed-in feed. An image-free article rendered in both views.

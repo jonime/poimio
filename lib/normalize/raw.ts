@@ -18,6 +18,7 @@
  */
 
 import { decodeEntities } from "./text.ts";
+import { type FeedThumbnail, imageWidth, selectFeedThumbnail } from "./thumbnail.ts";
 
 /**
  * Extract the inner content of the first `tag` element in a block, unwrapping
@@ -66,7 +67,7 @@ export function extractAtomCategories(block: string): string[] {
 }
 
 function attrValue(attrs: string, name: string): string | null {
-  const match = attrs.match(new RegExp(`\\b${name}\\s*=\\s*("([^"]*)"|'([^']*)')`, "i"));
+  const match = attrs.match(new RegExp(`\\s${name}\\s*=\\s*("([^"]*)"|'([^']*)')`, "i"));
   if (!match) return null;
   return match[2] ?? match[3] ?? null;
 }
@@ -81,4 +82,39 @@ export function extractThumbnailUrl(block: string): string | null {
   if (!match) return null;
   const url = attrValue(match[0], "url");
   return url == null ? null : decodeEntities(url).trim();
+}
+
+/** Consider media on this item only, ignoring embedded HTML and channel art. */
+export function extractArticleThumbnail(block: string): FeedThumbnail | null {
+  const markup = block.replace(
+    /<!\[CDATA\[[\s\S]*?\]\]>|<!--[\s\S]*?-->|<(description|summary|content|content:encoded)\b[^>]*>[\s\S]*?<\/\1>/gi,
+    "",
+  );
+  const candidates: FeedThumbnail[] = [];
+  let existingUnknown: FeedThumbnail | undefined;
+  for (const match of markup.matchAll(
+    /<(media:thumbnail|media:content|enclosure|link)(?=\s|\/?>)[^>]*>/gi,
+  )) {
+    const [tag, name] = match;
+    const kind = name?.toLowerCase();
+    if (kind === "link" && attrValue(tag, "rel") !== "enclosure") continue;
+    if (kind !== "media:thumbnail") {
+      const type = attrValue(tag, "type");
+      if (
+        !/^image\/[^\s]+$/i.test(type ?? "") &&
+        !(kind === "media:content" && attrValue(tag, "medium") === "image" && type === null)
+      )
+        continue;
+    }
+
+    const value = attrValue(tag, kind === "link" ? "href" : "url");
+    const url = URL.parse(decodeEntities(value ?? "").trim());
+    if (!url || !["http:", "https:"].includes(url.protocol) || url.username || url.password)
+      continue;
+    const candidate = { url: url.href, width: imageWidth(attrValue(tag, "width")) };
+    if (kind === "media:thumbnail" && candidate.width === null) existingUnknown ??= candidate;
+    candidates.push(candidate);
+  }
+  const selected = selectFeedThumbnail(candidates);
+  return selected?.width === null ? (existingUnknown ?? selected) : selected;
 }

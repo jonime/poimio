@@ -25,6 +25,7 @@
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 import { SITE_WIDE_DESCRIPTIONS } from "./enrich/page.ts";
 import type { ParsedItem } from "./normalize/parse.ts";
+import { NASA_RELEASES_FEED_URL } from "./thumbnails/publisher.ts";
 
 /** A row from the shared `sources` table (camelCase). */
 export interface Source {
@@ -106,12 +107,43 @@ export interface IngestDb {
    * `url` (`insert … on conflict (url) do nothing`; the first source to
    * deliver a URL wins). Items without a usable http(s) URL are skipped.
    *
-   * @returns the number of newly inserted rows (conflicts are skipped).
+   * @returns the IDs and URLs of newly inserted rows (conflicts are skipped).
    */
-  insertItems(source: Pick<Source, "id" | "language">, items: ParsedItem[]): Promise<number>;
+  insertItems(
+    source: Pick<Source, "id" | "language">,
+    items: ParsedItem[],
+  ): Promise<InsertedItem[]>;
 
   /** Apply a status patch to one `sources` row. */
   updateSource(id: string, patch: SourceStatusPatch): Promise<void>;
+}
+
+export interface InsertedItem {
+  id: string;
+  url: string;
+}
+
+export interface ThumbnailWriter {
+  saveThumbnail(id: string, expected: string | null, thumbnail: string | null): Promise<boolean>;
+}
+
+export interface ThumbnailCursor {
+  publishedAt: string;
+  id: string;
+}
+
+export interface ThumbnailRow extends ThumbnailCursor {
+  url: string;
+  thumbnailUrl: string | null;
+}
+
+export interface ThumbnailBackfillDb extends ThumbnailWriter {
+  listRecentThumbnailRows(
+    since: Date,
+    through: Date,
+    limit: number,
+    after?: ThumbnailCursor,
+  ): Promise<ThumbnailRow[]>;
 }
 
 export type SummaryOrigin = "feed" | "page_metadata" | "ai_generated";
@@ -347,7 +379,7 @@ interface ScheduledIngestionLease {
  */
 export function createIngestDb(
   env: IngestDbEnv = process.env,
-): IngestDb & BackfillDb & ScheduledIngestionLease {
+): IngestDb & BackfillDb & ScheduledIngestionLease & ThumbnailBackfillDb {
   const url = env.NEXT_PUBLIC_SUPABASE_URL;
   const serviceRoleKey = env.SUPABASE_SERVICE_ROLE_KEY;
 
@@ -622,19 +654,56 @@ export function createIngestDb(
 
     async insertItems(source, items) {
       const rows = toContentItemRows(source, items);
-      if (rows.length === 0) return 0;
+      if (rows.length === 0) return [];
 
       // Upsert with `ignoreDuplicates` is an `insert … on conflict (url)
       // do nothing`: PostgREST's RETURNING yields only the actually
-      // inserted rows, so the count is the number of new items.
+      // inserted rows, which also identifies new thumbnail candidates.
       const { data, error } = await client
         .from("content_items")
         .upsert(rows, { onConflict: "url", ignoreDuplicates: true })
-        .select("id");
+        .select("id,url");
       if (error) {
         throw new Error(`inserting content items failed: ${error.message}`);
       }
-      return data?.length ?? 0;
+      return data ?? [];
+    },
+
+    async listRecentThumbnailRows(since, through, limit, after) {
+      let query = client
+        .from("content_items")
+        .select("id,url,thumbnail_url,published_at,sources!inner(feed_url,kind)")
+        .eq("type", "article")
+        .eq("sources.feed_url", NASA_RELEASES_FEED_URL)
+        .eq("sources.kind", "rss")
+        .gte("published_at", since.toISOString())
+        .lte("published_at", through.toISOString())
+        .order("published_at", { ascending: false })
+        .order("id", { ascending: false })
+        .limit(limit);
+      if (after) {
+        query = query.or(
+          `published_at.lt.${after.publishedAt},and(published_at.eq.${after.publishedAt},id.lt.${after.id})`,
+        );
+      }
+      const { data, error } = await query;
+      if (error) throw new Error(`Listing recent article thumbnails failed: ${error.message}`);
+      return data.map((row) => ({
+        id: row.id,
+        url: row.url,
+        thumbnailUrl: row.thumbnail_url,
+        publishedAt: row.published_at,
+      }));
+    },
+
+    async saveThumbnail(id, expected, thumbnail) {
+      const update = client.from("content_items").update({ thumbnail_url: thumbnail }).eq("id", id);
+      const { data, error } = await (expected === null
+        ? update.is("thumbnail_url", null)
+        : update.eq("thumbnail_url", expected)
+      ).select("id");
+      if (error) throw new Error(`Saving article thumbnail failed: ${error.message}`);
+      return data.length > 0;
     },
 
     async updateSource(id, patch) {

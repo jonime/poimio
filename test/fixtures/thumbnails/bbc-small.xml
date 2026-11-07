@@ -1,0 +1,11 @@
+<?xml version="1.0"?>
+<rss version="2.0" xmlns:media="http://search.yahoo.com/mrss/">
+  <channel><title>BBC News World</title>
+    <item>
+      <title>Strikes on Ukraine's power network</title>
+      <link>https://www.bbc.co.uk/news/articles/cm4g1nq8158po</link>
+      <description>Strikes damaged Ukraine's power network.</description>
+      <media:thumbnail width="240" height="135" url="https://ichef.bbci.co.uk/ace/standard/240/cpsprodpb/0554/live/2786bc40-daa0-11f1-a523-f508a3e924cb.jpg" />
+    </item>
+  </channel>
+</rss>

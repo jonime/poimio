@@ -75,12 +75,13 @@ Make the application available on the internet (Vercel + hosted Supabase) for in
 **CI and deployment**
 
 - `.github/workflows/ci.yml` on push and pull request:
-  - Skip the workflow when all changed paths match `docs/**`, `**/*.md`, `.agents/**`, `.github/instructions/**`, `.github/prompts/**`, `.github/agents/**`, or `skills-lock.json`. Workflow files and unknown paths still trigger CI. Before enabling required checks, replace trigger-level filtering with job-level filtering so skipped workflows do not leave required checks pending.
+  - Run CI on every push so each `main` commit can report the production gate. For pull requests, skip the workflow when all changed paths match `docs/**`, `**/*.md`, `.agents/**`, `.github/instructions/**`, `.github/prompts/**`, `.github/agents/**`, or `skills-lock.json`.
   - **checks** job: `pnpm install --frozen-lockfile`, `lint`, `typecheck`, `test`; also `build` except on pushes to `main`, where the Vercel build is the build check.
   - **integration** job: Supabase CLI, `supabase start` with unused containers excluded, `pnpm test:integration` (fails if any test is skipped). Keep PostgreSQL, Auth, PostgREST, and Kong. Disable Storage and Realtime through CI-only environment overrides as well as excluding their containers, because `-x` alone does not skip their one-shot database initialization jobs. Disable local SMTP and Google OAuth; tests use confirmed email/password users. Suppress startup stdout so local API keys are not printed. The fresh GitHub-hosted runner has no existing database; start already applies migrations and seeds, so no reset is needed.
+  - **Production CI gate** job (only on pushes to `main`): waits for `checks` and `integration` and succeeds only when both report `success`. Select this job as the required GitHub check in Vercel before switching production deployments to the Git integration.
   - **vercel-build** job (only on pushes to `main`, parallel with checks and integration): `vercel deploy --prod --skip-domain --yes` builds remotely with production settings without assigning production domains; exports the exact deployment URL.
   - **deploy** job (only on pushes to `main`, needs all three): resolves the exact deployment URL through Vercel's API, verifies the project ID, production target, and ready state, then requests promotion through `POST /v10/projects/{projectId}/promote/{deploymentId}` with the explicit team ID. This avoids the CLI's failing user lookup and does not rebuild. HTTP or validation failures fail the job; a successful response confirms the promotion request, which Vercel may process asynchronously. Both Vercel jobs use `VERCEL_TOKEN`, `VERCEL_ORG_ID`, `VERCEL_PROJECT_ID` repository secrets.
-  - Workflow concurrency cancels older runs for the same ref; immediately before promotion, the deploy job also checks that its commit is still the head of `main` and skips stale commits. An ignored-only push during a deployment can also prevent promotion, leaving the previous production version live until the next code deployment.
+  - Workflow concurrency cancels older runs for the same ref. Immediately before promotion, the deploy job also checks that its commit is still the head of `main` and skips stale commits.
 - Vercel's own Git deployments are disabled (`vercel.json`: `git.deploymentEnabled: false`), so the production domain changes only after CI passes. Staged production builds have unique deployment URLs; deployment protection should restrict access to these URLs.
 - Workflow permissions are `contents: read`; third-party actions use pinned major versions as in the existing workflows.
 
@@ -249,3 +250,14 @@ sandbox.
 Enable Speed Insights in the Poimio Vercel dashboard before the next production
 deployment. After deployment, open Poimio and verify that the Speed Insights
 dashboard receives performance measurements.
+
+## Amendment: Production CI gate (7 Nov 2026)
+
+- [x] 14. Add a single GitHub check for Vercel that runs on every push to `main`
+  and passes only when both `checks` and `integration` pass.
+
+Task 14 validation: lint, typecheck, and 409 unit tests passed. The collector's
+shell step passed only for two successful jobs across all 16 result pairs.
+`actionlint` passed with the existing Supabase `background` and `wait` diagnostics
+excluded. Verify the check on the first `main` run and select it in Vercel before
+switching away from the current deployment and promotion jobs.

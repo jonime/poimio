@@ -2,14 +2,6 @@ name: CI
 
 on:
   push:
-    paths-ignore:
-      - "docs/**"
-      - "**/*.md"
-      - ".agents/**"
-      - ".github/instructions/**"
-      - ".github/prompts/**"
-      - ".github/agents/**"
-      - "skills-lock.json"
   pull_request:
     paths-ignore:
       - "docs/**"
@@ -107,6 +99,20 @@ jobs:
 
       - name: Run integration tests
         run: pnpm test:integration
+
+  production-ci-gate:
+    name: Production CI gate
+    needs: [checks, integration]
+    if: ${{ always() && github.event_name == 'push' && github.ref == 'refs/heads/main' }}
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Require both CI jobs to pass
+        env:
+          CHECKS_RESULT: ${{ needs.checks.result }}
+          INTEGRATION_RESULT: ${{ needs.integration.result }}
+        run: |
+          echo "checks=$CHECKS_RESULT integration=$INTEGRATION_RESULT"
+          test "$CHECKS_RESULT" = success && test "$INTEGRATION_RESULT" = success
 
   vercel-build:
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'

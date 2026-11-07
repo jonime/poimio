@@ -15,6 +15,7 @@ Follow-up to [spec 014](014-agent-readiness.md) after the live Ora audit reached
 - [x] 7. Add a More menu to the shared signed-in header on Feed and Liked. Link to About, Contact, Privacy policy, and GitHub. Verify keyboard access, narrow-screen layout, and all four destinations. Run lint, typecheck, and tests.
 - [x] 8. Give About, Contact, and Privacy policy a shared layout with the app header for signed-in users and a Poimio logo and Home link for guests. Remove the Back to Poimio footer. Verify both views on all three public URLs and run lint, typecheck, and tests.
 - [x] 9. Require static app shells for the three public pages while retaining their request-time verified headers. Next.js's shell setting does not enforce full static navigation or add build-time validation.
+- [x] 10. Show the shared More menu next to Home for guests on About, Contact, and Privacy policy. Keep the same four destinations as the signed-in menu.
 
 ## Release verification
 

@@ -16,12 +16,15 @@ const navItems = [
   { href: "/liked", label: "Liked" },
 ] as const;
 
-export function AppNav() {
+const guestNavItems = [{ href: "/", label: "Home" }] as const;
+
+export function AppNav({ guest = false }: { guest?: boolean }) {
   const pathname = usePathname();
+  const items = guest ? guestNavItems : navItems;
 
   return (
     <nav className="flex items-center gap-1" aria-label="Main navigation">
-      {navItems.map((item) => {
+      {items.map((item) => {
         const current = item.href === pathname;
         return (
           <Button

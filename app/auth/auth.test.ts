@@ -351,7 +351,7 @@ describe("guest home", () => {
 });
 
 describe("privacy page", () => {
-  it("renders the policy and contact with a Home link for guests", async () => {
+  it("renders the policy and contact with Home and More navigation for guests", async () => {
     auth.getClaims.mockResolvedValueOnce({ data: null, error: null });
     const stream = await renderToReadableStream(createElement(PrivacyPage));
     await stream.allReady;
@@ -366,6 +366,8 @@ describe("privacy page", () => {
     expect(html).toContain("Vercel");
     expect(html).toContain('href="/"');
     expect(html).toContain(">Home</a>");
+    expect(html).toContain(">More</button>");
+    expect(html).not.toContain(">Liked</a>");
     expect(html).not.toContain("Sign out");
     expect(html).not.toContain("Back to Poimio");
     expect(auth.getClaims).toHaveBeenCalledExactlyOnceWith();

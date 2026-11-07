@@ -1,4 +1,16 @@
 {
+  "functions": {
+    "app/api/scheduled-ingestion/route.ts": {
+      "maxDuration": 300,
+      "experimentalTriggers": [{ "type": "schedule/v1beta" }]
+    }
+  },
+  "schedules": {
+    "feed-ingestion": {
+      "schedule": "0 * * * *",
+      "function": "api/scheduled-ingestion"
+    }
+  },
   "git": {
     "deploymentEnabled": false
   }

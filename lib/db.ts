@@ -332,6 +332,11 @@ export interface IngestDbEnv {
   [key: string]: string | undefined;
 }
 
+interface ScheduledIngestionLease {
+  claimScheduledIngestion(leaseId: string): Promise<boolean>;
+  releaseScheduledIngestion(leaseId: string): Promise<void>;
+}
+
 /**
  * Create the ingestion database adapter from environment variables.
  *
@@ -340,7 +345,9 @@ export interface IngestDbEnv {
  * variable). Throws immediately if either is missing, so a misconfigured
  * run fails before fetching any feeds.
  */
-export function createIngestDb(env: IngestDbEnv = process.env): IngestDb & BackfillDb {
+export function createIngestDb(
+  env: IngestDbEnv = process.env,
+): IngestDb & BackfillDb & ScheduledIngestionLease {
   const url = env.NEXT_PUBLIC_SUPABASE_URL;
   const serviceRoleKey = env.SUPABASE_SERVICE_ROLE_KEY;
 
@@ -355,6 +362,20 @@ export function createIngestDb(env: IngestDbEnv = process.env): IngestDb & Backf
   const client: SupabaseClient = createClient(url as string, serviceRoleKey as string);
 
   return {
+    async claimScheduledIngestion(leaseId) {
+      const { data, error } = await client.rpc("claim_scheduled_ingestion", { lease_id: leaseId });
+      if (error) throw new Error(`Claiming the ingestion lease failed: ${error.message}`);
+      return data === true;
+    },
+
+    async releaseScheduledIngestion(leaseId) {
+      const { error } = await client
+        .from("scheduled_ingestion_lease")
+        .update({ lease_id: null, expires_at: "-infinity" })
+        .eq("lease_id", leaseId);
+      if (error) throw new Error(`Releasing the ingestion lease failed: ${error.message}`);
+    },
+
     async listActiveSources() {
       const { data, error } = await client
         .from("sources")

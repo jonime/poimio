@@ -1,6 +1,6 @@
 # 014 — Agent readiness
 
-**Status:** Implemented and verified locally
+**Status:** Done
 
 The [public guest homepage](008-guest-feed-preview.md) should identify Poimio as a content discovery app and explain how to use it through machine-readable responses. The existing [app access rules](004-deployment-access.md) apply to the personalized feed and saved items.
 
@@ -20,4 +20,4 @@ The canonical hostname is `www.poimio.cc`, the destination of the live apex redi
 
 ## Release verification
 
-- [ ] Recheck the public responses after deployment and rerun the Ora audit once the homepage has been recrawled.
+- [x] Recheck the public responses after deployment and rerun the Ora audit once the homepage has been recrawled.

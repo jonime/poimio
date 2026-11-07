@@ -1,0 +1,17 @@
+<?xml version="1.0"?>
+<rss version="2.0" xmlns:media="http://search.yahoo.com/mrss/">
+  <channel>
+    <title>Variant fixture</title>
+    <media:thumbnail width="1200" url="https://publisher.example/logo.jpg"/>
+    <item>
+      <title>Article with multiple images</title>
+      <link>https://publisher.example/story</link>
+      <description><![CDATA[<media:thumbnail width="960" url="https://publisher.example/description.jpg"/>]]></description>
+      <media:thumbnail width="240" url="https://publisher.example/photo.jpg?w=240"/>
+      <media:content type="image/jpeg" width="1600" url="https://publisher.example/photo.jpg?w=1600"/>
+      <media:thumbnail width="1200" url="https://publisher.example/another-photo.jpg"/>
+      <enclosure type="image/jpeg" width="960" url="https://publisher.example/photo.jpg?w=960"/>
+      <enclosure type="audio/mpeg" width="960" url="https://publisher.example/podcast.mp3"/>
+    </item>
+  </channel>
+</rss>

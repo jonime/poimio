@@ -34,6 +34,7 @@ class FakeIngestDb implements IngestDb, EnrichmentDb {
   enrichmentItems: EnrichmentItem[] = [];
   events: string[] = [];
   insertCount: number | null = null;
+  thumbnails: Array<{ id: string; expected: string | null; thumbnail: string | null }> = [];
 
   constructor(readonly sources: Source[]) {}
 
@@ -66,7 +67,12 @@ class FakeIngestDb implements IngestDb, EnrichmentDb {
   async insertItems(_source: Pick<Source, "id" | "language">, items: ParsedItem[]) {
     this.events.push("insert");
     this.inserted.push(items);
-    return this.insertCount ?? items.length;
+    return items.slice(0, this.insertCount ?? items.length).map(({ url }) => ({ id: url, url }));
+  }
+
+  async saveThumbnail(id: string, expected: string | null, thumbnail: string | null) {
+    this.thumbnails.push({ id, expected, thumbnail });
+    return true;
   }
 
   async updateSource(id: string, patch: SourceStatusPatch): Promise<void> {
@@ -267,5 +273,133 @@ describe("formatIngestionSummary", () => {
         "Embedding error (1 items): temporary failure",
       ].join("\n"),
     );
+  });
+});
+
+describe("scheduled article thumbnails", () => {
+  const feedUrl = "https://www.nasa.gov/news-release/feed/";
+  const upload = "https://www.nasa.gov/wp-content/uploads/2026/10/mou10242026.jpg";
+  const thumbnailHtml = readFileSync(
+    new URL("../test/fixtures/thumbnails/nasa-valid-upload.html", import.meta.url),
+    "utf8",
+  );
+  const releaseUrl = (slug: string) => `https://www.nasa.gov/news-release/${slug}/`;
+  const small = `<media:thumbnail width="300" url="${upload}?resize=300,227"/>`;
+  const response = (status: number, html = thumbnailHtml) => ({
+    status,
+    body: new TextEncoder().encode(html),
+    headers: { "content-type": "text/html" },
+  });
+  function feed(items: Array<{ slug: string; day: number; media?: string }>) {
+    return [
+      {
+        status: "ok" as const,
+        body: `<rss version="2.0" xmlns:media="http://search.yahoo.com/mrss/"><channel><title>NASA</title>
+        ${items
+          .map(
+            ({ slug, day, media }) => `<item><title>${slug}</title><link>${releaseUrl(slug)}</link>
+        <description>Complete feed summary.</description><pubDate>${new Date(Date.UTC(2026, 10, day)).toUTCString()}</pubDate>
+        ${media ?? ""}</item>`,
+          )
+          .join("")}</channel></rss>`,
+        contentType: "application/rss+xml",
+      },
+    ];
+  }
+
+  it("spends at most 20 additional requests newest first and reuses enrichment HTML", async () => {
+    const db = new FakeIngestDb([{ ...source("nasa", "NASA"), feedUrl }]);
+    const cachedUrl = releaseUrl("cached");
+    db.enrichmentItems = [
+      {
+        id: cachedUrl,
+        url: cachedUrl,
+        title: "cached",
+        summary: null,
+        language: "en",
+        attemptCount: 0,
+      },
+    ];
+    const requested: string[] = [];
+    const summary = await runIngestion(db, "key", {
+      fetchBatch: async () =>
+        feed([
+          { slug: "cached", day: 1 },
+          { slug: "over-budget", day: 2, media: small },
+          ...Array.from({ length: 20 }, (_, index) => ({
+            slug: `release-${index + 1}`,
+            day: index + 3,
+          })),
+        ]),
+      enrichment: {
+        fetchPage: async () => ({
+          status: "ok",
+          html: `<meta property="og:description" content="Description">${thumbnailHtml}`,
+          finalUrl: cachedUrl,
+          contentType: "text/html",
+        }),
+      },
+      thumbnailFetch: {
+        resolve: async () => [{ address: "1.1.1.1", family: 4 }],
+        request: async (url) => {
+          requested.push(url.href);
+          return response(200);
+        },
+      },
+    });
+
+    expect(summary.sources[0]?.newItems).toBe(22);
+    expect(summary.enrichment.succeeded).toBe(1);
+    expect(requested).toEqual(
+      Array.from({ length: 20 }, (_, index) => releaseUrl(`release-${20 - index}`)),
+    );
+    expect(db.thumbnails).toHaveLength(21);
+    expect(db.thumbnails).toContainEqual({ id: cachedUrl, expected: null, thumbnail: upload });
+    expect(db.thumbnails.some(({ id }) => id === releaseUrl("over-budget"))).toBe(false);
+  });
+
+  it("omits only confirmed unsuitable thumbnails and skips known good, unknown and duplicate images", async () => {
+    const db = new FakeIngestDb([{ ...source("nasa", "NASA"), feedUrl }]);
+    db.insertCount = 5;
+    const requested: string[] = [];
+    const resolved: string[] = [];
+    await runIngestion(db, "key", {
+      fetchBatch: async () =>
+        feed([
+          { slug: "confirmed", day: 7, media: small },
+          { slug: "transient", day: 7, media: small },
+          { slug: "unsafe", day: 7, media: small },
+          {
+            slug: "good",
+            day: 7,
+            media: `${small}<media:thumbnail width="960" url="${upload}?resize=960,726"/>`,
+          },
+          { slug: "unknown", day: 7, media: small.replace('width="300"', "") },
+          { slug: "duplicate", day: 7, media: small },
+        ]),
+      thumbnailFetch: {
+        resolve: async (host) => {
+          resolved.push(host);
+          return [{ address: "1.1.1.1", family: 4 }];
+        },
+        request: async (url) => {
+          requested.push(url.href);
+          if (url.href === releaseUrl("transient")) return response(503);
+          if (url.href === releaseUrl("unsafe")) {
+            return { ...response(302), headers: { location: "https://example.com/redirected" } };
+          }
+          return response(200, "<html></html>");
+        },
+      },
+    });
+    expect(requested).toEqual(["confirmed", "transient", "unsafe"].map(releaseUrl));
+    expect(resolved).toEqual(["www.nasa.gov", "www.nasa.gov", "www.nasa.gov"]);
+    expect(db.thumbnails).toEqual([
+      {
+        id: releaseUrl("confirmed"),
+        expected: `${upload}?resize=300,227`,
+        thumbnail: null,
+      },
+    ]);
   });
 });

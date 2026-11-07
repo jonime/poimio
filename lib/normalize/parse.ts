@@ -13,7 +13,7 @@
  *   finally truncated to ~1,000 characters
  * - `type` — `video` for YouTube watch/shorts URLs, `article` otherwise
  * - `categories` — deduplicated
- * - `thumbnailUrl` — from `<media:thumbnail>` when present
+ * - `thumbnailUrl` — from item-level feed media when present
  * - `publishedAt` — from `pubDate`/`published`/`updated`, falling back to
  *   the fetch time
  *
@@ -23,7 +23,13 @@
 
 import Parser from "rss-parser";
 import { removeYouTubeBoilerplate } from "./boilerplate.ts";
-import { elementText, extractAtomCategories, extractThumbnailUrl, splitItemBlocks } from "./raw.ts";
+import {
+  elementText,
+  extractArticleThumbnails,
+  extractAtomCategories,
+  extractThumbnailUrl,
+  splitItemBlocks,
+} from "./raw.ts";
 import { decodeEntities, htmlToText, isLinkOnly, truncateSummary } from "./text.ts";
 import { normalizeUrl } from "./url.ts";
 
@@ -39,6 +45,8 @@ export interface ParsedItem {
   categories: string[];
   /** Item thumbnail URL, when the feed provides one. */
   thumbnailUrl: string | null;
+  /** Feed-declared image width, when available. */
+  thumbnailWidth?: number;
   publishedAt: Date;
 }
 
@@ -164,6 +172,7 @@ export async function parseFeed(xml: string, options: ParseOptions = {}): Promis
   const feed = await parser.parseString(xml);
   const items = feed.items;
   const blocks = splitItemBlocks(xml, format);
+  const thumbnails = extractArticleThumbnails(xml, format, items.length);
   // Pairing is positional: rss-parser preserves document order. If the
   // counts ever disagree we normalize without the raw-block fields rather
   // than risk attaching data to the wrong item.
@@ -187,13 +196,16 @@ export async function parseFeed(xml: string, options: ParseOptions = {}): Promis
         ? dedupe((item.categories as string[] | undefined) ?? [])
         : dedupe(extractAtomCategories(block));
 
+    const thumbnail = type === "article" ? thumbnails[index] : null;
+
     return {
       url,
       title,
       summary: buildSummary(block, format, type),
       type,
       categories,
-      thumbnailUrl: useBlocks ? extractThumbnailUrl(block) : null,
+      thumbnailUrl: type === "video" ? extractThumbnailUrl(block) : (thumbnail?.url ?? null),
+      ...(thumbnail?.width == null ? {} : { thumbnailWidth: thumbnail.width }),
       publishedAt: resolvePublishedAt(item as unknown as Record<string, unknown>, fetchTime),
     };
   });

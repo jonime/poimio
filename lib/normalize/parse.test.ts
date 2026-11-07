@@ -127,3 +127,30 @@ describe("parseFeed (saved fixtures)", () => {
     expect(item.thumbnailUrl).toBe("https://i1.ytimg.com/vi/hJSbro3EBnY/hqdefault.jpg");
   });
 });
+
+it("ignores thumbnail markup inside CDATA, comments, and embedded content", async () => {
+  const feed = await parseFeed(`
+    <rss version="2.0" xmlns:media="http://search.yahoo.com/mrss/"
+      xmlns:content="http://purl.org/rss/1.0/modules/content/">
+      <channel>
+        <title>Example</title>
+        <item>
+          <title>Article</title>
+          <link>https://publisher.example/article</link>
+          <description><![CDATA[</description>
+            <media:thumbnail width="1200" url="https://other.example/cdata.jpg"/>
+          ]]></description>
+          <!-- <media:thumbnail width="1200" url="https://other.example/comment.jpg"/> -->
+          <content:encoded>
+            <media:thumbnail width="1200" url="https://other.example/body.jpg"/>
+          </content:encoded>
+          <media:thumbnail width="800" url="https://publisher.example/real.jpg"/>
+        </item>
+      </channel>
+    </rss>`);
+
+  expect(feed.items[0]).toMatchObject({
+    thumbnailUrl: "https://publisher.example/real.jpg",
+    thumbnailWidth: 800,
+  });
+});

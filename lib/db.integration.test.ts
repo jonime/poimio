@@ -167,9 +167,9 @@ describe.skipIf(!enabled || serviceKey == null)("IngestDb against a real databas
     const { client, db } = ready();
     const items = [item(`${prefix}/a`, "Item A"), item(`${prefix}/b`, "Item B")];
 
-    expect(await db.insertItems(sourceA, items)).toBe(2);
+    expect(await db.insertItems(sourceA, items)).toHaveLength(2);
     // Re-inserting the same items (unchanged feed) adds nothing.
-    expect(await db.insertItems(sourceA, items)).toBe(0);
+    expect(await db.insertItems(sourceA, items)).toHaveLength(0);
 
     const { data, error } = await client
       .from("content_items")
@@ -183,8 +183,8 @@ describe.skipIf(!enabled || serviceKey == null)("IngestDb against a real databas
     const { client, db } = ready();
     const shared = item(`${prefix}/shared`, "Shared item");
 
-    expect(await db.insertItems(sourceA, [shared])).toBe(1);
-    expect(await db.insertItems(sourceB, [shared])).toBe(0);
+    expect(await db.insertItems(sourceA, [shared])).toHaveLength(1);
+    expect(await db.insertItems(sourceB, [shared])).toHaveLength(0);
 
     const { data, error } = await client
       .from("content_items")
@@ -200,7 +200,7 @@ describe.skipIf(!enabled || serviceKey == null)("IngestDb against a real databas
     const nonEmpty = item(`${prefix}/summary`, "Summary");
     const empty = { ...item(`${prefix}/empty`, "Empty"), summary: "  " };
 
-    expect(await db.insertItems(sourceA, [nonEmpty, empty])).toBe(2);
+    expect(await db.insertItems(sourceA, [nonEmpty, empty])).toHaveLength(2);
 
     const { data, error } = await client
       .from("content_items")

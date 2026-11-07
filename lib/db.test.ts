@@ -47,13 +47,13 @@ class FakeIngestDb implements IngestDb {
     return this.sources.filter((s) => s.isActive);
   }
 
-  async insertItems(source: Pick<Source, "id" | "language">, items: ParsedItem[]): Promise<number> {
+  async insertItems(source: Pick<Source, "id" | "language">, items: ParsedItem[]) {
     this.insertCalls.push({ source, items });
-    let inserted = 0;
-    for (const it of items) {
-      if (!this.insertedUrls.has(it.url) && !this.existingUrls.has(it.url)) {
-        this.insertedUrls.add(it.url);
-        inserted++;
+    const inserted = [];
+    for (const item of items) {
+      if (!this.insertedUrls.has(item.url) && !this.existingUrls.has(item.url)) {
+        this.insertedUrls.add(item.url);
+        inserted.push({ id: item.url, url: item.url });
       }
     }
     return inserted;

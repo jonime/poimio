@@ -1,13 +1,27 @@
-import { type EnrichmentDb, type IngestDb, recordSourceOutcome, type Source } from "./db.ts";
+import {
+  type EnrichmentDb,
+  type IngestDb,
+  recordSourceOutcome,
+  type Source,
+  type ThumbnailWriter,
+} from "./db.ts";
 import { type EmbeddingOptions, type EmbeddingRunResult, embedPendingItems } from "./embeddings.ts";
 import {
   type EnrichmentOptions,
   type EnrichmentRunResult,
   runEnrichment,
 } from "./enrich/coordinator.ts";
+import { fetchPageHtml, type PageFetchBatchOptions, type PageFetchResult } from "./enrich/page.ts";
 import type { FetchBatchOptions, FetchResult } from "./fetch.ts";
 import { fetchFeeds } from "./fetch.ts";
 import { parseFeed } from "./normalize/parse.ts";
+import { MIN_THUMBNAIL_WIDTH } from "./normalize/thumbnail.ts";
+import { applyThumbnail, lookupThumbnails, type ThumbnailCandidate } from "./thumbnails/lookup.ts";
+import {
+  NASA_RELEASES_FEED_URL,
+  NASA_RELEASES_RULE,
+  publisherAllowsArticle,
+} from "./thumbnails/publisher.ts";
 
 export interface SourceIngestionSummary {
   name: string;
@@ -30,6 +44,7 @@ export interface IngestionOptions {
   ) => Promise<FetchResult[]>;
   embedding?: EmbeddingOptions;
   enrichment?: Omit<EnrichmentOptions, "now">;
+  thumbnailFetch?: PageFetchBatchOptions;
   now?: () => Date;
 }
 
@@ -56,7 +71,7 @@ function isYouTubeShort(url: string): boolean {
 
 /** Fetch, parse, persist, and embed the currently active feed catalog. */
 export async function runIngestion(
-  db: IngestDb & EnrichmentDb,
+  db: IngestDb & EnrichmentDb & ThumbnailWriter,
   openAiApiKey: string,
   options: IngestionOptions = {},
 ): Promise<IngestionSummary> {
@@ -64,6 +79,7 @@ export async function runIngestion(
   const fetchBatch = options.fetchBatch ?? fetchFeeds;
   const results = await fetchBatch(sources.map(fetchInput));
   const summaries: SourceIngestionSummary[] = [];
+  const thumbnailCandidates: Array<ThumbnailCandidate & { publishedAt: Date }> = [];
 
   for (const [index, source] of sources.entries()) {
     const result = results[index];
@@ -121,10 +137,30 @@ export async function runIngestion(
       continue;
     }
 
-    summary.newItems = await db.insertItems(
-      source,
-      parsed.items.filter((item) => !isYouTubeShort(item.url)),
-    );
+    const items = parsed.items.filter((item) => !isYouTubeShort(item.url));
+    const inserted = await db.insertItems(source, items);
+    summary.newItems = inserted.length;
+    if (source.kind === "rss" && source.feedUrl === NASA_RELEASES_FEED_URL) {
+      const insertedIds = new Map(inserted.map(({ url, id }) => [url, id]));
+      for (const item of items) {
+        const id = insertedIds.get(item.url);
+        if (!id) continue;
+        insertedIds.delete(item.url);
+        if (
+          item.type === "article" &&
+          (item.thumbnailUrl === null ||
+            (item.thumbnailWidth ?? MIN_THUMBNAIL_WIDTH) < MIN_THUMBNAIL_WIDTH) &&
+          publisherAllowsArticle(NASA_RELEASES_RULE, item.url)
+        ) {
+          thumbnailCandidates.push({
+            id,
+            url: item.url,
+            thumbnailUrl: item.thumbnailUrl,
+            publishedAt: item.publishedAt,
+          });
+        }
+      }
+    }
     await recordSourceOutcome(
       db,
       source.id,
@@ -138,10 +174,24 @@ export async function runIngestion(
     );
   }
 
+  const thumbnailUrls = new Set(thumbnailCandidates.map((candidate) => candidate.url));
+  const cached = new Map<string, PageFetchResult>();
   const enrichment = await runEnrichment(db, openAiApiKey, {
     ...options.enrichment,
+    fetchPage: async (url) => {
+      const page = await (options.enrichment?.fetchPage ?? fetchPageHtml)(url);
+      if (thumbnailUrls.has(url)) cached.set(url, page);
+      return page;
+    },
     ...(options.now === undefined ? {} : { now: options.now }),
   });
+  thumbnailCandidates.sort((a, b) => b.publishedAt.getTime() - a.publishedAt.getTime());
+  const thumbnails = await lookupThumbnails(thumbnailCandidates, cached, options.thumbnailFetch);
+  for (const candidate of thumbnailCandidates) {
+    const thumbnail = thumbnails.get(candidate.id);
+    if (thumbnail) await applyThumbnail(db, candidate, thumbnail);
+  }
+
   const embeddings = await embedPendingItems(db, openAiApiKey, options.embedding);
   return { sources: summaries, enrichment, embeddings };
 }

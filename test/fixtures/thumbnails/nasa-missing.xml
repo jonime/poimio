@@ -1,0 +1,23 @@
+<rss version="2.0">
+  <channel>
+    <title>NASA</title>
+    <item>
+      <title>APOD: 2026 November 7 – De Gerlache-Kocher Massif</title>
+      <link>https://science.nasa.gov/image-article/apod-2026-november-7-de-gerlache-kocher-massif/</link>
+      <pubDate>Sat, 07 Nov 2026 05:05:00 +0000</pubDate>
+      <description>Sample feed description.</description>
+    </item>
+    <item>
+      <title>M30’s Sparkling Stars</title>
+      <link>https://www.nasa.gov/image-article/m30s-sparkling-stars/</link>
+      <pubDate>Fri, 06 Nov 2026 16:23:41 +0000</pubDate>
+      <description>Sample feed description.</description>
+    </item>
+    <item>
+      <title>NASA Astronauts to Answer Questions from Florida Students</title>
+      <link>https://www.nasa.gov/learning-resources/nasa-astronauts-to-answer-questions-from-florida-students-2/</link>
+      <pubDate>Thu, 05 Nov 2026 15:11:25 +0000</pubDate>
+      <description>Sample feed description.</description>
+    </item>
+  </channel>
+</rss>

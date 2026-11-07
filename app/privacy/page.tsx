@@ -15,7 +15,7 @@ export default function PrivacyPage() {
       title="Privacy Policy"
       subtitle={
         <p className="text-sm text-muted-foreground">
-          Last updated: <time dateTime="2026-10-31">31 October 2026</time>
+          Last updated: <time dateTime="2026-11-07">7 November 2026</time>
         </p>
       }
     >
@@ -79,6 +79,15 @@ export default function PrivacyPage() {
           respective services.
         </p>
         <p>
+          Vercel Speed Insights measures how quickly pages load and respond. Vercel receives
+          performance measurements along with the page URL, browser and device information, network
+          speed, and country. See{" "}
+          <a href="https://vercel.com/docs/speed-insights/privacy-policy">
+            what Speed Insights collects
+          </a>
+          .
+        </p>
+        <p>
           OpenAI processes public feed titles and descriptions to create numerical representations
           used for recommendations. Poimio does not send your Google account information or personal
           feedback to OpenAI. Recommendation comparisons run in the database.
@@ -102,9 +111,8 @@ export default function PrivacyPage() {
       <section aria-labelledby="cookies">
         <h2 id="cookies">Cookies</h2>
         <p>
-          Poimio uses necessary authentication cookies to maintain your session. It does not use
-          advertising cookies or install analytics trackers. Google and websites you visit through
-          external links may use their own cookies under their own policies.
+          Poimio uses necessary authentication cookies to maintain your session. Google and websites
+          you visit through external links may use their own cookies under their own policies.
         </p>
       </section>
 

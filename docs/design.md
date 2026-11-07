@@ -175,7 +175,7 @@ Guiding principle: lowest possible cost, single language (TypeScript).
 | Database and vectors | Supabase Postgres + pgvector                                                                            | Free tier     |
 | Database access      | supabase-js (`@supabase/ssr` in Next.js), SQL migrations via Supabase CLI, generated TypeScript types   | Free          |
 | Authentication       | Supabase Auth with Google login                                                                         | Free          |
-| Scheduled jobs       | GitHub Actions scheduled workflow running TypeScript scripts                                            | Free          |
+| Scheduled jobs       | Vercel Schedules for hourly ingestion. GitHub Actions provides manual fallback.                         | Free tier     |
 | Embeddings           | OpenAI `text-embedding-3-small`, 512 dimensions                                                         | < 1 €/month   |
 | LLM                  | OpenAI GPT models via Responses API; description enrichment uses `gpt-6-luna`                           | A few € total |
 | Evaluation labels    | Local Qwen 3.8 27B via MTPLX (OpenAI-compatible API)                                                    | Free          |
@@ -186,8 +186,8 @@ Guiding principle: lowest possible cost, single language (TypeScript).
 Implementation notes:
 
 - Recommender and baseline scoring are Postgres SQL functions called via RPC, so vectors never leave the database.
-- Scheduled jobs run outside Vercel to avoid Hobby cron and function timeout limits; regular jobs also prevent the Supabase free project from pausing.
-- Hourly ingestion uses roughly 700–800 GitHub Actions minutes per month, within the 2,000 free minutes for private repositories (unlimited for public ones).
+- Vercel runs ingestion hourly through a private function with a five-minute limit. The Supabase lease prevents overlapping Vercel runs and expires if the function times out. Regular ingestion also keeps the Supabase project active. [Spec 016](specs/016-vercel-scheduled-ingestion.md)
+- For a GitHub fallback, pause `feed-ingestion` in Vercel, let any in-flight run finish, and dispatch **Ingest feeds** in GitHub Actions. To restore automatic GitHub ingestion, also restore the previous cron trigger (`17 * * * *`). Wait for GitHub ingestion to finish before resuming Vercel.
 - 512-dimension embeddings and pruning of old items keep the database within the 500 MB free limit.
 - Evaluation scripts are TypeScript; results are exported as CSV/JSON for charts.
 - Vercel Hobby is non-commercial only; a paid plan is needed if the project becomes a product.

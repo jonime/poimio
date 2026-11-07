@@ -25,33 +25,25 @@ export function AppHeader({
           <Image src="/icon.png" alt="" width={1254} height={1254} className="size-7" />
           <span className="hidden sm:inline">Poimio</span>
         </Link>
-        {guest ? (
-          <nav aria-label="Main navigation">
-            <Button variant="ghost" nativeButton={false} render={<Link href="/" />}>
-              Home
-            </Button>
-          </nav>
-        ) : (
-          <>
-            <AppNav />
-            <div className="ml-auto flex min-w-0 items-center gap-2">
-              {firstName && (
-                <span className="hidden truncate text-sm text-muted-foreground md:inline">
-                  {firstName}
-                </span>
-              )}
-              <form action={signOut}>
-                <Button variant="ghost" type="submit">
-                  <LogOutIcon
-                    className="hidden sm:block"
-                    data-icon="inline-start"
-                    aria-hidden="true"
-                  />
-                  Sign out
-                </Button>
-              </form>
-            </div>
-          </>
+        <AppNav guest={guest} />
+        {!guest && (
+          <div className="ml-auto flex min-w-0 items-center gap-2">
+            {firstName && (
+              <span className="hidden truncate text-sm text-muted-foreground md:inline">
+                {firstName}
+              </span>
+            )}
+            <form action={signOut}>
+              <Button variant="ghost" type="submit">
+                <LogOutIcon
+                  className="hidden sm:block"
+                  data-icon="inline-start"
+                  aria-hidden="true"
+                />
+                Sign out
+              </Button>
+            </form>
+          </div>
         )}
       </div>
     </header>

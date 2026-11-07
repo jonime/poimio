@@ -1,6 +1,6 @@
 # 016 — Hourly ingestion on Vercel
 
-**Status:** In progress\
+**Status:** Done\
 **Milestone:** Final\
 **Depends on:** [001](001-ingestion.md), [004](004-deployment-access.md)
 
@@ -45,7 +45,7 @@ Run Poimio's existing feed ingestion hourly on Vercel so short feed windows are 
 - [x] 1. Verify beta access, Fluid Compute, and the production environment target. Confirm the private function integration and get approval before adding any dependency.
 - [x] 2. Add the private ingestion target and static schedule. Verify the build, invocation behavior, and checks locally.
 - [x] 3. Scope the ingestion keys to Production in Vercel and apply the lease migration to the verified production Supabase project. Pause GitHub ingestion and wait for any run in progress to finish before verifying the manual and automatic Vercel runs. If verification fails, pause the Vercel schedule, let in-flight work finish, and re-enable the original GitHub workflow.
-- [ ] 4. After verification, remove the GitHub cron trigger and re-enable the workflow once the manual-only definition is on the default branch. Record the run evidence and update [design.md](../design.md#5-technology-stack) with the active scheduler and fallback steps. To restore automatic GitHub ingestion, pause Vercel, let in-flight work finish, and restore the previous cron trigger.
+- [x] 4. After verification, remove the GitHub cron trigger and re-enable the workflow once the manual-only definition is on the default branch. Record the run evidence and update [design.md](../design.md#5-technology-stack) with the active scheduler and fallback steps. To restore automatic GitHub ingestion, pause Vercel, let in-flight work finish, and restore the previous cron trigger.
 
 ## Verification
 
@@ -55,3 +55,4 @@ Run Poimio's existing feed ingestion hourly on Vercel so short feed windows are 
 - In production, the lease migration was present and both ingestion keys were restricted to Production. The first manual run failed when Vercel's Node.js runtime loaded `jsdom`. Set `NODE_OPTIONS=--experimental-require-module` in the Production environment and rebuild through CI to apply the setting. [Vercel Node.js configuration](https://vercel.com/docs/functions/runtimes/node-js/advanced-node-configuration#experimental-nodejs-require-of-es-module)
 - The [CI redeploy](https://github.com/jonime/poimio/actions/runs/42383579816/attempts/2) succeeded. Manual run `schx_7GTMEJM09032PTBFQ4XA5SSXQW` on 7 November 2026 at 16:58 EET succeeded and advanced fetch timestamps for 17 active sources.
 - The first automatic run, `schx_4W699ZBEVBGVADSY8EZV6C7WMY`, succeeded on 7 November 2026 at 17:06 EET and advanced fetch timestamps for 17 active sources. GitHub ingestion was paused during both successful runs.
+- After [PR #19](https://github.com/jonime/poimio/pull/19) merged, GitHub reported **Ingest feeds** active with `workflow_dispatch` as its only trigger on `main`. The hourly Vercel schedule remained active.

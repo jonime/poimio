@@ -13,10 +13,11 @@
  * - Atom `<category>` terms
  * - `<media:thumbnail url="…">`
  *
- * These run per item block, not over the whole feed, so stray text inside a
- * description's CDATA cannot produce phantom fields.
+ * Article thumbnail candidates are read from the XML tree so embedded
+ * content and comments cannot supply item metadata.
  */
 
+import { JSDOM } from "jsdom";
 import { decodeEntities } from "./text.ts";
 import { type FeedThumbnail, imageWidth, selectFeedThumbnail } from "./thumbnail.ts";
 
@@ -84,37 +85,91 @@ export function extractThumbnailUrl(block: string): string | null {
   return url == null ? null : decodeEntities(url).trim();
 }
 
-/** Consider media on this item only, ignoring embedded HTML and channel art. */
-export function extractArticleThumbnail(block: string): FeedThumbnail | null {
-  const markup = block.replace(
-    /<!\[CDATA\[[\s\S]*?\]\]>|<!--[\s\S]*?-->|<(description|summary|content|content:encoded)\b[^>]*>[\s\S]*?<\/\1>/gi,
-    "",
+const MEDIA_RSS_NAMESPACE = "http://search.yahoo.com/mrss/";
+
+function isMediaContainer(element: Element): boolean {
+  return (
+    element.namespaceURI === MEDIA_RSS_NAMESPACE &&
+    (element.localName === "group" || element.localName === "content")
   );
+}
+
+function extractArticleThumbnail(item: Element): FeedThumbnail | null {
   const candidates: FeedThumbnail[] = [];
   let existingUnknown: FeedThumbnail | undefined;
-  for (const match of markup.matchAll(
-    /<(media:thumbnail|media:content|enclosure|link)(?=\s|\/?>)[^>]*>/gi,
-  )) {
-    const [tag, name] = match;
-    const kind = name?.toLowerCase();
-    if (kind === "link" && attrValue(tag, "rel") !== "enclosure") continue;
-    if (kind !== "media:thumbnail") {
-      const type = attrValue(tag, "type");
-      if (
-        !/^image\/[^\s]+$/i.test(type ?? "") &&
-        !(kind === "media:content" && attrValue(tag, "medium") === "image" && type === null)
-      )
-        continue;
+  const pending = Array.from(item.children).reverse();
+
+  while (pending.length > 0) {
+    const element = pending.pop();
+    if (!element) break;
+    if (isMediaContainer(element)) {
+      for (const child of Array.from(element.children).reverse()) pending.push(child);
     }
 
-    const value = attrValue(tag, kind === "link" ? "href" : "url");
-    const url = URL.parse(decodeEntities(value ?? "").trim());
+    const kind = element.localName;
+    const isMedia = element.namespaceURI === MEDIA_RSS_NAMESPACE;
+    const isThumbnail = isMedia && kind === "thumbnail";
+    const isMediaContent = isMedia && kind === "content";
+    const isItemElement =
+      element.parentElement === item && element.namespaceURI === item.namespaceURI;
+    const isAtomEnclosure =
+      isItemElement && kind === "link" && element.getAttribute("rel") === "enclosure";
+    const isRssEnclosure = isItemElement && kind === "enclosure";
+    if (!isThumbnail && !isMediaContent && !isAtomEnclosure && !isRssEnclosure) continue;
+
+    const type = element.getAttribute("type");
+    if (
+      !isThumbnail &&
+      !/^image\/[^\s]+$/i.test(type ?? "") &&
+      !(isMediaContent && type === null && element.getAttribute("medium") === "image")
+    ) {
+      continue;
+    }
+
+    const value = element.getAttribute(isAtomEnclosure ? "href" : "url");
+    const url = value && URL.parse(value.trim());
     if (!url || !["http:", "https:"].includes(url.protocol) || url.username || url.password)
       continue;
-    const candidate = { url: url.href, width: imageWidth(attrValue(tag, "width")) };
-    if (kind === "media:thumbnail" && candidate.width === null) existingUnknown ??= candidate;
+
+    const candidate = { url: url.href, width: imageWidth(element.getAttribute("width")) };
+    if (isThumbnail && candidate.width === null) existingUnknown ??= candidate;
     candidates.push(candidate);
   }
+
   const selected = selectFeedThumbnail(candidates);
   return selected?.width === null ? (existingUnknown ?? selected) : selected;
+}
+
+/** Read actual item metadata in document order, without rewriting the feed XML. */
+export function extractArticleThumbnails(
+  xml: string,
+  format: "rss" | "atom",
+  expectedCount: number,
+): Array<FeedThumbnail | null> {
+  let dom: JSDOM;
+  try {
+    dom = new JSDOM(xml, { contentType: "application/xml" });
+  } catch {
+    // Keep items from the primary parser when strict XML parsing fails.
+    return [];
+  }
+
+  try {
+    const root = dom.window.document.documentElement;
+    const parent =
+      format === "rss"
+        ? Array.from(root.children).find(
+            (element) =>
+              element.localName === "channel" && element.namespaceURI === root.namespaceURI,
+          )
+        : root;
+    const itemTag = format === "rss" ? "item" : "entry";
+    const items = Array.from(parent?.children ?? []).filter(
+      (element) => element.localName === itemTag && element.namespaceURI === root.namespaceURI,
+    );
+    if (items.length !== expectedCount) return [];
+    return items.map(extractArticleThumbnail);
+  } finally {
+    dom.window.close();
+  }
 }

@@ -25,7 +25,7 @@ import Parser from "rss-parser";
 import { removeYouTubeBoilerplate } from "./boilerplate.ts";
 import {
   elementText,
-  extractArticleThumbnail,
+  extractArticleThumbnails,
   extractAtomCategories,
   extractThumbnailUrl,
   splitItemBlocks,
@@ -172,6 +172,7 @@ export async function parseFeed(xml: string, options: ParseOptions = {}): Promis
   const feed = await parser.parseString(xml);
   const items = feed.items;
   const blocks = splitItemBlocks(xml, format);
+  const thumbnails = extractArticleThumbnails(xml, format, items.length);
   // Pairing is positional: rss-parser preserves document order. If the
   // counts ever disagree we normalize without the raw-block fields rather
   // than risk attaching data to the wrong item.
@@ -195,7 +196,7 @@ export async function parseFeed(xml: string, options: ParseOptions = {}): Promis
         ? dedupe((item.categories as string[] | undefined) ?? [])
         : dedupe(extractAtomCategories(block));
 
-    const thumbnail = type === "article" ? extractArticleThumbnail(block) : null;
+    const thumbnail = type === "article" ? thumbnails[index] : null;
 
     return {
       url,

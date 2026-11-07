@@ -6,7 +6,7 @@ The [public guest homepage](008-guest-feed-preview.md) should identify Poimio as
 
 ## Acceptance criteria and tasks
 
-- [x] 1. Unknown paths return HTTP 404. Markdown requests receive an explanation and a link to `/llms.txt`. Existing protected routes retain their authentication checks.
+- [x] 1. Unknown paths return HTTP 404 using Next.js's standard response. Existing protected routes retain their authentication checks. The user approved removing Markdown-specific 404 responses on 7 Nov 2026 to enable meaningful typed-route checks.
 - [x] 2. The homepage negotiates HTML and Markdown for GET and HEAD, honors Accept preferences, and includes Accept in Vary on Markdown responses. Markdown describes the public product and its access requirements without reading account data. Next.js navigation and form submissions retain their existing behavior.
 - [x] 3. The homepage title, canonical URL and visible heading identify Poimio as a content discovery app.
 - [x] 4. The homepage HTML contains Schema.org SoftwareApplication JSON-LD using the same product identity.

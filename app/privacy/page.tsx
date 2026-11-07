@@ -3,6 +3,8 @@ import { PublicInfoPage } from "@/components/public-info-page";
 import { siteUrl } from "@/lib/public-home";
 import { operatorName, privacyEmail } from "@/lib/public-operator";
 
+export const ensureStatic = "shell";
+
 export const metadata: Metadata = {
   title: "Privacy Policy | Poimio",
   description: "How Poimio handles account information and recommendation feedback.",

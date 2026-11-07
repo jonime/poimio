@@ -1,8 +1,14 @@
 import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it, vi } from "vitest";
-import AboutPage, { metadata as aboutMetadata } from "./about/page";
-import ContactPage, { metadata as contactMetadata } from "./contact/page";
-import PrivacyPage, { metadata as privacyMetadata } from "./privacy/page";
+import AboutPage, { metadata as aboutMetadata, ensureStatic as aboutStatic } from "./about/page";
+import ContactPage, {
+  metadata as contactMetadata,
+  ensureStatic as contactStatic,
+} from "./contact/page";
+import PrivacyPage, {
+  metadata as privacyMetadata,
+  ensureStatic as privacyStatic,
+} from "./privacy/page";
 import robots from "./robots";
 import sitemap from "./sitemap";
 
@@ -13,6 +19,10 @@ vi.mock("@/lib/supabase/server", () => ({
 }));
 
 describe("public trust pages and crawler metadata", () => {
+  it("requires static shells for public information pages", () => {
+    expect([aboutStatic, contactStatic, privacyStatic]).toEqual(["shell", "shell", "shell"]);
+  });
+
   it.each([
     ["about", AboutPage, aboutMetadata, "About Poimio"],
     ["contact", ContactPage, contactMetadata, "Contact Poimio"],

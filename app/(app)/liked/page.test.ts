@@ -1,4 +1,4 @@
-import { renderToStaticMarkup } from "react-dom/server";
+import { renderToReadableStream } from "react-dom/server";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import LikedPage from "./page";
 
@@ -87,7 +87,9 @@ beforeEach(() => {
 
 describe("liked page", () => {
   it("loads only like rows newest-first through the session client", async () => {
-    const html = renderToStaticMarkup(await LikedPage());
+    const stream = await renderToReadableStream(await LikedPage());
+    await stream.allReady;
+    const html = await new Response(stream).text();
 
     expect(auth.getClaims).toHaveBeenCalledExactlyOnceWith();
     expect(from).toHaveBeenCalledExactlyOnceWith("feedback");
@@ -107,13 +109,42 @@ describe("liked page", () => {
     expect(html).toContain("Unlike");
   });
 
+  it("streams the heading while the verified user's likes are loading", async () => {
+    let resolveLikes: (result: { data: []; error: null }) => void = () => {};
+    order.mockReturnValueOnce(
+      new Promise((resolve) => {
+        resolveLikes = resolve;
+      }),
+    );
+    const stream = await renderToReadableStream(await LikedPage());
+    const reader = stream.getReader();
+    try {
+      const firstChunk = await reader.read();
+      const shell = new TextDecoder().decode(firstChunk.value);
+      expect(shell).toContain("Liked items");
+      expect(shell).toContain("Loading liked items...");
+      expect(auth.getClaims).toHaveBeenCalledBefore(from);
+    } finally {
+      resolveLikes({ data: [], error: null });
+      while (!(await reader.read()).done) {}
+    }
+  });
+
   it.each([
     { data: null, error: null },
     { data: { claims: {} }, error: null },
     { ...claims, error: new Error("Unverified claims") },
   ])("redirects when the user is missing or unverified", async (result) => {
-    auth.getClaims.mockResolvedValueOnce(result);
-    await expect(LikedPage()).rejects.toThrow("REDIRECT:/");
+    auth.getClaims.mockResolvedValue(result);
+    const errors: unknown[] = [];
+    const stream = await renderToReadableStream(LikedPage(), {
+      onError: (error) => {
+        errors.push(error);
+      },
+    });
+    await stream.allReady;
+    await new Response(stream).text();
+    expect(errors).toEqual([expect.objectContaining({ message: "REDIRECT:/" })]);
     expect(from).not.toHaveBeenCalled();
   });
 });

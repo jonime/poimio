@@ -50,6 +50,15 @@ beforeEach(() => {
   auth.exchangeCodeForSession.mockResolvedValue({ error: null });
 });
 
+async function renderHome(error?: string) {
+  const searchParams = error ? { error } : {};
+  const stream = await renderToReadableStream(
+    await Home({ searchParams: Promise.resolve(searchParams) }),
+  );
+  await stream.allReady;
+  return new Response(stream).text();
+}
+
 describe("signed-in page", () => {
   it("independently verifies identity before rendering the feed", async () => {
     await Home({ searchParams: Promise.resolve({}) });
@@ -60,7 +69,7 @@ describe("signed-in page", () => {
   it("keeps public and personal output separate through sign-in and sign-out", async () => {
     auth.getClaims.mockResolvedValueOnce({ data: null, error: null });
     const guest = renderToStaticMarkup(await Home({ searchParams: Promise.resolve({}) }));
-    const signedIn = renderToStaticMarkup(await Home({ searchParams: Promise.resolve({}) }));
+    const signedIn = await renderHome();
     auth.getClaims.mockResolvedValueOnce({ data: null, error: null });
     const signedOut = renderToStaticMarkup(await Home({ searchParams: Promise.resolve({}) }));
     expect(guest).toContain("Public preview cards");
@@ -77,9 +86,7 @@ describe("signed-in page", () => {
   });
 
   it("renders callback errors even with an existing verified session", async () => {
-    const html = renderToStaticMarkup(
-      await Home({ searchParams: Promise.resolve({ error: "callback" }) }),
-    );
+    const html = await renderHome("callback");
     expect(html).toContain("Sign-in could not be completed. Please try again.");
     expect(html).toContain("Your feed");
     expect(GuestPreview).not.toHaveBeenCalled();
@@ -126,7 +133,7 @@ describe("signed-in page", () => {
       error: null,
     });
 
-    const html = renderToStaticMarkup(await Home({ searchParams: Promise.resolve({}) }));
+    const html = await renderHome();
 
     expect(rpc).toHaveBeenCalledExactlyOnceWith("get_feed", { p_limit: 30 });
     expect(html).toContain("A useful article");
@@ -170,7 +177,7 @@ describe("signed-in page", () => {
       error: null,
     });
 
-    const html = renderToStaticMarkup(await Home({ searchParams: Promise.resolve({}) }));
+    const html = await renderHome();
 
     expect(html.includes("AI summary")).toBe(visible);
   });
@@ -193,10 +200,32 @@ describe("signed-in page", () => {
   );
 
   it("shows a retry message when sign-out fails", async () => {
-    const html = renderToStaticMarkup(
-      await Home({ searchParams: Promise.resolve({ error: "sign-out" }) }),
-    );
+    const html = await renderHome("sign-out");
     expect(html).toContain("Sign-out failed. Please try again.");
+  });
+
+  it("streams the verified header and feed controls while recommendations load", async () => {
+    const feed = Promise.withResolvers<{ data: []; error: null }>();
+    rpc.mockReturnValueOnce(feed.promise);
+    const stream = await renderToReadableStream(await Home({ searchParams: Promise.resolve({}) }));
+    const reader = stream.getReader();
+    try {
+      const decoder = new TextDecoder();
+      let shell = "";
+      while (!shell.includes("Loading your feed...")) {
+        const chunk = await reader.read();
+        if (chunk.done) break;
+        shell += decoder.decode(chunk.value, { stream: true });
+      }
+      expect(shell).toContain("Sign out");
+      expect(shell).toContain("Your feed");
+      expect(shell).toContain("Refresh feed");
+      expect(shell).toContain("Loading your feed...");
+      expect(auth.getClaims).toHaveBeenCalledBefore(rpc);
+    } finally {
+      feed.resolve({ data: [], error: null });
+      while (!(await reader.read()).done) {}
+    }
   });
 });
 

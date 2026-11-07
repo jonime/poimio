@@ -1,11 +1,13 @@
 import { CircleAlertIcon } from "lucide-react";
 import { redirect } from "next/navigation";
+import { Suspense } from "react";
 import { Alert, AlertTitle } from "@/components/ui/alert";
+import { Skeleton } from "@/components/ui/skeleton";
 import type { LikedFeedItem } from "@/lib/feed-ui";
 import { createClient } from "@/lib/supabase/server";
 import LikedList from "./liked-list";
 
-export const instant = false;
+export const instant = true;
 
 interface RelatedContentItem {
   id: string;
@@ -26,7 +28,30 @@ interface RawLikedItem {
   item: RelatedContentItem | RelatedContentItem[] | null;
 }
 
-export default async function LikedPage() {
+export default function LikedPage() {
+  return (
+    <main className="mx-auto flex w-full max-w-2xl flex-col gap-4 px-4 py-6">
+      <h1 id="liked-heading" className="text-2xl font-semibold tracking-tight">
+        Liked items
+      </h1>
+      <Suspense
+        fallback={
+          <div className="flex flex-col gap-4" aria-busy="true">
+            <p role="status" className="sr-only">
+              Loading liked items...
+            </p>
+            <Skeleton className="h-48 w-full" />
+            <Skeleton className="h-48 w-full" />
+          </div>
+        }
+      >
+        <LikedContent />
+      </Suspense>
+    </main>
+  );
+}
+
+async function LikedContent() {
   const supabase = await createClient();
   const { data: claimsData, error: claimsError } = await supabase.auth.getClaims();
   if (claimsError || !claimsData?.claims?.sub) redirect("/");
@@ -66,19 +91,12 @@ export default async function LikedPage() {
 
   const renderedAt = new Date().toISOString();
 
-  return (
-    <main className="mx-auto flex w-full max-w-2xl flex-col gap-4 px-4 py-6">
-      <h1 id="liked-heading" className="text-2xl font-semibold tracking-tight">
-        Liked items
-      </h1>
-      {error ? (
-        <Alert variant="destructive">
-          <CircleAlertIcon aria-hidden="true" />
-          <AlertTitle>Liked items could not be loaded. Please try again.</AlertTitle>
-        </Alert>
-      ) : (
-        <LikedList items={likedItems} renderedAt={renderedAt} />
-      )}
-    </main>
+  return error ? (
+    <Alert variant="destructive">
+      <CircleAlertIcon aria-hidden="true" />
+      <AlertTitle>Liked items could not be loaded. Please try again.</AlertTitle>
+    </Alert>
+  ) : (
+    <LikedList items={likedItems} renderedAt={renderedAt} />
   );
 }

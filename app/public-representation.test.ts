@@ -1,11 +1,18 @@
 import { readFileSync } from "node:fs";
+import type { Route } from "next";
 import { NextRequest } from "next/server";
 import { describe, expect, it } from "vitest";
 import { preferredRepresentation } from "@/lib/public-representation";
 import { proxy } from "../proxy";
-import { GET, HEAD } from "./[...missing]/route";
+
+// @ts-expect-error Unknown internal routes must not be accepted by typedRoutes.
+const invalidRoute: Route<"/misspelled-page"> = "/misspelled-page";
 
 describe("public HTTP representations", () => {
+  it("rejects unknown internal routes at typecheck time", () => {
+    expect(invalidRoute).toBe("/misspelled-page");
+  });
+
   it.each([
     [null, "text/html"],
     ["*/*", "text/html"],
@@ -52,33 +59,6 @@ describe("public HTTP representations", () => {
     );
     expect(response.status).toBe(406);
     expect(response.headers.get("vary")).toContain("Accept");
-  });
-
-  it.each(["text/markdown", "text/html"])(
-    "returns 404 for missing paths with %s",
-    async (accept) => {
-      const response = GET(
-        new Request("https://www.poimio.cc/unknown/nested.png", { headers: { accept } }),
-      );
-      expect(response.status).toBe(404);
-      expect(response.headers.get("content-type")).toBe(`${accept}; charset=utf-8`);
-      expect(response.headers.get("vary")).toBe("Accept");
-      const body = await response.text();
-      expect(body).toContain("The requested resource could not be found on Poimio.");
-      if (accept === "text/markdown") expect(body).toContain("](/llms.txt)");
-    },
-  );
-
-  it("returns a bodyless Markdown 404 to HEAD requests", async () => {
-    const response = HEAD(
-      new Request("https://www.poimio.cc/unknown", {
-        method: "HEAD",
-        headers: { accept: "text/markdown" },
-      }),
-    );
-    expect(response.status).toBe(404);
-    expect(response.headers.get("content-type")).toBe("text/markdown; charset=utf-8");
-    expect(await response.text()).toBe("");
   });
 
   it("publishes agent use cases as llms.txt file-list entries", () => {

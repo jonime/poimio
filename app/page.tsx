@@ -5,6 +5,7 @@ import Link from "next/link";
 import { Suspense } from "react";
 import { AppHeader } from "@/components/app-header";
 import { Alert, AlertTitle } from "@/components/ui/alert";
+import { Skeleton } from "@/components/ui/skeleton";
 import { displayNameFromClaims } from "@/lib/app-access";
 import type { FeedItem } from "@/lib/feed-ui";
 import { homeDescription, homeTitle, productTerm, siteUrl } from "@/lib/public-home";
@@ -17,7 +18,7 @@ import { RefreshFeedButton } from "./feed/refresh-feed-button";
 import { LocalSignInDialog } from "./login/local-sign-in-dialog";
 import { SignInButton } from "./login/sign-in-button";
 
-export const instant = false;
+export const instant = true;
 
 export const metadata: Metadata = {
   title: homeTitle,
@@ -153,8 +154,6 @@ export default async function Home({
     );
   }
 
-  const { data: feedData, error: feedError } = await supabase.rpc("get_feed", { p_limit: 30 });
-  const renderedAt = new Date().toISOString();
   return (
     <>
       <AppHeader displayName={displayNameFromClaims(data?.claims) ?? null} />
@@ -173,20 +172,39 @@ export default async function Home({
             </h1>
             <RefreshFeedButton />
           </div>
-          {feedError ? (
-            <Alert variant="destructive">
-              <CircleAlertIcon aria-hidden="true" />
-              <AlertTitle>The feed could not be loaded. Please try again.</AlertTitle>
-            </Alert>
-          ) : (
-            <FeedList
-              key={renderedAt}
-              initialItems={(feedData ?? []) as FeedItem[]}
-              renderedAt={renderedAt}
-            />
-          )}
+          <Suspense
+            fallback={
+              <div className="flex flex-col gap-4" aria-busy="true">
+                <p role="status" className="sr-only">
+                  Loading your feed...
+                </p>
+                <Skeleton className="h-48 w-full" />
+                <Skeleton className="h-48 w-full" />
+              </div>
+            }
+          >
+            <PersonalFeed supabase={supabase} />
+          </Suspense>
         </section>
       </main>
     </>
+  );
+}
+
+async function PersonalFeed({ supabase }: { supabase: Awaited<ReturnType<typeof createClient>> }) {
+  const { data: feedData, error: feedError } = await supabase.rpc("get_feed", { p_limit: 30 });
+  const renderedAt = new Date().toISOString();
+
+  return feedError ? (
+    <Alert variant="destructive">
+      <CircleAlertIcon aria-hidden="true" />
+      <AlertTitle>The feed could not be loaded. Please try again.</AlertTitle>
+    </Alert>
+  ) : (
+    <FeedList
+      key={renderedAt}
+      initialItems={(feedData ?? []) as FeedItem[]}
+      renderedAt={renderedAt}
+    />
   );
 }

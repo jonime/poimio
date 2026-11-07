@@ -4,6 +4,8 @@ import { PublicInfoPage } from "@/components/public-info-page";
 import { siteUrl } from "@/lib/public-home";
 import { operatorName } from "@/lib/public-operator";
 
+export const ensureStatic = "shell";
+
 export const metadata: Metadata = {
   title: "About Poimio | Content discovery app",
   description: "Learn how Poimio discovers Finnish and English articles and videos.",

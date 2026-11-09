@@ -1,22 +1,61 @@
 import { createServerClient } from "@supabase/ssr";
 import { type NextRequest, NextResponse } from "next/server";
-import { homeMarkdown } from "./lib/public-home";
+import { homeMarkdown, siteUrl } from "./lib/public-home";
 import { markdown, preferredRepresentation } from "./lib/public-representation";
 import { requireDefined } from "./lib/required.ts";
 
+export const sessionRoutes = new Set([
+  "/",
+  "/login",
+  "/about",
+  "/contact",
+  "/privacy",
+  "/auth/callback",
+  "/liked",
+]);
+
+export const otherRoutes = new Set([
+  "/api/scheduled-ingestion",
+  "/robots.txt",
+  "/sitemap.xml",
+  "/full.png",
+  "/icon.png",
+  "/llms.txt",
+]);
+
+const notFoundMarkdown = `# Page not found
+
+Poimio has no page at this URL.
+
+[Agent guidance](${siteUrl}llms.txt)
+`;
+
+function isKnownPath(pathname: string) {
+  if (sessionRoutes.has(pathname) || otherRoutes.has(pathname)) return true;
+  try {
+    const decoded = decodeURIComponent(pathname);
+    return sessionRoutes.has(decoded) || otherRoutes.has(decoded);
+  } catch {
+    return false;
+  }
+}
+
 export async function proxy(request: NextRequest) {
-  const isHome = request.nextUrl.pathname === "/";
+  const { pathname } = request.nextUrl;
+  const isHome = pathname === "/";
+  const refreshSession = sessionRoutes.has(pathname);
   if (
-    isHome &&
     (request.method === "GET" || request.method === "HEAD") &&
-    !request.headers.has("rsc")
+    !request.headers.has("rsc") &&
+    (isHome || !isKnownPath(pathname))
   ) {
     const representation = preferredRepresentation(request.headers.get("accept"));
-    if (representation === markdown || representation === null) {
+    if (representation === markdown || (isHome && representation === null)) {
+      const body = isHome ? homeMarkdown : notFoundMarkdown;
       return new NextResponse(
-        representation === markdown && request.method === "GET" ? homeMarkdown : null,
+        representation === markdown && request.method === "GET" ? body : null,
         {
-          status: representation === markdown ? 200 : 406,
+          status: isHome ? (representation === markdown ? 200 : 406) : 404,
           headers: {
             "Cache-Control": "no-store",
             ...(representation === markdown && { "Content-Type": `${markdown}; charset=utf-8` }),
@@ -26,6 +65,8 @@ export async function proxy(request: NextRequest) {
       );
     }
   }
+  if (!refreshSession) return NextResponse.next();
+
   const authStart = performance.now();
   let response = NextResponse.next({ request });
   const supabase = createServerClient(
@@ -53,10 +94,10 @@ export async function proxy(request: NextRequest) {
   );
 
   const { data, error } = await supabase.auth.getClaims();
-  if (process.env.VERCEL === "1" && request.nextUrl.pathname === "/") {
+  if (process.env.VERCEL === "1" && isHome) {
     console.info("home_proxy_auth_ms", Math.round(performance.now() - authStart));
   }
-  if (request.nextUrl.pathname === "/liked" && (error || !data?.claims?.sub)) {
+  if (pathname === "/liked" && (error || !data?.claims?.sub)) {
     const redirectResponse = NextResponse.redirect(new URL("/", request.url));
     for (const cookie of response.cookies.getAll()) {
       redirectResponse.cookies.set(cookie);
@@ -69,5 +110,5 @@ export async function proxy(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ["/", "/login", "/about", "/contact", "/privacy", "/auth/callback", "/liked"],
+  matcher: ["/((?!_next(?:/|$)|_vercel(?:/|$)).*)"],
 };

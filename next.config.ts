@@ -4,6 +4,8 @@ const nextConfig: NextConfig = {
   cacheComponents: true,
   partialPrefetching: true,
   typedRoutes: true,
+  // Keep the RSC header visible so Proxy can defer navigation requests to Next.js.
+  skipProxyUrlNormalize: true,
   async headers() {
     return [
       {

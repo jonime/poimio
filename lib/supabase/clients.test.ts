@@ -2,7 +2,7 @@ import { createBrowserClient, createServerClient } from "@supabase/ssr";
 import { unstable_doesMiddlewareMatch } from "next/experimental/testing/server";
 import { connection, NextRequest } from "next/server";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { config, proxy } from "../../proxy";
+import { config, otherRoutes, proxy } from "../../proxy";
 import { createClient as createBrowserSupabase } from "./client";
 import { createClient as createServerSupabase } from "./server";
 
@@ -210,23 +210,45 @@ describe("session refresh proxy", () => {
 
   it.each(["/", "/login", "/about", "/contact", "/privacy", "/auth/callback", "/liked"])(
     "refreshes sessions on application route %s",
-    (url) => {
+    async (url) => {
       expect(unstable_doesMiddlewareMatch({ config, url })).toBe(true);
+      const response = await proxy(
+        new NextRequest(`http://localhost:3001${url}`, {
+          headers: { accept: url === "/" ? "text/html" : "text/markdown" },
+        }),
+      );
+      expect(response.headers.get("x-middleware-next")).toBe("1");
+      expect(getClaims).toHaveBeenCalledExactlyOnceWith();
+    },
+  );
+
+  it.each([...otherRoutes, "/%69con.png"])(
+    "lets Next.js handle %s without refreshing the session",
+    async (url) => {
+      const response = await proxy(
+        new NextRequest(`http://localhost:3001${url}`, { headers: { accept: "text/markdown" } }),
+      );
+      expect(response.headers.get("x-middleware-next")).toBe("1");
+      expect(createServerClient).not.toHaveBeenCalled();
     },
   );
 
   it.each([
+    "/_next",
     "/_next/static/chunk.js",
     "/_next/image",
+    "/_vercel/speed-insights/script.js",
+  ])("exempts internal path %s from the proxy", (url) => {
+    expect(unstable_doesMiddlewareMatch({ config, url })).toBe(false);
+  });
+
+  it.each([
     "/favicon.ico",
-    "/image.png",
-    "/llms.txt",
-    "/sitemap.xml",
-    "/robots.txt",
+    "/_vercel-unknown",
     "/api/example",
     "/privacy/private",
     "/privacy-settings",
-  ])("leaves %s to framework routing", (url) => {
-    expect(unstable_doesMiddlewareMatch({ config, url })).toBe(false);
+  ])("checks %s for a possible Markdown 404", (url) => {
+    expect(unstable_doesMiddlewareMatch({ config, url })).toBe(true);
   });
 });

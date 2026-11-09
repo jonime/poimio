@@ -1,9 +1,11 @@
-import { readFileSync } from "node:fs";
+import { readdirSync, readFileSync } from "node:fs";
+import { join, relative } from "node:path";
+import { fileURLToPath } from "node:url";
 import type { Route } from "next";
 import { NextRequest } from "next/server";
 import { describe, expect, it } from "vitest";
 import { preferredRepresentation } from "@/lib/public-representation";
-import { proxy } from "../proxy";
+import { otherRoutes, proxy, sessionRoutes } from "../proxy";
 
 // @ts-expect-error Unknown internal routes must not be accepted by typedRoutes.
 const invalidRoute: Route<"/misspelled-page"> = "/misspelled-page";
@@ -59,6 +61,88 @@ describe("public HTTP representations", () => {
     );
     expect(response.status).toBe(406);
     expect(response.headers.get("vary")).toContain("Accept");
+  });
+
+  it.each([
+    ["GET", "/misspelled-page", "text/markdown"],
+    ["GET", "/privacy/missing?from=agent", "text/html;q=0.2, text/markdown;q=0.9"],
+    ["GET", "/missing.png", "text/markdown"],
+    ["HEAD", "/missing.txt", "text/markdown"],
+  ])("returns a Markdown 404 for %s %s with Accept %s", async (method, path, accept) => {
+    const response = await proxy(
+      new NextRequest(`https://www.poimio.cc${path}`, { method, headers: { accept } }),
+    );
+    expect(response.status).toBe(404);
+    expect(response.headers.get("content-type")).toBe("text/markdown; charset=utf-8");
+    expect(response.headers.get("vary")).toBe("Accept, RSC");
+    expect(response.headers.get("cache-control")).toBe("no-store");
+    expect(response.headers.has("set-cookie")).toBe(false);
+    const body = await response.text();
+    if (method === "HEAD") {
+      expect(body).toBe("");
+    } else {
+      expect(body).toMatch(/^# Page not found\n\nPoimio has no page at this URL\./);
+      expect(body).toContain("[Agent guidance](https://www.poimio.cc/llms.txt)");
+    }
+  });
+
+  it.each([
+    ["GET", "text/html", false],
+    ["GET", "text/markdown;q=0.1, text/html;q=0.9", false],
+    ["GET", "text/markdown;q=0, text/*", false],
+    ["GET", "text/markdown;q=0", false],
+    ["GET", "application/json", false],
+    ["GET", "text/markdown", true],
+    ["POST", "text/markdown", false],
+  ])("lets Next.js handle an unknown %s with Accept %s and RSC=%s", async (method, accept, rsc) => {
+    const headers = new Headers({ accept });
+    if (rsc) headers.set("rsc", "1");
+    const response = await proxy(
+      new NextRequest("https://www.poimio.cc/missing", { method, headers }),
+    );
+    expect(response.headers.get("x-middleware-next")).toBe("1");
+  });
+
+  it("inventories the app routes, metadata routes, and public files", () => {
+    function filesIn(directory: URL) {
+      const root = fileURLToPath(directory);
+      return readdirSync(root, { recursive: true, withFileTypes: true })
+        .filter((entry) => entry.isFile() || entry.isSymbolicLink())
+        .map((entry) => relative(root, join(entry.parentPath, entry.name)).split("\\").join("/"));
+    }
+
+    const appPaths = filesIn(new URL(".", import.meta.url)).flatMap((file) => {
+      const segments = file.split("/");
+      const name = segments.pop() ?? "";
+      if (segments.some((segment) => segment.startsWith("_"))) return [];
+      const path = segments.filter((segment) => !/^\(.*\)$|^@/.test(segment));
+      const sourceExtension = /\.(?:[jt]sx?|mdx?)$/;
+      const stem = name.replace(sourceExtension, "");
+      if (sourceExtension.test(name) && (stem === "page" || stem === "route")) {
+        return [`/${path.join("/")}`];
+      }
+      const metadata = {
+        robots: "robots.txt",
+        sitemap: "sitemap.xml",
+        manifest: "manifest.webmanifest",
+      };
+      if (Object.hasOwn(metadata, stem)) {
+        return [`/${[...path, metadata[stem as keyof typeof metadata]].join("/")}`];
+      }
+      if (
+        /^(?:robots\.txt|sitemap\.xml|manifest\.(?:json|webmanifest)|favicon\.ico)$/.test(name) ||
+        /^(?:icon|apple-icon|opengraph-image|twitter-image)\d*\.(?:[jt]sx?|ico|jpe?g|png|svg|gif|webp)$/.test(
+          name,
+        )
+      ) {
+        return [`/${[...path, name].join("/")}`];
+      }
+      return [];
+    });
+    const publicPaths = filesIn(new URL("../public/", import.meta.url)).map((file) => `/${file}`);
+    expect([...sessionRoutes, ...otherRoutes].sort()).toEqual(
+      [...new Set([...appPaths, ...publicPaths])].sort(),
+    );
   });
 
   it("publishes agent use cases as llms.txt file-list entries", () => {

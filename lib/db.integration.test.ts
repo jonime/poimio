@@ -266,7 +266,42 @@ describe.skipIf(!enabled || serviceKey == null)("IngestDb against a real databas
     expect(
       (await db.listDueEnrichmentItems(1_000, now)).some((candidate) => candidate.id === id),
     ).toBe(false);
-    expect((await db.listUnembeddedItems()).some((candidate) => candidate.id === id)).toBe(true);
+    expect(await db.listUnembeddedItems(1, [id])).toEqual([
+      expect.objectContaining({ id, summary: "A page metadata description" }),
+    ]);
+  });
+
+  it("limits the pending backlog after recovery filtering and orders timestamp ties by ID", async () => {
+    const { client, db } = ready();
+    const ids = Array.from({ length: 201 }, () => crypto.randomUUID()).sort();
+    const older = ids[200];
+    const { error } = await client.from("content_items").insert(
+      ids.map((id) => ({
+        id,
+        source_id: sourceA.id,
+        url: `${prefix}/embedding-backlog/${id}`,
+        title: "Embedding backlog fixture",
+        type: "article",
+        language: "en",
+        summary: "Integration test summary",
+        summary_origin: "feed",
+        enrichment_status: "completed",
+        published_at: "2026-10-28T08:00:00Z",
+        created_at: id === older ? "2000-01-01T00:00:00Z" : "2000-01-02T00:00:00Z",
+      })),
+    );
+    expect(error).toBeNull();
+
+    expect((await db.listUnembeddedItems(200)).map(({ id }) => id)).toEqual([
+      older,
+      ...ids.slice(0, 199),
+    ]);
+    const recoveryIds = ids.slice(198, 200).reverse();
+    expect((await db.listUnembeddedItems(1, recoveryIds)).map(({ id }) => id)).toEqual([ids[198]]);
+    expect((await db.listUnembeddedItems(2, recoveryIds)).map(({ id }) => id)).toEqual(
+      ids.slice(198, 200),
+    );
+    expect(await db.listUnembeddedItems(200, [])).toEqual([]);
   });
 
   it("rejects embeddings on unresolved items so ranking cannot admit them", async () => {

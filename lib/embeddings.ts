@@ -6,6 +6,7 @@ export const EMBEDDING_MODEL = "text-embedding-3-small";
 export const EMBEDDING_DIMENSIONS = 512;
 export const EMBEDDING_MODEL_VERSION = `${EMBEDDING_MODEL}@${EMBEDDING_DIMENSIONS}`;
 export const EMBEDDING_BATCH_SIZE = 100;
+const MAX_EMBEDDING_ITEMS_PER_RUN = 200;
 const OPENAI_EMBEDDINGS_URL = "https://api.openai.com/v1/embeddings";
 const MAX_TITLE_BYTES = 512;
 const MAX_SUMMARY_BYTES = 2_400;
@@ -98,19 +99,25 @@ async function requestEmbeddings(
   return ordered;
 }
 
-/** Embed all currently unembedded items; failed API batches remain retryable. */
+/** Embed a bounded set of pending items; failed API batches remain retryable. */
 export async function embedPendingItems(
   db: Pick<IngestDb, "listUnembeddedItems" | "saveEmbedding">,
   apiKey: string,
   options: EmbeddingOptions = {},
 ): Promise<EmbeddingRunResult> {
-  const fetchImpl = options.fetch ?? fetch;
-  const allowedIds = options.itemIds === undefined ? null : new Set(options.itemIds);
-  const eligible = (await db.listUnembeddedItems()).filter(
-    (item) => Boolean(item.summary?.trim()) && (allowedIds === null || allowedIds.has(item.id)),
-  );
-  const pending = eligible.slice(0, Math.max(0, options.limit ?? eligible.length));
+  const requestedLimit = options.limit ?? MAX_EMBEDDING_ITEMS_PER_RUN;
+  if (!Number.isInteger(requestedLimit) || requestedLimit < 0) {
+    throw new Error("Embedding limit must be a nonnegative integer");
+  }
+
   const result: EmbeddingRunResult = { embedded: 0, failedBatches: [] };
+  if (requestedLimit === 0 || options.itemIds?.length === 0) return result;
+
+  const limit = Math.min(requestedLimit, MAX_EMBEDDING_ITEMS_PER_RUN);
+  const pending = (await db.listUnembeddedItems(limit, options.itemIds)).filter((item) =>
+    Boolean(item.summary?.trim()),
+  );
+  const fetchImpl = options.fetch ?? fetch;
 
   for (let offset = 0; offset < pending.length; offset += EMBEDDING_BATCH_SIZE) {
     const batch = pending.slice(offset, offset + EMBEDDING_BATCH_SIZE);

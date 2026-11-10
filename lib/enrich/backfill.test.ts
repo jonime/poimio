@@ -103,8 +103,14 @@ class FakeBackfillDb implements EnrichmentBackfillDb {
     return this.siteWideRequeuedIds.length;
   }
 
-  async listUnembeddedItems(): Promise<UnembeddedItem[]> {
-    return this.unembedded.filter((candidate) => !this.embeddedIds.has(candidate.id));
+  async listUnembeddedItems(limit: number, itemIds?: string[]): Promise<UnembeddedItem[]> {
+    return this.unembedded
+      .filter(
+        (candidate) =>
+          !this.embeddedIds.has(candidate.id) &&
+          (itemIds === undefined || itemIds.includes(candidate.id)),
+      )
+      .slice(0, limit);
   }
 
   async saveEnrichedSummary(

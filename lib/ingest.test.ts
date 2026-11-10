@@ -10,6 +10,16 @@ const feedXml = `<?xml version="1.0"?>
 <description>Test feed</description><item><title>One</title><link>https://example.com/one</link>
 <description>Summary</description><pubDate>Tue, 28 Oct 2026 12:00:00 GMT</pubDate></item></channel></rss>`;
 
+function feedWithUrls(urls: string[]): FetchResult {
+  const items = urls.map((url) => `<item><title>Item</title><link>${url}</link></item>`).join("");
+  return {
+    status: "ok",
+    body: feedXml.replace(/<item>[\s\S]*<\/item>/, items),
+    contentType: "application/rss+xml",
+    etag: '"current"',
+  };
+}
+
 function source(id: string, name: string): Source {
   return {
     id,
@@ -42,7 +52,7 @@ class FakeIngestDb implements IngestDb, EnrichmentDb {
     return this.sources;
   }
 
-  async listUnembeddedItems() {
+  async listUnembeddedItems(_limit: number, _itemIds?: string[]) {
     this.events.push("embeddings");
     return [];
   }
@@ -81,6 +91,72 @@ class FakeIngestDb implements IngestDb, EnrichmentDb {
 }
 
 describe("runIngestion", () => {
+  it("accepts exactly 200 eligible entries after excluding Shorts and unusable URLs", async () => {
+    const db = new FakeIngestDb([source("test", "Test")]);
+    const eligible = Array.from({ length: 200 }, (_, index) => `https://example.com/${index}`);
+    const result = await runIngestion(db, "test-key", {
+      fetchBatch: async () => [
+        feedWithUrls([
+          ...eligible,
+          "https://m.youtube.com/shorts/abc",
+          "ftp://example.com/a",
+          "bad",
+        ]),
+      ],
+    });
+
+    expect(db.inserted.map((items) => items.map((item) => item.url))).toEqual([eligible]);
+    expect(result.sources[0]).toMatchObject({ newItems: 200, errors: [] });
+  });
+
+  it("rejects 201 entries even when URLs repeat and recovers after a smaller response", async () => {
+    const oversized = {
+      ...source("oversized", "Oversized"),
+      etag: '"previous"',
+      lastModified: "Wed, 28 Oct 2026 12:00:00 GMT",
+      lastSuccessAt: "2026-10-28T12:00:00.000Z",
+    };
+    const db = new FakeIngestDb([oversized, source("other", "Other")]);
+    const now = new Date("2026-10-29T12:00:00.000Z");
+    const first = await runIngestion(db, "test-key", {
+      fetchBatch: async () => [
+        feedWithUrls(Array(201).fill("https://example.com/repeated")),
+        feedWithUrls(["https://example.com/other"]),
+      ],
+      now: () => now,
+    });
+
+    const error = "Feed has 201 eligible entries (limit 200)";
+    expect(first.sources).toEqual([
+      { name: "Oversized", fetched: 1, newItems: 0, skipped: 0, errors: [error] },
+      { name: "Other", fetched: 1, newItems: 1, skipped: 0, errors: [] },
+    ]);
+    expect(db.inserted.map((items) => items.map((item) => item.url))).toEqual([
+      ["https://example.com/other"],
+    ]);
+    expect(db.events).toEqual(["insert", "enrichment", "embeddings"]);
+    expect(db.updates[0]).toEqual({
+      id: oversized.id,
+      patch: { etag: null, lastModified: null, lastFetchedAt: now, lastError: error },
+    });
+
+    db.sources[0] = { ...oversized, etag: null, lastModified: null, lastError: error };
+    const retry = await runIngestion(db, "test-key", {
+      fetchBatch: async (feeds) => {
+        expect(feeds[0]).toMatchObject({ etag: null, lastModified: null });
+        return [feedWithUrls(["https://example.com/repeated"]), { status: "not_modified" }];
+      },
+      now: () => now,
+    });
+
+    expect(retry.sources[0]).toMatchObject({ newItems: 1, errors: [] });
+    expect(db.updates[2]?.patch).toMatchObject({
+      etag: '"current"',
+      lastSuccessAt: now,
+      lastError: null,
+    });
+  });
+
   it("excludes Shorts from the YouTube fixture before insertion", async () => {
     const db = new FakeIngestDb([source("youtube", "YouTube")]);
     const body = readFileSync(

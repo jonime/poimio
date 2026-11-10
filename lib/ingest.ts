@@ -1,5 +1,6 @@
 import {
   type EnrichmentDb,
+  hasUsableUrl,
   type IngestDb,
   recordSourceOutcome,
   type Source,
@@ -14,7 +15,7 @@ import {
 import { fetchPageHtml, type PageFetchBatchOptions, type PageFetchResult } from "./enrich/page.ts";
 import type { FetchBatchOptions, FetchResult } from "./fetch.ts";
 import { fetchFeeds } from "./fetch.ts";
-import { parseFeed } from "./normalize/parse.ts";
+import { type ParsedItem, parseFeed } from "./normalize/parse.ts";
 import { MIN_THUMBNAIL_WIDTH } from "./normalize/thumbnail.ts";
 import { applyThumbnail, lookupThumbnails, type ThumbnailCandidate } from "./thumbnails/lookup.ts";
 import {
@@ -22,6 +23,8 @@ import {
   NASA_RELEASES_RULE,
   publisherAllowsArticle,
 } from "./thumbnails/publisher.ts";
+
+const MAX_FEED_ENTRIES = 200;
 
 export interface SourceIngestionSummary {
   name: string;
@@ -122,9 +125,13 @@ export async function runIngestion(
     }
 
     summary.fetched = 1;
-    let parsed: Awaited<ReturnType<typeof parseFeed>>;
+    let items: ParsedItem[];
     try {
-      parsed = await parseFeed(result.body, options.now ? { fetchTime: options.now() } : {});
+      const parsed = await parseFeed(result.body, options.now ? { fetchTime: options.now() } : {});
+      items = parsed.items.filter((item) => hasUsableUrl(item.url) && !isYouTubeShort(item.url));
+      if (items.length > MAX_FEED_ENTRIES) {
+        throw new Error(`Feed has ${items.length} eligible entries (limit ${MAX_FEED_ENTRIES})`);
+      }
     } catch (error) {
       const message = describeError(error);
       summary.errors.push(message);
@@ -137,7 +144,6 @@ export async function runIngestion(
       continue;
     }
 
-    const items = parsed.items.filter((item) => !isYouTubeShort(item.url));
     const inserted = await db.insertItems(source, items);
     summary.newItems = inserted.length;
     if (source.kind === "rss" && source.feedUrl === NASA_RELEASES_FEED_URL) {

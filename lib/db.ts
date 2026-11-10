@@ -70,7 +70,7 @@ export interface SourceStatusPatch {
  * - `error` with phase `fetch` — network/HTTP failure. The conditional-GET
  *   state and `last_success_at` are kept, so the next run retries
  *   conditionally.
- * - `error` with phase `parse` — the body arrived but could not be parsed.
+ * - `error` with phase `parse` — the body arrived but was rejected.
  *   The conditional-GET state is cleared so the next run re-fetches
  *   unconditionally; otherwise a persistently unparseable feed whose etag
  *   never changes would answer 304 forever and never be ingested.
@@ -96,8 +96,8 @@ export interface IngestDb {
   /** All sources with `is_active = true`, ordered by name. */
   listActiveSources(): Promise<Source[]>;
 
-  /** Content rows with no embedding, ordered by creation time. */
-  listUnembeddedItems(): Promise<UnembeddedItem[]>;
+  /** Eligible pending embeddings, ordered by creation time and ID. */
+  listUnembeddedItems(limit: number, itemIds?: string[]): Promise<UnembeddedItem[]>;
 
   /** Save a vector only if this item is still unembedded. */
   saveEmbedding(id: string, embedding: number[], model: string): Promise<boolean>;
@@ -211,7 +211,7 @@ export interface ContentItemRow {
   published_at: Date;
 }
 
-function hasUsableUrl(url: string): boolean {
+export function hasUsableUrl(url: string): boolean {
   try {
     const parsed = new URL(url);
     return parsed.protocol === "http:" || parsed.protocol === "https:";
@@ -420,37 +420,34 @@ export function createIngestDb(
       return (data as RawSourceRow[]).map(toSource);
     },
 
-    async listUnembeddedItems() {
-      const pageSize = 1000;
-      const items: UnembeddedItem[] = [];
-      for (let offset = 0; ; offset += pageSize) {
-        const { data, error } = await client
-          .from("content_items")
-          .select("id,title,summary,summary_origin")
-          .is("embedding", null)
-          .eq("enrichment_status", "completed")
-          .not("summary", "is", null)
-          .order("created_at")
-          .range(offset, offset + pageSize - 1);
-        if (error) {
-          throw new Error(`loading unembedded content items failed: ${error.message}`);
-        }
-        const page = data as Array<{
+    async listUnembeddedItems(limit, itemIds) {
+      if (limit === 0 || itemIds?.length === 0) return [];
+      let query = client
+        .from("content_items")
+        .select("id,title,summary,summary_origin")
+        .is("embedding", null)
+        .eq("enrichment_status", "completed")
+        .not("summary", "is", null)
+        .order("created_at")
+        .order("id");
+      if (itemIds !== undefined) query = query.in("id", itemIds);
+      const { data, error } = await query.limit(limit);
+      if (error) {
+        throw new Error(`loading unembedded content items failed: ${error.message}`);
+      }
+      return (
+        data as Array<{
           id: string;
           title: string;
           summary: string | null;
           summary_origin: SummaryOrigin;
-        }>;
-        items.push(
-          ...page.map((row) => ({
-            id: row.id,
-            title: row.title,
-            summary: row.summary,
-            summaryOrigin: row.summary_origin,
-          })),
-        );
-        if (page.length < pageSize) return items;
-      }
+        }>
+      ).map((row) => ({
+        id: row.id,
+        title: row.title,
+        summary: row.summary,
+        summaryOrigin: row.summary_origin,
+      }));
     },
 
     async listDueEnrichmentItems(limit, now, ids) {

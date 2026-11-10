@@ -35,7 +35,7 @@ class FakeIngestDb implements IngestDb {
   }> = [];
   updates: Array<{ id: string; patch: SourceStatusPatch }> = [];
 
-  async listUnembeddedItems() {
+  async listUnembeddedItems(_limit: number, _itemIds?: string[]) {
     return [];
   }
 

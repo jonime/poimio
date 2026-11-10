@@ -1,5 +1,5 @@
 import { Buffer } from "node:buffer";
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import type { UnembeddedItem } from "./db";
 import {
   EMBEDDING_BATCH_SIZE,
@@ -14,9 +14,14 @@ class FakeEmbeddingDb {
 
   constructor(readonly items: UnembeddedItem[]) {}
 
-  async listUnembeddedItems(): Promise<UnembeddedItem[]> {
-    return this.items.filter((item) => !this.embeddings.has(item.id));
-  }
+  listUnembeddedItems = vi.fn(async (limit: number, itemIds?: string[]) =>
+    this.items
+      .filter(
+        (item) =>
+          !this.embeddings.has(item.id) && (itemIds === undefined || itemIds.includes(item.id)),
+      )
+      .slice(0, limit),
+  );
 
   async saveEmbedding(id: string, vector: number[], model: string): Promise<boolean> {
     if (this.embeddings.has(id)) return false;
@@ -38,6 +43,15 @@ function captureEmbeddingInputs(requests: string[][]): typeof fetch {
     requests.push(input);
     return Response.json({ data: vectors(input.length) });
   };
+}
+
+function pendingItems(count: number): UnembeddedItem[] {
+  return Array.from({ length: count }, (_, index) => ({
+    id: `item-${index}`,
+    title: `Title ${index}`,
+    summary: `Summary ${index}`,
+    summaryOrigin: "feed",
+  }));
 }
 
 describe("embedPendingItems", () => {
@@ -181,13 +195,27 @@ describe("embedPendingItems", () => {
     ]);
   });
 
-  it("leaves a failed batch pending and retries it on the next run", async () => {
-    const items = Array.from({ length: EMBEDDING_BATCH_SIZE + 1 }, (_, index) => ({
-      id: `item-${index}`,
-      title: `Title ${index}`,
-      summary: `Summary ${index}`,
-      summaryOrigin: "feed" as const,
-    }));
+  it.each([{}, { limit: 500 }])("attempts at most 200 items with options %j", async (options) => {
+    const db = new FakeEmbeddingDb(pendingItems(201));
+    const requests: string[][] = [];
+    const fetch = captureEmbeddingInputs(requests);
+
+    expect(await embedPendingItems(db, "test-key", { ...options, fetch })).toEqual({
+      embedded: 200,
+      failedBatches: [],
+    });
+    expect(db.listUnembeddedItems.mock.calls).toEqual([[200, undefined]]);
+    expect(requests.map((batch) => batch.length)).toEqual([100, 100]);
+    expect(db.embeddings.has("item-200")).toBe(false);
+    expect(await embedPendingItems(db, "test-key", { fetch })).toEqual({
+      embedded: 1,
+      failedBatches: [],
+    });
+    expect(requests[2]).toEqual(["Title 200\n\nSummary 200"]);
+  });
+
+  it("leaves a failed batch pending without replacing it beyond the budget", async () => {
+    const items = pendingItems(201);
     const db = new FakeEmbeddingDb(items);
     let requestCount = 0;
     const fetchImpl: typeof fetch = async (_input, init) => {
@@ -206,17 +234,16 @@ describe("embedPendingItems", () => {
     const firstRun = await embedPendingItems(db, "test-key", {
       fetch: fetchImpl,
     });
-    expect(firstRun.embedded).toBe(1);
+    expect(firstRun.embedded).toBe(100);
+    expect(requestCount).toBe(2);
+    expect(db.listUnembeddedItems.mock.calls).toEqual([[200, undefined]]);
+    expect(db.embeddings.has("item-200")).toBe(false);
     expect(firstRun.failedBatches).toEqual([
       {
         itemIds: items.slice(0, EMBEDDING_BATCH_SIZE).map((item) => item.id),
         error: "temporary failure",
       },
     ]);
-    expect((await db.listUnembeddedItems()).map((item) => item.id)).toEqual(
-      items.slice(0, EMBEDDING_BATCH_SIZE).map((item) => item.id),
-    );
-
     const retryRun = await embedPendingItems(db, "test-key", {
       fetch: async (_input, init) => {
         const request = JSON.parse(String(init?.body)) as { input: string[] };
@@ -227,10 +254,10 @@ describe("embedPendingItems", () => {
     });
 
     expect(retryRun).toEqual({
-      embedded: EMBEDDING_BATCH_SIZE,
+      embedded: EMBEDDING_BATCH_SIZE + 1,
       failedBatches: [],
     });
-    expect(await db.listUnembeddedItems()).toEqual([]);
+    expect(await db.listUnembeddedItems(200)).toEqual([]);
   });
 
   it("never embeds items with missing or whitespace-only summaries", async () => {
@@ -247,10 +274,12 @@ describe("embedPendingItems", () => {
         summary: "  ",
         summaryOrigin: "feed",
       },
+      ...pendingItems(1),
     ]);
     let requestCount = 0;
 
     const result = await embedPendingItems(db, "test-key", {
+      limit: 2,
       fetch: async () => {
         requestCount++;
         return new Response(JSON.stringify({ data: [] }), { status: 200 });
@@ -258,8 +287,30 @@ describe("embedPendingItems", () => {
     });
 
     expect(result).toEqual({ embedded: 0, failedBatches: [] });
+    expect(db.listUnembeddedItems.mock.calls).toEqual([[2, undefined]]);
     expect(requestCount).toBe(0);
     expect(db.embeddings.size).toBe(0);
+  });
+
+  it.each([{ limit: 0 }, { itemIds: [] }])("does no work with options %j", async (options) => {
+    const db = new FakeEmbeddingDb(pendingItems(1));
+    const fetch = vi.fn<typeof globalThis.fetch>();
+    expect(await embedPendingItems(db, "test-key", { ...options, fetch })).toEqual({
+      embedded: 0,
+      failedBatches: [],
+    });
+    expect(db.listUnembeddedItems).not.toHaveBeenCalled();
+    expect(fetch).not.toHaveBeenCalled();
+  });
+
+  it.each([-1, 1.5, NaN, Infinity, -Infinity])("rejects invalid limit %s", async (limit) => {
+    const db = new FakeEmbeddingDb(pendingItems(1));
+    const fetch = vi.fn<typeof globalThis.fetch>();
+    await expect(embedPendingItems(db, "test-key", { limit, fetch })).rejects.toThrow(
+      "Embedding limit must be a nonnegative integer",
+    );
+    expect(db.listUnembeddedItems).not.toHaveBeenCalled();
+    expect(fetch).not.toHaveBeenCalled();
   });
 
   it("embeds only selected recovery IDs within the configured limit", async () => {
@@ -291,6 +342,7 @@ describe("embedPendingItems", () => {
     });
 
     expect(result.embedded).toBe(1);
+    expect(db.listUnembeddedItems.mock.calls).toEqual([[1, ["second"]]]);
     expect(requestBody).toContain("Second title\\n\\nSecond summary");
     expect(db.embeddings.has("first")).toBe(false);
     expect(db.embeddings.has("second")).toBe(true);

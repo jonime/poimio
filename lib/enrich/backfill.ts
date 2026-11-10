@@ -127,8 +127,7 @@ export async function runEnrichmentBackfill(
     : [];
   const siteWide = siteWideCandidates.slice(0, remaining);
   remaining -= siteWide.length;
-  const allMissingEmbeddings = await db.listUnembeddedItems();
-  const missingEmbeddings = allMissingEmbeddings.slice(0, remaining);
+  const missingEmbeddings = remaining > 0 ? await db.listUnembeddedItems(remaining) : [];
   reportProgress({
     phase: "selection",
     total: due.length + exhausted.length + siteWide.length + missingEmbeddings.length,

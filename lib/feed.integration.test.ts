@@ -220,7 +220,6 @@ describe.skipIf(!enabled || anonKey == null || serviceKey == null)(
     }
 
     async function rankItems(
-      client: SupabaseClient,
       candidateKeys: string[],
       likedKeys: string[] = [],
       dislikedKeys: string[] = [],
@@ -231,7 +230,8 @@ describe.skipIf(!enabled || anonKey == null || serviceKey == null)(
         p_seed?: number;
       } = {},
     ) {
-      const { data, error } = await client.rpc("rank_items", {
+      const { service } = clients();
+      const { data, error } = await service.rpc("rank_items", {
         p_candidate_ids: candidateKeys.map((key) => itemIds.get(key)),
         p_liked_ids: likedKeys.map((key) => itemIds.get(key)),
         p_disliked_ids: dislikedKeys.map((key) => itemIds.get(key)),
@@ -495,14 +495,13 @@ describe.skipIf(!enabled || anonKey == null || serviceKey == null)(
       ).toBeLessThan(feed.findIndex((row) => row.id === itemIds.get("candidate-same-unrelated")));
     });
 
-    it("matches get_feed order using explicit likes and dislikes", async () => {
+    it("matches get_feed order when the service role ranks explicit likes and dislikes", async () => {
       const { userAClient } = clients();
       await setFeedback(userAClient, "liked-fi", "like");
       await setFeedback(userAClient, "disliked-fi", "not_interested");
 
       const feed = await getFeed(userAClient);
       const ranking = await rankItems(
-        userAClient,
         rankingFixtureKeys.filter((key) => key !== "liked-fi" && key !== "disliked-fi"),
         ["liked-fi"],
         ["disliked-fi"],
@@ -550,27 +549,21 @@ describe.skipIf(!enabled || anonKey == null || serviceKey == null)(
     });
 
     it("uses the exact nearest-liked and average-vector score formulas", async () => {
-      const { userAClient } = clients();
       const asOf = publishedAt;
       const candidates = ["page-target"];
       const likes = ["page-old-like", "page-like"];
 
-      const nearest = await rankItems(userAClient, candidates, likes, [], {
+      const nearest = await rankItems(candidates, likes, [], {
         p_as_of: asOf,
       });
-      const average = await rankItems(userAClient, candidates, likes, [], {
+      const average = await rankItems(candidates, likes, [], {
         p_as_of: asOf,
         p_method: "average_vector",
       });
-      const disliked = await rankItems(
-        userAClient,
-        ["candidate-close-dislike"],
-        ["liked-fi"],
-        ["disliked-fi"],
-        { p_as_of: asOf },
-      );
+      const disliked = await rankItems(["candidate-close-dislike"], ["liked-fi"], ["disliked-fi"], {
+        p_as_of: asOf,
+      });
       const adjustedDislike = await rankItems(
-        userAClient,
         ["candidate-close-dislike"],
         ["liked-fi"],
         ["disliked-fi"],
@@ -586,30 +579,25 @@ describe.skipIf(!enabled || anonKey == null || serviceKey == null)(
     });
 
     it("ignores feedback for newest-first and random baselines", async () => {
-      const { userAClient } = clients();
       const candidates = ["candidate-close", "candidate-unrelated", "candidate-neutral"];
-      const newestWithFeedback = await rankItems(
-        userAClient,
-        candidates,
-        ["liked-fi"],
-        ["disliked-fi"],
-        { p_method: "newest_first" },
-      );
-      const newestWithoutFeedback = await rankItems(userAClient, candidates, [], [], {
+      const newestWithFeedback = await rankItems(candidates, ["liked-fi"], ["disliked-fi"], {
         p_method: "newest_first",
       });
-      const randomFirst = await rankItems(userAClient, candidates, ["liked-fi"], ["disliked-fi"], {
+      const newestWithoutFeedback = await rankItems(candidates, [], [], {
+        p_method: "newest_first",
+      });
+      const randomFirst = await rankItems(candidates, ["liked-fi"], ["disliked-fi"], {
         p_method: "random",
         p_seed: 42,
       });
-      const randomSecond = await rankItems(userAClient, candidates, [], [], {
+      const randomSecond = await rankItems(candidates, [], [], {
         p_method: "random",
         p_seed: 42,
       });
-      const coldNearest = await rankItems(userAClient, candidates, [], ["disliked-fi"], {
+      const coldNearest = await rankItems(candidates, [], ["disliked-fi"], {
         p_as_of: publishedAt,
       });
-      const coldAverage = await rankItems(userAClient, candidates, [], ["disliked-fi"], {
+      const coldAverage = await rankItems(candidates, [], ["disliked-fi"], {
         p_as_of: publishedAt,
         p_method: "average_vector",
       });
@@ -624,36 +612,54 @@ describe.skipIf(!enabled || anonKey == null || serviceKey == null)(
     });
 
     it("supports raw cosine, rejects unknown parameters, and breaks score ties by id", async () => {
-      const { anonymous, service, userAClient } = clients();
-      const centered = await rankItems(userAClient, ["candidate-cross-related"], ["liked-fi"]);
-      const raw = await rankItems(userAClient, ["candidate-cross-related"], ["liked-fi"], [], {
+      const { service } = clients();
+      const centered = await rankItems(["candidate-cross-related"], ["liked-fi"]);
+      const raw = await rankItems(["candidate-cross-related"], ["liked-fi"], [], {
         p_params: { centered: false },
       });
-      const serviceRank = await rankItems(service, ["candidate-cross-related"], ["liked-fi"]);
-      const tied = await rankItems(
-        userAClient,
-        ["candidate-unrelated", "candidate-neutral"],
-        ["liked-fi"],
-      );
-      const invalid = await userAClient.rpc("rank_items", {
+      const tied = await rankItems(["candidate-unrelated", "candidate-neutral"], ["liked-fi"]);
+      const invalid = await service.rpc("rank_items", {
         p_candidate_ids: [itemIds.get("candidate-neutral")],
         p_liked_ids: [],
         p_disliked_ids: [],
         p_as_of: publishedAt,
         p_params: { unexpected: true },
       });
-      const anonymousResult = await anonymous.rpc("rank_items", {
-        p_candidate_ids: [],
-        p_liked_ids: [],
-        p_disliked_ids: [],
-        p_as_of: publishedAt,
-      });
 
       expect(centered[0]?.score).not.toBeCloseTo(raw[0]?.score ?? 0, 3);
-      expect(serviceRank).toHaveLength(1);
+      expect(centered).toHaveLength(1);
+      expect(raw).toHaveLength(1);
       expect(tied.map((row) => row.item_id)).toEqual(tied.map((row) => row.item_id).toSorted());
       expect(invalid.error).not.toBeNull();
-      expect(anonymousResult.error).not.toBeNull();
+    });
+
+    it("denies direct ranking to anonymous and signed-in clients", async () => {
+      const { anonymous, service, userAClient } = clients();
+      const args = {
+        p_candidate_ids: [requireDefined(itemIds.get("candidate-close"), "candidate fixture")],
+        p_liked_ids: [requireDefined(itemIds.get("liked-fi"), "like fixture")],
+        p_disliked_ids: [requireDefined(itemIds.get("disliked-fi"), "dislike fixture")],
+        p_as_of: publishedAt,
+      };
+
+      const anonymousResult = await anonymous.rpc("rank_items", args);
+      expect(anonymousResult.error?.code).toBe("42501");
+
+      const authenticatedResult = await userAClient.rpc("rank_items", args);
+      expect(authenticatedResult.error?.code).toBe("42501");
+
+      const privateResult = await userAClient.schema("ranking_private").rpc("rank_items", args);
+      expect(privateResult.error?.code).toBe("PGRST106");
+
+      const serviceResult = await service.rpc("rank_items", args);
+      expect(serviceResult.error).toBeNull();
+      expect(serviceResult.data).toEqual([
+        {
+          item_id: args.p_candidate_ids[0],
+          score: expect.any(Number),
+          because_item_id: args.p_liked_ids[0],
+        },
+      ]);
     });
 
     it("rejects anonymous calls and clamps limits to 1 through 100", async () => {

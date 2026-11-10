@@ -37,8 +37,9 @@ Measure, reproducibly and without inflating the results, whether the production 
 
 **Shared ranking function**
 
-- `public.rank_items(p_candidate_ids uuid[], p_liked_ids uuid[], p_disliked_ids uuid[], p_as_of timestamptz, p_method text default 'nearest_liked', p_params jsonb default '{}', p_seed integer default 0, p_limit integer default 30)` returns `item_id`, `score`, `because_item_id`, ordered by rank.
-- `SECURITY INVOKER`, `set search_path = ''`, reads only shared tables (`content_items`, `sources`, `embedding_language_means`); it never reads `feedback` and takes no `user_id`. Execute granted to `authenticated` and `service_role`.
+- `ranking_private.rank_items(p_candidate_ids uuid[], p_liked_ids uuid[], p_disliked_ids uuid[], p_as_of timestamptz, p_method text default 'nearest_liked', p_params jsonb default '{}', p_seed integer default 0, p_limit integer default 30)` returns `item_id`, `score`, `because_item_id`, ordered by rank.
+- The scorer uses `SECURITY INVOKER` and `set search_path = ''`. It reads only shared tables (`content_items`, `sources`, `embedding_language_means`). The `authenticated` and `service_role` roles have schema usage and scorer execution. The `ranking_private` schema stays outside the Data API's exposed schemas and extra search path.
+- The service-role-only `public.rank_items` RPC delegates to the scorer with the same signature, defaults, and result order. Evaluation replay continues to pass full candidate windows and explicit signals through this RPC.
 - Only eligible items (design §1 / spec 003 rules: active model, embedding, mean row, completed description) count as candidates or signals; others in the arrays are ignored.
 - Notation: $s(a, b)$ is centered similarity (`centered_similarity`), or raw cosine similarity when `centered = false`; $P$ = eligible likes, $N$ = eligible dislikes; $r(c) = 0.5^{\text{age}(c)/h}$ with age measured at `p_as_of`.
 - Methods and their exact ordering (ties broken by `published_at desc`, then `id`):
@@ -50,7 +51,7 @@ Measure, reproducibly and without inflating the results, whether the production 
 - With no eligible likes, `nearest_liked` and `average_vector` use the existing cold-start ordering (source round-robin, dislike-similar items last), so they are identical at $k = 0$.
 - **Defaults block moves into `rank_items`**: `lambda`, `recency_weight`, `dislike_threshold`, half-lives, and `centered` (default `true`; `false` gives the raw-vector variant for the report). `p_params` overrides individual keys; unknown keys raise an error.
 - Recency is computed relative to `p_as_of`, not `now()`.
-- `get_feed` keeps its signature and behaviour: it selects candidates (window, not rated, not excluded) and the caller's likes and dislikes, then calls `rank_items(..., now(), 'nearest_liked', '{}')` and joins the card fields.
+- `get_feed` keeps its signature and behaviour: it selects candidates (window, not rated, not excluded) and the caller's likes and dislikes, then calls `ranking_private.rank_items(..., now(), 'nearest_liked', '{}')` and joins the card fields.
 
 **Snapshot**
 
@@ -123,7 +124,7 @@ Measure, reproducibly and without inflating the results, whether the production 
 Each criterion belongs to one task.
 
 1. **Task 1 — shared ranking function**
-   1. `supabase db reset` applies the migration cleanly; `rank_items` is executable by `authenticated` and `service_role` only and reads no per-user table.
+   1. `supabase db reset` applies the migration cleanly; `rank_items` reads no per-user table. Task 9 supersedes the original RPC grants.
    2. All existing `get_feed` integration tests pass unchanged.
    3. New integration tests: `rank_items` with a user's likes and dislikes returns the same order as `get_feed` for that user; `nearest_liked` and `average_vector` follow the exact formulas with controlled vectors and differ only in the interest term; `newest_first` and `random` ignore feedback; `centered = false` changes the cross-language test case; unknown parameter keys raise an error; `random` is deterministic per seed; ties follow `published_at desc`, then `id`.
 2. **Task 2 — snapshot export and import**
@@ -145,7 +146,11 @@ Each criterion belongs to one task.
    1. Unit tests: `--window test` fails without a valid freeze file, with a dirty tree or a different `HEAD`, with any hash mismatch, with a provisional snapshot, with `--params`, and when a test result for the experiment already exists; a different existing test result requires `--new-experiment` with a reason.
 8. **Task 8 — documentation**
    1. design.md §4 reflects the final protocol (personas as configuration, `rank_items`, label model); the first validation results and the agreement numbers are recorded in `docs/ai-log.md`.
-9. **Every task:** `pnpm lint`, `pnpm typecheck`, and `pnpm test` pass; tasks touching the database also pass `pnpm test:integration` with 0 skipped.
+9. **Task 9 — restrict direct ranking (alert #6)**
+   1. One forward migration applies from scratch on disposable local Supabase. It moves the existing scorer to `ranking_private` with its invoker security and empty search path. Only `authenticated` and `service_role` receive schema usage and scorer execution among the Data API roles. The schema is absent from the Data API's exposed schemas and extra search path.
+   2. `get_feed` calls the private scorer directly and preserves its signature, verified caller identity, feedback limits, candidate selection, and result order. Integration tests confirm signed-in accounts still receive personalized results based on their own feedback.
+   3. Only `service_role` can execute the public invoker wrapper among the Data API roles. The wrapper preserves its signature, defaults, return columns, and row order. Integration tests deny anonymous and signed-in calls to the public RPC and reject an authenticated request selecting the private schema. The service role ranks explicit inputs, and the existing ranking-method assertions pass through the wrapper.
+10. **Every task:** `pnpm lint`, `pnpm typecheck`, and `pnpm test` pass; tasks touching the database also pass `pnpm test:integration` with 0 skipped.
 
 ## Tasks
 
@@ -157,6 +162,13 @@ Each criterion belongs to one task.
 - [x] 6. Near-duplicate threshold from the feedback window; `pnpm eval:replay` with metrics; first validation run (criterion 6).
 - [x] 7. Test-window guard, `frozen-params.json` format, and experiment ID (criterion 7).
 - [ ] 8. Update design.md §4 and log results (criterion 8).
+- [x] 9. Follow-up for alert #6: move the scorer to a private schema and restrict the public ranking RPC to the service role (criterion 9).
+
+### Task 9 rollout after review and merge
+
+- [ ] Confirm that the Supabase GitHub integration applied the migration and that the hosted Data API excludes `ranking_private` from its exposed schemas and extra search path.
+- [ ] Verify a normal signed-in feed request and confirm the same account is denied a direct RPC call with a small, valid request.
+- [ ] Record the verification evidence on alert #6 and handle alert #3 as its duplicate.
 
 ## Decisions
 

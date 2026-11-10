@@ -128,6 +128,9 @@ Fetch the active feeds, normalize and deduplicate their items, embed them, and s
 - [x] 12. Early ranking experiment scripts (export for blind judging, score judged CSV); record the result and gate 1 decision.
 - [x] 13. Gate 1 re-run with language centering: add centered variants to the ranking script, export only unjudged items for blind judging, score, and record the final gate 1 decision (criterion 13).
 - [x] 14. Exclude YouTube Shorts during ingestion (criterion 15).
+- [ ] 15. Mitigate [code scanning alert #2](https://github.com/jonime/poimio/security/code-scanning/2) by sharing article destination validation and the DNS-pinned HTTP(S) transport with feed ingestion. Check the initial URL and up to three redirect destinations, including relative redirects, before connecting. Keep the 15 s deadline and cap both compressed and decoded bodies at 5 MB. Send validators only to the configured URL, accept 304 only for a conditional request, and clear both stored validators after successfully parsing a redirected feed. Add regressions for blocked destinations, mixed DNS and rebinding, redirects and validators, timeouts, compression limits, and per-source failure isolation. Run lint, typecheck, tests, and the production build.
+
+After deployment, check the next normal scheduled ingestion run for unexpected feed failures. Once verified, dismiss alert #2 as **Mitigated** if it remains open.
 
 ## Decisions
 

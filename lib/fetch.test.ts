@@ -1,291 +1,358 @@
-import { afterEach, describe, expect, it, vi } from "vitest";
+import type { LookupAddress } from "node:dns";
+import { EventEmitter } from "node:events";
+import type { IncomingHttpHeaders } from "node:http";
+import { PassThrough } from "node:stream";
+import {
+  brotliCompressSync,
+  deflateRawSync,
+  deflateSync,
+  gzipSync,
+  zstdCompressSync,
+} from "node:zlib";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import {
   DEFAULT_CONCURRENCY,
   DEFAULT_MAX_BYTES,
   DEFAULT_TIMEOUT_MS,
   DEFAULT_USER_AGENT,
-  type FeedToFetch,
   fetchFeed,
   fetchFeeds,
-} from "./fetch";
+} from "./fetch.ts";
+import type { PinnedLookup } from "./public-http.ts";
 
-interface ResponseInit {
-  status?: number;
-  statusText?: string;
-  headers?: Record<string, string>;
-  body?: BodyInit | null;
+type RequestOptions = {
+  headers: Record<string, string>;
+  lookup: PinnedLookup;
+  signal: AbortSignal;
+};
+
+type TestResponse = PassThrough & {
+  statusCode: number;
+  statusMessage: string;
+  headers: IncomingHttpHeaders;
+};
+
+const { lookup, request } = vi.hoisted(() => ({
+  lookup: vi.fn<(host: string) => Promise<LookupAddress[]>>(),
+  request:
+    vi.fn<
+      (
+        url: URL,
+        options: RequestOptions,
+        onResponse: (response: TestResponse) => void,
+      ) => EventEmitter
+    >(),
+}));
+
+vi.mock("node:dns/promises", () => ({ lookup }));
+vi.mock("node:http", () => ({ request }));
+vi.mock("node:https", () => ({ request }));
+
+const feedUrl = "https://feeds.example.com/feed";
+const publicAddress = { address: "93.184.216.34", family: 4 };
+const validators = { etag: '"tag-1"', lastModified: "Tue, 28 Oct 2026 12:00:00 GMT" };
+
+interface Reply {
+  statusCode?: number;
+  statusMessage?: string;
+  headers?: IncomingHttpHeaders;
+  body?: Buffer | string;
+  stall?: boolean;
 }
 
-function makeResponse(init: ResponseInit = {}): Response {
-  // 304/204/205 responses must have a null body; default to null so those
-  // statuses can be constructed, and let tests pass an explicit body otherwise.
-  const defaultBody = init.status === 304 || init.status === 204 || init.status === 205 ? null : "";
-  return new Response(init.body ?? defaultBody, {
-    status: init.status ?? 200,
-    statusText: init.statusText ?? "",
-    headers: init.headers ?? {},
+function serve(reply: Reply | ((url: URL) => Reply)) {
+  request.mockImplementation((url, { signal }, onResponse) => {
+    const req = new EventEmitter();
+    return Object.assign(req, {
+      end() {
+        const {
+          body = "",
+          stall,
+          statusCode = 200,
+          statusMessage = "",
+          headers = {},
+        } = typeof reply === "function" ? reply(url) : reply;
+        const response = Object.assign(new PassThrough(), { statusCode, statusMessage, headers });
+        const abort = () => response.destroy(signal.reason);
+        signal.addEventListener("abort", abort, { once: true });
+        response.once("close", () => signal.removeEventListener("abort", abort));
+        onResponse(response);
+        if (stall) response.write(body);
+        else response.end(body);
+      },
+    });
   });
 }
 
-function streamFrom(bytes: Uint8Array): ReadableStream<Uint8Array> {
-  return new ReadableStream<Uint8Array>({
-    start(controller) {
-      controller.enqueue(bytes);
-      controller.close();
-    },
-  });
-}
-
-/** A `fetch` mock that records its calls and serves a fixed 200 by default. */
-function captureFetch() {
-  const calls: Array<{ url: string; init: RequestInit | undefined }> = [];
-  const mock = vi.fn((input: string | URL | Request, init?: RequestInit) => {
-    calls.push({ url: String(input), init });
-    return Promise.resolve(
-      makeResponse({
-        status: 200,
-        body: "<rss/>",
-        headers: {
-          "content-type": "application/rss+xml",
-          etag: "new-etag",
-          "last-modified": "Wed, 28 Oct 2026 10:00:00 GMT",
-        },
-      }),
-    );
-  });
-  return { mock, calls };
-}
-
-afterEach(() => {
-  vi.unstubAllGlobals();
-  vi.restoreAllMocks();
+beforeEach(() => {
+  request.mockReset();
+  lookup.mockReset().mockResolvedValue([publicAddress]);
+  serve({ body: "<rss/>", headers: { "content-type": "application/rss+xml" } });
 });
 
 describe("fetchFeed", () => {
-  it("returns the body, content type, etag and last-modified on 200", async () => {
-    const { mock } = captureFetch();
-    vi.stubGlobal("fetch", mock);
-
-    const result = await fetchFeed("https://example.com/feed");
-
-    expect(result.status).toBe("ok");
-    if (result.status !== "ok") throw new Error("expected ok");
-    expect(result.body).toBe("<rss/>");
-    expect(result.contentType).toBe("application/rss+xml");
-    expect(result.etag).toBe("new-etag");
-    expect(result.lastModified).toBe("Wed, 28 Oct 2026 10:00:00 GMT");
-  });
-
-  it("sends an identifying User-Agent and conditional-GET headers", async () => {
-    const { mock, calls } = captureFetch();
-    vi.stubGlobal("fetch", mock);
-
-    await fetchFeed("https://example.com/feed", {
-      etag: "stored-etag",
-      lastModified: "Tue, 27 Oct 2026 08:00:00 GMT",
-      userAgent: "custom-agent/1.0",
+  it("keeps the RSS/Atom headers and returns direct response validators", async () => {
+    serve({
+      body: "<rss/>",
+      headers: {
+        "content-type": "application/rss+xml",
+        etag: '"tag-2"',
+        "last-modified": validators.lastModified,
+      },
     });
-
-    const init = calls[0]?.init as RequestInit;
-    const headers = init?.headers as Record<string, string>;
-    expect(headers["User-Agent"]).toBe("custom-agent/1.0");
-    expect(headers["If-None-Match"]).toBe("stored-etag");
-    expect(headers["If-Modified-Since"]).toBe("Tue, 27 Oct 2026 08:00:00 GMT");
-  });
-
-  it("uses the default identifying User-Agent when none is given", async () => {
-    const { mock, calls } = captureFetch();
-    vi.stubGlobal("fetch", mock);
-
-    await fetchFeed("https://example.com/feed");
-
-    expect(calls).toHaveLength(1);
-    const headers = new Headers(calls[0]?.init?.headers);
-    expect(headers.get("User-Agent")).toBe(DEFAULT_USER_AGENT);
-    // No stored state: no conditional-GET headers.
-    expect(headers.get("If-None-Match")).toBeNull();
-    expect(headers.get("If-Modified-Since")).toBeNull();
-  });
-
-  it("returns not_modified on 304", async () => {
-    const mock = vi.fn(() => Promise.resolve(makeResponse({ status: 304 })));
-    vi.stubGlobal("fetch", mock);
-
-    const result = await fetchFeed("https://example.com/feed", {
-      etag: "stored-etag",
+    expect(await fetchFeed(feedUrl, validators)).toEqual({
+      status: "ok",
+      body: "<rss/>",
+      contentType: "application/rss+xml",
+      etag: '"tag-2"',
+      lastModified: validators.lastModified,
     });
-
-    expect(result.status).toBe("not_modified");
+    expect(request.mock.calls[0]?.[1].headers).toMatchObject({
+      Host: "feeds.example.com",
+      "User-Agent": DEFAULT_USER_AGENT,
+      Accept: expect.stringContaining("application/atom+xml"),
+      "If-None-Match": validators.etag,
+      "If-Modified-Since": validators.lastModified,
+    });
   });
 
-  it("reports a non-2xx status as an error", async () => {
-    const mock = vi.fn(() =>
-      Promise.resolve(makeResponse({ status: 500, statusText: "Internal Server Error" })),
+  it("accepts a direct 304 only when it sent a validator", async () => {
+    serve({ statusCode: 304, headers: { "content-length": String(DEFAULT_MAX_BYTES + 1) } });
+    expect(await fetchFeed(feedUrl, { etag: validators.etag })).toEqual({ status: "not_modified" });
+    expect(await fetchFeed(feedUrl)).toEqual({ status: "error", error: "HTTP 304" });
+  });
+
+  it.each([
+    ["relative", "/moved", "https://feeds.example.com/moved"],
+    ["cross-origin", "https://cdn.example.com/moved", "https://cdn.example.com/moved"],
+  ])(
+    "follows a public %s redirect without validators and clears both",
+    async (_, location, finalUrl) => {
+      serve((url) =>
+        url.pathname === "/feed"
+          ? { statusCode: 302, headers: { location } }
+          : {
+              body: "<rss/>",
+              headers: { etag: '"cdn-tag"', "last-modified": validators.lastModified },
+            },
+      );
+      expect(await fetchFeed(feedUrl, validators)).toMatchObject({
+        status: "ok",
+        body: "<rss/>",
+        etag: null,
+        lastModified: null,
+      });
+      expect(request.mock.calls.map(([url]) => url.href)).toEqual([feedUrl, finalUrl]);
+      expect(request.mock.calls[0]?.[1].headers["If-None-Match"]).toBe(validators.etag);
+      const redirectedHeaders = request.mock.calls[1]?.[1].headers;
+      expect(redirectedHeaders).not.toHaveProperty("If-None-Match");
+      expect(redirectedHeaders).not.toHaveProperty("If-Modified-Since");
+    },
+  );
+
+  it("rejects an unconditional 304 after a redirect", async () => {
+    serve((url) =>
+      url.pathname === "/feed"
+        ? { statusCode: 302, headers: { location: "/moved" } }
+        : { statusCode: 304 },
     );
-    vi.stubGlobal("fetch", mock);
-
-    const result = await fetchFeed("https://example.com/feed");
-
-    expect(result.status).toBe("error");
-    if (result.status !== "error") throw new Error("expected error");
-    expect(result.error).toContain("500");
+    expect(await fetchFeed(feedUrl, validators)).toEqual({ status: "error", error: "HTTP 304" });
   });
 
-  it("times out when the request does not complete in time", async () => {
-    const mock = vi.fn(
-      (_input: string | URL | Request, init?: RequestInit) =>
-        new Promise<Response>((_resolve, reject) => {
-          const signal = init?.signal;
-          signal?.addEventListener("abort", () =>
-            reject(new DOMException("The operation was aborted.", "AbortError")),
-          );
-          // Never resolves on its own: only the abort ends it.
-        }),
+  it.each([
+    "http://127.0.0.1/private",
+    "http://10.0.0.1/private",
+    "http://169.254.169.254/latest/meta-data/",
+    "http://[::ffff:127.0.0.1]/private",
+    "http://[fe80::1]/private",
+    "http://server.internal/private",
+    "https://user:pass@cdn.example.com/moved",
+    "ftp://cdn.example.com/moved",
+  ])("rejects %s before the initial request or a redirected connection", async (destination) => {
+    expect(await fetchFeed(destination)).toMatchObject({ status: "error" });
+    expect(lookup).not.toHaveBeenCalled();
+    expect(request).not.toHaveBeenCalled();
+
+    serve({ statusCode: 302, headers: { location: destination } });
+    expect(await fetchFeed(feedUrl)).toMatchObject({ status: "error" });
+    expect(lookup).toHaveBeenCalledTimes(1);
+    expect(request).toHaveBeenCalledTimes(1);
+    expect(request.mock.calls[0]?.[0].href).toBe(feedUrl);
+  });
+
+  it.each(
+    [
+      [],
+      [publicAddress, { address: "192.168.1.9", family: 4 }],
+      [{ address: "::ffff:169.254.169.254", family: 6 }],
+    ].map((addresses) => [addresses] as const),
+  )("rejects blocked or empty DNS answers %j", async (addresses) => {
+    lookup.mockResolvedValueOnce(addresses);
+    expect(await fetchFeed(feedUrl)).toEqual({
+      status: "error",
+      error: "internal destination blocked",
+    });
+    expect(request).not.toHaveBeenCalled();
+
+    lookup.mockResolvedValueOnce([publicAddress]).mockResolvedValueOnce(addresses);
+    serve({ statusCode: 302, headers: { location: "https://cdn.example.com/moved" } });
+    expect(await fetchFeed(feedUrl)).toEqual({
+      status: "error",
+      error: "internal destination blocked",
+    });
+    expect(lookup).toHaveBeenLastCalledWith("cdn.example.com", { all: true, verbatim: true });
+    expect(request).toHaveBeenCalledTimes(1);
+  });
+
+  it("pins the first connection and redirect even if DNS changes before either connects", async () => {
+    const cdnAddress = { address: "1.1.1.1", family: 4 };
+    lookup.mockImplementation((host) => {
+      const calls = lookup.mock.calls.filter(([name]) => name === host).length;
+      return Promise.resolve([
+        calls > 1
+          ? { address: "127.0.0.1", family: 4 }
+          : host === "feeds.example.com"
+            ? publicAddress
+            : cdnAddress,
+      ]);
+    });
+    serve((url) =>
+      url.hostname === "feeds.example.com"
+        ? { statusCode: 302, headers: { location: "https://cdn.example.com/moved" } }
+        : { body: "<rss/>" },
     );
-    vi.stubGlobal("fetch", mock);
-
-    const startedAt = Date.now();
-    const result = await fetchFeed("https://example.com/feed", {
-      timeoutMs: 20,
-    });
-    const elapsed = Date.now() - startedAt;
-
-    expect(result.status).toBe("error");
-    if (result.status !== "error") throw new Error("expected error");
-    expect(result.error).toContain("timed out");
-    // The timeout fires before any realistic network delay.
-    expect(elapsed).toBeLessThan(1_000);
-  });
-
-  it("reports a rejected fetch (e.g. DNS/network) as an error", async () => {
-    const mock = vi.fn(() => Promise.reject(new TypeError("fetch failed")));
-    vi.stubGlobal("fetch", mock);
-
-    const result = await fetchFeed("https://missing.example.com/feed");
-
-    expect(result.status).toBe("error");
-    if (result.status !== "error") throw new Error("expected error");
-    expect(result.error).toContain("fetch failed");
-  });
-
-  it("enforces the size limit on a streamed body", async () => {
-    const big = new Uint8Array(20).fill(65); // 20 bytes
-    const mock = vi.fn(() => Promise.resolve(makeResponse({ body: streamFrom(big) })));
-    vi.stubGlobal("fetch", mock);
-
-    const result = await fetchFeed("https://example.com/feed", {
-      maxBytes: 10,
+    const send = request.getMockImplementation();
+    if (!send) throw new Error("missing mock transport");
+    const connected: LookupAddress[][] = [];
+    request.mockImplementation((url, options, respond) => {
+      options.lookup(url.hostname, { all: true }, (error, addresses) => {
+        if (error) throw error;
+        if (!Array.isArray(addresses)) throw new Error("expected address array");
+        connected.push(addresses);
+      });
+      expect(options.headers.Host).toBe(url.host);
+      expect(options).toMatchObject({ agent: false, rejectUnauthorized: true });
+      return send(url, options, respond);
     });
 
-    expect(result.status).toBe("error");
-    if (result.status !== "error") throw new Error("expected error");
-    expect(result.error).toContain("too large");
+    expect(await fetchFeed(feedUrl)).toMatchObject({ status: "ok" });
+    expect(lookup.mock.calls.map(([host]) => host)).toEqual([
+      "feeds.example.com",
+      "cdn.example.com",
+    ]);
+    expect(connected).toEqual([[publicAddress], [cdnAddress]]);
   });
 
-  it("fast-fails when Content-Length already exceeds the limit", async () => {
-    const mock = vi.fn(() =>
-      Promise.resolve(
-        makeResponse({
-          body: "small",
-          headers: { "content-length": "1000000" },
-        }),
-      ),
+  it("follows exactly three redirects and stops a loop", async () => {
+    serve((url) => {
+      const hop = Number(url.pathname.slice(1)) || 0;
+      return hop < 3
+        ? { statusCode: 302, headers: { location: `/${hop + 1}` } }
+        : { body: "<rss/>" };
+    });
+    expect(await fetchFeed(feedUrl)).toMatchObject({ status: "ok" });
+    expect(request).toHaveBeenCalledTimes(4);
+
+    request.mockClear();
+    serve({ statusCode: 302, headers: { location: "/feed" } });
+    expect(await fetchFeed(feedUrl)).toEqual({ status: "error", error: "too many redirects" });
+    expect(request).toHaveBeenCalledTimes(4);
+  });
+
+  it("times out during DNS without connecting", async () => {
+    lookup.mockReturnValue(new Promise(() => {}));
+    expect(await fetchFeed(feedUrl, { timeoutMs: 10 })).toEqual({
+      status: "error",
+      error: "timed out after 10 ms",
+    });
+    expect(request).not.toHaveBeenCalled();
+  });
+
+  it("times out while reading the final body and uses one signal across redirects", async () => {
+    serve((url) =>
+      url.pathname === "/feed"
+        ? { statusCode: 302, headers: { location: "/moved" } }
+        : { body: "<rss>", stall: true },
     );
-    vi.stubGlobal("fetch", mock);
-
-    const result = await fetchFeed("https://example.com/feed", {
-      maxBytes: 100,
+    expect(await fetchFeed(feedUrl, { timeoutMs: 20 })).toEqual({
+      status: "error",
+      error: "timed out after 20 ms",
     });
-
-    expect(result.status).toBe("error");
-    if (result.status !== "error") throw new Error("expected error");
-    expect(result.error).toContain("too large");
+    expect(request).toHaveBeenCalledTimes(2);
+    expect(request.mock.calls[0]?.[1].signal).toBe(request.mock.calls[1]?.[1].signal);
+    expect(request.mock.calls[1]?.[1].signal.aborted).toBe(true);
   });
 
-  it("rejects non-http(s) URLs without calling fetch", async () => {
-    const mock = vi.fn();
-    vi.stubGlobal("fetch", mock);
+  it.each([
+    ["gzip", gzipSync],
+    ["deflate", deflateSync],
+    ["deflate", deflateRawSync],
+    ["br", brotliCompressSync],
+    ["zstd", zstdCompressSync],
+  ] as const)("decodes %s response bodies", async (encoding, compress) => {
+    serve({ headers: { "content-encoding": encoding }, body: compress("<rss/>") });
+    expect(await fetchFeed(feedUrl)).toMatchObject({ status: "ok", body: "<rss/>" });
+  });
 
-    const result = await fetchFeed("ftp://example.com/feed");
+  it("caps compressed bytes even when Content-Length is absent", async () => {
+    serve({ headers: { "content-encoding": "gzip" }, body: gzipSync("<rss/>") });
+    expect(await fetchFeed(feedUrl, { maxBytes: 10 })).toEqual({
+      status: "error",
+      error: "response too large",
+    });
+  });
 
-    expect(result.status).toBe("error");
-    if (result.status !== "error") throw new Error("expected error");
-    expect(result.error).toContain("unsupported or invalid URL");
-    expect(mock).not.toHaveBeenCalled();
+  it("caps decoded bytes even when the compressed body is small", async () => {
+    const body = gzipSync("x".repeat(DEFAULT_MAX_BYTES + 1));
+    expect(body.byteLength).toBeLessThan(DEFAULT_MAX_BYTES);
+    serve({ headers: { "content-encoding": "gzip" }, body });
+    expect(await fetchFeed(feedUrl)).toEqual({
+      status: "error",
+      error: "decoded response too large",
+    });
+  });
+
+  it("rejects a declared Content-Length above the limit before the body arrives", async () => {
+    serve({ headers: { "content-length": "101" }, stall: true });
+    expect(await fetchFeed(feedUrl, { maxBytes: 100 })).toEqual({
+      status: "error",
+      error: "response too large",
+    });
+  });
+
+  it("keeps the documented feed defaults", () => {
+    expect(DEFAULT_TIMEOUT_MS).toBe(15_000);
+    expect(DEFAULT_MAX_BYTES).toBe(5 * 1024 * 1024);
+    expect(DEFAULT_CONCURRENCY).toBe(4);
   });
 });
 
 describe("fetchFeeds", () => {
-  const feeds: FeedToFetch[] = Array.from({ length: 6 }, (_, i) => ({
-    feedUrl: `https://example.com/feed${i}`,
-  }));
+  const feeds = Array.from({ length: 6 }, (_, index) => ({ feedUrl: `${feedUrl}/${index}` }));
 
-  it("fetches every feed and preserves input order", async () => {
-    const { mock } = captureFetch();
-    vi.stubGlobal("fetch", mock);
-
-    const results = await fetchFeeds(feeds);
-
-    expect(results).toHaveLength(6);
-    for (const result of results) {
-      expect(result.status).toBe("ok");
-    }
-    expect(mock).toHaveBeenCalledTimes(6);
-  });
-
-  it("caps concurrency at the requested value", async () => {
+  it("caps concurrency, preserves input order, and isolates a failed feed", async () => {
     let inFlight = 0;
     let maxInFlight = 0;
-    const mock = vi.fn(
-      (input: string | URL | Request) =>
-        new Promise<Response>((resolve) => {
-          inFlight += 1;
-          maxInFlight = Math.max(maxInFlight, inFlight);
-          setTimeout(() => {
-            inFlight -= 1;
-            resolve(makeResponse({ body: `body for ${String(input)}` }));
-          }, 25);
-        }),
-    );
-    vi.stubGlobal("fetch", mock);
-
-    const results = await fetchFeeds(feeds, { concurrency: 2 });
-
-    expect(results).toHaveLength(6);
-    expect(maxInFlight).toBeLessThanOrEqual(2);
-    expect(maxInFlight).toBeGreaterThanOrEqual(1);
-  });
-
-  it("isolates a failing feed without stopping the rest", async () => {
-    const mock = vi.fn((input: string | URL | Request) => {
-      const url = String(input);
-      if (url.includes("feed2")) {
-        return Promise.reject(new TypeError("network down"));
-      }
-      return Promise.resolve(makeResponse({ body: `body for ${url}` }));
+    lookup.mockImplementation(async () => {
+      inFlight++;
+      maxInFlight = Math.max(inFlight, maxInFlight);
+      await new Promise((resolve) => setTimeout(resolve, 5));
+      inFlight--;
+      return [publicAddress];
     });
-    vi.stubGlobal("fetch", mock);
-
-    const results = await fetchFeeds(feeds);
-
-    expect(results).toHaveLength(6);
-    for (const [index, result] of results.entries()) {
-      if (index === 2) {
-        expect(result.status).toBe("error");
-        if (result.status !== "error") throw new Error("expected error");
-        expect(result.error).toContain("network down");
-      } else {
-        expect(result.status).toBe("ok");
-      }
-    }
-  });
-});
-
-describe("defaults", () => {
-  it("exposes the documented defaults", () => {
-    expect(DEFAULT_TIMEOUT_MS).toBe(15_000);
-    expect(DEFAULT_MAX_BYTES).toBe(5 * 1024 * 1024);
-    expect(DEFAULT_CONCURRENCY).toBe(4);
-    expect(DEFAULT_USER_AGENT).toBeTruthy();
+    serve((url) =>
+      url.pathname === "/feed/2"
+        ? { statusCode: 404, statusMessage: "Not Found" }
+        : { body: url.href },
+    );
+    const results = await fetchFeeds(feeds, { concurrency: 2 });
+    expect(results).toEqual(
+      feeds.map(({ feedUrl }, index) =>
+        index === 2
+          ? { status: "error", error: "HTTP 404 Not Found" }
+          : { status: "ok", body: feedUrl, contentType: "" },
+      ),
+    );
+    expect(maxInFlight).toBe(2);
   });
 });

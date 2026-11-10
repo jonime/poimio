@@ -1,3 +1,4 @@
+import { Buffer } from "node:buffer";
 import { describe, expect, it } from "vitest";
 import type { UnembeddedItem } from "./db";
 import {
@@ -31,13 +32,21 @@ function vectors(count: number) {
   }));
 }
 
+function captureEmbeddingInputs(requests: string[][]): typeof fetch {
+  return async (_input, init) => {
+    const { input } = JSON.parse(String(init?.body)) as { input: string[] };
+    requests.push(input);
+    return Response.json({ data: vectors(input.length) });
+  };
+}
+
 describe("embedPendingItems", () => {
   it("sends ordered text in batches of at most 100 with the required model and dimensions", async () => {
     const items = [
       {
         id: "1",
-        title: "Title one",
-        summary: "Summary one",
+        title: "  Yle kertoo säästä  ",
+        summary: " \tSää lämpenee huomenna.\n ",
         summaryOrigin: "feed" as const,
       },
       {
@@ -80,7 +89,7 @@ describe("embedPendingItems", () => {
         model: EMBEDDING_MODEL,
         dimensions: EMBEDDING_DIMENSIONS,
         input: [
-          "Title one\n\nSummary one",
+          "  Yle kertoo säästä  \n\nSää lämpenee huomenna.",
           "Title two\n\nSummary two",
           "Title three\n\nSummary three",
         ],
@@ -90,6 +99,86 @@ describe("embedPendingItems", () => {
     expect(db.embeddings.get("2")?.vector[0]).toBe(1);
     expect(db.embeddings.get("3")?.vector[0]).toBe(2);
     expect(db.embeddings.get("1")?.model).toBe(EMBEDDING_MODEL_VERSION);
+  });
+
+  it.each([
+    { character: "ä", bytes: 2 },
+    { character: "界", bytes: 3 },
+    { character: "😀", bytes: 4 },
+  ])("keeps $character whole at both byte caps", async ({ character, bytes }) => {
+    const exactTitle = "t".repeat(512 - bytes) + character;
+    const exactSummary = "s".repeat(2_400 - bytes) + character;
+    const shortTitle = "t".repeat(512 - bytes + 1);
+    const shortSummary = "s".repeat(2_400 - bytes + 1);
+    const db = new FakeEmbeddingDb([
+      { id: "exact", title: exactTitle, summary: exactSummary, summaryOrigin: "feed" },
+      {
+        id: "crossing",
+        title: `${shortTitle}${character}t`,
+        summary: `${shortSummary}${character}s`,
+        summaryOrigin: "feed",
+      },
+    ]);
+    const requests: string[][] = [];
+
+    expect(
+      await embedPendingItems(db, "test-key", { fetch: captureEmbeddingInputs(requests) }),
+    ).toEqual({ embedded: 2, failedBatches: [] });
+    expect(requests).toEqual([
+      [`${exactTitle}\n\n${exactSummary}`, `${shortTitle}\n\n${shortSummary}`],
+    ]);
+  });
+
+  it("caps both fields independently in a full batch", async () => {
+    const title = "😀".repeat(5_000);
+    const summary = `  ${"界".repeat(1_000)}  `;
+    const db = new FakeEmbeddingDb(
+      Array.from({ length: 100 }, (_, index) => ({
+        id: `item-${index}`,
+        title,
+        summary,
+        summaryOrigin: "feed",
+      })),
+    );
+    const requests: string[][] = [];
+
+    expect(
+      await embedPendingItems(db, "test-key", { fetch: captureEmbeddingInputs(requests) }),
+    ).toEqual({ embedded: 100, failedBatches: [] });
+    expect(requests).toHaveLength(1);
+    const inputs = requests.flat();
+    expect(inputs).toHaveLength(100);
+    const expectedInput = `${"😀".repeat(128)}\n\n${"界".repeat(800)}`;
+    expect(inputs.every((input) => input === expectedInput)).toBe(true);
+    expect(inputs.reduce((bytes, input) => bytes + Buffer.byteLength(input, "utf8"), 0)).toBe(
+      291_400,
+    );
+  });
+
+  it("embeds a stored oversized item with its neighbors and skips them on rerun", async () => {
+    const title = "t".repeat(20_000);
+    const summary = "  Stored summary  ";
+    const stored = { id: "stored", title, summary, summaryOrigin: "feed" as const };
+    const db = new FakeEmbeddingDb([
+      { id: "first", title: "First", summary: "First summary", summaryOrigin: "feed" },
+      stored,
+      { id: "last", title: "Last", summary: "Last summary", summaryOrigin: "feed" },
+    ]);
+    const requests: string[][] = [];
+    const options = { fetch: captureEmbeddingInputs(requests) };
+
+    expect(await embedPendingItems(db, "test-key", options)).toEqual({
+      embedded: 3,
+      failedBatches: [],
+    });
+    expect(stored).toMatchObject({ title, summary });
+    expect(await embedPendingItems(db, "test-key", options)).toEqual({
+      embedded: 0,
+      failedBatches: [],
+    });
+    expect(requests).toEqual([
+      ["First\n\nFirst summary", `${"t".repeat(512)}\n\nStored summary`, "Last\n\nLast summary"],
+    ]);
   });
 
   it("leaves a failed batch pending and retries it on the next run", async () => {

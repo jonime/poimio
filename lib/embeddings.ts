@@ -1,3 +1,4 @@
+import { Buffer } from "node:buffer";
 import type { IngestDb, UnembeddedItem } from "./db.ts";
 import { requireDefined } from "./required.ts";
 
@@ -6,6 +7,8 @@ export const EMBEDDING_DIMENSIONS = 512;
 export const EMBEDDING_MODEL_VERSION = `${EMBEDDING_MODEL}@${EMBEDDING_DIMENSIONS}`;
 export const EMBEDDING_BATCH_SIZE = 100;
 const OPENAI_EMBEDDINGS_URL = "https://api.openai.com/v1/embeddings";
+const MAX_TITLE_BYTES = 512;
+const MAX_SUMMARY_BYTES = 2_400;
 
 interface EmbeddingResponse {
   data?: Array<{ index: number; embedding: number[] }>;
@@ -28,8 +31,21 @@ export interface EmbeddingOptions {
   limit?: number;
 }
 
+function truncateUtf8(text: string, maxBytes: number): string {
+  let bytes = 0;
+  let end = 0;
+  for (const codePoint of text) {
+    bytes += Buffer.byteLength(codePoint, "utf8");
+    if (bytes > maxBytes) break;
+    end += codePoint.length;
+  }
+  return text.slice(0, end);
+}
+
 function embeddingInput(item: UnembeddedItem): string {
-  return `${item.title}\n\n${item.summary?.trim() ?? ""}`;
+  const title = truncateUtf8(item.title, MAX_TITLE_BYTES);
+  const summary = truncateUtf8(item.summary?.trim() ?? "", MAX_SUMMARY_BYTES);
+  return `${title}\n\n${summary}`;
 }
 
 function describeError(error: unknown): string {

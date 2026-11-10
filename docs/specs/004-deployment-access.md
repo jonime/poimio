@@ -279,7 +279,7 @@ on the first Git-triggered production deployment.
 
 ## Amendment: Content Security Policy (10 Nov 2026)
 
-- [ ] 16. Add an enforced CSP to production builds in the existing catch-all
+- [x] 16. Add an enforced CSP to production builds in the existing catch-all
   `headers()` rule, preserving partial prerendering, proxy behavior, and the
   existing response headers. This supersedes the original CSP exclusion and
   addresses [code scanning alert #4](https://github.com/jonime/poimio/security/code-scanning/4).
@@ -314,5 +314,11 @@ the homepage as partially prerendered. Local production responses preserved
 Markdown negotiation, redirects, and existing headers. Chrome verified
 hydration, menus, client navigation, an HTTPS thumbnail, feed refresh, Like,
 Unlike, and sign-out using a disposable local account. The expected inline
-event handler violation was the only CSP violation. Live verification follows
-review, commit, and deployment.
+event handler violation was the only CSP violation.
+
+Task 16 production validation (10 Nov 2026): after PR #27 deployed, the
+homepage, legacy login route, and HTML 404 returned the enforced policy with
+the hosted Supabase origin. Google sign-in completed through the callback and
+returned to the signed-in feed. The configured Speed Insights script returned
+HTTP 200, and Vercel recorded four browser vitals POSTs with HTTP 200 on the
+production deployment. GitHub alert #4 was dismissed as **Mitigated**.

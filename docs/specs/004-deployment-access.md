@@ -13,6 +13,9 @@ RLS remain mandatory.
 **Deployment update (7 Nov 2026):** The Production CI gate amendment supersedes
 the original build trigger and promotion workflow below.
 
+**Security update (10 Nov 2026):** The Content Security Policy amendment
+supersedes the original CSP exclusion below.
+
 ## Goal
 
 Make the application available on the internet (Vercel + hosted Supabase) for invited users only, with automated tests — including the security integration tests — gating every production deployment.
@@ -273,3 +276,43 @@ builds pushes to `main` and promotes after the build succeeds and the required
 check passes. The GitHub jobs still run the unit and local Supabase integration
 tests, and non-production CI runs still build the app. Verify automatic promotion
 on the first Git-triggered production deployment.
+
+## Amendment: Content Security Policy (10 Nov 2026)
+
+- [ ] 16. Add an enforced CSP to production builds in the existing catch-all
+  `headers()` rule, preserving partial prerendering, proxy behavior, and the
+  existing response headers. This supersedes the original CSP exclusion and
+  addresses [code scanning alert #4](https://github.com/jonime/poimio/security/code-scanning/4).
+
+Use `default-src 'self'`, `script-src 'self' 'unsafe-inline'`,
+`script-src-attr 'none'`, `style-src 'self' 'unsafe-inline'`,
+`img-src 'self' https:`, `font-src 'self'`, `object-src 'none'`,
+`base-uri 'none'`, `frame-src 'none'`, `frame-ancestors 'none'`, and
+`form-action 'self'`. Set `connect-src` to `'self'` plus the exact HTTP(S)
+origin of `NEXT_PUBLIC_SUPABASE_URL` when configured. Same-origin connections
+cover Next.js and Vercel Speed Insights. Inline styles support the feed UI and
+HTTPS images support publisher thumbnails. Next.js inline bootstrap scripts
+remain allowed, so protection against inline script injection is limited.
+
+### Acceptance criteria
+
+- `pnpm lint`, `pnpm typecheck`, `pnpm test`, and `pnpm build` pass.
+- A local production server enforces the policy on the homepage, login page, and
+  HTML 404. Markdown negotiation, redirects, and existing headers still work.
+- In a browser against the local production build, hydration, navigation, menus,
+  thumbnails, and signed-in feed interactions work with a local test account.
+  An inline event handler is blocked and the console has no unexpected CSP
+  violations.
+- After deployment, verify the live header, complete Google sign-in and callback,
+  and confirm Speed Insights loads and sends requests. If alert #4 is still open
+  after those checks, dismiss it as **Mitigated**.
+
+Task 16 local validation: lint, typecheck, 428 unit tests, and
+`pnpm build --webpack` passed. The default Turbopack build hit environment
+restrictions on Google Fonts and worker-port binding. The webpack build reported
+the homepage as partially prerendered. Local production responses preserved
+Markdown negotiation, redirects, and existing headers. Chrome verified
+hydration, menus, client navigation, an HTTPS thumbnail, feed refresh, Like,
+Unlike, and sign-out using a disposable local account. The expected inline
+event handler violation was the only CSP violation. Live verification follows
+review, commit, and deployment.

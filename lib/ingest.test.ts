@@ -170,6 +170,26 @@ describe("runIngestion", () => {
     expect(result.embeddings).toEqual({ embedded: 0, failedBatches: [] });
   });
 
+  it("clears both stored validators after ingesting a redirected feed", async () => {
+    const db = new FakeIngestDb([
+      { ...source("moved", "Moved"), etag: '"old"', lastModified: "Tue, 28 Oct 2026 12:00:00 GMT" },
+    ]);
+    const result = await runIngestion(db, "test-key", {
+      fetchBatch: async () => [
+        {
+          status: "ok",
+          body: feedXml,
+          contentType: "application/rss+xml",
+          etag: null,
+          lastModified: null,
+        },
+      ],
+    });
+
+    expect(result.sources[0]?.newItems).toBe(1);
+    expect(db.updates[0]?.patch).toMatchObject({ etag: null, lastModified: null, lastError: null });
+  });
+
   it("retries due stored items after 304, feed errors, and duplicate-only feeds", async () => {
     const outcomes: Array<{
       name: string;

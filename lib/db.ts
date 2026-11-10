@@ -64,8 +64,8 @@ export interface SourceStatusPatch {
  * What happened with one source during an ingestion run.
  *
  * - `fetched` — HTTP 200 and parsed successfully. The stored
- *   etag/last-modified are replaced only when the server sent new values;
- *   a missing header keeps the previous working state.
+ *   etag/last-modified are updated when the server sends new values or
+ *   cleared when a redirected feed is parsed successfully.
  * - `not_modified` — HTTP 304; the fetch is confirmed successful.
  * - `error` with phase `fetch` — network/HTTP failure. The conditional-GET
  *   state and `last_success_at` are kept, so the next run retries
@@ -80,8 +80,8 @@ export type SourceOutcome =
       kind: "fetched";
       /** Number of newly inserted items from this fetch. */
       newItems: number;
-      etag?: string;
-      lastModified?: string;
+      etag?: string | null;
+      lastModified?: string | null;
     }
   | { kind: "not_modified" }
   | { kind: "error"; phase: "fetch" | "parse"; error: string };

@@ -1,19 +1,6 @@
-/**
- * Feed fetching with the guardrails from spec 001 (task 4):
- *
- *  - conditional GET using the stored `etag` / `last-modified`
- *  - a 15 s timeout covering the whole request (headers + body)
- *  - a 5 MB response size limit (enforced on the streamed body)
- *  - an identifying User-Agent
- *  - limited concurrency (default 4) when fetching several feeds
- *  - per-source error isolation: one failing feed never stops the run
- *
- * Feed URLs are admin-curated (seeded from feeds.md), so the private/internal
- * address (SSRF) block required when URLs come from users or an LLM is not
- * applied here. They are still restricted to http/https as a non-negotiable
- * security rule, and the size/timeout limits double as a slow/abusive-response
- * guard.
- */
+import { promisify } from "node:util";
+import { brotliDecompress, gunzip, inflate, inflateRaw, zstdDecompress } from "node:zlib";
+import { fetchPublicUrl, HttpFetchError, headerValue, withAbort } from "./public-http.ts";
 
 export const DEFAULT_TIMEOUT_MS = 15_000;
 export const DEFAULT_MAX_BYTES = 5 * 1024 * 1024; // 5 MB
@@ -56,10 +43,10 @@ export interface FetchOk {
   /** Raw feed body, UTF-8 decoded. */
   body: string;
   contentType: string;
-  /** New `ETag` to persist for the next run. */
-  etag?: string;
-  /** New `Last-Modified` to persist for the next run. */
-  lastModified?: string;
+  /** New `ETag` to persist, or null to clear it after a redirect. */
+  etag?: string | null;
+  /** New `Last-Modified` to persist, or null to clear it after a redirect. */
+  lastModified?: string | null;
 }
 
 /** The server answered `304 Not Modified`; nothing new to do. */
@@ -75,83 +62,56 @@ export interface FetchFailed {
 
 export type FetchResult = FetchOk | FetchNotModified | FetchFailed;
 
-/** Raised internally when a response exceeds the size limit. */
-class BodyTooLargeError extends Error {
-  constructor(maxBytes: number) {
-    super(`response too large: exceeds the ${maxBytes} byte limit`);
-    this.name = "BodyTooLargeError";
-  }
-}
+const decompress = {
+  gzip: promisify(gunzip),
+  deflate: promisify(inflate),
+  rawDeflate: promisify(inflateRaw),
+  br: promisify(brotliDecompress),
+  zstd: promisify(zstdDecompress),
+};
 
-function isHttpUrl(url: string): boolean {
-  try {
-    const parsed = new URL(url);
-    return parsed.protocol === "http:" || parsed.protocol === "https:";
-  } catch {
-    return false;
-  }
-}
-
-function describeError(error: unknown): string {
-  if (error instanceof Error) {
-    return error.message || error.name;
-  }
-  return String(error);
-}
-
-/**
- * Read a response body, enforcing {@link maxBytes} on the streamed bytes.
- * Throws {@link BodyTooLargeError} once the total exceeds the limit.
- */
-async function readBodyWithLimit(
-  response: Response,
+async function decodeBody(
+  body: Uint8Array,
+  contentEncoding: string,
   maxBytes: number,
   signal: AbortSignal,
 ): Promise<string> {
-  const decoder = new TextDecoder("utf-8");
+  let bytes = body;
+  for (const coding of contentEncoding.toLowerCase().split(",").reverse()) {
+    signal.throwIfAborted();
+    const encoding = coding.trim();
+    if (encoding === "" || encoding === "identity" || bytes.byteLength === 0) continue;
 
-  // Some responses (e.g. an empty 200) expose no body stream.
-  if (response.body == null) {
-    const text = await response.text();
-    if (new TextEncoder().encode(text).byteLength > maxBytes) {
-      throw new BodyTooLargeError(maxBytes);
+    let decode: (input: Uint8Array, options: { maxOutputLength: number }) => Promise<Buffer>;
+    switch (encoding) {
+      case "gzip":
+      case "x-gzip":
+        decode = decompress.gzip;
+        break;
+      case "deflate":
+      case "x-deflate":
+        // Some servers send raw deflate without the zlib wrapper.
+        decode = ((bytes[0] ?? 0) & 15) === 8 ? decompress.deflate : decompress.rawDeflate;
+        break;
+      case "br":
+        decode = decompress.br;
+        break;
+      case "zstd":
+        decode = decompress.zstd;
+        break;
+      default:
+        throw new HttpFetchError("unsupported content encoding");
     }
-    return text;
-  }
-
-  const reader = response.body.getReader();
-  const chunks: Uint8Array[] = [];
-  let total = 0;
-
-  try {
-    for (;;) {
-      if (signal.aborted) {
-        throw new DOMException("The operation was aborted.", "AbortError");
-      }
-      const { done, value } = await reader.read();
-      if (done) break;
-      const bytes = value;
-      total += bytes.byteLength;
-      if (total > maxBytes) {
-        throw new BodyTooLargeError(maxBytes);
-      }
-      chunks.push(bytes);
-    }
-  } finally {
     try {
-      reader.releaseLock();
-    } catch {
-      // The stream may already be locked/errored; releasing is best-effort.
+      bytes = await withAbort(decode(bytes, { maxOutputLength: maxBytes }), signal);
+    } catch (error) {
+      if ((error as NodeJS.ErrnoException)?.code === "ERR_BUFFER_TOO_LARGE") {
+        throw new HttpFetchError("decoded response too large");
+      }
+      throw error;
     }
   }
-
-  const combined = new Uint8Array(total);
-  let offset = 0;
-  for (const chunk of chunks) {
-    combined.set(chunk, offset);
-    offset += chunk.byteLength;
-  }
-  return decoder.decode(combined);
+  return new TextDecoder("utf-8").decode(bytes);
 }
 
 /**
@@ -165,73 +125,56 @@ export async function fetchFeed(feedUrl: string, options: FetchOptions = {}): Pr
   const maxBytes = options.maxBytes ?? DEFAULT_MAX_BYTES;
   const userAgent = options.userAgent ?? DEFAULT_USER_AGENT;
 
-  if (!isHttpUrl(feedUrl)) {
-    return { status: "error", error: `unsupported or invalid URL: ${feedUrl}` };
-  }
-
-  const headers: Record<string, string> = {
-    "User-Agent": userAgent,
-    Accept: "application/rss+xml, application/atom+xml, application/xml, text/xml, */*",
-  };
-  if (options.etag) headers["If-None-Match"] = options.etag;
-  if (options.lastModified) headers["If-Modified-Since"] = options.lastModified;
+  const initialHeaders: Record<string, string> = {};
+  if (options.etag) initialHeaders["If-None-Match"] = options.etag;
+  if (options.lastModified) initialHeaders["If-Modified-Since"] = options.lastModified;
 
   const controller = new AbortController();
-  let timedOut = false;
-  const timer = setTimeout(() => {
-    timedOut = true;
-    controller.abort();
-  }, timeoutMs);
+  const { signal } = controller;
+  const timer = setTimeout(() => controller.abort(), timeoutMs);
 
   try {
-    const response = await fetch(feedUrl, {
-      headers,
-      signal: controller.signal,
-      redirect: "follow",
+    const { response, redirected } = await fetchPublicUrl(feedUrl, {
+      headers: {
+        Accept: "application/rss+xml, application/atom+xml, application/xml, text/xml, */*",
+        "Accept-Encoding": "br, gzip, deflate, zstd",
+      },
+      initialHeaders,
+      maxBytes,
+      userAgent,
+      signal,
     });
 
-    if (response.status === 304) {
+    if (response.status === 304 && !redirected && Object.keys(initialHeaders).length > 0) {
       return { status: "not_modified" };
     }
-    if (!response.ok) {
+    if (response.status < 200 || response.status >= 300) {
       return {
         status: "error",
         error: `HTTP ${response.status}${response.statusText ? ` ${response.statusText}` : ""}`,
       };
     }
 
-    // Fast-fail on a declared size before reading the body.
-    const contentLength = Number(response.headers.get("content-length"));
-    if (Number.isFinite(contentLength) && contentLength > maxBytes) {
-      await response.body?.cancel().catch(() => {});
-      return {
-        status: "error",
-        error: `response too large: ${contentLength} bytes (limit ${maxBytes})`,
-      };
-    }
-
-    const body = await readBodyWithLimit(response, maxBytes, controller.signal);
-
-    const etag = response.headers.get("etag") ?? undefined;
-    const lastModified = response.headers.get("last-modified") ?? undefined;
+    const body = await decodeBody(
+      response.body,
+      headerValue(response.headers, "content-encoding") ?? "",
+      maxBytes,
+      signal,
+    );
+    const etag = redirected ? null : (headerValue(response.headers, "etag") ?? undefined);
+    const lastModified = redirected
+      ? null
+      : (headerValue(response.headers, "last-modified") ?? undefined);
     return {
       status: "ok",
       body,
-      contentType: response.headers.get("content-type") ?? "",
+      contentType: headerValue(response.headers, "content-type") ?? "",
       ...(etag === undefined ? {} : { etag }),
       ...(lastModified === undefined ? {} : { lastModified }),
     };
   } catch (error) {
-    if (timedOut) {
-      return { status: "error", error: `timed out after ${timeoutMs} ms` };
-    }
-    if (error instanceof BodyTooLargeError) {
-      return { status: "error", error: error.message };
-    }
-    if (error instanceof Error && error.name === "AbortError") {
-      return { status: "error", error: "request aborted" };
-    }
-    return { status: "error", error: describeError(error) };
+    if (signal.aborted) return { status: "error", error: `timed out after ${timeoutMs} ms` };
+    return { status: "error", error: error instanceof Error ? error.message : String(error) };
   } finally {
     clearTimeout(timer);
   }

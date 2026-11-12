@@ -1,7 +1,7 @@
 # 009 — Description quality experiment with TypeSafe Jev
 
-**Status:** Draft (for review)  
-**Milestone:** Final (optional side experiment while [spec 006](006-evaluation.md) waits for more data; third in the [plan's cut order](../plan.md#9-decision-gates-and-cut-order))  
+**Status:** Approved
+**Milestone:** Final (optional side experiment using the final snapshot from 11 Nov; third in the [plan's cut order](../plan.md#9-decision-gates-and-cut-order))
 **Depends on:** 005 (description provenance), 006 (evaluation snapshot export)  
 **Estimate:** roughly 10 h, plus a few hours of manual labelling
 
@@ -21,7 +21,7 @@ Labels used below: **Verified** means checked in this repository, the local prov
 
 A description is accepted when it is non-empty after normalization and is not link-only. Nothing checks whether it says what the item is about. The description is half of the embedding input (`title + "\n\n" + summary`), so a poor description affects ranking and is also shown on the card.
 
-**Verified** in the local provisional snapshot (`evaluation/snapshot/provisional/`, 1,074 completed items, 28 Oct – 2 Nov 2026; read-only check):
+**Verified historically** in the pre-fix local provisional snapshot (`evaluation/snapshot/provisional/`, 1,074 completed items, 28 Oct – 2 Nov 2026; read-only check). Spec 010 later fixed the known Yle metadata description; this experiment uses the post-fix final snapshot:
 
 | Origin          | Items | Examples of accepted poor descriptions                                                                                                                                                                              |
 | --------------- | ----: | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -58,7 +58,7 @@ Research questions (from the request):
 - [`extractPageContent`](../../lib/enrich/page.ts#L496) returns the first usable value from `og:description`, `twitter:description`, and `description`. [`normalizedDescription`](../../lib/enrich/page.ts#L489) checks only that it is non-empty and not link-only. If none is usable, Readability provides the article text.
 - [`summarizeArticleText`](../../lib/enrich/coordinator.ts#L84) calls `gpt-6-luna` through the Responses API with a raw `fetch`, without an SDK. Requests use a 15 s timeout and at most 200 output tokens. The run allows at most 20 summary requests. Before summarizing, [`articleContainsMoreThanTitle`](../../lib/enrich/coordinator.ts#L126) rejects article text that only repeats the title.
 - Failures are isolated per item and retried after 1 h and 6 h. Provenance is `page_metadata` or `ai_generated`.
-- The metadata step accepts Yle's site-wide `og:description` today. A "try page metadata" fallback would return the same boilerplate.
+- Spec 010 now rejects Yle's known site-wide description through `SITE_WIDE_DESCRIPTIONS`. The experiment tests other poor descriptions and repeated text in the post-fix snapshot.
 
 **Embeddings**
 
@@ -184,7 +184,7 @@ Instructions are written in English, the model's primary language. The state sta
 - Any change to ingestion, enrichment, embeddings, ranking, UI, or the database schema.
 - Judging factual accuracy against the article. Labellers and Jev both see only the title and description, the same text the embedding uses.
 - Generating replacement descriptions at scale. Only the task 8 probe generates them, without database writes.
-- Fixing the Yle boilerplate. It is fixed independently in its own spec (see Decisions).
+- Fixing Yle's known site-wide metadata description. Spec 010 handles that case; this experiment tests the remaining description-quality problem.
 
 ### H1: experiment-only heuristics (proposed, code only)
 
@@ -219,14 +219,14 @@ Each rule returns a reason code. Any match means "reject".
   - `config.json` (committed, frozen before the test run): rubric version, pinned models, thresholds, and H1 word limit.
   - `judge-cache.jsonl`: one row per Jev or LLM judge call, keyed by `[classifier, itemId, textHash, model, rubricVersion, run]`. Runs are resumable.
   - `results/report-<config hash>.{json,csv,md}`.
-- Whether files that contain titles and descriptions are committed or gitignored: see the "Committed text" open question.
+- Commit `sample.json`, `config.json`, finalized labels as `labels.jsonl` (item ID, label, and reason only), the response-only judge cache, and reports that refer to items by ID. Keep `items.jsonl`, the blind labeling CSVs, and full-text disagreement tables local and gitignored. Keep the exact snapshot files locally for reproduction; the committed hashes alone do not preserve the feed text.
 
 ## 5. Dataset and labelling
 
 ### 5.1 Source data
 
-- Proposed: sample from the current provisional snapshot (see the "Snapshot" open question). This experiment only reads the snapshot files; it does not import, label, or change anything that spec 006 uses, so spec 006 results are unaffected.
-- `sample` copies the sampled items into `evaluation/description-quality/items.jsonl` and freezes item IDs and text hashes in `sample.json`. Later provisional or final exports, and the separate Yle fix, cannot change the inputs: `run` fails on any hash mismatch.
+- Sample from the final, non-provisional snapshot created on 11 Nov 2026. It includes the spec 010 Yle fix and represents the current pipeline. This experiment reads the snapshot files only; it does not access the database or change spec 006 results.
+- `sample` copies the sampled items into local, gitignored `evaluation/description-quality/items.jsonl` and freezes item IDs and text hashes in committed `sample.json`. Later snapshot exports cannot change the inputs: `run` fails on any hash mismatch. Keep the exact snapshot files locally for reproduction.
 
 ### 5.2 Sampling
 
@@ -264,7 +264,7 @@ Simple random sampling would find only about 5–10 poor descriptions in 150 ite
 - Population estimates use inclusion weights. Unweighted sample numbers come with 95% Wilson intervals. With small cells, the report says "insufficient evidence" instead of pass or fail.
 - The Jev vs H1 comparison is paired, on the same items. Report discordant counts (Jev right/H1 wrong vs the reverse), not just two accuracies.
 - Choice option-order bias does not apply, since a Score is used. Stability is checked by rerunning all test calls once.
-- Repeated boilerplate (42 identical Yle items) is capped through stratification, so one easy pattern cannot inflate accuracy. The report also shows results with H1-flagged items excluded, which is Jev's marginal value.
+- H1-flagged items are capped through stratification, so one easy pattern cannot inflate accuracy. The report also shows results with H1-flagged items excluded, which is Jev's marginal value.
 
 ## 6. Metrics and success criteria
 
@@ -384,7 +384,7 @@ A production gate needs its own spec. It would change a spec 005 decision (feed 
 - **Order of checks:**
   1. Run deterministic rules first. Rules such as `repeated`, `placeholder`, and `equals_title` need no model.
   2. Call Jev only for descriptions that pass them.
-  3. Apply the same two steps to each page-metadata candidate in `extractPageContent`, so Yle's site-wide `og:description` is skipped and the next candidate or AI summary is used.
+  3. Apply the quality gate to page-metadata candidates in `extractPageContent`. Spec 010 already rejects the known Yle site-wide description; the gate would cover other poor metadata descriptions.
 - **Decision path:**
   - keep the description;
   - if Jev says replace, try page metadata through the same gate;
@@ -409,14 +409,13 @@ A production gate needs its own spec. It would change a spec 005 decision (feed 
 
 ## Decisions
 
-- This is a side experiment while spec 006 waits for more data. Estimates are rough, and `009` is its number.
+- This is an optional side experiment alongside spec 006. Estimates are rough, and `009` is its number.
 - Jev is called with plain `fetch`; `@typesafe-ai/sdk` is not added.
 - `gpt-6-luna` as an LLM judge (L) is included as a baseline.
 - The replacement probe (task 8) is included.
 - The user provides a TypeSafe API key; rate limits are expected to be sufficient for about 400 sequential requests.
-- The Yle site-wide metadata description is fixed independently in [spec 010](010-site-wide-metadata-descriptions.md), not in this experiment. The experiment samples from data captured before that fix, so the boilerplate items stay in the sample.
+- The known Yle site-wide metadata description was fixed in [spec 010](010-site-wide-metadata-descriptions.md). This experiment samples the final post-fix snapshot and does not evaluate that already-resolved case as part of its labelled sample.
 
 ## Open questions
 
-- **Snapshot:** proposed to sample from the current provisional snapshot. This only changes which items the experiment uses. Spec 006 results are unaffected, because this experiment only reads the snapshot files and copies the sample to its own folder. The provisional snapshot also still contains the Yle boilerplate items, which may be fixed before the final export. Confirm?
-- **Committed text:** the repository is public, so committing files that contain titles and descriptions republishes about 180 feed excerpts. `evaluation/early-ranking/judging.csv` is a precedent. Proposed: commit `sample.json`, `config.json`, labels as `labels.jsonl` (item ID, label, reason only), the judge cache, and a report that refers to items by ID. Keep `items.jsonl`, the labelling CSVs, and the full-text disagreement table gitignored and regenerate them locally. Reproducing the report then needs the local snapshot. Confirm, or prefer committing everything as before?
+- None.

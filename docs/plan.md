@@ -92,7 +92,7 @@ Not included: exploration slots, interest summary, evaluation harness, cross-lin
 - Per-user LLM usage limits, added with the first LLM-triggering user action.
 - Exploration slots and diversity re-ranking; reasons on negative feedback.
 - Natural-language feed tuning and same-story grouping (see cut order in §9).
-- Evaluation harness and results ([design.md §4](design.md#4-evaluation)), including Jev as a relevance judge.
+- Evaluation harness and results ([design.md §4](design.md#4-evaluation)).
 - Optional (see cut order in §9): LLM interest summary; click tracking as a weak positive signal.
 - Optional experiment ([spec 009](specs/009-description-quality-jev.md)): description quality with TypeSafe Jev against rules and an LLM judge. Offline with no production changes, so it does not wait for gate 2.
 - Stretch goals, only after gate 2 passes ([design.md §3](design.md#3-source-discovery-stretch-goal)): (a) catalog-based source discovery; (b) LLM web-search discovery.
@@ -130,7 +130,7 @@ About 19 hours per week over 7 weeks. Most code is written by AI agents, so impl
 
 | Week | Dates          | Focus                                                                                                                                                                                                                                                                                     | AI tool support               | Hours   |
 | ---- | -------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------- | ------- |
-| 5    | 23 – 29 Nov    | Evaluation harness with protocol safeguards (time-based splits, identical histories, near-duplicate handling, repeated runs); LLM labels and manual agreement check; Jev as a relevance judge; first validation results; Jev experiment test run and report; natural-language feed tuning | Metric code, labeling scripts | 19      |
+| 5    | 23 – 29 Nov    | Evaluation harness with protocol safeguards (time-based splits, identical histories, near-duplicate handling, repeated runs); LLM labels and manual agreement check; first validation results; Jev experiment test run and report; natural-language feed tuning | Metric code, labeling scripts | 19      |
 | 6    | 30 Nov – 6 Dec | Exploration slots and diversity; negative-feedback reasons; same-story grouping; optional LLM interest summary and click tracking; tune on validation set and **freeze parameters**; **gate 2**                                                                                           | Debugging, algorithm review   | 19      |
 | 7    | 7 – 12 Dec     | Final evaluation run on the test window; documentation and final demonstration; **submit final version (13 Dec)**; stretch goals only if gate 2 passed earlier                                                                                                                            | Documentation drafts, tests   | 16      |
 | —    |                | Buffer                                                                                                                                                                                                                                                                                    |                               | 12      |
@@ -246,7 +246,7 @@ The minimum acceptable result is: ingestion, personal feed with feedback, the re
 - Stack: Next.js on Vercel, Supabase Postgres + pgvector, supabase-js with SQL migrations (no ORM), Supabase Auth, GitHub Actions for scheduled jobs (hourly ingestion from week 2).
 - Source discovery is a two-stage stretch goal (catalog-based, then LLM web search), attempted only after gate 2; admin-approved sources join a shared pool.
 - Optional offline experiment: TypeSafe Jev for description quality, compared with rules and an LLM judge (spec 009); called with plain `fetch`, no SDK.
-- Additional AI features chosen for product value and measurability: natural-language feed tuning (LLM) and same-story grouping (embeddings + Jev), both not yet drafted; Jev as a relevance judge (spec 006); and negative-feedback reasons (spec 007).
+- Additional AI features chosen for product value and measurability: natural-language feed tuning (LLM) and same-story grouping (embeddings + Jev), both not yet drafted; and negative-feedback reasons (spec 007). Jev as a relevance judge was dropped: the Qwen label set was already final when it would have been added, and Jev is evaluated in spec 009 instead.
 - Cut order: web-search discovery, catalog discovery, Jev description experiment, LLM interest summary, click tracking, same-story grouping, natural-language feed tuning.
 
 ## 11. Open decisions

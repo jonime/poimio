@@ -80,7 +80,8 @@ First validation run `evaluation/results/validation-2026-11-12T16-29-08.088Z.jso
 
 **Applying the choice**
 
-- A migration changes the scorer's defaults to the chosen method and parameters, and `get_feed` calls the chosen method. If raw vectors win, `embedding_language_means` stays (harmless) and eligibility rules are unchanged.
+- A migration changes the scorer's defaults to the chosen method and parameters, and `get_feed` calls the chosen method. If raw vectors win, the default becomes `centered: false`; the `centered` option, `embedding_language_means`, and eligibility rules stay unchanged.
+- If raw vectors win, design.md §1 records the changed default and why it differs from gate 1.
 - design.md §2 is updated with the decision, the numbers, and the reasoning (including where it contradicts gate 1).
 
 ## Acceptance criteria
@@ -113,8 +114,5 @@ Each criterion belongs to one task.
 - Tuning happens before exploration and diversity, because those build on the chosen ranker.
 - Composite personas reuse the existing label set; no new labeling.
 - The freeze and the test-window run wait until exploration and diversity are settled.
-
-## Open questions
-
-- Should the objective weight composite personas more than single ones (real users usually have several interests), or keep equal weights as proposed?
-- If raw vectors win, should centering be removed from the code path, or kept as an option for a future embedding model?
+- All personas are weighted equally. Composite personas already carry 6 of 10 weights, and the balanced-coverage constraint guards the multi-interest case directly; a weight chosen after the results would be an unsupported tuned number.
+- If raw vectors win, centering stays as an option (default off) instead of being removed. Gate 1 (raw 0.65 vs centered 1.00) and the validation run (±0.05) disagree, the code is already built and tested, and a future embedding model may bring the language bias back.

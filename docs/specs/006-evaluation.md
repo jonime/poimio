@@ -166,9 +166,9 @@ Each criterion belongs to one task.
 
 ### Task 9 rollout after review and merge
 
-- [ ] Confirm that the Supabase GitHub integration applied the migration and that the hosted Data API excludes `ranking_private` from its exposed schemas and extra search path.
-- [ ] Verify a normal signed-in feed request and confirm the same account is denied a direct RPC call with a small, valid request.
-- [ ] Record the verification evidence on alert #6 and handle alert #3 as its duplicate.
+- [x] Confirm that the Supabase GitHub integration applied the migration and that the hosted Data API excludes `ranking_private` from its exposed schemas and extra search path.
+- [x] Verify a normal signed-in feed request and confirm the same account is denied a direct RPC call with a small, valid request.
+- [x] Record the verification evidence on alert #6 and handle alert #3 as its duplicate.
 
 ## Decisions
 

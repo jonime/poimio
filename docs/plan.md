@@ -146,24 +146,39 @@ About 19 hours per week over 7 weeks. Most code is written by AI agents, so impl
 
 ### 7.1 Spec roadmap
 
-Specs are written just in time: spec N+1 is drafted when spec N reaches its last few tasks, so it reflects what was learned. Workflow and rules are in [AGENTS.md](../AGENTS.md); the template is [specs/\_template.md](specs/_template.md).
+Specs are written just in time: the next spec is drafted when the current one reaches its last few tasks, so it reflects what was learned. A spec gets the next free number when it is drafted; 007 is reserved for exploration and diversity, and 011–012 were never used. Workflow and rules are in [AGENTS.md](../AGENTS.md); the template is [specs/\_template.md](specs/_template.md). Weeks are when the spec was drafted and worked on.
 
-| Spec                                        | Content                                                                                                                       | Week | Draft when                      |
-| ------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------- | ---- | ------------------------------- |
-| [001](specs/001-ingestion.md)               | Project setup, ingestion, hourly GitHub Actions run, early ranking experiment (gate 1)                                        | 1–2  | Drafted                         |
-| [002](specs/002-auth-feedback.md)           | Google login, feedback table, two-user RLS tests                                                                              | 2    | 001 reaches its embedding tasks |
-| [003](specs/003-feed-ui.md)                 | Feed UI (buttons, swipe gestures, Seen, undo), recommender SQL function, recency, explanations                                | 3    | After gate 1                    |
-| [004](specs/004-deployment-access.md)       | Vercel deployment from CI, authenticated access with database RLS                                                             | 4    | 003 nearly done                 |
-| [005](specs/005-description-enrichment.md)  | Enrich missing descriptions from page metadata and article text; backfill existing items                                      | 2–3  | Drafted                         |
-| [006](specs/006-evaluation.md)              | Evaluation harness, including the cross-lingual check moved from spec 001; Jev as a relevance judge                           | 2–5  | Drafted                         |
-| 007                                         | Exploration slots and diversity; negative-feedback reasons; per-user LLM limits; optional interest summary and click tracking | 6    | During week 5                   |
-| [008](specs/008-guest-feed-preview.md)      | Cached guest feed preview for signed-out visitors                                                                             | 2    | Drafted                         |
-| [009](specs/009-description-quality-jev.md) | Description quality experiment with TypeSafe Jev (optional)                                                                   | 4–5  | Drafted                         |
-| 010                                         | Natural-language feed tuning                                                                                                  | 5    | During week 4                   |
-| 011                                         | Same-story grouping with embeddings and Jev                                                                                   | 6    | During week 5                   |
-| 012                                         | Source discovery: (a) catalog-based, (b) LLM web search                                                                       | 6–7  | When gate 2 passes              |
+**Drafted specs**
 
-Spec 002 runs alongside the end of 001 because login is independent of ingestion.
+| Spec                                                | Content                                                                                         | Week | Status                           |
+| --------------------------------------------------- | ----------------------------------------------------------------------------------------------- | ---- | -------------------------------- |
+| [001](specs/001-ingestion.md)                       | Project setup, ingestion, hourly scheduled run, early ranking experiment (gate 1)               | 1    | Done                             |
+| [002](specs/002-auth-feedback.md)                   | Google login, feedback table, two-user RLS tests                                                | 1    | Done                             |
+| [003](specs/003-feed-ui.md)                         | Feed UI (buttons, swipe gestures, Seen, undo), recommender SQL function, recency, explanations  | 1    | Done                             |
+| [004](specs/004-deployment-access.md)               | Vercel deployment from CI, authenticated access with database RLS                               | 1    | Done                             |
+| [005](specs/005-description-enrichment.md)          | Enrich missing descriptions from page metadata and article text; backfill existing items        | 1    | Done                             |
+| [006](specs/006-evaluation.md)                      | Evaluation harness, including the cross-lingual check moved from spec 001                       | 2–7  | In progress (test run in week 7) |
+| [008](specs/008-guest-feed-preview.md)              | Cached guest feed preview for signed-out visitors                                               | 2    | Done                             |
+| [009](specs/009-description-quality-jev.md)         | Description quality experiment with TypeSafe Jev (optional)                                     | 2–3  | In progress                      |
+| [010](specs/010-site-wide-metadata-descriptions.md) | Reject site-wide metadata descriptions                                                          | 2    | Done                             |
+| [013](specs/013-liked-search.md)                    | Search liked items                                                                              | 2    | Done                             |
+| [014](specs/014-agent-readiness.md)                 | Agent readiness                                                                                 | 2    | Release checks pending           |
+| [015](specs/015-search-and-trust.md)                | Search discovery and trust pages                                                                | 2    | Done                             |
+| [016](specs/016-vercel-scheduled-ingestion.md)      | Hourly ingestion on Vercel                                                                      | 2    | Done                             |
+| [017](specs/017-article-thumbnails.md)              | Article thumbnail quality and coverage                                                          | 2    | Done                             |
+| [018](specs/018-bound-embedding-inputs.md)          | Bound embedding inputs                                                                          | 3    | Done                             |
+| [019](specs/019-bound-ingestion-work.md)            | Bound ingestion and embedding work                                                              | 3    | Done                             |
+| [020](specs/020-ranking-tuning.md)                  | Ranking tuning on validation with multi-interest personas; choose the production interest model | 3–6  | Draft                            |
+
+**Planned, not yet drafted** (in order; see the cut order in §9)
+
+| Spec      | Content                                                                         | Week |
+| --------- | ------------------------------------------------------------------------------- | ---- |
+| 007       | Exploration slots and diversity; negative-feedback reasons; per-user LLM limits | 5–6  |
+| next free | Natural-language feed tuning                                                    | 5–6  |
+| next free | Same-story grouping with embeddings and Jev                                     | 6    |
+| next free | Optional: LLM interest summary and click tracking                               | 6    |
+| next free | Source discovery: (a) catalog-based, (b) LLM web search; only after gate 2      | 6–7  |
 
 ## 8. Risks
 
@@ -231,7 +246,7 @@ The minimum acceptable result is: ingestion, personal feed with feedback, the re
 - Stack: Next.js on Vercel, Supabase Postgres + pgvector, supabase-js with SQL migrations (no ORM), Supabase Auth, GitHub Actions for scheduled jobs (hourly ingestion from week 2).
 - Source discovery is a two-stage stretch goal (catalog-based, then LLM web search), attempted only after gate 2; admin-approved sources join a shared pool.
 - Optional offline experiment: TypeSafe Jev for description quality, compared with rules and an LLM judge (spec 009); called with plain `fetch`, no SDK.
-- Additional AI features chosen for product value and measurability: natural-language feed tuning (LLM, spec 010), same-story grouping (embeddings + Jev, spec 011), Jev as a relevance judge (spec 006), and negative-feedback reasons (spec 007).
+- Additional AI features chosen for product value and measurability: natural-language feed tuning (LLM) and same-story grouping (embeddings + Jev), both not yet drafted; Jev as a relevance judge (spec 006); and negative-feedback reasons (spec 007).
 - Cut order: web-search discovery, catalog discovery, Jev description experiment, LLM interest summary, click tracking, same-story grouping, natural-language feed tuning.
 
 ## 11. Open decisions

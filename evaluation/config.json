@@ -1,0 +1,6 @@
+{
+  "provisional": false,
+  "snapshotManifestHash": "6a8057e2a2278c945d167a21e3cff344a45bfecc5a5d259cb944ab400bd4b314",
+  "nearDuplicateThreshold": 0.74,
+  "basis": "Inspected 1,347,261 centered-similarity pairs among 1,642 feedback-window items before validation. Of these, 121 scored at least 0.74. Pairs near the threshold mostly cover the same event, including some follow-up stories."
+}

@@ -1,0 +1,726 @@
+{
+  "selection": [
+    {
+      "pairId": "ai-software:2cd34b6c-4bdf-44d7-a842-9f51b978b395",
+      "personaId": "ai-software",
+      "itemId": "2cd34b6c-4bdf-44d7-a842-9f51b978b395",
+      "inclusionProbability": 0.006289308176100629
+    },
+    {
+      "pairId": "ai-software:8d6cfa3c-fcce-4dc2-8e40-78719ea827b6",
+      "personaId": "ai-software",
+      "itemId": "8d6cfa3c-fcce-4dc2-8e40-78719ea827b6",
+      "inclusionProbability": 0.006289308176100629
+    },
+    {
+      "pairId": "ai-software:a3fd889b-2427-46e7-a492-3dfa344e8446",
+      "personaId": "ai-software",
+      "itemId": "a3fd889b-2427-46e7-a492-3dfa344e8446",
+      "inclusionProbability": 0.006289308176100629
+    },
+    {
+      "pairId": "ai-software:7d17146c-64b0-4d3d-a62d-7a7772cbc06f",
+      "personaId": "ai-software",
+      "itemId": "7d17146c-64b0-4d3d-a62d-7a7772cbc06f",
+      "inclusionProbability": 0.006289308176100629
+    },
+    {
+      "pairId": "ai-software:587ca92a-0be1-466c-ac07-fb53e721b538",
+      "personaId": "ai-software",
+      "itemId": "587ca92a-0be1-466c-ac07-fb53e721b538",
+      "inclusionProbability": 0.006289308176100629
+    },
+    {
+      "pairId": "ai-software:e18956a7-305c-4f29-8616-f7741845e8d4",
+      "personaId": "ai-software",
+      "itemId": "e18956a7-305c-4f29-8616-f7741845e8d4",
+      "inclusionProbability": 0.006289308176100629
+    },
+    {
+      "pairId": "ai-software:16bdb42a-4573-4ab3-921d-bafe6a077e33",
+      "personaId": "ai-software",
+      "itemId": "16bdb42a-4573-4ab3-921d-bafe6a077e33",
+      "inclusionProbability": 0.006289308176100629
+    },
+    {
+      "pairId": "ai-software:8018b43a-d874-46cf-9ebf-f2146044fdfe",
+      "personaId": "ai-software",
+      "itemId": "8018b43a-d874-46cf-9ebf-f2146044fdfe",
+      "inclusionProbability": 0.019230769230769232
+    },
+    {
+      "pairId": "ai-software:16fd4372-afff-44b0-bfb2-d923487476dd",
+      "personaId": "ai-software",
+      "itemId": "16fd4372-afff-44b0-bfb2-d923487476dd",
+      "inclusionProbability": 0.0036133694670280035
+    },
+    {
+      "pairId": "ai-software:5fbed2b7-33c7-4f54-8361-2053a46776ee",
+      "personaId": "ai-software",
+      "itemId": "5fbed2b7-33c7-4f54-8361-2053a46776ee",
+      "inclusionProbability": 0.0036133694670280035
+    },
+    {
+      "pairId": "ai-software:39482f52-1b50-4342-ba3d-b4cc1d66ccdb",
+      "personaId": "ai-software",
+      "itemId": "39482f52-1b50-4342-ba3d-b4cc1d66ccdb",
+      "inclusionProbability": 0.0036133694670280035
+    },
+    {
+      "pairId": "ai-software:a78a78af-5d42-47f0-9639-3af8ea703ceb",
+      "personaId": "ai-software",
+      "itemId": "a78a78af-5d42-47f0-9639-3af8ea703ceb",
+      "inclusionProbability": 0.0036133694670280035
+    },
+    {
+      "pairId": "ai-software:8765a38b-f9aa-49e2-ac9f-5038cc293ebd",
+      "personaId": "ai-software",
+      "itemId": "8765a38b-f9aa-49e2-ac9f-5038cc293ebd",
+      "inclusionProbability": 0.002967359050445104
+    },
+    {
+      "pairId": "ai-software:7ac33482-b15f-47e3-929a-9d34c0326ee0",
+      "personaId": "ai-software",
+      "itemId": "7ac33482-b15f-47e3-929a-9d34c0326ee0",
+      "inclusionProbability": 0.002967359050445104
+    },
+    {
+      "pairId": "ai-software:f482bac2-1712-484d-95b9-92c719a4c031",
+      "personaId": "ai-software",
+      "itemId": "f482bac2-1712-484d-95b9-92c719a4c031",
+      "inclusionProbability": 0.002967359050445104
+    },
+    {
+      "pairId": "cars-engineering:b7928f29-a686-4851-8329-d9d91c8e6d05",
+      "personaId": "cars-engineering",
+      "itemId": "b7928f29-a686-4851-8329-d9d91c8e6d05",
+      "inclusionProbability": 0.005240174672489083
+    },
+    {
+      "pairId": "cars-engineering:954e8255-aa57-430e-9e63-9738e1f149a7",
+      "personaId": "cars-engineering",
+      "itemId": "954e8255-aa57-430e-9e63-9738e1f149a7",
+      "inclusionProbability": 0.005240174672489083
+    },
+    {
+      "pairId": "cars-engineering:853fd655-27ee-44e8-af6d-fb8175138df0",
+      "personaId": "cars-engineering",
+      "itemId": "853fd655-27ee-44e8-af6d-fb8175138df0",
+      "inclusionProbability": 0.005240174672489083
+    },
+    {
+      "pairId": "cars-engineering:54919fac-bfc1-4a99-bce3-a3702cf3856c",
+      "personaId": "cars-engineering",
+      "itemId": "54919fac-bfc1-4a99-bce3-a3702cf3856c",
+      "inclusionProbability": 0.005240174672489083
+    },
+    {
+      "pairId": "cars-engineering:6e373792-d6a5-4ab4-9d62-0f214999aa5b",
+      "personaId": "cars-engineering",
+      "itemId": "6e373792-d6a5-4ab4-9d62-0f214999aa5b",
+      "inclusionProbability": 0.005240174672489083
+    },
+    {
+      "pairId": "cars-engineering:cdc4a65e-ef1e-4603-b283-d00456715e5c",
+      "personaId": "cars-engineering",
+      "itemId": "cdc4a65e-ef1e-4603-b283-d00456715e5c",
+      "inclusionProbability": 0.005240174672489083
+    },
+    {
+      "pairId": "cars-engineering:bab053f5-7565-4d31-a3ae-5bf549d214b5",
+      "personaId": "cars-engineering",
+      "itemId": "bab053f5-7565-4d31-a3ae-5bf549d214b5",
+      "inclusionProbability": 0.05
+    },
+    {
+      "pairId": "cars-engineering:16fd4372-afff-44b0-bfb2-d923487476dd",
+      "personaId": "cars-engineering",
+      "itemId": "16fd4372-afff-44b0-bfb2-d923487476dd",
+      "inclusionProbability": 0.0034808552958727
+    },
+    {
+      "pairId": "cars-engineering:442ec252-9ac6-4f85-9b50-832bd69984f2",
+      "personaId": "cars-engineering",
+      "itemId": "442ec252-9ac6-4f85-9b50-832bd69984f2",
+      "inclusionProbability": 0.0034808552958727
+    },
+    {
+      "pairId": "cars-engineering:297c13e8-478f-4670-a9fe-0e725d20c434",
+      "personaId": "cars-engineering",
+      "itemId": "297c13e8-478f-4670-a9fe-0e725d20c434",
+      "inclusionProbability": 0.0034808552958727
+    },
+    {
+      "pairId": "cars-engineering:e9386504-e3ed-4862-89e4-e2ea3888f453",
+      "personaId": "cars-engineering",
+      "itemId": "e9386504-e3ed-4862-89e4-e2ea3888f453",
+      "inclusionProbability": 0.0034808552958727
+    },
+    {
+      "pairId": "cars-engineering:33caeee6-a262-4427-8926-bd607649b14d",
+      "personaId": "cars-engineering",
+      "itemId": "33caeee6-a262-4427-8926-bd607649b14d",
+      "inclusionProbability": 0.0034808552958727
+    },
+    {
+      "pairId": "cars-engineering:9090decb-a393-40b8-998b-6626f3640862",
+      "personaId": "cars-engineering",
+      "itemId": "9090decb-a393-40b8-998b-6626f3640862",
+      "inclusionProbability": 0.0034808552958727
+    },
+    {
+      "pairId": "cars-engineering:f674c7f0-240d-40a8-837c-2e279ff1f1c5",
+      "personaId": "cars-engineering",
+      "itemId": "f674c7f0-240d-40a8-837c-2e279ff1f1c5",
+      "inclusionProbability": 0.0034808552958727
+    },
+    {
+      "pairId": "cars-engineering:33ab0516-a6b3-4719-b10d-6ceff21c52b4",
+      "personaId": "cars-engineering",
+      "itemId": "33ab0516-a6b3-4719-b10d-6ceff21c52b4",
+      "inclusionProbability": 0.009345794392523364
+    },
+    {
+      "pairId": "science-space:7db7138d-2699-4e7d-8692-82c66cefc3a3",
+      "personaId": "science-space",
+      "itemId": "7db7138d-2699-4e7d-8692-82c66cefc3a3",
+      "inclusionProbability": 0.006097560975609756
+    },
+    {
+      "pairId": "science-space:bcbc9fca-60ae-4d68-8413-805bdd2ffe6b",
+      "personaId": "science-space",
+      "itemId": "bcbc9fca-60ae-4d68-8413-805bdd2ffe6b",
+      "inclusionProbability": 0.006097560975609756
+    },
+    {
+      "pairId": "science-space:75d064c4-533c-49ec-a3e6-301af42c0e8d",
+      "personaId": "science-space",
+      "itemId": "75d064c4-533c-49ec-a3e6-301af42c0e8d",
+      "inclusionProbability": 0.006097560975609756
+    },
+    {
+      "pairId": "science-space:5142bd1b-a5de-4f1b-a737-6e70ca7d2741",
+      "personaId": "science-space",
+      "itemId": "5142bd1b-a5de-4f1b-a737-6e70ca7d2741",
+      "inclusionProbability": 0.006097560975609756
+    },
+    {
+      "pairId": "science-space:1147e7d7-a073-4706-be95-5640f69ab7ff",
+      "personaId": "science-space",
+      "itemId": "1147e7d7-a073-4706-be95-5640f69ab7ff",
+      "inclusionProbability": 0.006097560975609756
+    },
+    {
+      "pairId": "science-space:7b16abed-1fac-4132-b095-399473fe743a",
+      "personaId": "science-space",
+      "itemId": "7b16abed-1fac-4132-b095-399473fe743a",
+      "inclusionProbability": 0.006097560975609756
+    },
+    {
+      "pairId": "science-space:f517a122-d17c-43b2-a34b-ca8f791d6ffa",
+      "personaId": "science-space",
+      "itemId": "f517a122-d17c-43b2-a34b-ca8f791d6ffa",
+      "inclusionProbability": 0.006097560975609756
+    },
+    {
+      "pairId": "science-space:86aacd07-bd01-4572-8570-5809f7d31171",
+      "personaId": "science-space",
+      "itemId": "86aacd07-bd01-4572-8570-5809f7d31171",
+      "inclusionProbability": 0.058823529411764705
+    },
+    {
+      "pairId": "science-space:5932a1b1-e7e4-4597-a76a-348b6627e0e3",
+      "personaId": "science-space",
+      "itemId": "5932a1b1-e7e4-4597-a76a-348b6627e0e3",
+      "inclusionProbability": 0.0031364349189754314
+    },
+    {
+      "pairId": "science-space:d84add51-fe51-471c-8389-6380c50dd46d",
+      "personaId": "science-space",
+      "itemId": "d84add51-fe51-471c-8389-6380c50dd46d",
+      "inclusionProbability": 0.0031364349189754314
+    },
+    {
+      "pairId": "science-space:bb610990-5d76-4ce3-b4e3-1502b67d7145",
+      "personaId": "science-space",
+      "itemId": "bb610990-5d76-4ce3-b4e3-1502b67d7145",
+      "inclusionProbability": 0.0031364349189754314
+    },
+    {
+      "pairId": "science-space:4dd412ce-ed41-4d16-9187-3bca90d933d5",
+      "personaId": "science-space",
+      "itemId": "4dd412ce-ed41-4d16-9187-3bca90d933d5",
+      "inclusionProbability": 0.0031364349189754314
+    },
+    {
+      "pairId": "science-space:a0f0f7e6-2759-4365-b4d1-bfc76af5dd2d",
+      "personaId": "science-space",
+      "itemId": "a0f0f7e6-2759-4365-b4d1-bfc76af5dd2d",
+      "inclusionProbability": 0.0031364349189754314
+    },
+    {
+      "pairId": "science-space:750e6ff9-6b1f-4cc0-a5ba-6912b46bc1f5",
+      "personaId": "science-space",
+      "itemId": "750e6ff9-6b1f-4cc0-a5ba-6912b46bc1f5",
+      "inclusionProbability": 0.0031364349189754314
+    },
+    {
+      "pairId": "science-space:2fccccee-0e07-4a1a-9e48-37769357ee9d",
+      "personaId": "science-space",
+      "itemId": "2fccccee-0e07-4a1a-9e48-37769357ee9d",
+      "inclusionProbability": 0.004878048780487805
+    },
+    {
+      "pairId": "finnish-sports:bba4ddc9-2c1a-41e0-84dc-8b73583b3690",
+      "personaId": "finnish-sports",
+      "itemId": "bba4ddc9-2c1a-41e0-84dc-8b73583b3690",
+      "inclusionProbability": 0.008928571428571428
+    },
+    {
+      "pairId": "finnish-sports:b4f5d5fd-9aef-4bdb-ad3e-5dba44f3b3d4",
+      "personaId": "finnish-sports",
+      "itemId": "b4f5d5fd-9aef-4bdb-ad3e-5dba44f3b3d4",
+      "inclusionProbability": 0.008928571428571428
+    },
+    {
+      "pairId": "finnish-sports:1a38cb7c-ba34-4c44-b31b-c851d1aa4411",
+      "personaId": "finnish-sports",
+      "itemId": "1a38cb7c-ba34-4c44-b31b-c851d1aa4411",
+      "inclusionProbability": 0.005313496280552604
+    },
+    {
+      "pairId": "finnish-sports:bbf95dea-bb6e-4649-9949-4f32d5412f0f",
+      "personaId": "finnish-sports",
+      "itemId": "bbf95dea-bb6e-4649-9949-4f32d5412f0f",
+      "inclusionProbability": 0.005313496280552604
+    },
+    {
+      "pairId": "finnish-sports:1bb6947e-d504-4f25-b719-35eea177ba98",
+      "personaId": "finnish-sports",
+      "itemId": "1bb6947e-d504-4f25-b719-35eea177ba98",
+      "inclusionProbability": 0.005313496280552604
+    },
+    {
+      "pairId": "finnish-sports:0ec0953c-2c09-4ce6-bae9-a28f8242eb9a",
+      "personaId": "finnish-sports",
+      "itemId": "0ec0953c-2c09-4ce6-bae9-a28f8242eb9a",
+      "inclusionProbability": 0.005313496280552604
+    },
+    {
+      "pairId": "finnish-sports:d26246cf-e3cb-4d8b-8528-cc5f0c8b859f",
+      "personaId": "finnish-sports",
+      "itemId": "d26246cf-e3cb-4d8b-8528-cc5f0c8b859f",
+      "inclusionProbability": 0.005313496280552604
+    },
+    {
+      "pairId": "finnish-sports:1b844dab-5b13-4548-bb1c-868906036b16",
+      "personaId": "finnish-sports",
+      "itemId": "1b844dab-5b13-4548-bb1c-868906036b16",
+      "inclusionProbability": 0.0033112582781456954
+    },
+    {
+      "pairId": "finnish-sports:e3530609-c501-4641-8bbc-fd7ffefa1297",
+      "personaId": "finnish-sports",
+      "itemId": "e3530609-c501-4641-8bbc-fd7ffefa1297",
+      "inclusionProbability": 0.0033112582781456954
+    },
+    {
+      "pairId": "finnish-sports:a86aefd5-eb0e-4876-b199-97ff68cd69b1",
+      "personaId": "finnish-sports",
+      "itemId": "a86aefd5-eb0e-4876-b199-97ff68cd69b1",
+      "inclusionProbability": 0.0033112582781456954
+    },
+    {
+      "pairId": "finnish-sports:b5675ed1-a24e-4acf-8b7e-389e89ca8b23",
+      "personaId": "finnish-sports",
+      "itemId": "b5675ed1-a24e-4acf-8b7e-389e89ca8b23",
+      "inclusionProbability": 0.0033112582781456954
+    },
+    {
+      "pairId": "finnish-sports:2eaae1e2-595d-486e-b21a-b08e028e04a8",
+      "personaId": "finnish-sports",
+      "itemId": "2eaae1e2-595d-486e-b21a-b08e028e04a8",
+      "inclusionProbability": 0.0033112582781456954
+    },
+    {
+      "pairId": "finnish-sports:3a78a587-d9b6-4fc9-abbc-f8a5eb092ad1",
+      "personaId": "finnish-sports",
+      "itemId": "3a78a587-d9b6-4fc9-abbc-f8a5eb092ad1",
+      "inclusionProbability": 0.0033112582781456954
+    },
+    {
+      "pairId": "finnish-sports:84890b36-2a66-4b91-bb7d-f3b37c3d4232",
+      "personaId": "finnish-sports",
+      "itemId": "84890b36-2a66-4b91-bb7d-f3b37c3d4232",
+      "inclusionProbability": 0.0033112582781456954
+    },
+    {
+      "pairId": "finnish-sports:aff70f1d-e0d6-41e5-b91d-584588048fa3",
+      "personaId": "finnish-sports",
+      "itemId": "aff70f1d-e0d6-41e5-b91d-584588048fa3",
+      "inclusionProbability": 0.25
+    }
+  ],
+  "reporting": [
+    {
+      "pairId": "ai-software:12131c66-4c9f-4b16-ae00-4c3eb282a3d1",
+      "personaId": "ai-software",
+      "itemId": "12131c66-4c9f-4b16-ae00-4c3eb282a3d1",
+      "inclusionProbability": 0.006289308176100629
+    },
+    {
+      "pairId": "ai-software:eb33ffe4-f690-467b-a305-19ca039239a9",
+      "personaId": "ai-software",
+      "itemId": "eb33ffe4-f690-467b-a305-19ca039239a9",
+      "inclusionProbability": 0.006289308176100629
+    },
+    {
+      "pairId": "ai-software:c8812c92-68b5-4289-b377-19ef836749d3",
+      "personaId": "ai-software",
+      "itemId": "c8812c92-68b5-4289-b377-19ef836749d3",
+      "inclusionProbability": 0.006289308176100629
+    },
+    {
+      "pairId": "ai-software:da47b912-b1fd-4190-986c-290a7a3dc6b4",
+      "personaId": "ai-software",
+      "itemId": "da47b912-b1fd-4190-986c-290a7a3dc6b4",
+      "inclusionProbability": 0.006289308176100629
+    },
+    {
+      "pairId": "ai-software:e263d198-cfa7-475e-be1e-43f76874c94d",
+      "personaId": "ai-software",
+      "itemId": "e263d198-cfa7-475e-be1e-43f76874c94d",
+      "inclusionProbability": 0.006289308176100629
+    },
+    {
+      "pairId": "ai-software:33a7b266-920a-41a9-b813-210aff5ae1ec",
+      "personaId": "ai-software",
+      "itemId": "33a7b266-920a-41a9-b813-210aff5ae1ec",
+      "inclusionProbability": 0.006289308176100629
+    },
+    {
+      "pairId": "ai-software:ccb70db8-6b7d-4093-8298-c9e6b9525d52",
+      "personaId": "ai-software",
+      "itemId": "ccb70db8-6b7d-4093-8298-c9e6b9525d52",
+      "inclusionProbability": 0.006289308176100629
+    },
+    {
+      "pairId": "ai-software:7b752584-c31b-45df-8e76-cac8205a8497",
+      "personaId": "ai-software",
+      "itemId": "7b752584-c31b-45df-8e76-cac8205a8497",
+      "inclusionProbability": 0.019230769230769232
+    },
+    {
+      "pairId": "ai-software:25e4fc15-e62a-4e4f-b061-26603732e25b",
+      "personaId": "ai-software",
+      "itemId": "25e4fc15-e62a-4e4f-b061-26603732e25b",
+      "inclusionProbability": 0.0036133694670280035
+    },
+    {
+      "pairId": "ai-software:3c8446ee-a1b5-4ade-8cab-3c5c21b352c9",
+      "personaId": "ai-software",
+      "itemId": "3c8446ee-a1b5-4ade-8cab-3c5c21b352c9",
+      "inclusionProbability": 0.0036133694670280035
+    },
+    {
+      "pairId": "ai-software:5dcef48b-f878-4779-8352-4024aba028d6",
+      "personaId": "ai-software",
+      "itemId": "5dcef48b-f878-4779-8352-4024aba028d6",
+      "inclusionProbability": 0.0036133694670280035
+    },
+    {
+      "pairId": "ai-software:f4d86def-aa41-4411-a8f6-afb7e23ab5ea",
+      "personaId": "ai-software",
+      "itemId": "f4d86def-aa41-4411-a8f6-afb7e23ab5ea",
+      "inclusionProbability": 0.0036133694670280035
+    },
+    {
+      "pairId": "ai-software:b53215de-0a63-4426-909d-48498178dad5",
+      "personaId": "ai-software",
+      "itemId": "b53215de-0a63-4426-909d-48498178dad5",
+      "inclusionProbability": 0.002967359050445104
+    },
+    {
+      "pairId": "ai-software:c8101ace-ef65-49f7-96f4-3a0048a96f0a",
+      "personaId": "ai-software",
+      "itemId": "c8101ace-ef65-49f7-96f4-3a0048a96f0a",
+      "inclusionProbability": 0.002967359050445104
+    },
+    {
+      "pairId": "ai-software:e1570bcf-01be-427a-80bf-c256ad9ee005",
+      "personaId": "ai-software",
+      "itemId": "e1570bcf-01be-427a-80bf-c256ad9ee005",
+      "inclusionProbability": 0.002967359050445104
+    },
+    {
+      "pairId": "cars-engineering:53c570d3-d4ac-4734-b348-bc31d2ad2227",
+      "personaId": "cars-engineering",
+      "itemId": "53c570d3-d4ac-4734-b348-bc31d2ad2227",
+      "inclusionProbability": 0.005240174672489083
+    },
+    {
+      "pairId": "cars-engineering:cd7553d5-52a0-4e8a-8b66-f405786cbee7",
+      "personaId": "cars-engineering",
+      "itemId": "cd7553d5-52a0-4e8a-8b66-f405786cbee7",
+      "inclusionProbability": 0.005240174672489083
+    },
+    {
+      "pairId": "cars-engineering:9045a3d8-b178-45f4-9ffa-01b0bad3668d",
+      "personaId": "cars-engineering",
+      "itemId": "9045a3d8-b178-45f4-9ffa-01b0bad3668d",
+      "inclusionProbability": 0.005240174672489083
+    },
+    {
+      "pairId": "cars-engineering:7c70adc4-673a-4496-95cb-1681cd2fa07a",
+      "personaId": "cars-engineering",
+      "itemId": "7c70adc4-673a-4496-95cb-1681cd2fa07a",
+      "inclusionProbability": 0.005240174672489083
+    },
+    {
+      "pairId": "cars-engineering:41780ca7-9890-48b8-8d18-0f46a0d87a4b",
+      "personaId": "cars-engineering",
+      "itemId": "41780ca7-9890-48b8-8d18-0f46a0d87a4b",
+      "inclusionProbability": 0.005240174672489083
+    },
+    {
+      "pairId": "cars-engineering:db97fbc1-ae7b-40d0-9e97-119427737c74",
+      "personaId": "cars-engineering",
+      "itemId": "db97fbc1-ae7b-40d0-9e97-119427737c74",
+      "inclusionProbability": 0.005240174672489083
+    },
+    {
+      "pairId": "cars-engineering:c0056ea7-c1a4-4c37-9d2f-2e474371058e",
+      "personaId": "cars-engineering",
+      "itemId": "c0056ea7-c1a4-4c37-9d2f-2e474371058e",
+      "inclusionProbability": 0.05
+    },
+    {
+      "pairId": "cars-engineering:08fc8fb2-9592-4330-8b05-37873673e070",
+      "personaId": "cars-engineering",
+      "itemId": "08fc8fb2-9592-4330-8b05-37873673e070",
+      "inclusionProbability": 0.0034808552958727
+    },
+    {
+      "pairId": "cars-engineering:5ac1c79a-dbd7-4ec7-b547-22db2a43da0d",
+      "personaId": "cars-engineering",
+      "itemId": "5ac1c79a-dbd7-4ec7-b547-22db2a43da0d",
+      "inclusionProbability": 0.0034808552958727
+    },
+    {
+      "pairId": "cars-engineering:0fd15027-bec3-44f2-bd88-926cf61efd9c",
+      "personaId": "cars-engineering",
+      "itemId": "0fd15027-bec3-44f2-bd88-926cf61efd9c",
+      "inclusionProbability": 0.0034808552958727
+    },
+    {
+      "pairId": "cars-engineering:e6c3896f-6ce8-40ac-ab88-a5b1ad6e7c05",
+      "personaId": "cars-engineering",
+      "itemId": "e6c3896f-6ce8-40ac-ab88-a5b1ad6e7c05",
+      "inclusionProbability": 0.0034808552958727
+    },
+    {
+      "pairId": "cars-engineering:965175ff-5baf-4291-a95d-7f5aa1117aca",
+      "personaId": "cars-engineering",
+      "itemId": "965175ff-5baf-4291-a95d-7f5aa1117aca",
+      "inclusionProbability": 0.0034808552958727
+    },
+    {
+      "pairId": "cars-engineering:9a75b6c4-527f-4a31-a027-f8b0abeb60e7",
+      "personaId": "cars-engineering",
+      "itemId": "9a75b6c4-527f-4a31-a027-f8b0abeb60e7",
+      "inclusionProbability": 0.0034808552958727
+    },
+    {
+      "pairId": "cars-engineering:a9d5d71a-7a59-4393-a4f2-30c656c4f07d",
+      "personaId": "cars-engineering",
+      "itemId": "a9d5d71a-7a59-4393-a4f2-30c656c4f07d",
+      "inclusionProbability": 0.0034808552958727
+    },
+    {
+      "pairId": "cars-engineering:3d66d22d-7d71-4421-a7a3-e1ef49e5849a",
+      "personaId": "cars-engineering",
+      "itemId": "3d66d22d-7d71-4421-a7a3-e1ef49e5849a",
+      "inclusionProbability": 0.009345794392523364
+    },
+    {
+      "pairId": "science-space:bfae5223-982b-4c27-926a-acb1cc89ac8d",
+      "personaId": "science-space",
+      "itemId": "bfae5223-982b-4c27-926a-acb1cc89ac8d",
+      "inclusionProbability": 0.006097560975609756
+    },
+    {
+      "pairId": "science-space:f096f510-6f6b-4fc7-874d-953009bfef6a",
+      "personaId": "science-space",
+      "itemId": "f096f510-6f6b-4fc7-874d-953009bfef6a",
+      "inclusionProbability": 0.006097560975609756
+    },
+    {
+      "pairId": "science-space:a690faf8-e745-4302-aa5a-8df39a15288c",
+      "personaId": "science-space",
+      "itemId": "a690faf8-e745-4302-aa5a-8df39a15288c",
+      "inclusionProbability": 0.006097560975609756
+    },
+    {
+      "pairId": "science-space:fc1e0209-1e7f-4938-8960-f69c89bcb017",
+      "personaId": "science-space",
+      "itemId": "fc1e0209-1e7f-4938-8960-f69c89bcb017",
+      "inclusionProbability": 0.006097560975609756
+    },
+    {
+      "pairId": "science-space:f39f958b-8e11-442f-9b11-f09692c044ef",
+      "personaId": "science-space",
+      "itemId": "f39f958b-8e11-442f-9b11-f09692c044ef",
+      "inclusionProbability": 0.006097560975609756
+    },
+    {
+      "pairId": "science-space:f9a07a6a-d64b-4f34-8c4d-6b21b5510b5b",
+      "personaId": "science-space",
+      "itemId": "f9a07a6a-d64b-4f34-8c4d-6b21b5510b5b",
+      "inclusionProbability": 0.006097560975609756
+    },
+    {
+      "pairId": "science-space:6e373792-d6a5-4ab4-9d62-0f214999aa5b",
+      "personaId": "science-space",
+      "itemId": "6e373792-d6a5-4ab4-9d62-0f214999aa5b",
+      "inclusionProbability": 0.006097560975609756
+    },
+    {
+      "pairId": "science-space:afc5a378-f1ac-4bbc-8a90-0d0815454a40",
+      "personaId": "science-space",
+      "itemId": "afc5a378-f1ac-4bbc-8a90-0d0815454a40",
+      "inclusionProbability": 0.058823529411764705
+    },
+    {
+      "pairId": "science-space:737d275e-0733-4d6f-8fab-96563d3ada70",
+      "personaId": "science-space",
+      "itemId": "737d275e-0733-4d6f-8fab-96563d3ada70",
+      "inclusionProbability": 0.0031364349189754314
+    },
+    {
+      "pairId": "science-space:f83fee8c-8548-432c-9a0c-4d9fa0dee286",
+      "personaId": "science-space",
+      "itemId": "f83fee8c-8548-432c-9a0c-4d9fa0dee286",
+      "inclusionProbability": 0.0031364349189754314
+    },
+    {
+      "pairId": "science-space:26599469-67e5-4b9f-b535-25ef70b33532",
+      "personaId": "science-space",
+      "itemId": "26599469-67e5-4b9f-b535-25ef70b33532",
+      "inclusionProbability": 0.0031364349189754314
+    },
+    {
+      "pairId": "science-space:d07e0e92-b31e-43cb-afb3-956f0f924e79",
+      "personaId": "science-space",
+      "itemId": "d07e0e92-b31e-43cb-afb3-956f0f924e79",
+      "inclusionProbability": 0.0031364349189754314
+    },
+    {
+      "pairId": "science-space:d4ec373b-9ab6-4dbf-b576-5c5b44ba0264",
+      "personaId": "science-space",
+      "itemId": "d4ec373b-9ab6-4dbf-b576-5c5b44ba0264",
+      "inclusionProbability": 0.0031364349189754314
+    },
+    {
+      "pairId": "science-space:8cb70ecf-c2f0-459f-ad8f-496d6b928ff1",
+      "personaId": "science-space",
+      "itemId": "8cb70ecf-c2f0-459f-ad8f-496d6b928ff1",
+      "inclusionProbability": 0.0031364349189754314
+    },
+    {
+      "pairId": "science-space:8d83716b-0cb7-46f6-884d-462369a30288",
+      "personaId": "science-space",
+      "itemId": "8d83716b-0cb7-46f6-884d-462369a30288",
+      "inclusionProbability": 0.004878048780487805
+    },
+    {
+      "pairId": "finnish-sports:b80fc5ea-ec86-4496-9287-4de873ab902a",
+      "personaId": "finnish-sports",
+      "itemId": "b80fc5ea-ec86-4496-9287-4de873ab902a",
+      "inclusionProbability": 0.008928571428571428
+    },
+    {
+      "pairId": "finnish-sports:fe623cfd-d3c2-4136-b019-bf45aa8751a9",
+      "personaId": "finnish-sports",
+      "itemId": "fe623cfd-d3c2-4136-b019-bf45aa8751a9",
+      "inclusionProbability": 0.008928571428571428
+    },
+    {
+      "pairId": "finnish-sports:04dffee6-34df-4a4d-bca2-a7cbd133baf5",
+      "personaId": "finnish-sports",
+      "itemId": "04dffee6-34df-4a4d-bca2-a7cbd133baf5",
+      "inclusionProbability": 0.005313496280552604
+    },
+    {
+      "pairId": "finnish-sports:c08f1a92-9512-4ba5-aa81-19c0edd3bfdb",
+      "personaId": "finnish-sports",
+      "itemId": "c08f1a92-9512-4ba5-aa81-19c0edd3bfdb",
+      "inclusionProbability": 0.005313496280552604
+    },
+    {
+      "pairId": "finnish-sports:7c5a9a70-0f4b-4dac-9a82-6a61fc7eed96",
+      "personaId": "finnish-sports",
+      "itemId": "7c5a9a70-0f4b-4dac-9a82-6a61fc7eed96",
+      "inclusionProbability": 0.005313496280552604
+    },
+    {
+      "pairId": "finnish-sports:9c868130-f32d-47da-b6df-c96c208893f5",
+      "personaId": "finnish-sports",
+      "itemId": "9c868130-f32d-47da-b6df-c96c208893f5",
+      "inclusionProbability": 0.005313496280552604
+    },
+    {
+      "pairId": "finnish-sports:b7928f29-a686-4851-8329-d9d91c8e6d05",
+      "personaId": "finnish-sports",
+      "itemId": "b7928f29-a686-4851-8329-d9d91c8e6d05",
+      "inclusionProbability": 0.005313496280552604
+    },
+    {
+      "pairId": "finnish-sports:ec4ef10f-1715-4bb5-a7d5-1ff7fbfcdeb8",
+      "personaId": "finnish-sports",
+      "itemId": "ec4ef10f-1715-4bb5-a7d5-1ff7fbfcdeb8",
+      "inclusionProbability": 0.0033112582781456954
+    },
+    {
+      "pairId": "finnish-sports:fd9ebe37-4cc9-4433-901b-27b87a37805c",
+      "personaId": "finnish-sports",
+      "itemId": "fd9ebe37-4cc9-4433-901b-27b87a37805c",
+      "inclusionProbability": 0.0033112582781456954
+    },
+    {
+      "pairId": "finnish-sports:fc96e41b-fed8-4d82-83a7-9475ada989b4",
+      "personaId": "finnish-sports",
+      "itemId": "fc96e41b-fed8-4d82-83a7-9475ada989b4",
+      "inclusionProbability": 0.0033112582781456954
+    },
+    {
+      "pairId": "finnish-sports:63319d38-0277-4ec4-8580-5e032c1f14cf",
+      "personaId": "finnish-sports",
+      "itemId": "63319d38-0277-4ec4-8580-5e032c1f14cf",
+      "inclusionProbability": 0.0033112582781456954
+    },
+    {
+      "pairId": "finnish-sports:b1c814e7-6591-4273-9349-e26bd110d524",
+      "personaId": "finnish-sports",
+      "itemId": "b1c814e7-6591-4273-9349-e26bd110d524",
+      "inclusionProbability": 0.0033112582781456954
+    },
+    {
+      "pairId": "finnish-sports:e07aa4e9-1eff-4680-8d43-419c5ff8139d",
+      "personaId": "finnish-sports",
+      "itemId": "e07aa4e9-1eff-4680-8d43-419c5ff8139d",
+      "inclusionProbability": 0.0033112582781456954
+    },
+    {
+      "pairId": "finnish-sports:95c52255-e7ca-43a2-83a6-e6ae6f6402bc",
+      "personaId": "finnish-sports",
+      "itemId": "95c52255-e7ca-43a2-83a6-e6ae6f6402bc",
+      "inclusionProbability": 0.0033112582781456954
+    },
+    {
+      "pairId": "finnish-sports:1962d0bc-daea-459a-a565-f300df4c52b6",
+      "personaId": "finnish-sports",
+      "itemId": "1962d0bc-daea-459a-a565-f300df4c52b6",
+      "inclusionProbability": 0.25
+    }
+  ]
+}

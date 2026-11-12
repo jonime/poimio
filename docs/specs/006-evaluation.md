@@ -155,13 +155,13 @@ Each criterion belongs to one task.
 ## Tasks
 
 - [x] 1. Migration: `rank_items` with methods and parameters; refactor `get_feed` to use it; integration tests (criterion 1).
-- [ ] 2. `pnpm eval:export` (including `--provisional`) and `pnpm eval:import` with manifest and hash checks (criterion 2).
+- [x] 2. `pnpm eval:export` (including `--provisional`) and `pnpm eval:import` with manifest and hash checks (criterion 2).
 - [x] 3. Personas file and `pnpm eval:label` (criterion 3).
 - [x] 4. `pnpm eval:agreement export|score` with the sampling design and weights; I label the selection set, decide on the fallback, then label the reporting set (criterion 4).
-- [ ] 5. `pnpm eval:crosslingual propose|score`; I confirm pairs (criterion 5).
+- [x] 5. `pnpm eval:crosslingual propose|score`; I confirm pairs (criterion 5).
 - [x] 6. Near-duplicate threshold from the feedback window; `pnpm eval:replay` with metrics; first validation run (criterion 6).
 - [x] 7. Test-window guard, `frozen-params.json` format, and experiment ID (criterion 7).
-- [ ] 8. Update design.md §4 and log results (criterion 8).
+- [x] 8. Update design.md §4 and log results (criterion 8).
 - [x] 9. Follow-up for alert #6: move the scorer to a private schema and restrict the public ranking RPC to the service role (criterion 9).
 
 ### Task 9 rollout after review and merge
@@ -177,7 +177,7 @@ Each criterion belongs to one task.
 - Evaluation data is a frozen snapshot copied from production into local Supabase; production is only read.
 - Personas are configuration, not database users.
 - The raw-vector variant is reported next to the centered recommender to show the effect of language centering.
-- Relevance labels come from a **local Qwen 3.8 27B via MTPLX** (OpenAI-compatible server on localhost): free, and a different model family than the OpenAI embeddings. Labeling runs only locally, never in CI or production; the exact model build and quantization are recorded with the labels and in `docs/ai-log.md`.
+- The intended relevance labeler is **local Qwen 3.8 27B via MTPLX**, a different model family than the OpenAI embeddings. For the final snapshot, the user approved OpenRouter model `qwen/qwen3.8-27b` after the local endpoint could not complete a batch within the request timeout. The remote provider's exact build and quantization were not captured. Labeling runs outside CI and production; the model ID and prompt version are recorded with the labels.
 - Fallback: decided on the selection set only (weighted κ below 0.6 for Finnish or English); the fallback model then labels the whole snapshot, and one complete label set is used per experiment.
 - Personas: "AI and software", "cars and engineering", "science and space", "Finnish sports".
 - Tasks 2–7 are developed and checked on a provisional snapshot while data accumulates; the cross-lingual check (task 5) runs on production data as soon as 10 pairs exist. Final labeling, the agreement check, and the first validation run use the non-provisional snapshot from about 11 Nov.

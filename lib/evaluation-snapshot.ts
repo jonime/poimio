@@ -51,6 +51,19 @@ export const SNAPSHOT_MEAN_COLUMNS = [
 
 export type SnapshotRow = Record<string, unknown>;
 
+export function findSourceIdConflicts(
+  snapshotSources: readonly SnapshotRow[],
+  localSources: readonly SnapshotRow[],
+): SnapshotRow[] {
+  const snapshotUrlsById = new Map(
+    snapshotSources.map((row) => [String(row.id), String(row.feed_url)]),
+  );
+  return localSources.filter((row) => {
+    const snapshotUrl = snapshotUrlsById.get(String(row.id));
+    return snapshotUrl !== undefined && snapshotUrl !== String(row.feed_url);
+  });
+}
+
 export interface SnapshotWindow {
   startIndex: number;
   endIndexExclusive: number;

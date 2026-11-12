@@ -1,9 +1,11 @@
+import { randomUUID } from "node:crypto";
 import { readFile } from "node:fs/promises";
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { createClient } from "@supabase/supabase-js";
 import {
   type EvaluationSnapshotManifest,
+  findSourceIdConflicts,
   parseJsonLines,
   requireLocalSupabaseUrl,
   type SnapshotRow,
@@ -64,6 +66,21 @@ async function main(): Promise<void> {
     throw new Error(
       `local embedding_language_means must be empty before import; found ${meansCount} rows`,
     );
+  }
+  const { data: localSources, error: sourceReadError } = await client
+    .from("sources")
+    .select("id,feed_url");
+  if (sourceReadError) {
+    throw new Error(`checking local sources failed: ${sourceReadError.message}`);
+  }
+  const sourceConflicts = findSourceIdConflicts(sources, localSources ?? []);
+  for (const source of sourceConflicts) {
+    const { error } = await client.from("sources").update({ id: randomUUID() }).eq("id", source.id);
+    if (error) {
+      throw new Error(
+        `reassigning conflicting local source ${String(source.id)} failed: ${error.message}`,
+      );
+    }
   }
   for (let offset = 0; offset < sources.length; offset += batchSize) {
     const batch = sources.slice(offset, offset + batchSize);

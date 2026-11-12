@@ -76,6 +76,29 @@ describe("evaluation agreement", () => {
     expect(score.fi?.samplePairs).toBe(4);
   });
 
+  it("includes rare nonempty strata in both disjoint samples", () => {
+    const rareLabels = labels.map((label) => ({
+      ...label,
+      relevant:
+        label.itemId === "i0" ||
+        label.itemId === "i2" ||
+        label.itemId === "i1" ||
+        label.itemId === "i3",
+    }));
+    const design = createAgreementDesign({ personas, items, labels: rareLabels, seed: 42 });
+    expect(design.strata.every((stratum) => stratum.selectionSampleSize > 0)).toBe(true);
+    expect(design.strata.every((stratum) => stratum.reportingSampleSize > 0)).toBe(true);
+    expect(design.sets.selection).toHaveLength(60);
+    expect(design.sets.reporting).toHaveLength(60);
+  });
+
+  it("rejects a stratum too small for both disjoint samples", () => {
+    const rareLabels = labels.map((label) => ({ ...label, relevant: label.itemId === "i0" }));
+    expect(() => createAgreementDesign({ personas, items, labels: rareLabels, seed: 42 })).toThrow(
+      /agreement stratum/u,
+    );
+  });
+
   it("rejects incomplete primary labels and unscored manual samples", () => {
     expect(() =>
       createAgreementDesign({

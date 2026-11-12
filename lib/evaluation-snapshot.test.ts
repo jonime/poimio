@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import { describe, expect, it } from "vitest";
 import {
   buildSnapshotManifest,
+  findSourceIdConflicts,
   hashSnapshotRow,
   parseSnapshotDateRange,
   requireFinalSnapshot,
@@ -74,6 +75,18 @@ const dateRange = {
 };
 
 describe("evaluation snapshot", () => {
+  it("finds local source IDs that conflict with different snapshot feeds", () => {
+    const conflictingSource = {
+      ...source,
+      feed_url: "https://local-preview.invalid/source-1",
+    };
+    const sameFeedDifferentId = { ...source, id: "local-source" };
+
+    expect(findSourceIdConflicts([source], [conflictingSource, sameFeedDifferentId])).toEqual([
+      conflictingSource,
+    ]);
+  });
+
   it("hashes objects independent of property order", () => {
     expect(hashSnapshotRow({ id: "item", fields: { a: 1, b: 2 } })).toBe(
       hashSnapshotRow({ fields: { b: 2, a: 1 }, id: "item" }),

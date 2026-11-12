@@ -1,0 +1,418 @@
+{
+  "provisional": false,
+  "snapshotManifestHash": "6a8057e2a2278c945d167a21e3cff344a45bfecc5a5d259cb944ab400bd4b314",
+  "confirmedPairCount": 28,
+  "randomSeed": 6112026,
+  "matchedPairs": [
+    {
+      "englishItemId": "1118be61-19da-4d1c-9271-4817e5a8947b",
+      "finnishItemId": "f898b49b-2e55-4b44-880f-a864e456c73b",
+      "rawSimilarity": 0.694357583477074,
+      "centeredSimilarity": 0.6227068278904236
+    },
+    {
+      "englishItemId": "8aec01cf-fddb-413a-85bb-93a26ce273f2",
+      "finnishItemId": "c85ca2af-5ff4-4b76-a67e-fd4f3344fd48",
+      "rawSimilarity": 0.5867794610393938,
+      "centeredSimilarity": 0.47703742094176815
+    },
+    {
+      "englishItemId": "009e1648-3927-409f-aa18-906d75cbd3d5",
+      "finnishItemId": "6042900d-cb78-4655-bd66-a8d9b80c19e1",
+      "rawSimilarity": 0.6251960537444456,
+      "centeredSimilarity": 0.5323613971659099
+    },
+    {
+      "englishItemId": "b62565ac-3d91-4491-805a-095226d08200",
+      "finnishItemId": "a15952ad-44d6-4b9f-b4f4-30072da7a681",
+      "rawSimilarity": 0.5459643356226159,
+      "centeredSimilarity": 0.3985677523751969
+    },
+    {
+      "englishItemId": "f550d12e-1362-4835-b13d-8cdc7eff0f3f",
+      "finnishItemId": "9806280c-d29a-4a7b-aae8-010a0b277400",
+      "rawSimilarity": 0.634921777980482,
+      "centeredSimilarity": 0.5219898512289665
+    },
+    {
+      "englishItemId": "338560dd-e303-4d53-8f8e-aa27d77a69eb",
+      "finnishItemId": "0c1e8443-b784-4378-9276-a8b634307a16",
+      "rawSimilarity": 0.7099767049326182,
+      "centeredSimilarity": 0.6579560348550593
+    },
+    {
+      "englishItemId": "d2760cf5-d4e0-463c-8475-a250219047e3",
+      "finnishItemId": "f9771311-e983-4770-97c9-b42baeb3af9b",
+      "rawSimilarity": 0.5969676359321492,
+      "centeredSimilarity": 0.5116065651937035
+    },
+    {
+      "englishItemId": "388e25bd-668d-43bb-9c0d-28b778c6d6c9",
+      "finnishItemId": "8418edc6-97d9-47fa-a27d-dc42b9229aea",
+      "rawSimilarity": 0.6315040469099471,
+      "centeredSimilarity": 0.539902525174541
+    },
+    {
+      "englishItemId": "a7e4a08f-4304-4ca3-8461-fce3513fe98c",
+      "finnishItemId": "f076efb6-7af1-4faf-ab83-bcbdda39345f",
+      "rawSimilarity": 0.5556552168277482,
+      "centeredSimilarity": 0.5076584881703885
+    },
+    {
+      "englishItemId": "9aefacfd-f3fe-4d69-9467-cd4c4ca2f9be",
+      "finnishItemId": "cfa94c3a-479b-4e5e-a61a-6cfe3e1092a0",
+      "rawSimilarity": 0.6920315899073919,
+      "centeredSimilarity": 0.5826941697910616
+    },
+    {
+      "englishItemId": "1962d0bc-daea-459a-a565-f300df4c52b6",
+      "finnishItemId": "aa2f65a7-b7ed-4ac6-bb2a-b5d06305a60b",
+      "rawSimilarity": 0.6256400004743756,
+      "centeredSimilarity": 0.5345569804494189
+    },
+    {
+      "englishItemId": "e0e9662e-c7e6-470d-aee1-ff33be8c799e",
+      "finnishItemId": "6b409d72-ab6b-4ce6-ae90-398d728aa1e1",
+      "rawSimilarity": 0.5846737994262299,
+      "centeredSimilarity": 0.47222021126927
+    },
+    {
+      "englishItemId": "b40d5ae1-94d3-43dd-9072-21d5d868dcf5",
+      "finnishItemId": "a9b0eb50-76ce-41b1-8311-5a4db9b4c133",
+      "rawSimilarity": 0.5092047486527821,
+      "centeredSimilarity": 0.32300719736485745
+    },
+    {
+      "englishItemId": "aff70f1d-e0d6-41e5-b91d-584588048fa3",
+      "finnishItemId": "0dea12b8-9d8b-411c-bb9b-3256d2d9d779",
+      "rawSimilarity": 0.5900840746599633,
+      "centeredSimilarity": 0.5249970163989044
+    },
+    {
+      "englishItemId": "8d53d58c-5839-40a4-98f6-9050028cdcfd",
+      "finnishItemId": "9d1f1c48-5350-4ea0-9f6c-01f9a6e3f917",
+      "rawSimilarity": 0.5598895767636524,
+      "centeredSimilarity": 0.4290202829340462
+    },
+    {
+      "englishItemId": "346a2ac2-87f4-4ec9-a50b-d18669374d64",
+      "finnishItemId": "38f34db3-600f-44bf-9353-abdecd008d5e",
+      "rawSimilarity": 0.5983045436337524,
+      "centeredSimilarity": 0.49360671940845574
+    },
+    {
+      "englishItemId": "490d405a-2746-4905-9c72-5f5e20193fc8",
+      "finnishItemId": "93ae8a11-32db-48f1-9e1b-e40438128eb0",
+      "rawSimilarity": 0.6058126040388946,
+      "centeredSimilarity": 0.49164737091953603
+    },
+    {
+      "englishItemId": "b2db30ad-0057-4700-8632-a202b9b05153",
+      "finnishItemId": "ee6511f3-4a98-4f37-beae-a8bd278221bd",
+      "rawSimilarity": 0.7296397699333987,
+      "centeredSimilarity": 0.670283058896
+    },
+    {
+      "englishItemId": "55625b8d-bce7-4ac7-8fea-5e83c20bdff1",
+      "finnishItemId": "597dbc67-8597-478e-b47d-39f48f1f60ca",
+      "rawSimilarity": 0.5192781368184726,
+      "centeredSimilarity": 0.37333368568812103
+    },
+    {
+      "englishItemId": "9f969873-e890-4212-8632-511350860053",
+      "finnishItemId": "5819ac3b-8e2a-4792-9b08-bb655d0c5a85",
+      "rawSimilarity": 0.564877931651804,
+      "centeredSimilarity": 0.4601461743853795
+    },
+    {
+      "englishItemId": "674c09f8-9d72-4f65-893a-5dd0ca6edb23",
+      "finnishItemId": "42be331f-7538-4fdf-9549-5b33dfb41a92",
+      "rawSimilarity": 0.6748483658121556,
+      "centeredSimilarity": 0.5745826950390311
+    },
+    {
+      "englishItemId": "3aab151e-7d67-44d7-bc80-8a468895f508",
+      "finnishItemId": "770132e2-cb84-4a8b-a236-75a348b5b78b",
+      "rawSimilarity": 0.5912435582223526,
+      "centeredSimilarity": 0.5243113638866522
+    },
+    {
+      "englishItemId": "d371397d-1290-4b7a-9f31-8355bebaf0cc",
+      "finnishItemId": "c8e8253e-0937-4705-98e9-08ef735d94b9",
+      "rawSimilarity": 0.6214029190745182,
+      "centeredSimilarity": 0.5134988591934285
+    },
+    {
+      "englishItemId": "daef785c-1511-4b1b-aa02-d1d46fd76155",
+      "finnishItemId": "78ca9cd4-4fb3-40c8-8fe7-35865d9e88fd",
+      "rawSimilarity": 0.5284895978285495,
+      "centeredSimilarity": 0.4125917031790181
+    },
+    {
+      "englishItemId": "4ca34c14-7c18-4e31-a668-c5ea602f8206",
+      "finnishItemId": "23d37d06-ea52-42ca-b116-6440759bce5f",
+      "rawSimilarity": 0.7092197233009215,
+      "centeredSimilarity": 0.639765215309945
+    },
+    {
+      "englishItemId": "b2eae215-cb09-4663-b9c1-750e38200c53",
+      "finnishItemId": "a4ffb053-0ae9-4ffd-9a8d-9805c83a7fe0",
+      "rawSimilarity": 0.5964853422604017,
+      "centeredSimilarity": 0.5126450931406672
+    },
+    {
+      "englishItemId": "3f1d1954-b5eb-42a2-bdc3-e034fd1d491d",
+      "finnishItemId": "34287c4b-5987-49dc-9f67-bdcf5840820a",
+      "rawSimilarity": 0.42373086510334224,
+      "centeredSimilarity": 0.26425064682199667
+    },
+    {
+      "englishItemId": "7edfddc5-3fbf-4f7e-aab4-a474e8cc87d5",
+      "finnishItemId": "63ef0dc2-fb71-4b32-8805-fa3218803f2e",
+      "rawSimilarity": 0.6104883328727175,
+      "centeredSimilarity": 0.44182756110830707
+    }
+  ],
+  "randomPairCount": 10000,
+  "random95thPercentile": {
+    "raw": 0.32452247745834834,
+    "centered": 0.16352614526340764
+  },
+  "aboveRandom": {
+    "raw": 28,
+    "centered": 28
+  },
+  "gateSample": {
+    "count": 10,
+    "rawAbove": 10,
+    "centeredAbove": 10
+  },
+  "passed": true,
+  "passMethod": "raw",
+  "confirmedPairs": [
+    {
+      "englishUrl": "https://yle.fi/a/74-20253779",
+      "finnishUrl": "https://yle.fi/a/74-20253735",
+      "englishItemId": "1118be61-19da-4d1c-9271-4817e5a8947b",
+      "finnishItemId": "f898b49b-2e55-4b44-880f-a864e456c73b",
+      "rawSimilarity": 0.694357583477074,
+      "centeredSimilarity": 0.6227068278904236
+    },
+    {
+      "englishUrl": "https://yle.fi/a/74-20253970",
+      "finnishUrl": "https://yle.fi/a/74-20253960",
+      "englishItemId": "8aec01cf-fddb-413a-85bb-93a26ce273f2",
+      "finnishItemId": "c85ca2af-5ff4-4b76-a67e-fd4f3344fd48",
+      "rawSimilarity": 0.5867794610393938,
+      "centeredSimilarity": 0.47703742094176815
+    },
+    {
+      "englishUrl": "https://yle.fi/a/74-20253986",
+      "finnishUrl": "https://yle.fi/a/74-20253928",
+      "englishItemId": "009e1648-3927-409f-aa18-906d75cbd3d5",
+      "finnishItemId": "6042900d-cb78-4655-bd66-a8d9b80c19e1",
+      "rawSimilarity": 0.6251960537444456,
+      "centeredSimilarity": 0.5323613971659099
+    },
+    {
+      "englishUrl": "https://yle.fi/a/74-20254012",
+      "finnishUrl": "https://yle.fi/a/74-20253948",
+      "englishItemId": "b62565ac-3d91-4491-805a-095226d08200",
+      "finnishItemId": "a15952ad-44d6-4b9f-b4f4-30072da7a681",
+      "rawSimilarity": 0.5459643356226159,
+      "centeredSimilarity": 0.3985677523751969
+    },
+    {
+      "englishUrl": "https://yle.fi/a/74-20254173",
+      "finnishUrl": "https://yle.fi/a/74-20254164",
+      "englishItemId": "f550d12e-1362-4835-b13d-8cdc7eff0f3f",
+      "finnishItemId": "9806280c-d29a-4a7b-aae8-010a0b277400",
+      "rawSimilarity": 0.634921777980482,
+      "centeredSimilarity": 0.5219898512289665
+    },
+    {
+      "englishUrl": "https://yle.fi/a/74-20254226",
+      "finnishUrl": "https://yle.fi/a/74-20254132",
+      "englishItemId": "338560dd-e303-4d53-8f8e-aa27d77a69eb",
+      "finnishItemId": "0c1e8443-b784-4378-9276-a8b634307a16",
+      "rawSimilarity": 0.7099767049326182,
+      "centeredSimilarity": 0.6579560348550593
+    },
+    {
+      "englishUrl": "https://yle.fi/a/74-20254234",
+      "finnishUrl": "https://yle.fi/a/74-20254133",
+      "englishItemId": "d2760cf5-d4e0-463c-8475-a250219047e3",
+      "finnishItemId": "f9771311-e983-4770-97c9-b42baeb3af9b",
+      "rawSimilarity": 0.5969676359321492,
+      "centeredSimilarity": 0.5116065651937035
+    },
+    {
+      "englishUrl": "https://yle.fi/a/74-20254265",
+      "finnishUrl": "https://yle.fi/a/74-20254198",
+      "englishItemId": "388e25bd-668d-43bb-9c0d-28b778c6d6c9",
+      "finnishItemId": "8418edc6-97d9-47fa-a27d-dc42b9229aea",
+      "rawSimilarity": 0.6315040469099471,
+      "centeredSimilarity": 0.539902525174541
+    },
+    {
+      "englishUrl": "https://yle.fi/a/74-20254524",
+      "finnishUrl": "https://yle.fi/a/74-20254464",
+      "englishItemId": "a7e4a08f-4304-4ca3-8461-fce3513fe98c",
+      "finnishItemId": "f076efb6-7af1-4faf-ab83-bcbdda39345f",
+      "rawSimilarity": 0.5556552168277482,
+      "centeredSimilarity": 0.5076584881703885
+    },
+    {
+      "englishUrl": "https://yle.fi/a/74-20254575",
+      "finnishUrl": "https://yle.fi/a/74-20254453",
+      "englishItemId": "9aefacfd-f3fe-4d69-9467-cd4c4ca2f9be",
+      "finnishItemId": "cfa94c3a-479b-4e5e-a61a-6cfe3e1092a0",
+      "rawSimilarity": 0.6920315899073919,
+      "centeredSimilarity": 0.5826941697910616
+    },
+    {
+      "englishUrl": "https://yle.fi/a/74-20254576",
+      "finnishUrl": "https://yle.fi/a/74-20254379",
+      "englishItemId": "1962d0bc-daea-459a-a565-f300df4c52b6",
+      "finnishItemId": "aa2f65a7-b7ed-4ac6-bb2a-b5d06305a60b",
+      "rawSimilarity": 0.6256400004743756,
+      "centeredSimilarity": 0.5345569804494189
+    },
+    {
+      "englishUrl": "https://yle.fi/a/74-20254619",
+      "finnishUrl": "https://yle.fi/a/74-20254038",
+      "englishItemId": "e0e9662e-c7e6-470d-aee1-ff33be8c799e",
+      "finnishItemId": "6b409d72-ab6b-4ce6-ae90-398d728aa1e1",
+      "rawSimilarity": 0.5846737994262299,
+      "centeredSimilarity": 0.47222021126927
+    },
+    {
+      "englishUrl": "https://yle.fi/a/74-20254670",
+      "finnishUrl": "https://yle.fi/a/74-20254922",
+      "englishItemId": "b40d5ae1-94d3-43dd-9072-21d5d868dcf5",
+      "finnishItemId": "a9b0eb50-76ce-41b1-8311-5a4db9b4c133",
+      "rawSimilarity": 0.5092047486527821,
+      "centeredSimilarity": 0.32300719736485745
+    },
+    {
+      "englishUrl": "https://yle.fi/a/74-20254773",
+      "finnishUrl": "https://yle.fi/a/74-20254697",
+      "englishItemId": "aff70f1d-e0d6-41e5-b91d-584588048fa3",
+      "finnishItemId": "0dea12b8-9d8b-411c-bb9b-3256d2d9d779",
+      "rawSimilarity": 0.5900840746599633,
+      "centeredSimilarity": 0.5249970163989044
+    },
+    {
+      "englishUrl": "https://yle.fi/a/74-20255194",
+      "finnishUrl": "https://yle.fi/a/74-20255019",
+      "englishItemId": "8d53d58c-5839-40a4-98f6-9050028cdcfd",
+      "finnishItemId": "9d1f1c48-5350-4ea0-9f6c-01f9a6e3f917",
+      "rawSimilarity": 0.5598895767636524,
+      "centeredSimilarity": 0.4290202829340462
+    },
+    {
+      "englishUrl": "https://yle.fi/a/74-20255486",
+      "finnishUrl": "https://yle.fi/a/74-20252121",
+      "englishItemId": "346a2ac2-87f4-4ec9-a50b-d18669374d64",
+      "finnishItemId": "38f34db3-600f-44bf-9353-abdecd008d5e",
+      "rawSimilarity": 0.5983045436337524,
+      "centeredSimilarity": 0.49360671940845574
+    },
+    {
+      "englishUrl": "https://yle.fi/a/74-20255548",
+      "finnishUrl": "https://yle.fi/a/74-20254579",
+      "englishItemId": "490d405a-2746-4905-9c72-5f5e20193fc8",
+      "finnishItemId": "93ae8a11-32db-48f1-9e1b-e40438128eb0",
+      "rawSimilarity": 0.6058126040388946,
+      "centeredSimilarity": 0.49164737091953603
+    },
+    {
+      "englishUrl": "https://yle.fi/a/74-20255781",
+      "finnishUrl": "https://yle.fi/a/74-20255469",
+      "englishItemId": "b2db30ad-0057-4700-8632-a202b9b05153",
+      "finnishItemId": "ee6511f3-4a98-4f37-beae-a8bd278221bd",
+      "rawSimilarity": 0.7296397699333987,
+      "centeredSimilarity": 0.670283058896
+    },
+    {
+      "englishUrl": "https://yle.fi/a/74-20255782",
+      "finnishUrl": "https://yle.fi/a/74-20255720",
+      "englishItemId": "55625b8d-bce7-4ac7-8fea-5e83c20bdff1",
+      "finnishItemId": "597dbc67-8597-478e-b47d-39f48f1f60ca",
+      "rawSimilarity": 0.5192781368184726,
+      "centeredSimilarity": 0.37333368568812103
+    },
+    {
+      "englishUrl": "https://yle.fi/a/74-20255835",
+      "finnishUrl": "https://yle.fi/a/74-20255914",
+      "englishItemId": "9f969873-e890-4212-8632-511350860053",
+      "finnishItemId": "5819ac3b-8e2a-4792-9b08-bb655d0c5a85",
+      "rawSimilarity": 0.564877931651804,
+      "centeredSimilarity": 0.4601461743853795
+    },
+    {
+      "englishUrl": "https://yle.fi/a/74-20255908",
+      "finnishUrl": "https://yle.fi/a/74-20254927",
+      "englishItemId": "674c09f8-9d72-4f65-893a-5dd0ca6edb23",
+      "finnishItemId": "42be331f-7538-4fdf-9549-5b33dfb41a92",
+      "rawSimilarity": 0.6748483658121556,
+      "centeredSimilarity": 0.5745826950390311
+    },
+    {
+      "englishUrl": "https://yle.fi/a/74-20256001",
+      "finnishUrl": "https://yle.fi/a/74-20255985",
+      "englishItemId": "3aab151e-7d67-44d7-bc80-8a468895f508",
+      "finnishItemId": "770132e2-cb84-4a8b-a236-75a348b5b78b",
+      "rawSimilarity": 0.5912435582223526,
+      "centeredSimilarity": 0.5243113638866522
+    },
+    {
+      "englishUrl": "https://yle.fi/a/74-20256056",
+      "finnishUrl": "https://yle.fi/a/74-20255791",
+      "englishItemId": "d371397d-1290-4b7a-9f31-8355bebaf0cc",
+      "finnishItemId": "c8e8253e-0937-4705-98e9-08ef735d94b9",
+      "rawSimilarity": 0.6214029190745182,
+      "centeredSimilarity": 0.5134988591934285
+    },
+    {
+      "englishUrl": "https://yle.fi/a/74-20256084",
+      "finnishUrl": "https://yle.fi/a/74-20253408",
+      "englishItemId": "daef785c-1511-4b1b-aa02-d1d46fd76155",
+      "finnishItemId": "78ca9cd4-4fb3-40c8-8fe7-35865d9e88fd",
+      "rawSimilarity": 0.5284895978285495,
+      "centeredSimilarity": 0.4125917031790181
+    },
+    {
+      "englishUrl": "https://yle.fi/a/74-20256145",
+      "finnishUrl": "https://yle.fi/a/74-20250439",
+      "englishItemId": "4ca34c14-7c18-4e31-a668-c5ea602f8206",
+      "finnishItemId": "23d37d06-ea52-42ca-b116-6440759bce5f",
+      "rawSimilarity": 0.7092197233009215,
+      "centeredSimilarity": 0.639765215309945
+    },
+    {
+      "englishUrl": "https://yle.fi/a/74-20256236",
+      "finnishUrl": "https://yle.fi/a/74-20256221",
+      "englishItemId": "b2eae215-cb09-4663-b9c1-750e38200c53",
+      "finnishItemId": "a4ffb053-0ae9-4ffd-9a8d-9805c83a7fe0",
+      "rawSimilarity": 0.5964853422604017,
+      "centeredSimilarity": 0.5126450931406672
+    },
+    {
+      "englishUrl": "https://yle.fi/a/74-20256307",
+      "finnishUrl": "https://yle.fi/a/74-20256204",
+      "englishItemId": "3f1d1954-b5eb-42a2-bdc3-e034fd1d491d",
+      "finnishItemId": "34287c4b-5987-49dc-9f67-bdcf5840820a",
+      "rawSimilarity": 0.42373086510334224,
+      "centeredSimilarity": 0.26425064682199667
+    },
+    {
+      "englishUrl": "https://yle.fi/a/74-20256304",
+      "finnishUrl": "https://yle.fi/a/74-20256179",
+      "englishItemId": "7edfddc5-3fbf-4f7e-aab4-a474e8cc87d5",
+      "finnishItemId": "63ef0dc2-fb71-4b32-8805-fa3218803f2e",
+      "rawSimilarity": 0.6104883328727175,
+      "centeredSimilarity": 0.44182756110830707
+    }
+  ]
+}

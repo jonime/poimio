@@ -1,0 +1,164 @@
+{
+  "set": "selection",
+  "provisional": false,
+  "labelSetId": "qwen/qwen3.8-27b:relevance-v1:final:bad99fa3aa138349",
+  "labelSetHash": "bad99fa3aa1383492643dfd25d118239e6d0fbbb46770b9f51ea49d8f58db641",
+  "model": "qwen/qwen3.8-27b",
+  "promptVersion": "relevance-v1",
+  "scores": {
+    "overall": {
+      "samplePairs": 60,
+      "weightedPercentAgreement": 0.9743374961925069,
+      "weightedCohenKappa": 0.8966547641543668,
+      "weightedPrecision": 1,
+      "weightedRecall": 0.8374336710082007,
+      "effectiveSampleSize": 52.00576650803081
+    },
+    "fi": {
+      "samplePairs": 30,
+      "weightedPercentAgreement": 1,
+      "weightedCohenKappa": 1,
+      "weightedPrecision": 1,
+      "weightedRecall": 1,
+      "effectiveSampleSize": 27.511769513443433
+    },
+    "en": {
+      "samplePairs": 30,
+      "weightedPercentAgreement": 0.9602219074598678,
+      "weightedCohenKappa": 0.8699726780236801,
+      "weightedPrecision": 1,
+      "weightedRecall": 0.8085227272727272,
+      "effectiveSampleSize": 28.40712784103995
+    }
+  },
+  "stratumCounts": [
+    {
+      "personaId": "ai-software",
+      "language": "fi",
+      "modelRelevant": false,
+      "populationSize": 1113,
+      "selectionSampleSize": 7,
+      "reportingSampleSize": 7
+    },
+    {
+      "personaId": "ai-software",
+      "language": "fi",
+      "modelRelevant": true,
+      "populationSize": 52,
+      "selectionSampleSize": 1,
+      "reportingSampleSize": 1
+    },
+    {
+      "personaId": "ai-software",
+      "language": "en",
+      "modelRelevant": true,
+      "populationSize": 1107,
+      "selectionSampleSize": 4,
+      "reportingSampleSize": 4
+    },
+    {
+      "personaId": "ai-software",
+      "language": "en",
+      "modelRelevant": false,
+      "populationSize": 1011,
+      "selectionSampleSize": 3,
+      "reportingSampleSize": 3
+    },
+    {
+      "personaId": "cars-engineering",
+      "language": "fi",
+      "modelRelevant": false,
+      "populationSize": 1145,
+      "selectionSampleSize": 6,
+      "reportingSampleSize": 6
+    },
+    {
+      "personaId": "cars-engineering",
+      "language": "fi",
+      "modelRelevant": true,
+      "populationSize": 20,
+      "selectionSampleSize": 1,
+      "reportingSampleSize": 1
+    },
+    {
+      "personaId": "cars-engineering",
+      "language": "en",
+      "modelRelevant": false,
+      "populationSize": 2011,
+      "selectionSampleSize": 7,
+      "reportingSampleSize": 7
+    },
+    {
+      "personaId": "cars-engineering",
+      "language": "en",
+      "modelRelevant": true,
+      "populationSize": 107,
+      "selectionSampleSize": 1,
+      "reportingSampleSize": 1
+    },
+    {
+      "personaId": "science-space",
+      "language": "fi",
+      "modelRelevant": false,
+      "populationSize": 1148,
+      "selectionSampleSize": 7,
+      "reportingSampleSize": 7
+    },
+    {
+      "personaId": "science-space",
+      "language": "fi",
+      "modelRelevant": true,
+      "populationSize": 17,
+      "selectionSampleSize": 1,
+      "reportingSampleSize": 1
+    },
+    {
+      "personaId": "science-space",
+      "language": "en",
+      "modelRelevant": false,
+      "populationSize": 1913,
+      "selectionSampleSize": 6,
+      "reportingSampleSize": 6
+    },
+    {
+      "personaId": "science-space",
+      "language": "en",
+      "modelRelevant": true,
+      "populationSize": 205,
+      "selectionSampleSize": 1,
+      "reportingSampleSize": 1
+    },
+    {
+      "personaId": "finnish-sports",
+      "language": "fi",
+      "modelRelevant": true,
+      "populationSize": 224,
+      "selectionSampleSize": 2,
+      "reportingSampleSize": 2
+    },
+    {
+      "personaId": "finnish-sports",
+      "language": "fi",
+      "modelRelevant": false,
+      "populationSize": 941,
+      "selectionSampleSize": 5,
+      "reportingSampleSize": 5
+    },
+    {
+      "personaId": "finnish-sports",
+      "language": "en",
+      "modelRelevant": false,
+      "populationSize": 2114,
+      "selectionSampleSize": 7,
+      "reportingSampleSize": 7
+    },
+    {
+      "personaId": "finnish-sports",
+      "language": "en",
+      "modelRelevant": true,
+      "populationSize": 4,
+      "selectionSampleSize": 1,
+      "reportingSampleSize": 1
+    }
+  ]
+}

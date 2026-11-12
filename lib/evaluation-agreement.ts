@@ -72,16 +72,17 @@ function seededShuffle<T>(items: T[], seed: string): T[] {
 
 function allocateProportionally(sizes: Map<string, number>, quota: number): Map<string, number> {
   const total = [...sizes.values()].reduce((sum, size) => sum + size, 0);
-  if (quota > total) {
+  if (quota > total || quota < sizes.size || [...sizes.values()].some((size) => size < 1)) {
     throw new Error(`agreement stratum has ${total} pairs but needs ${quota}`);
   }
-  if (quota === 0) return new Map([...sizes.keys()].map((key) => [key, 0]));
 
+  const remainingQuota = quota - sizes.size;
+  const remainingTotal = total - sizes.size;
   const allocations = new Map<string, number>();
   const fractions = [...sizes].map(([key, size]) => {
-    const exact = (quota * size) / total;
+    const exact = remainingTotal === 0 ? 0 : (remainingQuota * (size - 1)) / remainingTotal;
     const floor = Math.min(size, Math.floor(exact));
-    allocations.set(key, floor);
+    allocations.set(key, 1 + floor);
     return { key, fraction: exact - floor };
   });
   let remaining = quota - [...allocations.values()].reduce((sum, n) => sum + n, 0);
@@ -172,7 +173,11 @@ export function createAgreementDesign(input: {
       });
       const target = balancedLanguageQuota(language, personaIndex, perPersona);
       const sizes = new Map(languageStrata.map(([key, rows]) => [key, rows.length]));
-      const selectionAllocations = allocateProportionally(sizes, target);
+      if ([...sizes.values()].reduce((total, size) => total + size, 0) < target * 2) {
+        throw new Error(`agreement strata for ${persona.id}/${language} cannot fill both sets`);
+      }
+      const selectionCapacities = new Map([...sizes].map(([key, size]) => [key, size - 1]));
+      const selectionAllocations = allocateProportionally(selectionCapacities, target);
       const remainingSizes = new Map(
         languageStrata.map(([key, rows]) => [
           key,

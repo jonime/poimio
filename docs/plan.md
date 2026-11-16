@@ -172,13 +172,16 @@ Specs are written just in time: the next spec is drafted when the current one re
 
 **Planned, not yet drafted** (in order; see the cut order in §9)
 
-| Spec      | Content                                                                         | Week |
-| --------- | ------------------------------------------------------------------------------- | ---- |
-| 007       | Exploration slots and diversity; negative-feedback reasons; per-user LLM limits | 5–6  |
-| next free | Natural-language feed tuning                                                    | 5–6  |
-| next free | Same-story grouping with embeddings and Jev                                     | 6    |
-| next free | Optional: LLM interest summary and click tracking                               | 6    |
-| next free | Source discovery: (a) catalog-based, (b) LLM web search; only after gate 2      | 6–7  |
+| Spec      | Content                                                                                                                                                                                                                           | Week |
+| --------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---- |
+| 007       | Exploration slots and diversity; negative-feedback reasons; per-user LLM limits                                                                                                                                                   | 5–6  |
+| next free | Natural-language feed tuning                                                                                                                                                                                                      | 5–6  |
+| next free | Same-story grouping with embeddings and Jev                                                                                                                                                                                       | 6    |
+| next free | Optional: LLM interest summary and click tracking                                                                                                                                                                                 | 6    |
+| next free | Source discovery: (a) catalog-based, (b) LLM web search; only after gate 2                                                                                                                                                        | 6–7  |
+| next free | Improve AI-generated descriptions: describe the subject directly, avoid formulaic narration, and retain attribution where needed; decide whether to regenerate existing summaries without changing the frozen evaluation snapshot | TBD  |
+
+**AI-generated description style:** Draft a spec to improve the summary-generation prompt in [spec 005](specs/005-description-enrichment.md). Descriptions should state the article's subject or main point directly, instead of narrating it with phrases such as "The author describes...", "The article discusses...", or "They report...". For example, prefer "Pi is a minimalist, customizable coding harness" to "The author describes switching to Pi". Keep attribution when needed to distinguish opinions or claims from facts, and preserve factual accuracy and the item's language. Evaluate examples in Finnish and English. Decide whether and how to regenerate existing AI descriptions, including embedding updates, without changing the frozen evaluation snapshot. This is separate from the offline quality experiment in [spec 009](specs/009-description-quality-jev.md).
 
 ## 8. Risks
 

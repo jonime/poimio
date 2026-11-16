@@ -24,6 +24,7 @@ next-env.d.ts
 evaluation/early-ranking/.answer-key.json
 evaluation/early-ranking/.centered-answer-key.json
 evaluation/snapshot/*.jsonl
+evaluation/snapshot/ai-generated-descriptions.md
 evaluation/snapshot/provisional/
 evaluation/config.provisional.json
 evaluation/labels/*.provisional.jsonl

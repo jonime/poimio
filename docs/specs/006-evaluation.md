@@ -1,6 +1,6 @@
 # 006 — Evaluation harness
 
-**Status:** In progress  
+**Status:** Done (the one-time test-window run is deferred to week 7, after tuning in spec 007)  
 **Milestone:** Final (weeks 2–5; final test run in week 7)  
 **Depends on:** 001 (content, embeddings), 003 (`get_feed`, centering), 005 (completed descriptions)  
 **Estimate:** 23 h

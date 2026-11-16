@@ -23,6 +23,7 @@ next-env.d.ts
 .DS_Store
 evaluation/early-ranking/.answer-key.json
 evaluation/early-ranking/.centered-answer-key.json
+evaluation/ai-generated-descriptions.md
 evaluation/snapshot/*.jsonl
 evaluation/snapshot/ai-generated-descriptions.md
 evaluation/snapshot/provisional/

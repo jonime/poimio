@@ -44,6 +44,8 @@ node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON \
 
 That ingestion command writes to the selected database. Confirm the target project before running it; use production for read-only checks unless a production write is explicitly intended. Never print or commit either environment file.
 
+Run `pnpm descriptions:export` to list current AI-generated article descriptions from production. It reads `.env.production.local` directly and writes no database data. The command replaces the local, gitignored `evaluation/ai-generated-descriptions.md` report; the evaluation snapshot is not changed.
+
 ## Evaluation scripts
 
 See [spec 006](docs/specs/006-evaluation.md) for the protocol. Check which environment file a script loads (in `package.json`) before running it.

@@ -10,6 +10,7 @@
     "ingest": "node --env-file-if-exists=.env.local scripts/ingest.mts",
     "thumbnails:backfill": "node scripts/thumbnail-backfill.mts",
     "enrich:backfill": "node scripts/enrich-backfill.mts",
+    "descriptions:export": "node scripts/export-ai-descriptions.mts",
     "embeddings:means": "node --env-file-if-exists=.env.local scripts/compute-embedding-language-means.mts",
     "ranking:freeze": "node --env-file-if-exists=.env.local scripts/freeze-ranking-sample.mts",
     "ranking:export": "node --env-file-if-exists=.env.local scripts/export-ranking-judging.mts",

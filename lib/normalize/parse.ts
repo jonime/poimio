@@ -61,7 +61,8 @@ export interface ParsedFeed {
 export interface ParseOptions {
   /**
    * When the feed document was fetched. Used as the fallback for
-   * `publishedAt` when an item carries no usable date.
+   * `publishedAt` when an item carries no usable date, and as the upper
+   * bound for future-dated items.
    */
   fetchTime?: Date;
 }
@@ -101,8 +102,15 @@ function isYouTubeVideoUrl(url: string): boolean {
 /**
  * Resolve an item's publication date: the ISO date `rss-parser` computes
  * first, then the raw date string, then the fetch-time fallback.
+ * Dates after the fetch time are clamped to it.
  */
 function resolvePublishedAt(item: Record<string, unknown>, fetchTime: Date): Date {
+  const date = resolveRawPublishedAt(item, fetchTime);
+  // Future dates would keep an item maximally recent indefinitely.
+  return date.getTime() > fetchTime.getTime() ? fetchTime : date;
+}
+
+function resolveRawPublishedAt(item: Record<string, unknown>, fetchTime: Date): Date {
   const iso = item.isoDate;
   if (typeof iso === "string") {
     const parsed = new Date(iso);

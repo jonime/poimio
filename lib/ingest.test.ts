@@ -418,6 +418,7 @@ describe("scheduled article thumbnails", () => {
     ];
     const requested: string[] = [];
     const summary = await runIngestion(db, "key", {
+      now: () => new Date("2026-12-01T00:00:00.000Z"),
       fetchBatch: async () =>
         feed([
           { slug: "cached", day: 1 },

@@ -234,6 +234,7 @@ Task 2 implementation normalizes text with Unicode NFC, trimming, whitespace col
 - `pnpm eval:description-quality sample|run|probe|report`. It runs with Node `--experimental-strip-types` and `--env-file-if-exists=.env.local` like the other evaluation scripts, refuses to run when `CI=true`, and reads `TYPESAFE_API_KEY` and `OPENAI_API_KEY` from the environment only. Logs never contain keys or request bodies.
 - `lib/evaluation-description-quality.ts` (+ `.test.ts`): pure functions for H1, sampling, request building, response validation, decisions, and metrics.
 - `lib/evaluation-description-judges.ts` (+ `.test.ts`): the shared rubric, pinned requests, validated responses, HTTP retry/timeout handling, and response-only cache runner. HTTP and cache code are kept separate from sampling and metrics; no production pipeline modules are changed.
+- `lib/evaluation-description-report.ts` (+ `.test.ts`): frozen-evidence validation, human-audit statistics, diagnostics, stability/operations, hypothetical policy projection, and ID-only report generation with a separate local text disagreement CSV.
 - `scripts/description-quality.mts`: command-line wiring and file input/output.
 - `evaluation/description-quality/`:
   - `sample.json` (committed): snapshot manifest hash, seed, strata sizes, item IDs, weights, and the SHA-256 of each item's title and description.
@@ -367,7 +368,7 @@ stored without text in `labels.jsonl` (dev + audit) and `labels-repeat.jsonl`
 preserve the dev observations. A full-text disagreement CSV with 10 rows stays
 local at `results/disagreements-dev.csv`. The runner rejects protocol,
 model/price, snapshot/sample, or dev-label drift when a frozen config exists.
-Test calls remain blocked pending task 7.
+Task 7 adds guarded test execution without changing these settings.
 
 ### 6.1 Decisions
 
@@ -396,6 +397,14 @@ Test calls remain blocked pending task 7.
   - P4: always generate.
 
   It also projects cost using the [design.md §2.5](../design.md#25-llm-usage-limited) summary estimate (about 6,000 input + 200 output tokens per `gpt-6-luna` call) and about 5,400 new items per month (about 180 per day in the snapshot). Call counts and costs may use the full model sample; poor/good replacement estimates use only the human audit and its weights. These are hypothetical routing estimates, not measured replacement improvements.
+
+  The pilot calibrates each policy's article routing volume from the original
+  weighted model sample to the audit-weighted poor/good label mix among
+  **routed audit articles**. This keeps quality-routing estimates bounded by
+  routing volume. If there are no routed audit examples, quality estimates
+  are insufficient evidence rather than zero. Video quality is unknown and
+  is excluded from human-label projections, not inferred from article labels.
+  Generation-call and cost projections still include the video census.
 
 ### 6.3 Original validation targets (not certification gates for the reduced pilot)
 
@@ -454,7 +463,7 @@ Cost alone does not decide. At about 1,000 input tokens per item, Jev costs abou
 - [x] 4. Set up the labelling tool and reduced audit. Preserve the completed 30 dev labels and 8 test labels; finish only 22 additional test labels in `labels-audit.csv`. Prepare and complete 10 delayed repeat labels (descriptive S0). No video labelling is required.
 - [x] 5. Implement the Jev and LLM judge HTTP clients, cache, and `run` subcommand. Add unit tests with an injected `fetch` (criterion 3).
 - [x] 6. Run on the dev set only. Adjust rubric wording, the L prompt, `τ`, `c_min`, and _w_. Commit the frozen `config.json` (criterion 6).
-- [ ] 7. Run once on the test set, plus the stability rerun. Implement metrics and the report, with unit tests (criteria 4 and 7). Check criterion 8.
+- [x] 7. Run once on the test set, plus the stability rerun. Implement metrics and the report, with unit tests (criteria 4 and 7). Check criterion 8.
 - [ ] 8. **Deferred by the approved reduced-effort pilot:** replacement probe (`probe` subcommand) for at most 30 test items labelled `unusable`, without database writes:
   - fetch the page with `fetchPageHtml` and run `extractPageContent`;
   - if the metadata description passes H1 and J, use it as the replacement;
@@ -465,11 +474,68 @@ Cost alone does not decide. At about 1,000 input tokens per item, Jev costs abou
 
 ## 9. Risks and assumptions
 
+### Task 7 execution and report (17 Nov 2026)
+
+The frozen config was committed in `e07c241` before either held-out run.
+`run --set test --run 1` and `--run 2` each measured all 150 original test
+articles and the 8-video census, with 157 HTTP calls per classifier plus one
+deterministic placeholder route. Across both runs there were 628 HTTP calls,
+no API errors, and no retries. Requested and resolved model IDs matched.
+No rubric, threshold, word rule, human label, or input text changed.
+
+The audit contains 18 `good`, 11 `weak`, and 1 `unusable` article, split
+15 Finnish / 15 English. The sole unusable example is English. H1 and Jev
+each replace two human-`weak` audit items and miss the unusable one; L
+replaces only the unusable one. Neither model path replaces any of the
+18 human-`good` audit articles. L's 1/1 precision and recall are based on
+**one** positive, with an unweighted Wilson lower bound of about 20.7%.
+The zero observed good-item false replacements have a Wilson upper bound of
+about 17.6%, so they do not establish the original <=5% target. Finnish
+recall is undefined, not zero or perfect, because there are no Finnish
+human-`unusable` audit examples.
+
+Jev's three-way replace/uncertain/keep decisions repeat on 145/150 articles
+(96.7%, below the original 98% stability reference). All five changes are
+keep/uncertain transitions: its binary replacement decisions repeat on
+150/150. L's binary decisions repeat on 148/150 (98.7%). Exact three-level
+quality agreement with the human audit is 15/30 for Jev's nearest score level
+and 19/30 for L. J/L binary agreement over all 150 articles is 94%; the 120
+unlabelled articles provide no correctness evidence. Video decisions repeat
+on all 8 items for both classifiers, descriptively only.
+
+Jev p95 first-attempt latency was 222/226 ms across the two runs; L was
+1802/2226 ms, so L exceeded the 2-second reference in the second run.
+Estimated held-out call costs were $0.00415065 per Jev run and
+$0.00553160 / $0.00553260 for L. Routing/generation projections remain
+hypothetical; the deferred probe means no replacement benefit was measured.
+
+The complete outputs are
+[`report-f621fa4deda3fed9445d89e4bebe724d09335ecfe488befcb8976c6f24bb5ac8.md`](../../evaluation/description-quality/results/report-f621fa4deda3fed9445d89e4bebe724d09335ecfe488befcb8976c6f24bb5ac8.md)
+and its JSON/CSV companions. They refer to items by ID. The 19-row full-text
+disagreement table is local and gitignored. Reports include config,
+human-label, snapshot, cache, and runtime-source hashes; git HEAD is
+`e07c241`, with report implementation changes explicitly recorded as
+uncommitted. The report's policy quality estimator was corrected before
+finalization to calibrate routed audit label shares to article routing
+volume; no extra model calls or changed experiment settings were used.
+
+Test execution requires exact committed config content, frozen protocol and
+prices, matching input/human-label/design/dev-summary/dev-cache hashes, and
+only the two planned run numbers. Run 2 requires run-1 cache records.
+`report` rejects missing measurements; completed error records would remain
+visible and fail open to keep in binary policy metrics. Reports are
+overwrite-protected. Metric tests cover hand-computed weighted precision,
+recall, F1, kappa, good-item false replacement, Wilson intervals, tied AUC,
+Spearman ranks, calibrated policy counts, confidence-only stability changes,
+and exclusion of unlabelled items from accuracy. Production ingestion,
+enrichment, embeddings, normalization, application code, and migrations were
+not changed.
+
 Task 5 implementation (17 Nov 2026): `run --set dev` supports `--classifier
 both|jev|llm` (default `both`) and `--run <positive integer>` (default 1).
-Only dev runs are enabled; test/video model runs remain blocked until the
-configuration is frozen in task 6 and the guarded test path is implemented in
-task 7. No live judge calls were made during task 5.
+At task 5 completion only dev runs were enabled; task 7 adds test/video runs
+after the frozen configuration is committed. No live judge calls were made
+during task 5.
 
 Both clients use the same three rubric levels (`desc-quality-v1`), pinned
 models, and minimal input state. Empty/placeholder descriptions get a

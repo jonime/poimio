@@ -543,7 +543,7 @@ describe("description judge command", () => {
   it("blocks CI and premature test runs before accessing files or keys", () => {
     for (const [args, ci, message] of [
       [["run", "--set", "dev"], "true", "must not run in CI"],
-      [["run", "--set", "test"], "false", "Only --set dev"],
+      [["run", "--set", "invalid"], "false", "--set must be dev or test"],
       [["run", "--set", "dev", "--run", "0"], "false", "positive safe integer"],
     ] as const) {
       const result = spawnSync(process.execPath, ["scripts/description-quality.mts", ...args], {

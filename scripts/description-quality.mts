@@ -19,6 +19,13 @@ import {
   readDescriptionSnapshot,
   validateDescriptionSample,
 } from "../lib/evaluation-description-quality.ts";
+import {
+  buildDescriptionPilotReport,
+  parseFrozenDescriptionConfig,
+  requireCommittedDescriptionConfig,
+  requireDescriptionPriorRun,
+  validateFrozenDescriptionEvidence,
+} from "../lib/evaluation-description-report.ts";
 import { hashSnapshotRow, parseJsonLines, sha256 } from "../lib/evaluation-snapshot.ts";
 import { descriptionJudgingConfig, readConfiguredJudgingCsv } from "../lib/manual-judging.ts";
 import { requireDefined } from "../lib/required.ts";
@@ -36,9 +43,15 @@ function workspacePath(value: string): string {
 
 function parseArguments(args: string[]) {
   const command = args[0];
-  if (command !== "sample" && command !== "audit" && command !== "repeat" && command !== "run") {
+  if (
+    command !== "sample" &&
+    command !== "audit" &&
+    command !== "repeat" &&
+    command !== "run" &&
+    command !== "report"
+  ) {
     throw new Error(
-      "usage: pnpm eval:description-quality sample|audit|repeat|run [--snapshot <directory>] [--output <directory>]; run --set dev [--classifier both|jev|llm] [--run <positive integer>]; repeat requires --completed-at <timestamp> --audit-hash <sha256>; test runs, probe, and report are not implemented yet",
+      "usage: pnpm eval:description-quality sample|audit|repeat|run|report [--snapshot <directory>] [--output <directory>]; run --set dev|test [--classifier both|jev|llm] [--run <positive integer>]; repeat requires --completed-at <timestamp> --audit-hash <sha256>; the replacement probe is deferred",
     );
   }
   let snapshot = workspacePath("evaluation/snapshot");
@@ -91,12 +104,10 @@ function parseArguments(args: string[]) {
   if (command === "repeat" && (!completedAt || !auditHash)) {
     throw new Error("repeat requires --completed-at <timestamp> and --audit-hash <sha256>");
   }
-  if (command === "run" && set !== "dev") {
-    throw new Error(
-      "Only --set dev is supported; test runs require frozen configuration in task 7",
-    );
+  if (command === "run" && set !== "dev" && set !== "test") {
+    throw new Error("--set must be dev or test");
   }
-  return { command, snapshot, output, seed, completedAt, auditHash, classifier, run };
+  return { command, snapshot, output, seed, completedAt, auditHash, classifier, run, set };
 }
 
 async function requireNewFile(path: string): Promise<void> {
@@ -115,7 +126,7 @@ async function main(): Promise<void> {
   if (process.env.CI === "true") {
     throw new Error("Description-quality experiments must not run in CI");
   }
-  const { command, snapshot, output, seed, completedAt, auditHash, classifier, run } =
+  const { command, snapshot, output, seed, completedAt, auditHash, classifier, run, set } =
     parseArguments(process.argv.slice(2));
   if (command === "repeat") {
     const [auditText, auditCsv, sampleText] = await Promise.all([
@@ -156,7 +167,7 @@ async function main(): Promise<void> {
     readFile(resolve(snapshot, "items.jsonl"), "utf8"),
   ]);
   const inputs = readDescriptionSnapshot(manifestText, itemText);
-  if (command === "run") {
+  if (command === "run" || command === "report") {
     const [sampleText, frozenText, labelsText] = await Promise.all([
       readFile(resolve(output, "sample.json"), "utf8"),
       readFile(resolve(output, "items.jsonl"), "utf8"),
@@ -186,6 +197,32 @@ async function main(): Promise<void> {
         config.labelCsvHashes.dev !== sha256(labelsText)
       ) {
         throw new Error("Frozen description input or dev-label hash mismatch");
+      }
+    }
+    const heldOut = set === "test" || command === "report";
+    const frozenConfig = heldOut
+      ? parseFrozenDescriptionConfig(
+          requireDefined(configText ?? undefined, "committed frozen configuration for test/report"),
+        )
+      : null;
+    if (heldOut) {
+      const configPath = relative(root, resolve(output, "config.json"));
+      let committed: string;
+      try {
+        committed = execFileSync("git", ["show", `HEAD:${configPath}`], {
+          cwd: root,
+          encoding: "utf8",
+          stdio: "pipe",
+        });
+      } catch {
+        throw new Error("Commit the frozen configuration before test runs or reports");
+      }
+      requireCommittedDescriptionConfig(
+        requireDefined(configText ?? undefined, "frozen config"),
+        committed,
+      );
+      if (frozenConfig !== null && !frozenConfig.plannedTestRuns.includes(run)) {
+        throw new Error("Frozen pilot permits only test runs 1 and 2");
       }
     }
     validateDescriptionSample(
@@ -228,6 +265,39 @@ async function main(): Promise<void> {
       )
         throw new Error("Dev labels are incomplete or differ from the frozen inputs");
     }
+    const evidence =
+      frozenConfig === null
+        ? null
+        : await (async () => {
+            const names = [
+              "audit.json",
+              "repeat.json",
+              "labels-audit.csv",
+              "labels-repeat.csv",
+              "labels.jsonl",
+              "labels-repeat.jsonl",
+              "results/dev-run-1.json",
+            ] as const;
+            const texts = await Promise.all(
+              names.map((name) => readFile(resolve(output, name), "utf8")),
+            );
+            return validateFrozenDescriptionEvidence({
+              config: frozenConfig,
+              sample,
+              items: inputs.items,
+              texts: {
+                sample: sampleText,
+                audit: requireDefined(texts[0], "audit design"),
+                repeat: requireDefined(texts[1], "repeat design"),
+                devCsv: labelsText,
+                auditCsv: requireDefined(texts[2], "audit CSV"),
+                repeatCsv: requireDefined(texts[3], "repeat CSV"),
+                labels: requireDefined(texts[4], "finalized labels"),
+                repeatLabels: requireDefined(texts[5], "finalized repeat labels"),
+                devSummary: requireDefined(texts[6], "dev summary"),
+              },
+            });
+          })();
     const lockPath = resolve(output, ".judge-cache.lock");
     const lock = await open(lockPath, "wx");
     try {
@@ -245,12 +315,93 @@ async function main(): Promise<void> {
       if (cacheText !== "" && !cacheText.endsWith("\n")) {
         throw new Error("Judge cache must end with a newline before appending");
       }
+      if (frozenConfig !== null) {
+        const devIds = new Set(sample.sets.dev.map((entry) => entry.itemId));
+        const devCache = cache.filter((row) => row.run === 1 && devIds.has(row.itemId));
+        if (
+          sha256(`${devCache.map((row) => JSON.stringify(row)).join("\n")}\n`) !==
+          frozenConfig.devCacheHashAtFreeze
+        ) {
+          throw new Error("Frozen dev response cache hash mismatch");
+        }
+      }
+      if (command === "report") {
+        const config = requireDefined(frozenConfig ?? undefined, "report config");
+        const human = requireDefined(evidence ?? undefined, "report human evidence");
+        const sourceFiles = [
+          "scripts/description-quality.mts",
+          "lib/evaluation-description-report.ts",
+          "lib/evaluation-description-judges.ts",
+          "lib/evaluation-description-quality.ts",
+          "lib/evaluation-snapshot.ts",
+          "lib/evaluation-agreement.ts",
+          "lib/manual-judging.ts",
+          "lib/early-ranking.ts",
+          "lib/required.ts",
+        ];
+        const sourceHashes = await Promise.all(
+          sourceFiles.map(async (path) => [
+            path,
+            sha256(await readFile(resolve(root, path), "utf8")),
+          ]),
+        );
+        const configHash = sha256(requireDefined(configText ?? undefined, "report config text"));
+        const built = buildDescriptionPilotReport({
+          config,
+          sample,
+          items: inputs.items,
+          ...human,
+          cache,
+          provenance: {
+            generatedAt: new Date().toISOString(),
+            configHash,
+            cacheHash: sha256(cacheText),
+            gitCommit: execFileSync("git", ["rev-parse", "HEAD"], {
+              cwd: root,
+              encoding: "utf8",
+            }).trim(),
+            workingTreeDirty:
+              execFileSync("git", ["status", "--porcelain"], {
+                cwd: root,
+                encoding: "utf8",
+              }).trim() !== "",
+            sourceCodeHash: sha256(JSON.stringify(sourceHashes)),
+            configCommit: execFileSync(
+              "git",
+              ["log", "-1", "--format=%H", "--", relative(root, resolve(output, "config.json"))],
+              { cwd: root, encoding: "utf8" },
+            ).trim(),
+          },
+        });
+        const prefix = `results/report-${configHash}`;
+        const files = [
+          [`${prefix}.json`, `${JSON.stringify(built.report, null, 2)}\n`],
+          [`${prefix}.csv`, built.csv],
+          [`${prefix}.md`, built.markdown],
+          [`results/disagreements-${configHash}.csv`, built.localCsv],
+        ] as const;
+        await Promise.all(files.map(([name]) => requireNewFile(resolve(output, name))));
+        await mkdir(resolve(output, "results"), { recursive: true });
+        for (const [name, content] of files) {
+          await writeFile(resolve(output, name), content, { flag: "wx" });
+        }
+        console.log(
+          JSON.stringify({
+            report: `${prefix}.md`,
+            counts: built.report.counts,
+            humanConsistency: built.report.humanConsistency,
+          }),
+        );
+        return;
+      }
       const classifiers: DescriptionClassifier[] =
         classifier === "both" ? ["jev", "llm"] : [classifier];
+      const selectedItems = (
+        heldOut ? [...sample.sets.test, ...sample.sets.videos] : sample.sets.dev
+      ).map((entry) => requireDefined(originals.get(entry.itemId), `judged item ${entry.itemId}`));
+      if (heldOut) requireDescriptionPriorRun({ items: selectedItems, classifiers, cache, run });
       const totals = await runDescriptionJudges({
-        items: sample.sets.dev.map((entry) =>
-          requireDefined(originals.get(entry.itemId), `dev item ${entry.itemId}`),
-        ),
+        items: selectedItems,
         classifiers,
         run,
         keys: { jev: process.env.TYPESAFE_API_KEY ?? "", llm: process.env.OPENAI_API_KEY ?? "" },
@@ -263,7 +414,7 @@ async function main(): Promise<void> {
           console.log(`${row.classifier} ${row.itemId}: ${row.result.status}`);
         },
       });
-      console.log(JSON.stringify({ set: "dev", run, ...totals }));
+      console.log(JSON.stringify({ set, run, ...totals }));
       if (totals.errors > 0) process.exitCode = 1;
     } finally {
       await lock.close();
@@ -349,3 +500,5 @@ main().catch((error: unknown) => {
   console.error(error instanceof Error ? error.message : "Description-quality sampling failed");
   process.exitCode = 1;
 });
+
+import { execFileSync } from "node:child_process";

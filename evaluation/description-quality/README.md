@@ -148,8 +148,7 @@ additional human disagreement-review or replacement-probe queue.
 
 ## Judge clients (task 5)
 
-The HTTP clients and resumable runner currently support only dev-set
-execution. The first dev run is now complete and cached:
+The first dev run is complete and cached:
 
 ```bash
 pnpm eval:description-quality run --set dev
@@ -178,9 +177,8 @@ Do not run two judge commands against the same directory. The exclusive
 verify the recorded PID is no longer running before removing that specific
 stale lock. Do not edit or delete cached results to rerun an experiment.
 
-Test/video runs are deliberately unavailable until the frozen configuration
-and guarded test execution are implemented in the next tasks. No test
-judgments should be viewed during dev tuning.
+Test/video runs use the committed frozen configuration and separate run
+numbers described below. Do not use test judgments to revise dev settings.
 
 ## Frozen pilot settings (task 6)
 
@@ -201,5 +199,53 @@ automatically replacement errors.
 without item text. CSV hashes, finalized-label hashes, and source-design
 hashes are in the config. Resuming the cached dev run makes no new model calls.
 The runner refuses protocol or input drift after the config is frozen; do not
-edit frozen artifacts to rerun an experiment. Task 7 will add guarded test
-execution and the held-out pilot report.
+edit frozen artifacts to rerun an experiment.
+
+## Held-out pilot (task 7)
+
+The test command includes the original 150 articles **and** the 8-video census.
+It never requires labels for the remaining 120 articles or the videos.
+
+```bash
+pnpm eval:description-quality run --set test --run 1
+pnpm eval:description-quality run --set test --run 2
+pnpm eval:description-quality report
+```
+
+Only test runs 1 and 2 are allowed by the frozen plan. Run 2 requires completed
+cache records for run 1 for the selected judges and items. Rerunning the same
+command resumes those records rather than making fresh calls. Recorded errors
+are not silently retried by a resume; they remain explicit failures and the
+command exits nonzero. A report can describe completed error records, but it
+refuses missing records instead of treating them as keep decisions.
+
+Before any held-out call, the runner verifies that `config.json` matches the
+version committed at HEAD, the request protocol and model prices match the
+config, and all sample, human CSV, finalized-label, audit/repeat design,
+dev-summary, and dev-response hashes still match. No human labels are sent
+to either model. Do not change the config to obtain another test result.
+
+The report writes `results/report-<config SHA-256>.json`, `.csv`, and `.md`.
+These files contain IDs, not article titles/descriptions. Full-text
+disagreements are in the local gitignored
+`results/disagreements-<config SHA-256>.csv`, with confident Jev errors on
+human-labelled items first. Existing report files are never overwritten.
+
+The JSON report includes weighted/unweighted accuracy **only** on the
+30 human audit items, raw denominators, Wilson intervals for unweighted
+proportions, language/origin breakdowns, H1-accepted-only and AI-origin-excluded
+results, paired comparisons, ordinal/confidence diagnostics, both runs'
+operational measurements, and a hypothetical routing-cost simulation.
+Uncertain and failed model calls keep the original description in policy
+metrics, but error statuses remain visible. Missing judgments are an error.
+Model agreement on unlabelled articles and videos is not ground truth.
+
+The report records HEAD, whether source changes were uncommitted, a runtime
+source-code hash, config/label/snapshot/cache hashes, and resolved model IDs.
+Policy call counts use the full sample's original weights. Poor/good article
+routing estimates multiply that policy's article routing volume by the
+two-stage audit-weighted label mix among routed audit articles. With no routed
+audit examples, quality estimates are insufficient evidence. Unknown video
+outcomes are excluded rather than inferred from article labels. No replacement benefit, production
+readiness, language certification, or low false-replacement rate is established
+by this small pilot.

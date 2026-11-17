@@ -1,6 +1,6 @@
 # 014 — Agent readiness
 
-**Status:** Follow-up verified locally. Release checks pending.
+**Status:** Done. Follow-up verified locally and after release.
 
 The [public guest homepage](008-guest-feed-preview.md) should identify Poimio as a content discovery app and explain how to use it through machine-readable responses. The existing [app access rules](004-deployment-access.md) apply to the personalized feed and saved items.
 
@@ -23,6 +23,6 @@ The canonical hostname is `www.poimio.cc`, the destination of the live apex redi
 ## Release verification
 
 - [x] Recheck the public responses after deployment and rerun the Ora audit once the homepage has been recrawled.
-- [ ] After the follow-up ships, follow redirects from the apex and www hosts and verify the final unknown-URL status, Markdown content type and explanatory body. Verify the scheduled-ingestion endpoint's protection without triggering ingestion.
-- [ ] Fetch the Is Agentic report for the exact Poimio scan target and confirm its timestamp is newer before reporting a score change.
-- [ ] After a fresh crawl, check whether Google sees the declared canonical and associates the homepage with the submitted sitemap. On 9 Nov 2026, Search Console confirmed that the www homepage was indexed and that Google selected it as canonical. The indexed snapshot was crawled on 31 Oct and showed no declared canonical or referring sitemap. For ranking follow-up, track queries and seek relevant editorial backlinks. Ranking is measured separately from metadata verification.
+- [x] After the follow-up ships, follow redirects from the apex and www hosts and verify the final unknown-URL status, Markdown content type and explanatory body. Verify the scheduled-ingestion endpoint's protection without triggering ingestion.
+- [x] Fetch the Is Agentic report for the exact Poimio scan target and confirm its timestamp is newer before reporting a score change. A scan run on 17 Nov 2026 scored 100/100.
+- [x] After a fresh crawl, check whether Google sees the declared canonical and associates the homepage with the submitted sitemap. On 9 Nov 2026, Search Console confirmed that the www homepage was indexed and that Google selected it as canonical. The indexed snapshot was crawled on 31 Oct and showed no declared canonical or referring sitemap. For ranking follow-up, track queries and seek relevant editorial backlinks. Ranking is measured separately from metadata verification.

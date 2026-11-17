@@ -154,3 +154,12 @@ it("ignores thumbnail markup inside CDATA, comments, and embedded content", asyn
     thumbnailWidth: 800,
   });
 });
+
+describe("parseFeed (future dates)", () => {
+  it("clamps future publication dates to the fetch time", async () => {
+    const xml = `<rss version="2.0"><channel><title>T</title><item><title>A</title><link>https://example.com/a</link><pubDate>Mon, 01 Jan 2040 00:00:00 GMT</pubDate></item></channel></rss>`;
+    const fetchTime = new Date("2026-11-17T12:00:00.000Z");
+    const feed = await parseFeed(xml, { fetchTime });
+    expect(feed.items[0]?.publishedAt.toISOString()).toBe(fetchTime.toISOString());
+  });
+});

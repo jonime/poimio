@@ -3,7 +3,7 @@ import {
   descriptionTextHash,
   routeDescriptionJudge,
 } from "./evaluation-description-quality.ts";
-import { parseJsonLines } from "./evaluation-snapshot.ts";
+import { parseJsonLines, sha256 } from "./evaluation-snapshot.ts";
 import { requireDefined } from "./required.ts";
 
 export const DESCRIPTION_RUBRIC_VERSION = "desc-quality-v1";
@@ -57,6 +57,27 @@ export interface JevJudgment {
 export interface LlmJudgment {
   kind: "llm";
   quality: DescriptionQuality;
+}
+
+export interface DescriptionDecisionThresholds {
+  replaceProbability: number;
+  minConfidence: number;
+}
+
+export function descriptionJevDecision(
+  judgment: Pick<JevJudgment, "probabilities" | "confidence">,
+  thresholds: DescriptionDecisionThresholds,
+): "replace" | "uncertain" | "keep" {
+  if (
+    !probability(thresholds.replaceProbability) ||
+    !probability(thresholds.minConfidence) ||
+    !probability(judgment.confidence) ||
+    !probability(judgment.probabilities["0"])
+  ) {
+    throw new Error("Description decisions require probabilities and confidence between 0 and 1");
+  }
+  if (judgment.confidence < thresholds.minConfidence) return "uncertain";
+  return judgment.probabilities["0"] >= thresholds.replaceProbability ? "replace" : "keep";
 }
 
 type JudgeError = "http" | "timeout" | "network" | "invalid_response";
@@ -117,7 +138,7 @@ function validModel(value: unknown): value is string {
 
 export function buildDescriptionJudgeRequest(
   classifier: DescriptionClassifier,
-  item: DescriptionSampleItem,
+  item: Pick<DescriptionSampleItem, "title" | "summary" | "language" | "type">,
 ) {
   const state = {
     title: item.title,
@@ -175,6 +196,44 @@ export function buildDescriptionJudgeRequest(
       },
     },
   };
+}
+
+export function descriptionJudgeProtocolHash(): string {
+  return sha256(
+    JSON.stringify(
+      (["jev", "llm"] as const).flatMap((classifier) =>
+        (["fi", "en"] as const).flatMap((language) =>
+          (["article", "video"] as const).map((type) =>
+            buildDescriptionJudgeRequest(classifier, { title: "", summary: "", language, type }),
+          ),
+        ),
+      ),
+    ),
+  );
+}
+
+export function validateFrozenDescriptionProtocol(config: unknown): void {
+  if (
+    !isRecord(config) ||
+    config.schemaVersion !== 1 ||
+    config.rubricVersion !== DESCRIPTION_RUBRIC_VERSION ||
+    config.requestProtocolHash !== descriptionJudgeProtocolHash() ||
+    !isRecord(config.models) ||
+    !isRecord(config.pricesUsdPerMillionTokens)
+  ) {
+    throw new Error("Frozen description configuration does not match the judge protocol");
+  }
+  for (const classifier of ["jev", "llm"] as const) {
+    const price = config.pricesUsdPerMillionTokens[classifier];
+    if (
+      config.models[classifier] !== DESCRIPTION_JUDGE_MODELS[classifier] ||
+      !isRecord(price) ||
+      price.inputPerMillion !== DESCRIPTION_JUDGE_PRICES[classifier].inputPerMillion ||
+      price.outputPerMillion !== DESCRIPTION_JUDGE_PRICES[classifier].outputPerMillion
+    ) {
+      throw new Error("Frozen description models or prices do not match the judge protocol");
+    }
+  }
 }
 
 function parseJevJudgment(answers: unknown): JevJudgment {

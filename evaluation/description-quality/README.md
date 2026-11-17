@@ -148,8 +148,8 @@ additional human disagreement-review or replacement-probe queue.
 
 ## Judge clients (task 5)
 
-The HTTP clients and resumable runner are implemented. The next task runs
-only the dev set for tuning:
+The HTTP clients and resumable runner currently support only dev-set
+execution. The first dev run is now complete and cached:
 
 ```bash
 pnpm eval:description-quality run --set dev
@@ -181,3 +181,25 @@ stale lock. Do not edit or delete cached results to rerun an experiment.
 Test/video runs are deliberately unavailable until the frozen configuration
 and guarded test execution are implemented in the next tasks. No test
 judgments should be viewed during dev tuning.
+
+## Frozen pilot settings (task 6)
+
+`config.json` is frozen before test runs. The approved settings require Jev
+`p0 >= 0.80` **and** confidence `>= 0.50` to replace a description. Lower
+confidence means uncertain/keep; the word-count rule remains disabled.
+The rubric is unchanged. With only one human-`unusable` dev item, these are
+conservative defaults, not reliably optimized thresholds.
+
+Dev results are preserved in `results/dev-run-1.json` (IDs only). The local
+`results/disagreements-dev.csv` shows human/model disagreements with item text.
+Do not change human labels to match the models. The existing placeholder
+disagreement is retained: deterministic routing rejects it, but the human
+label is `weak`. Other differences include good/weak judgments; these are not
+automatically replacement errors.
+
+`labels.jsonl` and `labels-repeat.jsonl` preserve finalized human labels
+without item text. CSV hashes, finalized-label hashes, and source-design
+hashes are in the config. Resuming the cached dev run makes no new model calls.
+The runner refuses protocol or input drift after the config is frozen; do not
+edit frozen artifacts to rerun an experiment. Task 7 will add guarded test
+execution and the held-out pilot report.

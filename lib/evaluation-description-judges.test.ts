@@ -6,10 +6,15 @@ import {
   buildDescriptionJudgeRequest,
   callDescriptionJudge,
   DESCRIPTION_JUDGE_MODELS,
+  DESCRIPTION_JUDGE_PRICES,
+  DESCRIPTION_RUBRIC_VERSION,
   type DescriptionJudgeCacheRow,
+  descriptionJevDecision,
+  descriptionJudgeProtocolHash,
   parseDescriptionJudgeCache,
   parseDescriptionJudgeResponse,
   runDescriptionJudges,
+  validateFrozenDescriptionProtocol,
 } from "./evaluation-description-judges.ts";
 import {
   createDescriptionSample,
@@ -29,6 +34,74 @@ const item: DescriptionSampleItem = {
   type: "article",
   url: "https://example.com/story",
 };
+
+describe("conservative description decisions", () => {
+  const thresholds = { replaceProbability: 0.8, minConfidence: 0.5 };
+  it("uses inclusive replacement and confidence thresholds and fails open on low confidence", () => {
+    const judgment = (p0: number, confidence: number) => ({
+      probabilities: { "0": p0, "1": 1 - p0, "2": 0 },
+      confidence,
+    });
+    expect(descriptionJevDecision(judgment(0.8, 0.5), thresholds)).toBe("replace");
+    expect(descriptionJevDecision(judgment(0.799, 1), thresholds)).toBe("keep");
+    expect(descriptionJevDecision(judgment(1, 0.499), thresholds)).toBe("uncertain");
+    expect(descriptionJevDecision(judgment(0, 0.499), thresholds)).toBe("uncertain");
+    expect(descriptionJevDecision(judgment(0, 0.5), thresholds)).toBe("keep");
+  });
+
+  describe("frozen description protocol", () => {
+    it("accepts the frozen request contract and rejects prompt, model, version, or price drift", () => {
+      const config = {
+        schemaVersion: 1,
+        rubricVersion: DESCRIPTION_RUBRIC_VERSION,
+        requestProtocolHash: descriptionJudgeProtocolHash(),
+        models: DESCRIPTION_JUDGE_MODELS,
+        pricesUsdPerMillionTokens: DESCRIPTION_JUDGE_PRICES,
+      };
+      expect(() => validateFrozenDescriptionProtocol(config)).not.toThrow();
+      for (const changed of [
+        null,
+        {},
+        { ...config, requestProtocolHash: sha256("changed prompt") },
+        { ...config, rubricVersion: "changed-rubric" },
+        { ...config, models: { ...config.models, jev: "jev-latest" } },
+        {
+          ...config,
+          pricesUsdPerMillionTokens: {
+            ...config.pricesUsdPerMillionTokens,
+            llm: { inputPerMillion: 1, outputPerMillion: 1 },
+          },
+        },
+      ]) {
+        expect(() => validateFrozenDescriptionProtocol(changed)).toThrow(/Frozen description/u);
+      }
+    });
+  });
+
+  it("rejects invalid decision inputs rather than returning a keep verdict", () => {
+    const judgment = { probabilities: { "0": 0.8, "1": 0.2, "2": 0 }, confidence: 0.5 };
+    for (const invalid of [-1, 1.1, Number.NaN]) {
+      expect(() =>
+        descriptionJevDecision(judgment, { ...thresholds, replaceProbability: invalid }),
+      ).toThrow();
+      expect(() =>
+        descriptionJevDecision(judgment, { ...thresholds, minConfidence: invalid }),
+      ).toThrow();
+      expect(() =>
+        descriptionJevDecision({ ...judgment, confidence: invalid }, thresholds),
+      ).toThrow();
+      expect(() =>
+        descriptionJevDecision(
+          {
+            ...judgment,
+            probabilities: { ...judgment.probabilities, "0": invalid },
+          },
+          thresholds,
+        ),
+      ).toThrow();
+    }
+  });
+});
 
 function jevResponse() {
   return {
@@ -567,6 +640,19 @@ describe("description judge command", () => {
           (row) => row.model === DESCRIPTION_JUDGE_MODELS[row.classifier],
         ),
       ).toBe(true);
+      writeFileSync(
+        resolve(output, "config.json"),
+        JSON.stringify({
+          schemaVersion: 1,
+          rubricVersion: DESCRIPTION_RUBRIC_VERSION,
+          requestProtocolHash: descriptionJudgeProtocolHash(),
+          models: DESCRIPTION_JUDGE_MODELS,
+          pricesUsdPerMillionTokens: DESCRIPTION_JUDGE_PRICES,
+          sampleHash: sha256(JSON.stringify(sample)),
+          snapshotManifestHash: sha256(manifestText),
+          labelCsvHashes: { dev: sha256(labels) },
+        }),
+      );
       const resumed = run('globalThis.fetch = () => { throw new Error("Unexpected call"); };');
       expect(resumed.status, resumed.stderr).toBe(0);
       expect(resumed.stdout).toContain('"cached":60');
@@ -575,8 +661,10 @@ describe("description judge command", () => {
       expect(run().status).toBe(1);
       rmSync(resolve(output, ".judge-cache.lock"));
       writeFileSync(resolve(output, "labels-dev.csv"), labels.replace('"good"', '""'));
-      expect(run().stderr).toContain("Dev labels are incomplete");
+      expect(run().stderr).toContain("Frozen description input or dev-label hash mismatch");
       expect(readFileSync(resolve(output, "judge-cache.jsonl"), "utf8")).toBe(cache);
+      rmSync(resolve(output, "config.json"));
+      expect(run().stderr).toContain("Dev labels are incomplete");
       writeFileSync(resolve(output, "labels-dev.csv"), labels);
       const frozen = readFileSync(resolve(output, "items.jsonl"), "utf8");
       writeFileSync(

@@ -240,7 +240,7 @@ Task 2 implementation normalizes text with Unicode NFC, trimming, whitespace col
   - `items.jsonl`: a copy of the sampled items' fields needed by the experiment, so later snapshot exports or production fixes cannot change the inputs.
   - `labels-dev.csv`, `labels-audit.csv`, `labels-repeat.csv`: the required pilot human labels. Preserve the original `labels-test.csv` and `labels-videos.csv`; their remaining blank rows need not be labelled.
   - `audit.json` (committed): selected audit item IDs, original sample hash, source-label CSV hash, retained flags, and second-stage inclusion probabilities and weights; no text or human answers.
-  - `config.json` (committed, frozen before the test run): rubric version, pinned models, thresholds, and H1 word limit.
+  - `config.json` (committed, frozen before the test run): rubric version and request-protocol hash, pinned models/prices, thresholds, H1 word limit, and input/label hashes.
   - `judge-cache.jsonl`: one row per Jev or LLM judge call, keyed by `[classifier, itemId, textHash, model, rubricVersion, run]`. Runs are resumable.
   - `results/report-<config hash>.{json,csv,md}`.
 - Commit `sample.json`, `config.json`, finalized labels as `labels.jsonl` (item ID, label, and reason only), the response-only judge cache, and reports that refer to items by ID. Keep `items.jsonl`, the blind labeling CSVs, and full-text disagreement tables local and gitignored. Keep the exact snapshot files locally for reproduction; the committed hashes alone do not preserve the feed text.
@@ -309,7 +309,7 @@ carry the limitation into the report rather than treating raw agreement as a
 pass or requesting more labels. Original audit labels remain unchanged.
 Hashes and descriptive results are recorded in
 [`repeat-consistency.json`](../../evaluation/description-quality/repeat-consistency.json).
-Task 5 (judge clients) is next; no model judgments have been run.
+No model judgments had been run at task 4 completion; task 6 records the later dev-only run.
 
 ### 5.4 Avoiding biased or misleading conclusions
 
@@ -325,10 +325,54 @@ Task 5 (judge clients) is next; no model judgments have been run.
 
 ## 6. Metrics and success criteria
 
+### Dev-only settings freeze (task 6, 17 Nov 2026)
+
+The dev run used commit `70399eb` and completed 29 HTTP calls per model plus
+one deterministic placeholder route per classifier, with no request errors or
+retries. Resolved models matched the pinned IDs. The 30 dev labels contain
+23 `good`, 6 `weak`, and only 1 `unusable` item; 23 items are English and
+7 Finnish. There is no Finnish unusable dev item. This is too little positive
+evidence for reliable threshold optimization.
+
+The user approved conservative defaults, not a fitted optimum:
+`replaceProbability = 0.80`, `minConfidence = 0.50`, and H1 word count disabled.
+Rubric and L prompt remain `desc-quality-v1`. Check confidence **before** the
+replacement threshold: low confidence always means uncertain/keep, including
+when `p0` exceeds the replacement threshold. Empty/placeholder routing remains
+deterministic and precedes model decisions.
+
+Both standalone model paths replace 2 dev items: the sole human-`unusable`
+item and a deterministic placeholder labelled `weak` by the human. Counting
+that routing disagreement, primary precision is 1/2 and recall 1/1; neither
+path replaces a human-`good` dev item (0/23). H1 replaces 4 items, of which
+1 is human-`unusable` and 3 human-`weak`. Jev marks 4 items uncertain at the
+chosen confidence threshold. Exact three-level agreement is 23/30 for Jev's
+nearest integer score and 24/30 for L, including deterministic routes.
+Nearest-level rounding is descriptive only, not a replacement decision rule.
+Human labels were not changed to agree with either model.
+
+Jev's dev p50/p95 first-attempt latency was 178/247 ms, with estimated cost
+$0.00074739. L's was 971/4140 ms, with estimated cost $0.00098180. These are
+small-sample dev observations, not held-out operational or accuracy results.
+Do not treat the one-positive recall, zero observed good-item replacements,
+or AI agreement as production evidence.
+
+[`config.json`](../../evaluation/description-quality/config.json) freezes
+models, prices, request-protocol hash (both languages and content types),
+thresholds, input hashes, human-label CSV hashes, finalized-label hashes, and
+dev result/cache hashes before test execution. Finalized human labels are
+stored without text in `labels.jsonl` (dev + audit) and `labels-repeat.jsonl`
+(separate repeated annotations). The response-only cache and
+[`results/dev-run-1.json`](../../evaluation/description-quality/results/dev-run-1.json)
+preserve the dev observations. A full-text disagreement CSV with 10 rows stays
+local at `results/disagreements-dev.csv`. The runner rejects protocol,
+model/price, snapshot/sample, or dev-label drift when a frozen config exists.
+Test calls remain blocked pending task 7.
+
 ### 6.1 Decisions
 
 - Jev's `p0` = `probabilities["0"]` of `usefulness`.
-- **Replace** if `p0 ≥ τ`; **uncertain** if `confidence < c_min`; otherwise **keep**.
+- **Uncertain** if `confidence < c_min`; otherwise **replace** if `p0 ≥ τ`; otherwise **keep**. Confidence takes precedence; empty/placeholder routing happens before model evaluation.
 - `τ` and `c_min` are chosen on the dev set. `uncertain` counts as keep in the binary metrics (fail-open to current behaviour), and coverage is reported.
 
 ### 6.2 Metrics (test set)
@@ -409,7 +453,7 @@ Cost alone does not decide. At about 1,000 input tokens per item, Jev costs abou
 - [x] 3. Implement stratified sampling and blind CSV export. Export `seededShuffle` from `lib/evaluation-agreement.ts` instead of copying it. Add unit tests (criteria 2 and 5).
 - [x] 4. Set up the labelling tool and reduced audit. Preserve the completed 30 dev labels and 8 test labels; finish only 22 additional test labels in `labels-audit.csv`. Prepare and complete 10 delayed repeat labels (descriptive S0). No video labelling is required.
 - [x] 5. Implement the Jev and LLM judge HTTP clients, cache, and `run` subcommand. Add unit tests with an injected `fetch` (criterion 3).
-- [ ] 6. Run on the dev set only. Adjust rubric wording, the L prompt, `τ`, `c_min`, and _w_. Commit the frozen `config.json` (criterion 6).
+- [x] 6. Run on the dev set only. Adjust rubric wording, the L prompt, `τ`, `c_min`, and _w_. Commit the frozen `config.json` (criterion 6).
 - [ ] 7. Run once on the test set, plus the stability rerun. Implement metrics and the report, with unit tests (criteria 4 and 7). Check criterion 8.
 - [ ] 8. **Deferred by the approved reduced-effort pilot:** replacement probe (`probe` subcommand) for at most 30 test items labelled `unusable`, without database writes:
   - fetch the page with `fetchPageHtml` and run `extractPageContent`;

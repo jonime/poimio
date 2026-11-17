@@ -1,0 +1,67 @@
+{
+  "schemaVersion": 1,
+  "experiment": "description-quality-reduced-pilot",
+  "frozenAt": "2026-11-17T15:36:17.613Z",
+  "rubricVersion": "desc-quality-v1",
+  "requestProtocolHash": "5eb29920e9477a7df142b9bfe3955da369ad3277e6ce833b88c86cb3a13c356a",
+  "models": {
+    "jev": "jev-1.14.0",
+    "llm": "gpt-6-luna"
+  },
+  "pricesUsdPerMillionTokens": {
+    "jev": {
+      "inputPerMillion": 0.042,
+      "outputPerMillion": 0
+    },
+    "llm": {
+      "inputPerMillion": 0.1,
+      "outputPerMillion": 0.5
+    }
+  },
+  "thresholds": {
+    "replaceProbability": 0.8,
+    "minConfidence": 0.5
+  },
+  "decisionOrder": [
+    "deterministic_empty_or_placeholder",
+    "uncertain_if_confidence_below_minimum",
+    "replace_if_p0_at_least_threshold",
+    "keep"
+  ],
+  "uncertainBinaryDecision": "keep",
+  "h1MinWords": null,
+  "llmReplaceLabel": "unusable",
+  "devRun": 1,
+  "plannedTestRuns": [
+    1,
+    2
+  ],
+  "sampleHash": "173cd12c0cf4d11fa631ca519facd3e2bb7ad988d98f6f637b3541b395d94f96",
+  "snapshotManifestHash": "6a8057e2a2278c945d167a21e3cff344a45bfecc5a5d259cb944ab400bd4b314",
+  "auditDesignHash": "b443a615f58d58502feb513a7fa5f0ae6f2fb14a820e4c393f6881b6526b919a",
+  "repeatDesignHash": "caffd782aadbd0c81614b3f1efe15e865ad8fae55bdd8fcb4249f8b5cc8e008e",
+  "labelCsvHashes": {
+    "dev": "5a4aa6922d65e264693363dd81f00236b1d4502a661a2bdd50d475be5b15df11",
+    "audit": "2008148f8fdeb325bbe2b215ced95dce6e88f3c06411513ac070b8ad6d7aee64",
+    "repeat": "fbe75f262f490cfe1e92178d28ba1e47a67420234904a9d8737dc2e53280faa7"
+  },
+  "finalizedLabelsHash": "ef2ac268a771386b32fc6ee5e7c853f45e1cf6c874e6550a26075fc35a507467",
+  "finalizedRepeatLabelsHash": "254344c4e64157b6b28ba43e2aebbd1fe735f7d33634770b94012949858bca77",
+  "devCacheHashAtFreeze": "84a392203d336470e8e1279c774ba9314a188718d053cbad53440eeb00a15c2f",
+  "devSummaryHash": "faa75a266bd4a769313b6b9c1d725f4d04c056b48d098783459fb832b11f48f3",
+  "implementationCommitAtDevRun": "70399eb648ca6b0063853cefd175e292b00cf531",
+  "policyProjection": {
+    "monthlyItems": 5400,
+    "summaryInputTokens": 6000,
+    "summaryOutputTokens": 200
+  },
+  "tuning": {
+    "approach": "User-approved conservative settings; no parameter search",
+    "rubricChanged": false,
+    "unusableDevItems": 1,
+    "explanation": "One positive cannot support reliable threshold optimization. Leave the word rule disabled and retain the original rubric."
+  },
+  "humanWorkComplete": true,
+  "replacementProbe": "deferred",
+  "productionReadiness": "not_assessed"
+}

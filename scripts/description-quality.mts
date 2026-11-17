@@ -5,6 +5,7 @@ import {
   type DescriptionClassifier,
   parseDescriptionJudgeCache,
   runDescriptionJudges,
+  validateFrozenDescriptionProtocol,
 } from "../lib/evaluation-description-judges.ts";
 import {
   createDescriptionAudit,
@@ -162,6 +163,31 @@ async function main(): Promise<void> {
       readFile(resolve(output, "labels-dev.csv"), "utf8"),
     ]);
     const sample: DescriptionSample = JSON.parse(sampleText);
+    let configText: string | null = null;
+    try {
+      configText = await readFile(resolve(output, "config.json"), "utf8");
+    } catch (error) {
+      if (!(error instanceof Error && "code" in error && error.code === "ENOENT")) throw error;
+    }
+    if (configText !== null) {
+      const config: unknown = JSON.parse(configText);
+      validateFrozenDescriptionProtocol(config);
+      if (
+        config === null ||
+        typeof config !== "object" ||
+        !("sampleHash" in config) ||
+        config.sampleHash !== sha256(sampleText) ||
+        !("snapshotManifestHash" in config) ||
+        config.snapshotManifestHash !== inputs.snapshotManifestHash ||
+        !("labelCsvHashes" in config) ||
+        config.labelCsvHashes === null ||
+        typeof config.labelCsvHashes !== "object" ||
+        !("dev" in config.labelCsvHashes) ||
+        config.labelCsvHashes.dev !== sha256(labelsText)
+      ) {
+        throw new Error("Frozen description input or dev-label hash mismatch");
+      }
+    }
     validateDescriptionSample(
       sample,
       inputs.snapshotManifestHash,

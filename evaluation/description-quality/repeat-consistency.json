@@ -1,0 +1,14 @@
+{
+  "schemaVersion": 1,
+  "completedAt": "2026-11-17T17:13:46.560+02:00",
+  "auditLabelsHash": "2008148f8fdeb325bbe2b215ced95dce6e88f3c06411513ac070b8ad6d7aee64",
+  "repeatLabelsHash": "fbe75f262f490cfe1e92178d28ba1e47a67420234904a9d8737dc2e53280faa7",
+  "items": 10,
+  "binaryAgreement": 0.9,
+  "ordinalAgreement": 0.8,
+  "reasonAgreement": 0.7,
+  "binaryCohenKappa": 0,
+  "originalUnusable": 0,
+  "repeatUnusable": 1,
+  "interpretation": "Descriptive only. Nine of ten replacement decisions agree. The original repeat subset contains no unusable labels; the repeat contains one, so expected agreement equals observed agreement and kappa is zero. This does not certify reliable labels or production readiness. No additional human labels are required by the reduced pilot."
+}

@@ -1,0 +1,1590 @@
+{
+  "schemaVersion": 1,
+  "snapshotManifestHash": "6a8057e2a2278c945d167a21e3cff344a45bfecc5a5d259cb944ab400bd4b314",
+  "seed": 9112026,
+  "minWords": null,
+  "strata": [
+    {
+      "key": "en:ai_generated:not_flagged",
+      "populationSize": 122,
+      "devSize": 1,
+      "testPopulationSize": 121,
+      "testSize": 11
+    },
+    {
+      "key": "en:feed:flagged",
+      "populationSize": 6,
+      "devSize": 0,
+      "testPopulationSize": 6,
+      "testSize": 6
+    },
+    {
+      "key": "en:feed:not_flagged",
+      "populationSize": 1226,
+      "devSize": 8,
+      "testPopulationSize": 1218,
+      "testSize": 41
+    },
+    {
+      "key": "en:page_metadata:flagged",
+      "populationSize": 12,
+      "devSize": 4,
+      "testPopulationSize": 8,
+      "testSize": 8
+    },
+    {
+      "key": "en:page_metadata:not_flagged",
+      "populationSize": 744,
+      "devSize": 10,
+      "testPopulationSize": 734,
+      "testSize": 28
+    },
+    {
+      "key": "fi:ai_generated:not_flagged",
+      "populationSize": 120,
+      "devSize": 1,
+      "testPopulationSize": 119,
+      "testSize": 11
+    },
+    {
+      "key": "fi:feed:not_flagged",
+      "populationSize": 1036,
+      "devSize": 6,
+      "testPopulationSize": 1030,
+      "testSize": 36
+    },
+    {
+      "key": "fi:page_metadata:flagged",
+      "populationSize": 3,
+      "devSize": 0,
+      "testPopulationSize": 3,
+      "testSize": 3
+    },
+    {
+      "key": "fi:page_metadata:not_flagged",
+      "populationSize": 6,
+      "devSize": 0,
+      "testPopulationSize": 6,
+      "testSize": 6
+    },
+    {
+      "key": "video:census",
+      "populationSize": 8,
+      "devSize": 0,
+      "testPopulationSize": 8,
+      "testSize": 8
+    }
+  ],
+  "sets": {
+    "dev": [
+      {
+        "itemId": "8e4fd804-ac9c-45bf-9e1c-0108e532b5c5",
+        "blindId": "dev-001",
+        "textHash": "f07936cd83d613c1e871c94933c658250144e417992e71a964915cbe8741cba7",
+        "stratumKey": "en:page_metadata:flagged",
+        "inclusionProbability": null,
+        "weight": null
+      },
+      {
+        "itemId": "5e76d6be-4bf3-4a00-8eb0-60e3e3aa3e4c",
+        "blindId": "dev-002",
+        "textHash": "19aca05b6b0537848974f17b32869513134678cd18b9523dd72b2de8e557ae3a",
+        "stratumKey": "en:ai_generated:not_flagged",
+        "inclusionProbability": null,
+        "weight": null
+      },
+      {
+        "itemId": "fc72d338-c514-44ac-ae35-b5282612132d",
+        "blindId": "dev-003",
+        "textHash": "0ced0075579ccd27883755e89cb81fd802a71e50c14d8e97fc6db57ef505c031",
+        "stratumKey": "en:feed:not_flagged",
+        "inclusionProbability": null,
+        "weight": null
+      },
+      {
+        "itemId": "fcf8ece3-a8b2-4e1e-ad50-427366ee49a4",
+        "blindId": "dev-004",
+        "textHash": "f17c73378886adef08600529686f536294010f03ddf4158e04b2e0ffa0415e16",
+        "stratumKey": "en:page_metadata:not_flagged",
+        "inclusionProbability": null,
+        "weight": null
+      },
+      {
+        "itemId": "2c1c42f7-e899-403d-bdcc-9447a9d762d0",
+        "blindId": "dev-005",
+        "textHash": "87486eaeef293c80d6eb63c10599bc22e3ad08e38e878b0d846d6d71eb438692",
+        "stratumKey": "en:page_metadata:not_flagged",
+        "inclusionProbability": null,
+        "weight": null
+      },
+      {
+        "itemId": "542f10af-a93b-4685-9523-2ebc76076bda",
+        "blindId": "dev-006",
+        "textHash": "c578ece6aea9d9b5bdacb3c682a90f0dd0546e64720045759f6a8fd69ef0faaf",
+        "stratumKey": "en:page_metadata:not_flagged",
+        "inclusionProbability": null,
+        "weight": null
+      },
+      {
+        "itemId": "f63d7b70-9511-4050-bc9c-200f51a3414b",
+        "blindId": "dev-007",
+        "textHash": "e615c20d6cf8273b4b7249eb037dd27688b30bdd81a3bbc99f3efe26ff018223",
+        "stratumKey": "en:page_metadata:not_flagged",
+        "inclusionProbability": null,
+        "weight": null
+      },
+      {
+        "itemId": "a4f9ee92-da5c-46c3-8112-62990161d78a",
+        "blindId": "dev-008",
+        "textHash": "1fcbe449af324c4db95e55917017a4c7f8facdeb5797d00dd7d2dd480a28b01c",
+        "stratumKey": "fi:feed:not_flagged",
+        "inclusionProbability": null,
+        "weight": null
+      },
+      {
+        "itemId": "7ca1877f-6b53-45a9-94b7-944c6dc15477",
+        "blindId": "dev-009",
+        "textHash": "5d1996be296814009ddebfbce4c84a227df0b7e6cac4510bb28adbbce943b16f",
+        "stratumKey": "fi:feed:not_flagged",
+        "inclusionProbability": null,
+        "weight": null
+      },
+      {
+        "itemId": "9dd4c522-d46b-43bb-aaa3-429166efb5a7",
+        "blindId": "dev-010",
+        "textHash": "3bc1af75e3eb99c51a2d91f2384a1d7d51a0bfd9aee331fcd95473cd8c2e766a",
+        "stratumKey": "en:page_metadata:not_flagged",
+        "inclusionProbability": null,
+        "weight": null
+      },
+      {
+        "itemId": "d6fde539-97f3-4bca-abf5-218d5cda6a9e",
+        "blindId": "dev-011",
+        "textHash": "ba7245b351021398f3f3c45bcce40d9981178686b5572cd33fc2ced7d4742884",
+        "stratumKey": "en:page_metadata:flagged",
+        "inclusionProbability": null,
+        "weight": null
+      },
+      {
+        "itemId": "753038d5-1398-4eab-8011-9562edf2a650",
+        "blindId": "dev-012",
+        "textHash": "dfa572e671e18062d9db12977a82b1bf0f09dd3d7fe1c07c7eff981d78cd00ae",
+        "stratumKey": "en:feed:not_flagged",
+        "inclusionProbability": null,
+        "weight": null
+      },
+      {
+        "itemId": "7ffa653a-80dd-4f48-a02e-3fba252d9a5f",
+        "blindId": "dev-013",
+        "textHash": "8c2992a83e7876a6c0d65689caf7e710e748b02966253e542fd16a2d237b3b46",
+        "stratumKey": "en:page_metadata:not_flagged",
+        "inclusionProbability": null,
+        "weight": null
+      },
+      {
+        "itemId": "cf9bd217-ae08-4cc3-84d4-0cd59e6fb0a3",
+        "blindId": "dev-014",
+        "textHash": "edcc1b408220de245011db4c5a5a1b32daaec46af7b001c0a23cdc59c80feff6",
+        "stratumKey": "en:page_metadata:flagged",
+        "inclusionProbability": null,
+        "weight": null
+      },
+      {
+        "itemId": "dd1df5d3-3361-416a-9b3f-88518312ba2b",
+        "blindId": "dev-015",
+        "textHash": "8f5ba22df1c108d2ec5de1a50ada43e5930c497183f55d8a3659c3cad161283d",
+        "stratumKey": "en:feed:not_flagged",
+        "inclusionProbability": null,
+        "weight": null
+      },
+      {
+        "itemId": "7bf7896b-1962-4b53-9097-2483d003ebdb",
+        "blindId": "dev-016",
+        "textHash": "31961f6746bf5e887823f4eb2832c0dd8fe93badb2471b75de6866fa1acd7ba8",
+        "stratumKey": "en:feed:not_flagged",
+        "inclusionProbability": null,
+        "weight": null
+      },
+      {
+        "itemId": "d1984c8a-1bf7-4214-b7ee-ccdadb0b3384",
+        "blindId": "dev-017",
+        "textHash": "b63a4e25c406d3d98961c0b4d951c3cd9f4574a984c5dc85f51f9f9e9a5b317d",
+        "stratumKey": "fi:ai_generated:not_flagged",
+        "inclusionProbability": null,
+        "weight": null
+      },
+      {
+        "itemId": "99e0909a-9153-4c76-9457-ff8388a5b7aa",
+        "blindId": "dev-018",
+        "textHash": "c74806caad5bf0c8a328c14c5d4e4ddd9dfaae1590fbae82cec5ebcb7a6d6be0",
+        "stratumKey": "en:feed:not_flagged",
+        "inclusionProbability": null,
+        "weight": null
+      },
+      {
+        "itemId": "0679c669-e672-43e5-81f1-e2bf9a009abc",
+        "blindId": "dev-019",
+        "textHash": "6f64ceac6cecd073a60047c20b484d62a8ebc5eb0cca948349c07371f2135ea6",
+        "stratumKey": "en:page_metadata:not_flagged",
+        "inclusionProbability": null,
+        "weight": null
+      },
+      {
+        "itemId": "305fb091-f01e-470d-a6b3-caad0a15838c",
+        "blindId": "dev-020",
+        "textHash": "87f11a2177daf95ff68b7d9ce11a762001384faa1415f9107f42ec96d53791e6",
+        "stratumKey": "fi:feed:not_flagged",
+        "inclusionProbability": null,
+        "weight": null
+      },
+      {
+        "itemId": "6636c386-0948-434e-8dbc-7501b74135fc",
+        "blindId": "dev-021",
+        "textHash": "b4c336644f3e923c3908c2681f5e54d5215554fc01674bc85d34ab21aa87dfe3",
+        "stratumKey": "en:page_metadata:flagged",
+        "inclusionProbability": null,
+        "weight": null
+      },
+      {
+        "itemId": "494f3690-37c8-45ac-9ff9-1e72ce92736b",
+        "blindId": "dev-022",
+        "textHash": "7cd116b96fec7ba7765e4a0b8657ae694dca7213b695e6629453ca6e5269037a",
+        "stratumKey": "fi:feed:not_flagged",
+        "inclusionProbability": null,
+        "weight": null
+      },
+      {
+        "itemId": "ff13f940-c9b8-4597-9976-7a83af573aec",
+        "blindId": "dev-023",
+        "textHash": "0a148556a587dc3cef652b0a477e7c536bc9219a39d311692bf49723f76b0618",
+        "stratumKey": "en:feed:not_flagged",
+        "inclusionProbability": null,
+        "weight": null
+      },
+      {
+        "itemId": "2eaae1e2-595d-486e-b21a-b08e028e04a8",
+        "blindId": "dev-024",
+        "textHash": "9ad3864a13755390ca135cab64bdd27fa0fd12579947c996245e1d087589945b",
+        "stratumKey": "en:page_metadata:not_flagged",
+        "inclusionProbability": null,
+        "weight": null
+      },
+      {
+        "itemId": "b39a4e32-908c-4b6a-b3c8-9ea97f1f00cf",
+        "blindId": "dev-025",
+        "textHash": "64865d94f813246c9337239a5ce8e7b74448ebd0cdf4b685ebb0c8e3260439ca",
+        "stratumKey": "en:feed:not_flagged",
+        "inclusionProbability": null,
+        "weight": null
+      },
+      {
+        "itemId": "9368a5bb-ed43-4121-92e0-b6a85ff6c846",
+        "blindId": "dev-026",
+        "textHash": "b9a7acb43d2b64edb423ffc68cad31a79ece46e13d9ffe6a6680b216457a6d0d",
+        "stratumKey": "en:page_metadata:not_flagged",
+        "inclusionProbability": null,
+        "weight": null
+      },
+      {
+        "itemId": "da47b912-b1fd-4190-986c-290a7a3dc6b4",
+        "blindId": "dev-027",
+        "textHash": "560bbac2c363973cf4af2e420b9a52059bf08b41fd19693e1994a05bd7f69896",
+        "stratumKey": "fi:feed:not_flagged",
+        "inclusionProbability": null,
+        "weight": null
+      },
+      {
+        "itemId": "94bb557f-4820-439e-a6b0-08c5c4ad8e6e",
+        "blindId": "dev-028",
+        "textHash": "012ee9b1a99683791ee442c2cb2711ec2af0d84bcdacfc70ac9838df7954c49e",
+        "stratumKey": "fi:feed:not_flagged",
+        "inclusionProbability": null,
+        "weight": null
+      },
+      {
+        "itemId": "b09fb102-0c5a-40c4-a414-c697712cd6a2",
+        "blindId": "dev-029",
+        "textHash": "e8ecb70c17991f58c2aef65f33ce7f9e445653e7be5abe4d3bebdadb3c0c9247",
+        "stratumKey": "en:page_metadata:not_flagged",
+        "inclusionProbability": null,
+        "weight": null
+      },
+      {
+        "itemId": "aacaa5f9-4ccc-4e97-b5ad-b294bbdda9b5",
+        "blindId": "dev-030",
+        "textHash": "c73377859533cedc0fb5bcddb6f580e97e2cdc30ee02a3ccc0bad1aab184d594",
+        "stratumKey": "en:feed:not_flagged",
+        "inclusionProbability": null,
+        "weight": null
+      }
+    ],
+    "test": [
+      {
+        "itemId": "6be0dd17-741e-4aaf-b84d-15c913e3c2eb",
+        "blindId": "test-001",
+        "textHash": "1831d12096baefd2bc14567a2cd46c68c055bf361c97a0b7c1e28e35cf1a64d2",
+        "stratumKey": "en:feed:not_flagged",
+        "inclusionProbability": 0.033442088091353996,
+        "weight": 29.902439024390244
+      },
+      {
+        "itemId": "ae5dede7-f0f0-4ae3-9288-8a49d3f27531",
+        "blindId": "test-002",
+        "textHash": "1e5cd1d002d7307f525be14c80b8c6e8f1ad193cc4f79ac7dbc840e6b8400507",
+        "stratumKey": "en:feed:not_flagged",
+        "inclusionProbability": 0.033442088091353996,
+        "weight": 29.902439024390244
+      },
+      {
+        "itemId": "5b1cecc9-8726-4c50-97f1-599b63514a22",
+        "blindId": "test-003",
+        "textHash": "8264c0218f4a2332ea12af1388e352e54de66b6fe63cb95895154bd2c5a8a830",
+        "stratumKey": "fi:feed:not_flagged",
+        "inclusionProbability": 0.03474903474903475,
+        "weight": 28.77777777777778
+      },
+      {
+        "itemId": "d28e8ee8-da17-4235-8bd9-941018b77b0b",
+        "blindId": "test-004",
+        "textHash": "c670bddcd887c22c15ad49669c631c57d2ef81061a1aaa10a0aa2e8ed445f1a3",
+        "stratumKey": "en:feed:not_flagged",
+        "inclusionProbability": 0.033442088091353996,
+        "weight": 29.902439024390244
+      },
+      {
+        "itemId": "b3a2e485-5a0f-4564-9e84-26753b388765",
+        "blindId": "test-005",
+        "textHash": "7137d82dbf4e37b9cfa0317272ae1b169c6e746edad14e9306612a29ac2be70c",
+        "stratumKey": "fi:ai_generated:not_flagged",
+        "inclusionProbability": 0.09166666666666666,
+        "weight": 10.909090909090908
+      },
+      {
+        "itemId": "a55e6efc-28bc-4dfa-a4e9-3cbeefa28f51",
+        "blindId": "test-006",
+        "textHash": "b2880c48fd7eabfb49031e7a975747aba4ed9a2f332d2d7dc7bf1c08ce7d393b",
+        "stratumKey": "en:page_metadata:not_flagged",
+        "inclusionProbability": 0.03763440860215054,
+        "weight": 26.571428571428573
+      },
+      {
+        "itemId": "0cf5442a-a708-44e1-8516-5e18193e99a4",
+        "blindId": "test-007",
+        "textHash": "f27b88bebadb3870edb3a47a3dc02f07c327d66e13d0d790ce9fc926a0938d05",
+        "stratumKey": "fi:feed:not_flagged",
+        "inclusionProbability": 0.03474903474903475,
+        "weight": 28.77777777777778
+      },
+      {
+        "itemId": "36f2f282-a1b5-4e1d-ae6b-f507c53daf55",
+        "blindId": "test-008",
+        "textHash": "476baabe93df6e4b3187d4c750a13ba79ac5e0b37bad5d33a4f3e2f63ca55736",
+        "stratumKey": "fi:feed:not_flagged",
+        "inclusionProbability": 0.03474903474903475,
+        "weight": 28.77777777777778
+      },
+      {
+        "itemId": "87c0e968-14dd-484e-a006-92471f49e134",
+        "blindId": "test-009",
+        "textHash": "f365128f04e84d041a640141c6a4532e108a743bbf53595b43016592c71eae6b",
+        "stratumKey": "fi:feed:not_flagged",
+        "inclusionProbability": 0.03474903474903475,
+        "weight": 28.77777777777778
+      },
+      {
+        "itemId": "a879ef56-c06d-43f8-95d0-5b70a8d1feb9",
+        "blindId": "test-010",
+        "textHash": "cd1d2920a75a4145759d2d5de38b88787ab26cfbe31483495eb69fb55475f039",
+        "stratumKey": "fi:feed:not_flagged",
+        "inclusionProbability": 0.03474903474903475,
+        "weight": 28.77777777777778
+      },
+      {
+        "itemId": "e181f4ca-bab2-4dc0-9ac9-88dda168d300",
+        "blindId": "test-011",
+        "textHash": "245c495676372330e48a402e128ba8d7a28d5ddeefc698bd449f84ef113e3c22",
+        "stratumKey": "en:feed:not_flagged",
+        "inclusionProbability": 0.033442088091353996,
+        "weight": 29.902439024390244
+      },
+      {
+        "itemId": "aab8b313-bd4f-4bb0-af3f-e51893f50857",
+        "blindId": "test-012",
+        "textHash": "a7070c43b62ea0dc3cf522430c24b69323e766e3f04706798883c35036f6a58b",
+        "stratumKey": "en:page_metadata:not_flagged",
+        "inclusionProbability": 0.03763440860215054,
+        "weight": 26.571428571428573
+      },
+      {
+        "itemId": "facee516-ea6e-4e36-93b9-3c72cf6a72eb",
+        "blindId": "test-013",
+        "textHash": "fa024b07ceec2a77b1eb304005246dd4433cbc4f3702b6515ee28e2adfd98146",
+        "stratumKey": "en:feed:not_flagged",
+        "inclusionProbability": 0.033442088091353996,
+        "weight": 29.902439024390244
+      },
+      {
+        "itemId": "3a4b9fb9-e3f5-4d87-b589-ab8e0429aced",
+        "blindId": "test-014",
+        "textHash": "90d53fb9407a254b7e6c795eafb49b05403747cf1d4199dc4c3800582d1b9df1",
+        "stratumKey": "fi:ai_generated:not_flagged",
+        "inclusionProbability": 0.09166666666666666,
+        "weight": 10.909090909090908
+      },
+      {
+        "itemId": "f38033ea-d875-4084-95a4-774e1b6f348d",
+        "blindId": "test-015",
+        "textHash": "3ae31be99e14b5e7d9b116c4777eb460b36661ba8716448444f3877072180c50",
+        "stratumKey": "fi:feed:not_flagged",
+        "inclusionProbability": 0.03474903474903475,
+        "weight": 28.77777777777778
+      },
+      {
+        "itemId": "84e46458-55db-45b0-83c2-65be24980910",
+        "blindId": "test-016",
+        "textHash": "24442c2f286a0280c57e18d115208f69f98463a0765ca321d0316377e6771cb4",
+        "stratumKey": "en:page_metadata:not_flagged",
+        "inclusionProbability": 0.03763440860215054,
+        "weight": 26.571428571428573
+      },
+      {
+        "itemId": "127fa766-175a-457a-b903-8dfdfa040c99",
+        "blindId": "test-017",
+        "textHash": "79323ce9aa08b4b8050ecce1bdd91235f9a3ebd809d9fc746de126fe1bc15310",
+        "stratumKey": "en:ai_generated:not_flagged",
+        "inclusionProbability": 0.09016393442622951,
+        "weight": 11.090909090909092
+      },
+      {
+        "itemId": "6d73ae2b-110e-4625-9f8b-73b630e4d7b0",
+        "blindId": "test-018",
+        "textHash": "8b912db92ee9330dfc5277939b6e39083248cee4e05be15d834e9491c042e947",
+        "stratumKey": "en:feed:not_flagged",
+        "inclusionProbability": 0.033442088091353996,
+        "weight": 29.902439024390244
+      },
+      {
+        "itemId": "b1a5e572-ec47-464b-8477-f54dd6c02173",
+        "blindId": "test-019",
+        "textHash": "4e06175a4060e6406094f297f066854c4db728dabdb6db70dde36597c8a4057d",
+        "stratumKey": "en:page_metadata:not_flagged",
+        "inclusionProbability": 0.03763440860215054,
+        "weight": 26.571428571428573
+      },
+      {
+        "itemId": "c08a5150-5a82-43fd-a8c9-4002688aa6c5",
+        "blindId": "test-020",
+        "textHash": "f3ac087165996bab12fc856c8d38b701af225953c4981f24a12be63f2687d391",
+        "stratumKey": "en:feed:not_flagged",
+        "inclusionProbability": 0.033442088091353996,
+        "weight": 29.902439024390244
+      },
+      {
+        "itemId": "11b6dff9-73cb-4740-a702-9e6ec6ce3c5d",
+        "blindId": "test-021",
+        "textHash": "e410ae83c0c6a818fd359c2f880d276d4fb5e1c9f74317661c9dcb0baabf87bc",
+        "stratumKey": "fi:feed:not_flagged",
+        "inclusionProbability": 0.03474903474903475,
+        "weight": 28.77777777777778
+      },
+      {
+        "itemId": "d5d70601-c66c-4488-bf58-78786f7000a1",
+        "blindId": "test-022",
+        "textHash": "47ef59627d6cb604947a69f80a8d02e6f716594a67915ba7ada0fdeff53507d6",
+        "stratumKey": "en:feed:flagged",
+        "inclusionProbability": 1,
+        "weight": 1
+      },
+      {
+        "itemId": "9392e7fb-fea5-4f29-b788-d0c24b6bf0c9",
+        "blindId": "test-023",
+        "textHash": "8e91f2097333dc9c11275a9456557c9d999f0acd4abb9aea02e19db76d7141b0",
+        "stratumKey": "en:ai_generated:not_flagged",
+        "inclusionProbability": 0.09016393442622951,
+        "weight": 11.090909090909092
+      },
+      {
+        "itemId": "f0d3e9ef-38f9-460b-ab16-238b3c8e7ba3",
+        "blindId": "test-024",
+        "textHash": "706acda7e9650c5041f1b083ca94eb3eeffe3c2a638a5515a41048e222379023",
+        "stratumKey": "en:feed:flagged",
+        "inclusionProbability": 1,
+        "weight": 1
+      },
+      {
+        "itemId": "7d3f19b8-b924-46ad-97fd-c121a8784509",
+        "blindId": "test-025",
+        "textHash": "f535b26c0fff764a33a5215f7431ea71d15a048ca361318c1e04f38192b35ad7",
+        "stratumKey": "fi:feed:not_flagged",
+        "inclusionProbability": 0.03474903474903475,
+        "weight": 28.77777777777778
+      },
+      {
+        "itemId": "4202d75c-ecfc-4eed-8e26-41f60c07ef61",
+        "blindId": "test-026",
+        "textHash": "ed0479aa55662583b9e301cca8d7af93b5e5d9f2bf02854a2d58bcd1737f7400",
+        "stratumKey": "fi:feed:not_flagged",
+        "inclusionProbability": 0.03474903474903475,
+        "weight": 28.77777777777778
+      },
+      {
+        "itemId": "7340d9d6-a8f5-422d-9465-6f5082732f7a",
+        "blindId": "test-027",
+        "textHash": "0f499cdb1985ef0c07fa4b6caba8f1dbaec935d34f07292a4a513b0ed7576b23",
+        "stratumKey": "fi:feed:not_flagged",
+        "inclusionProbability": 0.03474903474903475,
+        "weight": 28.77777777777778
+      },
+      {
+        "itemId": "db930359-d98c-42e0-a804-680449684f4f",
+        "blindId": "test-028",
+        "textHash": "407dbcbfa36295718290a3b35734a82a0fdc0781ffac3627783456c436193e13",
+        "stratumKey": "en:page_metadata:flagged",
+        "inclusionProbability": 0.6666666666666666,
+        "weight": 1.5
+      },
+      {
+        "itemId": "e66be282-0f69-4d9c-911a-ab634f5453ae",
+        "blindId": "test-029",
+        "textHash": "a5e720195dfd9b0aba9a87dfe5233bee0eb7c06b44398d4457b2df79759a1e88",
+        "stratumKey": "fi:feed:not_flagged",
+        "inclusionProbability": 0.03474903474903475,
+        "weight": 28.77777777777778
+      },
+      {
+        "itemId": "0f2f8068-165b-4846-a28e-9b6d7b509792",
+        "blindId": "test-030",
+        "textHash": "5ead51934f1815238d3b6c885149ceaa0123ba33292ade6c24240896de85dd57",
+        "stratumKey": "en:page_metadata:flagged",
+        "inclusionProbability": 0.6666666666666666,
+        "weight": 1.5
+      },
+      {
+        "itemId": "c31ba71a-f8a7-4220-8511-37b2d08ffe5a",
+        "blindId": "test-031",
+        "textHash": "8cd33f61628c776572e67277a951788b8824f9e432275643d6040cf6f566cd02",
+        "stratumKey": "en:feed:not_flagged",
+        "inclusionProbability": 0.033442088091353996,
+        "weight": 29.902439024390244
+      },
+      {
+        "itemId": "534e7639-10ff-4cae-91ea-b680f7aa9924",
+        "blindId": "test-032",
+        "textHash": "cfaa23f7585028051a8b2e14bf84d7ac3058a9123c0547cd182cbedc6a69040a",
+        "stratumKey": "en:feed:not_flagged",
+        "inclusionProbability": 0.033442088091353996,
+        "weight": 29.902439024390244
+      },
+      {
+        "itemId": "338560dd-e303-4d53-8f8e-aa27d77a69eb",
+        "blindId": "test-033",
+        "textHash": "1e4f4d99e1bcb497bc3b80247a45388310b7f948ee995bd3067fb01863086cb0",
+        "stratumKey": "en:feed:not_flagged",
+        "inclusionProbability": 0.033442088091353996,
+        "weight": 29.902439024390244
+      },
+      {
+        "itemId": "ae6b1a1f-19db-4478-9ceb-3c0479da4aa4",
+        "blindId": "test-034",
+        "textHash": "b990401eb093ccfc79762594952e3704b614745e187d758d2768e437e40e0dff",
+        "stratumKey": "fi:feed:not_flagged",
+        "inclusionProbability": 0.03474903474903475,
+        "weight": 28.77777777777778
+      },
+      {
+        "itemId": "a3c659fd-50cc-4546-9ea7-212a671ff050",
+        "blindId": "test-035",
+        "textHash": "d1807ab0a6bae5d59993d4a09e7d83d94ce6efd25faf21558478df3e4f12354a",
+        "stratumKey": "en:page_metadata:not_flagged",
+        "inclusionProbability": 0.03763440860215054,
+        "weight": 26.571428571428573
+      },
+      {
+        "itemId": "a2ee9b49-4337-469a-9186-36e50fe3c030",
+        "blindId": "test-036",
+        "textHash": "48ce5d0fa1b358cfa7b2f826aabc340f366dcca0c9844c329f1d0d6ef2726ca9",
+        "stratumKey": "en:feed:not_flagged",
+        "inclusionProbability": 0.033442088091353996,
+        "weight": 29.902439024390244
+      },
+      {
+        "itemId": "ae02ea60-95be-4bc8-9b11-f5c41e5809c0",
+        "blindId": "test-037",
+        "textHash": "1bdb2451136ff3e437d61bd801ba9e104957ebb3a9358e5d21f0480154e266cf",
+        "stratumKey": "en:feed:not_flagged",
+        "inclusionProbability": 0.033442088091353996,
+        "weight": 29.902439024390244
+      },
+      {
+        "itemId": "2933a241-df33-4749-839e-2af76d67d206",
+        "blindId": "test-038",
+        "textHash": "03d2af8c3427449e3e8939462ebe164fd95e62c8afb4f6cced60615df38951aa",
+        "stratumKey": "en:page_metadata:not_flagged",
+        "inclusionProbability": 0.03763440860215054,
+        "weight": 26.571428571428573
+      },
+      {
+        "itemId": "c5bffc3e-9f76-465b-b3bc-8c945d4d43b0",
+        "blindId": "test-039",
+        "textHash": "ed197d1ce170b3e127834c3f3b55c40194da6a8664803ba9655751a5bae2a3e3",
+        "stratumKey": "en:feed:not_flagged",
+        "inclusionProbability": 0.033442088091353996,
+        "weight": 29.902439024390244
+      },
+      {
+        "itemId": "2497448b-0631-43b5-bce0-43cf2b5d24be",
+        "blindId": "test-040",
+        "textHash": "b1c269d93bdf01b6ed35f29c771d2f0df3df14026de6aa7bbe723e5df16abeba",
+        "stratumKey": "fi:feed:not_flagged",
+        "inclusionProbability": 0.03474903474903475,
+        "weight": 28.77777777777778
+      },
+      {
+        "itemId": "87876f9f-0fef-4eb0-9f8d-214400b3fa4b",
+        "blindId": "test-041",
+        "textHash": "61229f75f332aabf834e4e65e67656d95a94e05a8f9f8598724cd804a4969e64",
+        "stratumKey": "en:page_metadata:not_flagged",
+        "inclusionProbability": 0.03763440860215054,
+        "weight": 26.571428571428573
+      },
+      {
+        "itemId": "7b752584-c31b-45df-8e76-cac8205a8497",
+        "blindId": "test-042",
+        "textHash": "588c391ecc5856c7aefb87ac8f298dc8b5be66f605a0cdacb44b637967964446",
+        "stratumKey": "fi:ai_generated:not_flagged",
+        "inclusionProbability": 0.09166666666666666,
+        "weight": 10.909090909090908
+      },
+      {
+        "itemId": "269dd0b4-b55c-4f05-ad96-d9431051f2dc",
+        "blindId": "test-043",
+        "textHash": "7f5b837313e66b5f6ea3bd21910a28411d88ed06481637062bd9294e9e0a6f7a",
+        "stratumKey": "en:page_metadata:not_flagged",
+        "inclusionProbability": 0.03763440860215054,
+        "weight": 26.571428571428573
+      },
+      {
+        "itemId": "e4947d21-5778-4442-85d6-57d36fbc9460",
+        "blindId": "test-044",
+        "textHash": "d81e1001ac1bf196519be24aaa24e89e6a97efe794eeeeafc59288ac12ade9a0",
+        "stratumKey": "en:feed:not_flagged",
+        "inclusionProbability": 0.033442088091353996,
+        "weight": 29.902439024390244
+      },
+      {
+        "itemId": "8fd5c783-93c0-432f-b630-6c640825a94c",
+        "blindId": "test-045",
+        "textHash": "72ef9e4feb3cfbc1686342c99fdd8ecb54b00e06aec1f0e2d86ad52a44bd3663",
+        "stratumKey": "fi:ai_generated:not_flagged",
+        "inclusionProbability": 0.09166666666666666,
+        "weight": 10.909090909090908
+      },
+      {
+        "itemId": "000f6c77-634b-470c-bd60-7270e9e86b12",
+        "blindId": "test-046",
+        "textHash": "6c355468e9af14ed90288531913b3603804cf4166a6569cd03d97df28e0ca206",
+        "stratumKey": "en:ai_generated:not_flagged",
+        "inclusionProbability": 0.09016393442622951,
+        "weight": 11.090909090909092
+      },
+      {
+        "itemId": "eacf9655-7bca-4a4b-a517-573172559732",
+        "blindId": "test-047",
+        "textHash": "05ca8372e7aa3e6d08e3dd52f1f79a92895ca2da225c98ddd68982711f071e9a",
+        "stratumKey": "en:page_metadata:flagged",
+        "inclusionProbability": 0.6666666666666666,
+        "weight": 1.5
+      },
+      {
+        "itemId": "f1d99d30-52b4-4414-b694-fff5d9fe9897",
+        "blindId": "test-048",
+        "textHash": "87d7d941fb644c4c766c2949410489a615904191191cf0c583e0ef8db8c6bf65",
+        "stratumKey": "en:page_metadata:not_flagged",
+        "inclusionProbability": 0.03763440860215054,
+        "weight": 26.571428571428573
+      },
+      {
+        "itemId": "a20eb39b-318c-45c4-b6a0-b06fbf1a471f",
+        "blindId": "test-049",
+        "textHash": "de4cc67c2c658cd967fb1cb74aee77a371901c8ba375d68986e098e6edaf79d9",
+        "stratumKey": "fi:feed:not_flagged",
+        "inclusionProbability": 0.03474903474903475,
+        "weight": 28.77777777777778
+      },
+      {
+        "itemId": "8c875f89-662b-4d4c-a8b1-2d3faa43e44a",
+        "blindId": "test-050",
+        "textHash": "9a14aec8e4779fa32690220d0205c299cd3f16742c58be8eb3d91b023e820109",
+        "stratumKey": "en:page_metadata:flagged",
+        "inclusionProbability": 0.6666666666666666,
+        "weight": 1.5
+      },
+      {
+        "itemId": "edac5710-8d48-4d2d-9613-143fa605e85c",
+        "blindId": "test-051",
+        "textHash": "7a8070a4e560eaee91ed62e353ace184dfd8bdb81802af7500e1b1bd58ff86c0",
+        "stratumKey": "en:page_metadata:not_flagged",
+        "inclusionProbability": 0.03763440860215054,
+        "weight": 26.571428571428573
+      },
+      {
+        "itemId": "18b61703-255b-471f-aae3-589a0dc1568f",
+        "blindId": "test-052",
+        "textHash": "89ccbc95d93c1a4f17b805095498ab81c94d07b462ec90d8a59bd1fba419d7b7",
+        "stratumKey": "en:feed:not_flagged",
+        "inclusionProbability": 0.033442088091353996,
+        "weight": 29.902439024390244
+      },
+      {
+        "itemId": "35fffa4e-97e3-4a34-b748-251b4b50393b",
+        "blindId": "test-053",
+        "textHash": "a81cb006da5e97a26c38266ecbaca539610789103dd596bd117d281bc1605edd",
+        "stratumKey": "en:page_metadata:not_flagged",
+        "inclusionProbability": 0.03763440860215054,
+        "weight": 26.571428571428573
+      },
+      {
+        "itemId": "4fda6fa5-173f-4ef0-b992-6e78ec54f0c0",
+        "blindId": "test-054",
+        "textHash": "14341ea153a09269ee7a534004dea13c27280a6b4027f875efa6067472ce11e6",
+        "stratumKey": "en:feed:not_flagged",
+        "inclusionProbability": 0.033442088091353996,
+        "weight": 29.902439024390244
+      },
+      {
+        "itemId": "e8d44fae-70ef-45db-8e97-740b33459d81",
+        "blindId": "test-055",
+        "textHash": "d8b52e6a6f627b0a72e4c1aa8ffcc12bbde526462d28fb8a907520b3a93e5065",
+        "stratumKey": "en:feed:not_flagged",
+        "inclusionProbability": 0.033442088091353996,
+        "weight": 29.902439024390244
+      },
+      {
+        "itemId": "b7b1b8eb-aed1-4f24-89dc-330e8f32a344",
+        "blindId": "test-056",
+        "textHash": "3a30296d42695f16951d76757247e13cd4994a4c21d9868fe26738bcf620b92f",
+        "stratumKey": "fi:page_metadata:flagged",
+        "inclusionProbability": 1,
+        "weight": 1
+      },
+      {
+        "itemId": "c44d1801-8569-4b1d-b41c-f5c247aac030",
+        "blindId": "test-057",
+        "textHash": "73610ea2826f31657d087ff9040d9f2095240115f421bee4224a22bb7c27274e",
+        "stratumKey": "fi:feed:not_flagged",
+        "inclusionProbability": 0.03474903474903475,
+        "weight": 28.77777777777778
+      },
+      {
+        "itemId": "65388dce-c6f0-4810-858d-306e1dd83744",
+        "blindId": "test-058",
+        "textHash": "e0287229cd838cf5e974a126c36f0c3749cfacb86b771336a24b5ec641eb80b9",
+        "stratumKey": "en:page_metadata:not_flagged",
+        "inclusionProbability": 0.03763440860215054,
+        "weight": 26.571428571428573
+      },
+      {
+        "itemId": "9806280c-d29a-4a7b-aae8-010a0b277400",
+        "blindId": "test-059",
+        "textHash": "525b3c5805afd4784910f52c68d6c71412b71d6a008c403b78ab83914a65a630",
+        "stratumKey": "fi:ai_generated:not_flagged",
+        "inclusionProbability": 0.09166666666666666,
+        "weight": 10.909090909090908
+      },
+      {
+        "itemId": "cae761d7-36a5-43b9-81be-9e366ee8cbb7",
+        "blindId": "test-060",
+        "textHash": "198a62f6980e5f52b552278d523e2667918630f21a3e1f4002d233d9fe79bcd8",
+        "stratumKey": "en:feed:not_flagged",
+        "inclusionProbability": 0.033442088091353996,
+        "weight": 29.902439024390244
+      },
+      {
+        "itemId": "eb62dd07-c3c1-4587-bd4c-42c83e20dace",
+        "blindId": "test-061",
+        "textHash": "34dab4c222e2b70786a770b8da0fc8297452861dc22fc0e6cde4f1c6744eb550",
+        "stratumKey": "fi:feed:not_flagged",
+        "inclusionProbability": 0.03474903474903475,
+        "weight": 28.77777777777778
+      },
+      {
+        "itemId": "5b260ede-6ae7-45b5-96ba-2e0149177ec1",
+        "blindId": "test-062",
+        "textHash": "455b8d9694d4da153afda2592879e5f986639155ef51db15022fe54a1edf6a67",
+        "stratumKey": "fi:ai_generated:not_flagged",
+        "inclusionProbability": 0.09166666666666666,
+        "weight": 10.909090909090908
+      },
+      {
+        "itemId": "53c0bf5a-c072-4b0c-bc93-f0227f7560bb",
+        "blindId": "test-063",
+        "textHash": "2bc6e70fe0d3ec7627740de8d8e3cd1e76b2650c77d2f54d6b5fcbaf639be284",
+        "stratumKey": "fi:page_metadata:not_flagged",
+        "inclusionProbability": 1,
+        "weight": 1
+      },
+      {
+        "itemId": "4c4ad874-56b5-40b7-b04b-2c8f3f009ce2",
+        "blindId": "test-064",
+        "textHash": "f2413f1a510a3480c2a4493d07336e2d280882884879b48791fa889ecaa94093",
+        "stratumKey": "en:feed:not_flagged",
+        "inclusionProbability": 0.033442088091353996,
+        "weight": 29.902439024390244
+      },
+      {
+        "itemId": "3dd23633-65a5-4392-bbbd-929c489dfc28",
+        "blindId": "test-065",
+        "textHash": "259b8251d582de8b7f16c1299ae5581d77086e33978041451b32e05367e09e67",
+        "stratumKey": "fi:page_metadata:not_flagged",
+        "inclusionProbability": 1,
+        "weight": 1
+      },
+      {
+        "itemId": "4149a8af-134b-46c5-9849-d14f41185d66",
+        "blindId": "test-066",
+        "textHash": "47cff331ff5f703d20a4039e75dfe85b4080f8c06506ae392c234e17e82db234",
+        "stratumKey": "en:feed:flagged",
+        "inclusionProbability": 1,
+        "weight": 1
+      },
+      {
+        "itemId": "29cf8615-0e05-433c-a9f7-7a94236c72c9",
+        "blindId": "test-067",
+        "textHash": "62e4dbb1549e6986073b20660fe98f9fe10b531649d5ce49487973d14174a2d7",
+        "stratumKey": "en:feed:not_flagged",
+        "inclusionProbability": 0.033442088091353996,
+        "weight": 29.902439024390244
+      },
+      {
+        "itemId": "bbce8a8b-9295-4fd6-be92-41a4e6883a53",
+        "blindId": "test-068",
+        "textHash": "942c60ae97e2b57f70e759de1b682b3fac306f94d991eadf864d35aa9e0e525e",
+        "stratumKey": "en:page_metadata:not_flagged",
+        "inclusionProbability": 0.03763440860215054,
+        "weight": 26.571428571428573
+      },
+      {
+        "itemId": "a9e743da-1684-4364-8e2d-ae94da23a7b1",
+        "blindId": "test-069",
+        "textHash": "856a765abc3c2c9e47ae2ca7dff4f9dc0806690274ec4644997fd25445a0501d",
+        "stratumKey": "fi:feed:not_flagged",
+        "inclusionProbability": 0.03474903474903475,
+        "weight": 28.77777777777778
+      },
+      {
+        "itemId": "a7de07ff-3484-416e-bb18-622884f6c68c",
+        "blindId": "test-070",
+        "textHash": "acf9ed91482e80ad65b1420a34186eae149d2dc3806cb73ea0d02b1296d7c7f2",
+        "stratumKey": "fi:feed:not_flagged",
+        "inclusionProbability": 0.03474903474903475,
+        "weight": 28.77777777777778
+      },
+      {
+        "itemId": "1f05f8a0-7291-4ec3-bf5c-4e75502e9baf",
+        "blindId": "test-071",
+        "textHash": "20b8a07344208b36adcfd7b7a9102d1c6f387a1ad7dfdb6ac68aae0140b326e2",
+        "stratumKey": "fi:ai_generated:not_flagged",
+        "inclusionProbability": 0.09166666666666666,
+        "weight": 10.909090909090908
+      },
+      {
+        "itemId": "e79fd7a2-100b-4f1a-8f19-66d21dfa4735",
+        "blindId": "test-072",
+        "textHash": "e3c0498a444c2da5a1fd2760bd4d1f0aa618afae430d698e670c4ece223e7333",
+        "stratumKey": "en:feed:not_flagged",
+        "inclusionProbability": 0.033442088091353996,
+        "weight": 29.902439024390244
+      },
+      {
+        "itemId": "d1378b87-4c4d-40e5-86e1-3100fd7842c2",
+        "blindId": "test-073",
+        "textHash": "88359374c62d70c123b20d7de2a2964ab04e4b02300767dfb53a07724958939b",
+        "stratumKey": "fi:page_metadata:flagged",
+        "inclusionProbability": 1,
+        "weight": 1
+      },
+      {
+        "itemId": "370241b2-b586-4c88-815a-7cc646f88f23",
+        "blindId": "test-074",
+        "textHash": "8766939da5253196280a23c3218b2107172d4d68134b583f9332e5d68a030191",
+        "stratumKey": "en:feed:not_flagged",
+        "inclusionProbability": 0.033442088091353996,
+        "weight": 29.902439024390244
+      },
+      {
+        "itemId": "d08e4545-01b9-4cb5-ab09-4f185d3ded88",
+        "blindId": "test-075",
+        "textHash": "3abd07b7016bcb9368557559b19a57c05645785e18ddacd8abdb4190af166e81",
+        "stratumKey": "en:ai_generated:not_flagged",
+        "inclusionProbability": 0.09016393442622951,
+        "weight": 11.090909090909092
+      },
+      {
+        "itemId": "ff6aa719-0dcb-41af-9723-2fb1efe88bf9",
+        "blindId": "test-076",
+        "textHash": "a138142a98333f94a1a4ed141ad67079919b58b02813a4d280e75a20f8b1465a",
+        "stratumKey": "fi:feed:not_flagged",
+        "inclusionProbability": 0.03474903474903475,
+        "weight": 28.77777777777778
+      },
+      {
+        "itemId": "d1511823-a840-4065-abc6-8a5a937fef4a",
+        "blindId": "test-077",
+        "textHash": "1aeeccfd6ce6a380b570f897aa29f2caea2d6d279bfbac9432bc27fd6b1239cd",
+        "stratumKey": "en:page_metadata:not_flagged",
+        "inclusionProbability": 0.03763440860215054,
+        "weight": 26.571428571428573
+      },
+      {
+        "itemId": "bb474fa7-7c86-432e-993e-506c975818aa",
+        "blindId": "test-078",
+        "textHash": "9d867bcc1f052c39a1edc9919be85cbc53f82607165a83e96ac97276ca0efb35",
+        "stratumKey": "en:feed:not_flagged",
+        "inclusionProbability": 0.033442088091353996,
+        "weight": 29.902439024390244
+      },
+      {
+        "itemId": "9b59de61-b32b-40c8-9c88-1563eceb1159",
+        "blindId": "test-079",
+        "textHash": "3c312c797f17f34927abf4cea5c0e8ee2d192d70978aafae9cff19665e2d3f0e",
+        "stratumKey": "en:feed:not_flagged",
+        "inclusionProbability": 0.033442088091353996,
+        "weight": 29.902439024390244
+      },
+      {
+        "itemId": "9a595e85-5097-4be1-94a5-013fab9807ec",
+        "blindId": "test-080",
+        "textHash": "5d8c3eb0555919977b7447957d8f9c49e5f27faccd24a6dcac6b899a9b834d3d",
+        "stratumKey": "en:feed:not_flagged",
+        "inclusionProbability": 0.033442088091353996,
+        "weight": 29.902439024390244
+      },
+      {
+        "itemId": "6abbd518-0bbb-4c2e-b975-0d6399fc4f21",
+        "blindId": "test-081",
+        "textHash": "93ec2e96f41feecfadd6564adad5711afd6f00656b467120b020d0c9b5fb7800",
+        "stratumKey": "en:page_metadata:not_flagged",
+        "inclusionProbability": 0.03763440860215054,
+        "weight": 26.571428571428573
+      },
+      {
+        "itemId": "d26246cf-e3cb-4d8b-8528-cc5f0c8b859f",
+        "blindId": "test-082",
+        "textHash": "0fc9811495b7ab906053c77961b616808fc287204414c43b1e87af3f6f7f18b1",
+        "stratumKey": "fi:feed:not_flagged",
+        "inclusionProbability": 0.03474903474903475,
+        "weight": 28.77777777777778
+      },
+      {
+        "itemId": "7919c59c-4751-4a02-9ebc-f0a3af2ab5dc",
+        "blindId": "test-083",
+        "textHash": "8a0e0d570eebe46a6603e66601cad048ce6bdbc1af6f3b00b94f7594bec83859",
+        "stratumKey": "en:feed:not_flagged",
+        "inclusionProbability": 0.033442088091353996,
+        "weight": 29.902439024390244
+      },
+      {
+        "itemId": "6e4ec9ed-4906-4cc9-bd52-488d84efaf27",
+        "blindId": "test-084",
+        "textHash": "f34d7e3a920cc622dea4afa7a797e7314d97aead3b553b7efcb3f6166f33c6ca",
+        "stratumKey": "fi:feed:not_flagged",
+        "inclusionProbability": 0.03474903474903475,
+        "weight": 28.77777777777778
+      },
+      {
+        "itemId": "582122bd-b43f-4a1b-8ab0-36072cf7c244",
+        "blindId": "test-085",
+        "textHash": "d6e038cc747341a7744977a3be6f2538864cfd734c3e58e0d9063dccf975f98d",
+        "stratumKey": "en:ai_generated:not_flagged",
+        "inclusionProbability": 0.09016393442622951,
+        "weight": 11.090909090909092
+      },
+      {
+        "itemId": "0d8de291-12bb-4c3e-afe6-855566daabfb",
+        "blindId": "test-086",
+        "textHash": "561018a0fa0972525e0f9e5c9cced69846a44fccf9f0a274b0afc1a28e400a57",
+        "stratumKey": "en:page_metadata:not_flagged",
+        "inclusionProbability": 0.03763440860215054,
+        "weight": 26.571428571428573
+      },
+      {
+        "itemId": "bcf557e5-4ba7-4bb1-9e1c-1e1bd2b2063f",
+        "blindId": "test-087",
+        "textHash": "568a0c38bf8d00e8d7f1a68572d6752ea4c755a01316d490bb5f79bc25a6278e",
+        "stratumKey": "fi:feed:not_flagged",
+        "inclusionProbability": 0.03474903474903475,
+        "weight": 28.77777777777778
+      },
+      {
+        "itemId": "ef1a1e40-1b75-4fe4-b7ee-bae5d9ae19f5",
+        "blindId": "test-088",
+        "textHash": "a685d1f19fbe17e0a66490ff79f1efd1cff450102952f5958721b911b63a3881",
+        "stratumKey": "en:page_metadata:not_flagged",
+        "inclusionProbability": 0.03763440860215054,
+        "weight": 26.571428571428573
+      },
+      {
+        "itemId": "2acf64fa-6401-4221-b878-024263339c4c",
+        "blindId": "test-089",
+        "textHash": "5461a08d79ba662c876e98853faf9eef785a296e7cf71c1ac352fa55a2f27a23",
+        "stratumKey": "en:feed:not_flagged",
+        "inclusionProbability": 0.033442088091353996,
+        "weight": 29.902439024390244
+      },
+      {
+        "itemId": "fc681b19-34e0-4d2a-afa3-0d3c93afa007",
+        "blindId": "test-090",
+        "textHash": "4c7f23d6e39b062231d9f0560943b3be824b2b560fc8ddcee17b57651a334a19",
+        "stratumKey": "fi:feed:not_flagged",
+        "inclusionProbability": 0.03474903474903475,
+        "weight": 28.77777777777778
+      },
+      {
+        "itemId": "a9e76cf8-5a47-458d-8411-3e9646ee7f25",
+        "blindId": "test-091",
+        "textHash": "47076b60232f1c07ac1cc8633b78ae60519fb5af2bb5eecceb52f0cabd17efb6",
+        "stratumKey": "fi:ai_generated:not_flagged",
+        "inclusionProbability": 0.09166666666666666,
+        "weight": 10.909090909090908
+      },
+      {
+        "itemId": "52389f11-da06-4be7-afa0-e74514b6c1c4",
+        "blindId": "test-092",
+        "textHash": "1565ebfde272a6853787865762ff5c418bdeab848db91fa78c67672bbadd0454",
+        "stratumKey": "fi:ai_generated:not_flagged",
+        "inclusionProbability": 0.09166666666666666,
+        "weight": 10.909090909090908
+      },
+      {
+        "itemId": "1d012f95-a47c-4e84-91c2-9cd3e1a2f8b9",
+        "blindId": "test-093",
+        "textHash": "321bed7a75efb3f9a606c8a297086b887cf86ea8e518a49e0831c37911f272ce",
+        "stratumKey": "fi:page_metadata:not_flagged",
+        "inclusionProbability": 1,
+        "weight": 1
+      },
+      {
+        "itemId": "c151a7a9-41f9-4744-8bcb-a70ee6315705",
+        "blindId": "test-094",
+        "textHash": "2195da4ac1ffc054f6fe1cc4ac8e194f27bb1a0ffb684f95275b9495a44ee255",
+        "stratumKey": "en:ai_generated:not_flagged",
+        "inclusionProbability": 0.09016393442622951,
+        "weight": 11.090909090909092
+      },
+      {
+        "itemId": "615f5819-66ab-4c42-9d63-50b384436c70",
+        "blindId": "test-095",
+        "textHash": "4057ddba7bef17f3a320cd49de598d3c5a4e0c3a40521368dd3f8659e86072fe",
+        "stratumKey": "fi:ai_generated:not_flagged",
+        "inclusionProbability": 0.09166666666666666,
+        "weight": 10.909090909090908
+      },
+      {
+        "itemId": "8a2dc778-9be1-4ca3-927a-f0f7186cb8f5",
+        "blindId": "test-096",
+        "textHash": "daf46b5009d5300cd5879cc3aa691c0581902ba1c73c2bc2fab298ee801672f1",
+        "stratumKey": "en:ai_generated:not_flagged",
+        "inclusionProbability": 0.09016393442622951,
+        "weight": 11.090909090909092
+      },
+      {
+        "itemId": "334ce1fd-38a6-4d4a-b082-1c30c8a07086",
+        "blindId": "test-097",
+        "textHash": "743482a4361469d98d4828b624e50ca1c944e46dcdfd5c12a8b8356535c9e984",
+        "stratumKey": "en:feed:not_flagged",
+        "inclusionProbability": 0.033442088091353996,
+        "weight": 29.902439024390244
+      },
+      {
+        "itemId": "801c72cc-fd74-415b-b77e-dd3ccba16533",
+        "blindId": "test-098",
+        "textHash": "e0e7c78a21b2145af69ecc894fa1d48ef82a183dad133c507e0d2bd4080bc97a",
+        "stratumKey": "en:feed:not_flagged",
+        "inclusionProbability": 0.033442088091353996,
+        "weight": 29.902439024390244
+      },
+      {
+        "itemId": "4c7b0fcf-8dd1-4c04-b8b7-9d2cb6d6ae4f",
+        "blindId": "test-099",
+        "textHash": "332fee8108ba5ff6148a40a4daee9a9ba4e846ce0dffbbca5c045eabede9fce2",
+        "stratumKey": "en:page_metadata:flagged",
+        "inclusionProbability": 0.6666666666666666,
+        "weight": 1.5
+      },
+      {
+        "itemId": "ff618681-d777-4770-bf75-822de2a4ec59",
+        "blindId": "test-100",
+        "textHash": "0d2c2d83db5ac4d7cc95df61e60fe1ebb17ac911f90f453e3388821b222d5b08",
+        "stratumKey": "fi:feed:not_flagged",
+        "inclusionProbability": 0.03474903474903475,
+        "weight": 28.77777777777778
+      },
+      {
+        "itemId": "97b3c212-4edb-4031-96a2-f44d083a0a1a",
+        "blindId": "test-101",
+        "textHash": "17b3ee828aeab7082d944818dc67f6b74a931d81849c06ef98f5a550a4958231",
+        "stratumKey": "en:feed:not_flagged",
+        "inclusionProbability": 0.033442088091353996,
+        "weight": 29.902439024390244
+      },
+      {
+        "itemId": "516fa5d4-dc87-43bb-b8b2-f15f95889b46",
+        "blindId": "test-102",
+        "textHash": "571b80d264a10dfbac61210fe7d259c9b6d9f015363a20f58a58f4eb58862484",
+        "stratumKey": "en:feed:flagged",
+        "inclusionProbability": 1,
+        "weight": 1
+      },
+      {
+        "itemId": "28081842-787c-4521-a2c3-0fb4cf1a7498",
+        "blindId": "test-103",
+        "textHash": "c058e97e16da711751ba2993f8ea9bc22f795505a99f3da800b00d4f7475c062",
+        "stratumKey": "fi:feed:not_flagged",
+        "inclusionProbability": 0.03474903474903475,
+        "weight": 28.77777777777778
+      },
+      {
+        "itemId": "432137a7-81f5-4d9d-830f-9201ef0d0fa7",
+        "blindId": "test-104",
+        "textHash": "a70e92954a7060a2901f00341dca078ec489cc2bd44bdf943be05cd4008e2a49",
+        "stratumKey": "en:page_metadata:not_flagged",
+        "inclusionProbability": 0.03763440860215054,
+        "weight": 26.571428571428573
+      },
+      {
+        "itemId": "b0fa34fe-058a-440c-b1e1-1f6d63b35065",
+        "blindId": "test-105",
+        "textHash": "f6d6a022c6d9a27f511710e8fd4eaed53183c0d7fae2c63556114419c2892c08",
+        "stratumKey": "fi:page_metadata:not_flagged",
+        "inclusionProbability": 1,
+        "weight": 1
+      },
+      {
+        "itemId": "c4e37056-2d23-45de-aa08-36c2945cdf34",
+        "blindId": "test-106",
+        "textHash": "6da5efcc9cf505c2937f52a81e7018630e35d04f3509b526f5b4c32b7a435363",
+        "stratumKey": "fi:page_metadata:flagged",
+        "inclusionProbability": 1,
+        "weight": 1
+      },
+      {
+        "itemId": "6a93620a-e40d-42ae-afe3-999e11f9bc99",
+        "blindId": "test-107",
+        "textHash": "b25800affd25800c036bfb92dbfb17d0da3db457f574e38a3d669d5b976f883a",
+        "stratumKey": "en:feed:not_flagged",
+        "inclusionProbability": 0.033442088091353996,
+        "weight": 29.902439024390244
+      },
+      {
+        "itemId": "42d714b6-4523-41d6-b825-a40bb3eb3082",
+        "blindId": "test-108",
+        "textHash": "6ca71b5ae8a74d571bf8e64f70b5180dfeaae402b05f897e380a072f2f31a988",
+        "stratumKey": "en:page_metadata:flagged",
+        "inclusionProbability": 0.6666666666666666,
+        "weight": 1.5
+      },
+      {
+        "itemId": "07fec1bf-ac3c-4cb1-be6e-707aee9ffae7",
+        "blindId": "test-109",
+        "textHash": "bb3bec3cc18c96a2fba1ce6f1fc4b80c46eaea29906e751348d45f1127f1f24a",
+        "stratumKey": "en:page_metadata:not_flagged",
+        "inclusionProbability": 0.03763440860215054,
+        "weight": 26.571428571428573
+      },
+      {
+        "itemId": "c231a2ac-562b-434c-9b03-0e39a4d50de6",
+        "blindId": "test-110",
+        "textHash": "bf85f822e1ccea703cb9ad356ffffad7708bc736f989e26110ec7560bb661031",
+        "stratumKey": "en:page_metadata:not_flagged",
+        "inclusionProbability": 0.03763440860215054,
+        "weight": 26.571428571428573
+      },
+      {
+        "itemId": "2aa14c91-01f2-414a-b53f-ff3c7ae75d65",
+        "blindId": "test-111",
+        "textHash": "23946c698c99c6d620738b34efb9d9d9bad9792fe4bc065e03eef0e699fe7e98",
+        "stratumKey": "en:ai_generated:not_flagged",
+        "inclusionProbability": 0.09016393442622951,
+        "weight": 11.090909090909092
+      },
+      {
+        "itemId": "934d7103-2410-4a9e-abbb-ad363eba08ba",
+        "blindId": "test-112",
+        "textHash": "8d0822252a5200e2ab401fbd189ed32818ee68b02a57c0977e12aab59ad34c94",
+        "stratumKey": "en:feed:not_flagged",
+        "inclusionProbability": 0.033442088091353996,
+        "weight": 29.902439024390244
+      },
+      {
+        "itemId": "8e0e7bc9-10a6-4da2-b443-d58d9e1742e2",
+        "blindId": "test-113",
+        "textHash": "12c872b10436924ad190dca40b9816e741491f40ad2302bfe384083980494aed",
+        "stratumKey": "en:page_metadata:not_flagged",
+        "inclusionProbability": 0.03763440860215054,
+        "weight": 26.571428571428573
+      },
+      {
+        "itemId": "d44e1d2b-01a8-4c8e-b106-197d10a6ad44",
+        "blindId": "test-114",
+        "textHash": "4bbfb1ecb255fa53db006cd210b2515baddfb704dff2f4b530787a76f37ac7bf",
+        "stratumKey": "fi:feed:not_flagged",
+        "inclusionProbability": 0.03474903474903475,
+        "weight": 28.77777777777778
+      },
+      {
+        "itemId": "a32e71aa-4ab7-43bd-a84a-34a2828bdf70",
+        "blindId": "test-115",
+        "textHash": "45e5c7a4eecdf45e1c5e091c431631e1a857caa34dbafbbb8fb819bd0acfe78f",
+        "stratumKey": "en:feed:not_flagged",
+        "inclusionProbability": 0.033442088091353996,
+        "weight": 29.902439024390244
+      },
+      {
+        "itemId": "4888149a-954e-4784-9c66-fde1c612ca47",
+        "blindId": "test-116",
+        "textHash": "85e96992afe555cdc96abab8d1a9cc133d1c4de2d09c424022b8519bca828db4",
+        "stratumKey": "en:ai_generated:not_flagged",
+        "inclusionProbability": 0.09016393442622951,
+        "weight": 11.090909090909092
+      },
+      {
+        "itemId": "325e6f4f-3edd-45c4-950a-81010408b83a",
+        "blindId": "test-117",
+        "textHash": "3d8860f03b23d6b174819c2237051865ceedd014c1e676abcb77df55b7f468ff",
+        "stratumKey": "en:ai_generated:not_flagged",
+        "inclusionProbability": 0.09016393442622951,
+        "weight": 11.090909090909092
+      },
+      {
+        "itemId": "23d0ab47-323d-4ad5-84c8-8c8e1227f3a4",
+        "blindId": "test-118",
+        "textHash": "c5d04ad09ea47d752458981cca7d6113f82bc3d98aecc76a723f6407854a88ad",
+        "stratumKey": "en:feed:not_flagged",
+        "inclusionProbability": 0.033442088091353996,
+        "weight": 29.902439024390244
+      },
+      {
+        "itemId": "b746de95-831d-42c1-8118-22b542939989",
+        "blindId": "test-119",
+        "textHash": "89155bf7bf2024cca69b8f1e23bb788bc81afff4186df89305d9a6676c4720b4",
+        "stratumKey": "fi:feed:not_flagged",
+        "inclusionProbability": 0.03474903474903475,
+        "weight": 28.77777777777778
+      },
+      {
+        "itemId": "0735b2eb-bcd0-475c-bf5e-abfdafdfea3b",
+        "blindId": "test-120",
+        "textHash": "121697c3214cd6129ecb86647ad857d63279f2eeb1d468ca4c35c78ba37ce5b2",
+        "stratumKey": "en:feed:not_flagged",
+        "inclusionProbability": 0.033442088091353996,
+        "weight": 29.902439024390244
+      },
+      {
+        "itemId": "0792d891-8aae-4281-97a2-5ea236b1deff",
+        "blindId": "test-121",
+        "textHash": "340a0ece88fd28bde4f9ae5d00ab5ee0ceabcb70ef9966ab8e39388dc9e2089c",
+        "stratumKey": "en:feed:not_flagged",
+        "inclusionProbability": 0.033442088091353996,
+        "weight": 29.902439024390244
+      },
+      {
+        "itemId": "4a048fd9-4b0e-489d-a961-b2cf0b9dc577",
+        "blindId": "test-122",
+        "textHash": "3dcb274bec52adf153307b79ab2905031c1e4477bc08f25f90525f0877455df7",
+        "stratumKey": "fi:feed:not_flagged",
+        "inclusionProbability": 0.03474903474903475,
+        "weight": 28.77777777777778
+      },
+      {
+        "itemId": "4304e273-bd46-4fdd-956c-fa3910626e22",
+        "blindId": "test-123",
+        "textHash": "26771f1479a92c8836a546b28cef9082ab01172b3cc972ccc39d6a6954b90dbf",
+        "stratumKey": "en:page_metadata:not_flagged",
+        "inclusionProbability": 0.03763440860215054,
+        "weight": 26.571428571428573
+      },
+      {
+        "itemId": "b34e888e-e6a1-4f68-b417-8ec256f1cccf",
+        "blindId": "test-124",
+        "textHash": "1554590097b3d976018f90f3f48edf3678c480546ae2b1cab76835ed0c5fc9e4",
+        "stratumKey": "fi:page_metadata:not_flagged",
+        "inclusionProbability": 1,
+        "weight": 1
+      },
+      {
+        "itemId": "fd0c768b-b887-4d9f-8e55-f38f40b4f809",
+        "blindId": "test-125",
+        "textHash": "017a30253638a33fc24fdfc459491c0aaa3e284dc067d1451cfc44b57c331554",
+        "stratumKey": "fi:feed:not_flagged",
+        "inclusionProbability": 0.03474903474903475,
+        "weight": 28.77777777777778
+      },
+      {
+        "itemId": "c733a421-611d-427b-85f0-405f399efecb",
+        "blindId": "test-126",
+        "textHash": "76ff4f4e238e0558f3ff6968761622e77dce7aec377bb6e7b407717b62dcbae2",
+        "stratumKey": "fi:ai_generated:not_flagged",
+        "inclusionProbability": 0.09166666666666666,
+        "weight": 10.909090909090908
+      },
+      {
+        "itemId": "b7c76c1d-99ca-479e-8ce5-58cd01fcf57c",
+        "blindId": "test-127",
+        "textHash": "f099bcac6ee02b89ad8c2aab193762b2c50bc224475cb98675fdf930b5468279",
+        "stratumKey": "fi:page_metadata:not_flagged",
+        "inclusionProbability": 1,
+        "weight": 1
+      },
+      {
+        "itemId": "6da40127-7e14-4d08-b28b-3ba0e01ceb0c",
+        "blindId": "test-128",
+        "textHash": "6335fc270ebdee2910d789d55027c28c9914da69c310ffdb2e160a015786e9e1",
+        "stratumKey": "en:feed:flagged",
+        "inclusionProbability": 1,
+        "weight": 1
+      },
+      {
+        "itemId": "d0da50dd-a0f3-42be-8666-2b221649a415",
+        "blindId": "test-129",
+        "textHash": "ad81a7d5e76d47ce6e8ea2749629236ce5ac679677949fb24447d0943ca2ab9c",
+        "stratumKey": "en:feed:not_flagged",
+        "inclusionProbability": 0.033442088091353996,
+        "weight": 29.902439024390244
+      },
+      {
+        "itemId": "a53cc779-0607-4d21-8a0c-bb1bd93eee30",
+        "blindId": "test-130",
+        "textHash": "4e44c98bf2f3c73724e80ec5dc0d70a939284fe614b2341d5c6966d76bec499e",
+        "stratumKey": "fi:feed:not_flagged",
+        "inclusionProbability": 0.03474903474903475,
+        "weight": 28.77777777777778
+      },
+      {
+        "itemId": "9a0a9fee-5f63-4dcc-9c02-ef210e31091a",
+        "blindId": "test-131",
+        "textHash": "1487eb3010034377c55be40536d0f160c43ae5da005430cbca0f0eb4caebba39",
+        "stratumKey": "en:feed:not_flagged",
+        "inclusionProbability": 0.033442088091353996,
+        "weight": 29.902439024390244
+      },
+      {
+        "itemId": "f775f2ab-2e03-4d2f-97d7-10716d5bb9b9",
+        "blindId": "test-132",
+        "textHash": "d6e774117660cba69effc9f6a7791b321b99e8134eb92e5a9c07c1ef7d572ca9",
+        "stratumKey": "en:ai_generated:not_flagged",
+        "inclusionProbability": 0.09016393442622951,
+        "weight": 11.090909090909092
+      },
+      {
+        "itemId": "2500d403-a884-4fc5-b64c-72be98a3486c",
+        "blindId": "test-133",
+        "textHash": "30ff2c7f4a5367903df86e31428f2a92eb4bd1ceab186e302fbb6918ea788491",
+        "stratumKey": "fi:feed:not_flagged",
+        "inclusionProbability": 0.03474903474903475,
+        "weight": 28.77777777777778
+      },
+      {
+        "itemId": "6d6fe350-9dc6-4316-a2e6-9f6c823d9f08",
+        "blindId": "test-134",
+        "textHash": "07e1e6b31b721087d6f7f4cdb81ce955a3491576a8ad5b07d51af0bdcfbef559",
+        "stratumKey": "en:page_metadata:not_flagged",
+        "inclusionProbability": 0.03763440860215054,
+        "weight": 26.571428571428573
+      },
+      {
+        "itemId": "93cec391-a414-419c-933c-35da4fb4a91b",
+        "blindId": "test-135",
+        "textHash": "24c779ae53e8b003897966956b6374fcb104a0014689cdc9e4bcb1fdd97a92a2",
+        "stratumKey": "fi:feed:not_flagged",
+        "inclusionProbability": 0.03474903474903475,
+        "weight": 28.77777777777778
+      },
+      {
+        "itemId": "e3f6c78e-3be8-4bbf-86cd-102b076dd42b",
+        "blindId": "test-136",
+        "textHash": "b0e4274318c6de9880050dbaff6539e5636c29c2bfd1a49c696d99923c4c15e6",
+        "stratumKey": "fi:feed:not_flagged",
+        "inclusionProbability": 0.03474903474903475,
+        "weight": 28.77777777777778
+      },
+      {
+        "itemId": "a9e0f190-00fa-4968-9287-f5b548f8fdbe",
+        "blindId": "test-137",
+        "textHash": "bbb45fee4c03c24236cd282474831c8853ea55c0351a4e230535a5a11b4ab32b",
+        "stratumKey": "en:feed:not_flagged",
+        "inclusionProbability": 0.033442088091353996,
+        "weight": 29.902439024390244
+      },
+      {
+        "itemId": "442ec252-9ac6-4f85-9b50-832bd69984f2",
+        "blindId": "test-138",
+        "textHash": "83c98981b3b8146829894a3d7f70de24da2469b7decfcbb924f7b74a469bfddb",
+        "stratumKey": "en:page_metadata:not_flagged",
+        "inclusionProbability": 0.03763440860215054,
+        "weight": 26.571428571428573
+      },
+      {
+        "itemId": "0cca2092-ca0d-4a5f-874e-fb5b44b02a79",
+        "blindId": "test-139",
+        "textHash": "af0e7066d654ce70c579105969550cecea5e29a3aff21b32ee55ad73dcb8e303",
+        "stratumKey": "en:page_metadata:not_flagged",
+        "inclusionProbability": 0.03763440860215054,
+        "weight": 26.571428571428573
+      },
+      {
+        "itemId": "31bb5378-51c7-4d79-aeb2-90ec92ea2a54",
+        "blindId": "test-140",
+        "textHash": "822dcf17cc87f2d5d6a2951c6c7e125660968ccb57f8ad5e5cf78f42713ad7d4",
+        "stratumKey": "en:page_metadata:not_flagged",
+        "inclusionProbability": 0.03763440860215054,
+        "weight": 26.571428571428573
+      },
+      {
+        "itemId": "2a0cb7e1-318b-411c-afcf-e61ae07bf91f",
+        "blindId": "test-141",
+        "textHash": "92a1bb93ec1a6046fc408e3e7050360e2df6222f1b39cab1d860ca65f0cfabfd",
+        "stratumKey": "fi:feed:not_flagged",
+        "inclusionProbability": 0.03474903474903475,
+        "weight": 28.77777777777778
+      },
+      {
+        "itemId": "8b995477-601a-4f81-8224-2a8839e88dff",
+        "blindId": "test-142",
+        "textHash": "9aaae6ec8475b2d5c2bd5344cf134f973c6b5f49383631ba1cff22ae351c8e7f",
+        "stratumKey": "en:page_metadata:not_flagged",
+        "inclusionProbability": 0.03763440860215054,
+        "weight": 26.571428571428573
+      },
+      {
+        "itemId": "65ae009a-d2e3-425e-b751-cd8abe4b3338",
+        "blindId": "test-143",
+        "textHash": "dc1dec97f197c6b9b4fe0b7791453912505032f29e1075a442776dd1fdf06f57",
+        "stratumKey": "en:page_metadata:flagged",
+        "inclusionProbability": 0.6666666666666666,
+        "weight": 1.5
+      },
+      {
+        "itemId": "17caa897-e617-4e8a-ba51-552db6aaea94",
+        "blindId": "test-144",
+        "textHash": "39a12a2c6ac98097c2754f228f439b9ce403e3ced18db1512e4ecb1da68b30f8",
+        "stratumKey": "fi:feed:not_flagged",
+        "inclusionProbability": 0.03474903474903475,
+        "weight": 28.77777777777778
+      },
+      {
+        "itemId": "4c534d9d-23b3-4fcd-9712-6d815c6a4a5b",
+        "blindId": "test-145",
+        "textHash": "c170f6fa2415775bb8a9dd03bca8e8235a4fc9fb6b1c1cf802120d4d96c41ff0",
+        "stratumKey": "en:page_metadata:flagged",
+        "inclusionProbability": 0.6666666666666666,
+        "weight": 1.5
+      },
+      {
+        "itemId": "0908a2c0-18f8-42c1-a1e1-34782c02374a",
+        "blindId": "test-146",
+        "textHash": "92bfd5db168b0779d1133b34e90e432aaa8197f721f327a30db301a9fae8ef93",
+        "stratumKey": "en:feed:flagged",
+        "inclusionProbability": 1,
+        "weight": 1
+      },
+      {
+        "itemId": "36e5def7-42b9-44d1-bcf0-81ae2ebdb647",
+        "blindId": "test-147",
+        "textHash": "734f0ab6292eb2bc354c2954543bd345b8c8a8343fcf9a11e70aa91eee322d0f",
+        "stratumKey": "en:feed:not_flagged",
+        "inclusionProbability": 0.033442088091353996,
+        "weight": 29.902439024390244
+      },
+      {
+        "itemId": "7200cb53-ad55-4b57-b12e-8297ea006e4a",
+        "blindId": "test-148",
+        "textHash": "fb95873e14cced8f475b09802b827c3621e34dd2536b76e7f8c81b4ac68df9fa",
+        "stratumKey": "en:page_metadata:not_flagged",
+        "inclusionProbability": 0.03763440860215054,
+        "weight": 26.571428571428573
+      },
+      {
+        "itemId": "f2d24e5a-3539-4049-87eb-9f8aa38241fa",
+        "blindId": "test-149",
+        "textHash": "37bbccb34df1684e986722acc2eaafb7abba505a028f2eefcd35f095648ec62c",
+        "stratumKey": "fi:feed:not_flagged",
+        "inclusionProbability": 0.03474903474903475,
+        "weight": 28.77777777777778
+      },
+      {
+        "itemId": "8d87711a-270d-454d-b4e2-ee26a09bb848",
+        "blindId": "test-150",
+        "textHash": "a6604b20656abf3685ab0b60ae580be0c63213d05b34725e64b6bcd157af53ff",
+        "stratumKey": "en:feed:not_flagged",
+        "inclusionProbability": 0.033442088091353996,
+        "weight": 29.902439024390244
+      }
+    ],
+    "videos": [
+      {
+        "itemId": "031214ba-21d2-4ad5-a5f1-d954d5f9ef92",
+        "blindId": "videos-001",
+        "textHash": "6d5413759e5ef6ea1b3eaaa06ba58d3c05d8bce028345c0fbbb85598e81e472b",
+        "stratumKey": "video:census",
+        "inclusionProbability": 1,
+        "weight": 1
+      },
+      {
+        "itemId": "319a5b38-74b7-4435-ba72-b456fd31430c",
+        "blindId": "videos-002",
+        "textHash": "55679136a933bc21da35fb279cf2858f68e7140529cd7bd3c4d3dc3174f06f48",
+        "stratumKey": "video:census",
+        "inclusionProbability": 1,
+        "weight": 1
+      },
+      {
+        "itemId": "df20f964-2866-4b80-9da9-2fe319a9405f",
+        "blindId": "videos-003",
+        "textHash": "5b45007cba007aa562a7773a75a8e6f5254d8f21f3e96f7de7f82fe269b16a43",
+        "stratumKey": "video:census",
+        "inclusionProbability": 1,
+        "weight": 1
+      },
+      {
+        "itemId": "7a65907c-c60f-4cbd-bec5-360e7aab735b",
+        "blindId": "videos-004",
+        "textHash": "d67f09e5848e94aaa2de6960dc43d477bde1ef488f31485fd3400cfcc5ee1bf4",
+        "stratumKey": "video:census",
+        "inclusionProbability": 1,
+        "weight": 1
+      },
+      {
+        "itemId": "383783ec-3916-4cba-905e-807590e12eb2",
+        "blindId": "videos-005",
+        "textHash": "9769cf616d4f82a82ca4a85f71b6280135666c8b06fdb5b0de385c6467b6b84d",
+        "stratumKey": "video:census",
+        "inclusionProbability": 1,
+        "weight": 1
+      },
+      {
+        "itemId": "bfd3e088-e634-43fa-bb19-25a84033669b",
+        "blindId": "videos-006",
+        "textHash": "f37710884004d67e836866edaa85ca1b3df1e10add24abf6e39e17c5b9702775",
+        "stratumKey": "video:census",
+        "inclusionProbability": 1,
+        "weight": 1
+      },
+      {
+        "itemId": "5f69a222-201c-4492-a243-b3c258157789",
+        "blindId": "videos-007",
+        "textHash": "5db28311e1fd4ffc86f4df2cba5c661e86baf85ec9c1a6f756c61cdf424b6d5f",
+        "stratumKey": "video:census",
+        "inclusionProbability": 1,
+        "weight": 1
+      },
+      {
+        "itemId": "6d64dfc6-3200-432e-9536-ae7f6680ddea",
+        "blindId": "videos-008",
+        "textHash": "3f25de7a6cdaa64cdc2a081ca7e739fc5d8195018226a1132f40bcc93e4ce0cd",
+        "stratumKey": "video:census",
+        "inclusionProbability": 1,
+        "weight": 1
+      }
+    ]
+  }
+}

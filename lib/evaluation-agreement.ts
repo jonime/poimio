@@ -51,7 +51,7 @@ export interface AgreementScore {
   en: WeightedAgreementMetrics | null;
 }
 
-function seededShuffle<T>(items: T[], seed: string): T[] {
+export function seededShuffle<T>(items: T[], seed: string): T[] {
   const shuffled = [...items];
   let state = 0;
   for (const character of seed) {

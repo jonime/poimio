@@ -249,3 +249,11 @@ audit examples, quality estimates are insufficient evidence. Unknown video
 outcomes are excluded rather than inferred from article labels. No replacement benefit, production
 readiness, language certification, or low false-replacement rate is established
 by this small pilot.
+
+## Completion
+
+The approved reduced pilot is complete. Its recommendation is **not to add a
+production quality gate from these results**. A separate future study could
+validate the existing OpenAI judge, but that is not required for this spec.
+The replacement probe remains deferred. No further human labels, model runs,
+database changes, or deployment steps are needed for pilot completion.

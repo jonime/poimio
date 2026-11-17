@@ -1,6 +1,6 @@
 # 009 — Description quality experiment with TypeSafe Jev
 
-**Status:** Approved
+**Status:** Completed (approved reduced-effort pilot; replacement probe deferred)
 **Milestone:** Final (optional side experiment using the final snapshot from 11 Nov; third in the [plan's cut order](../plan.md#9-decision-gates-and-cut-order))
 **Depends on:** 005 (description provenance), 006 (evaluation snapshot export)  
 **Estimate:** roughly 10 h; reduced human audit approved on 16 Nov 2026
@@ -464,13 +464,43 @@ Cost alone does not decide. At about 1,000 input tokens per item, Jev costs abou
 - [x] 5. Implement the Jev and LLM judge HTTP clients, cache, and `run` subcommand. Add unit tests with an injected `fetch` (criterion 3).
 - [x] 6. Run on the dev set only. Adjust rubric wording, the L prompt, `τ`, `c_min`, and _w_. Commit the frozen `config.json` (criterion 6).
 - [x] 7. Run once on the test set, plus the stability rerun. Implement metrics and the report, with unit tests (criteria 4 and 7). Check criterion 8.
-- [ ] 8. **Deferred by the approved reduced-effort pilot:** replacement probe (`probe` subcommand) for at most 30 test items labelled `unusable`, without database writes:
+- **8. Deferred by the approved reduced-effort pilot (not required for completion):** replacement probe (`probe` subcommand) for at most 30 test items labelled `unusable`, without database writes:
   - fetch the page with `fetchPageHtml` and run `extractPageContent`;
   - if the metadata description passes H1 and J, use it as the replacement;
   - otherwise extract article text with the same Readability and `htmlToText` steps as `extractPageContent`, implemented in the experiment code without changing `lib/enrich/`, and summarize it with `summarizeArticleText`;
   - the human labels each pair (original and replacement in random A/B order) as `better`, `same`, or `worse`, plus the replacement's quality label (criterion 9).
-- [ ] 9. Check criterion 10.
-- [ ] 10. Record findings and the recommendation in this spec. Add an AI-log entry after the user confirms the model.
+- [x] 9. Check criterion 10.
+- [x] 10. Record findings and the recommendation in this spec. Add an AI-log entry after the user confirms the model.
+
+## Final recommendation and completion
+
+**Do not proceed to a production description-quality gate from this pilot.**
+Jev did not add value over H1 on the human audit: both missed its sole
+`unusable` item and rejected two human-`weak` items. L agreed with the human
+binary replacement labels on all 30 audit items, including that one positive,
+but one positive and no Finnish positives cannot establish useful recall or
+per-language performance. Zero observed replacements of the 18 human-`good`
+items also cannot establish a <=5% false-replacement rate.
+
+Jev was fast and inexpensive, with stable binary replacement decisions, but
+its three-way confidence decisions fell below the original stability
+reference. L was also inexpensive but exceeded the latency reference in its
+second run. Neither operational result resolves the limited human evidence,
+the low repeat-label kappa, or the absence of measured replacement benefit.
+
+Keep the current ingestion behaviour unchanged. If this idea is revisited
+outside the completed pilot, the existing OpenAI judge is a more promising
+candidate for a separately approved validation study than adding Jev as a
+production vendor. That study is optional future work, not an outstanding
+requirement or another human-labelling request for this spec.
+
+Tasks 1–7, 9, and 10 are complete under the approved reduced scope. Task 8
+remains explicitly deferred. Final `pnpm lint`, `pnpm typecheck`, and
+`pnpm test` passed after implementation commit `998d5d4` (555 passing unit
+tests; existing integration suites remain skipped in this unit command).
+The user confirmed `GPT-6.1 Sol` (`gpt-6.1-sol`) for the final update to the
+single consolidated AI-log entry. No production deployment, database work,
+or additional labelling is required to complete this pilot.
 
 ## 9. Risks and assumptions
 

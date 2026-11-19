@@ -123,8 +123,8 @@ Each criterion belongs to one task.
 
 ## Tasks
 
-- [ ] 1. Composite personas and balanced coverage in the replay (criterion 1).
-- [ ] 2. Migration: `top_m_mean` and `blend` in the private scorer, parameter validation, integration tests (criterion 2).
+- [x] 1. Composite personas and balanced coverage in the replay (criterion 1).
+- [x] 2. Migration: `top_m_mean` and `blend` in the private scorer, parameter validation, integration tests (criterion 2).
 - [ ] 3. Commit the selection rule; replay configuration input; selector and `pnpm eval:tune`; re-import the snapshot; run stage 1 and stage 2 on validation (criterion 3).
 - [ ] 4. Apply the chosen configuration to `get_feed`; update design.md and the AI log (criterion 4).
 

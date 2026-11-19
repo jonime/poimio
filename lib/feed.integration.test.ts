@@ -4,6 +4,7 @@ import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 import { createIngestDb } from "./db.ts";
 import { EMBEDDING_DIMENSIONS } from "./embeddings.ts";
+import { rankingDefaults } from "./ranking-parameters.ts";
 import { requireDefined } from "./required.ts";
 
 const enabled = process.env.SUPABASE_INTEGRATION === "1";
@@ -24,6 +25,8 @@ interface ItemDefinition {
   center: number[];
   embedding?: number[] | null;
   model?: string | null;
+  type?: "article" | "video";
+  ageMinutes?: number;
 }
 
 interface FeedRow {
@@ -137,6 +140,44 @@ const itemDefinitions: ItemDefinition[] = [
     center: axisVector(2),
     model: otherModel,
   },
+  // Ranking-method fixtures: ids start with "rank-" and are never shown by get_feed in tests.
+  { key: "rank-like-1", source: 0, language: "fi", center: axisVector(10) },
+  { key: "rank-like-2", source: 0, language: "fi", center: axisVector(11) },
+  { key: "rank-like-3", source: 0, language: "fi", center: axisVector(12) },
+  {
+    key: "rank-x",
+    source: 1,
+    language: "fi",
+    center: addVectors(axisVector(10, 3), axisVector(11, 4)),
+  },
+  {
+    key: "rank-mid",
+    source: 1,
+    language: "fi",
+    center: addVectors(axisVector(10), axisVector(11)),
+  },
+  { key: "rank-cand-a", source: 2, language: "fi", center: axisVector(10) },
+  { key: "rank-cand-b", source: 2, language: "fi", center: axisVector(11) },
+  { key: "rank-cold-dislike", source: 0, language: "fi", center: axisVector(13) },
+  { key: "rank-cold-1", source: 0, language: "fi", center: axisVector(13), ageMinutes: 0 },
+  { key: "rank-cold-2", source: 0, language: "fi", center: axisVector(14), ageMinutes: 5 },
+  { key: "rank-cold-3", source: 1, language: "fi", center: axisVector(14), ageMinutes: 5 },
+  { key: "rank-fi-other", source: 0, language: "fi", center: axisVector(15), ageMinutes: 10 },
+  { key: "rank-en-dislike", source: 1, language: "en", center: axisVector(13) },
+  { key: "rank-en-cand", source: 0, language: "en", center: axisVector(14), ageMinutes: 0 },
+  {
+    key: "rank-probe-article",
+    source: 1,
+    language: "en",
+    center: addVectors(axisVector(10), axisVector(13)),
+  },
+  {
+    key: "rank-probe-video",
+    source: 2,
+    language: "en",
+    center: addVectors(axisVector(10), axisVector(13)),
+    type: "video",
+  },
   ...Array.from({ length: 105 }, (_, index) => ({
     key: `limit-candidate-${index}`,
     source: index % 3,
@@ -203,17 +244,19 @@ describe.skipIf(!enabled || anonKey == null || serviceKey == null)(
       } = {},
     ): Promise<FeedRow[]> {
       const { includeLimitFixtures = false, ...rpcParameters } = parameters;
-      const limitFixtureIds = includeLimitFixtures
-        ? []
-        : itemDefinitions
-            .filter((definition) => definition.key.startsWith("limit-candidate-"))
-            .map((definition) =>
-              requireDefined(itemIds.get(definition.key), `fixture item ${definition.key}`),
-            );
+      const hiddenFixtureIds = itemDefinitions
+        .filter(
+          (definition) =>
+            definition.key.startsWith("rank-") ||
+            (!includeLimitFixtures && definition.key.startsWith("limit-candidate-")),
+        )
+        .map((definition) =>
+          requireDefined(itemIds.get(definition.key), `fixture item ${definition.key}`),
+        );
       const { data, error } = await client.rpc("get_feed", {
         ...rpcParameters,
         p_limit: rpcParameters.p_limit ?? 100,
-        p_exclude: [...new Set([...limitFixtureIds, ...(rpcParameters.p_exclude ?? [])])],
+        p_exclude: [...new Set([...hiddenFixtureIds, ...(rpcParameters.p_exclude ?? [])])],
       });
       if (error) throw new Error(`Loading feed failed: ${error.message}`);
       return (data ?? []) as FeedRow[];
@@ -251,7 +294,7 @@ describe.skipIf(!enabled || anonKey == null || serviceKey == null)(
 
     const rankingFixtureKeys = itemDefinitions
       .map((definition) => definition.key)
-      .filter((key) => !key.startsWith("limit-candidate-"));
+      .filter((key) => !key.startsWith("limit-candidate-") && !key.startsWith("rank-"));
 
     async function restoreMean(language: "fi" | "en"): Promise<void> {
       const { service } = clients();
@@ -338,14 +381,17 @@ describe.skipIf(!enabled || anonKey == null || serviceKey == null)(
             : definition.embedding;
         return {
           source_id: sourceIds[definition.source],
-          type: "article",
+          type: definition.type ?? "article",
           url: `https://feed-integration.example/${suffix}/${definition.key}`,
           title: `feed-test-${definition.key}`,
           summary: "Ranking integration description",
           summary_origin: "feed",
           enrichment_status: "completed",
           language: definition.language,
-          published_at: publishedAt,
+          published_at:
+            definition.ageMinutes === undefined
+              ? publishedAt
+              : new Date(Date.parse(publishedAt) - definition.ageMinutes * 60_000).toISOString(),
           embedding: embedding === null ? null : pgVector(embedding),
           embedding_model: definition.model === undefined ? activeModel : definition.model,
         };
@@ -631,6 +677,169 @@ describe.skipIf(!enabled || anonKey == null || serviceKey == null)(
       expect(raw).toHaveLength(1);
       expect(tied.map((row) => row.item_id)).toEqual(tied.map((row) => row.item_id).toSorted());
       expect(invalid.error).not.toBeNull();
+    });
+
+    describe("interest models", () => {
+      const likes = ["rank-like-1", "rank-like-2", "rank-like-3"];
+      const candidates = ["rank-x", "rank-mid", "rank-cand-a", "rank-cand-b"];
+      // `rank-x` has cosine 0.6, 0.8, and 0 to the three likes.
+      const topTwoMean = 0.7;
+      const topThreeMean = (0.6 + 0.8 + 0) / 3;
+      const averageSimilarity = 7 / (5 * Math.sqrt(3));
+
+      function rank(method: string, params: Record<string, unknown> = {}) {
+        return rankItems(candidates, likes, [], {
+          p_as_of: publishedAt,
+          p_method: method,
+          p_params: { recency_weight: 0, ...params },
+        });
+      }
+
+      function scoreOf(rows: Awaited<ReturnType<typeof rank>>, key: string): number | undefined {
+        return rows.find((row) => row.item_id === itemIds.get(key))?.score ?? undefined;
+      }
+
+      it("matches nearest_liked for top_m_mean m=1 and blend alpha=1, and average_vector for alpha=0", async () => {
+        for (const centered of [true, false]) {
+          const nearest = await rank("nearest_liked", { centered });
+          const average = await rank("average_vector", { centered });
+          expect(await rank("top_m_mean", { centered, top_m: 1 })).toEqual(nearest);
+          expect(await rank("blend", { centered, blend_alpha: 1 })).toEqual(nearest);
+          expect(await rank("blend", { centered, blend_alpha: 0 })).toEqual(average);
+        }
+      });
+
+      it("computes top_m_mean and blend scores exactly", async () => {
+        expect(scoreOf(await rank("top_m_mean", { top_m: 2 }), "rank-x")).toBeCloseTo(
+          topTwoMean,
+          5,
+        );
+        expect(scoreOf(await rank("top_m_mean", { top_m: 3 }), "rank-x")).toBeCloseTo(
+          topThreeMean,
+          5,
+        );
+        expect(scoreOf(await rank("blend", { blend_alpha: 0.5 }), "rank-x")).toBeCloseTo(
+          0.5 * 0.8 + 0.5 * averageSimilarity,
+          5,
+        );
+        expect(await rank("top_m_mean")).toEqual(await rank("top_m_mean", { top_m: 3 }));
+        expect(await rank("blend")).toEqual(await rank("blend", { blend_alpha: 0.5 }));
+      });
+
+      it("uses all likes when m is larger than the number of likes", async () => {
+        const all = await rank("top_m_mean", { top_m: 3 });
+        expect(await rank("top_m_mean", { top_m: 5 })).toEqual(all);
+        expect(await rank("top_m_mean", { top_m: 10 })).toEqual(all);
+      });
+
+      it("ranks both interests above an item between them only for nearest_liked", async () => {
+        const nearest = await rank("nearest_liked");
+        const average = await rank("average_vector");
+        const order = (rows: typeof nearest) => rows.map((row) => row.item_id);
+        const position = (rows: typeof nearest, key: string) =>
+          order(rows).indexOf(requireDefined(itemIds.get(key), `fixture item ${key}`));
+
+        expect(position(nearest, "rank-cand-a")).toBeLessThan(position(nearest, "rank-mid"));
+        expect(position(nearest, "rank-cand-b")).toBeLessThan(position(nearest, "rank-mid"));
+        expect(position(average, "rank-mid")).toBeLessThan(position(average, "rank-cand-a"));
+        expect(position(average, "rank-mid")).toBeLessThan(position(average, "rank-cand-b"));
+      });
+
+      it("keeps the most similar like as the explanation for every method", async () => {
+        for (const [method, params] of [
+          ["nearest_liked", {}],
+          ["average_vector", {}],
+          ["top_m_mean", { top_m: 2 }],
+          ["blend", { blend_alpha: 0.5 }],
+        ] as const) {
+          const rows = await rank(method, params);
+          expect(
+            rows.find((row) => row.item_id === itemIds.get("rank-x"))?.because_item_id,
+            method,
+          ).toBe(itemIds.get("rank-like-2"));
+        }
+      });
+
+      it("rejects invalid top_m and blend_alpha values", async () => {
+        const invalidParameters = [
+          { top_m: 0 },
+          { top_m: 11 },
+          { top_m: 1.5 },
+          { top_m: "2" },
+          { blend_alpha: -0.1 },
+          { blend_alpha: 1.1 },
+          { blend_alpha: "0.5" },
+        ];
+        for (const params of invalidParameters) {
+          await expect(rank("top_m_mean", params), JSON.stringify(params)).rejects.toThrow(
+            "Ranking items failed",
+          );
+        }
+      });
+
+      it("orders cold start identically across interest models at each vector mode", async () => {
+        const coldCandidates = ["rank-cold-1", "rank-cold-2", "rank-cold-3", "rank-fi-other"];
+        for (const centered of [true, false]) {
+          const orders = await Promise.all(
+            (
+              [
+                ["nearest_liked", {}],
+                ["average_vector", {}],
+                ["top_m_mean", { top_m: 2 }],
+                ["blend", { blend_alpha: 0.5 }],
+              ] as const
+            ).map(async ([method, params]) =>
+              (
+                await rankItems(coldCandidates, [], ["rank-cold-dislike"], {
+                  p_method: method,
+                  p_params: { centered, ...params },
+                })
+              ).map((row) => row.item_id),
+            ),
+          );
+          for (const order of orders) expect(order).toEqual(orders[0]);
+          expect(orders[0]?.at(-1)).toBe(itemIds.get("rank-cold-1"));
+        }
+      });
+
+      it("lets the vector mode change cold-start dislike demotion", async () => {
+        const order = async (centered: boolean) =>
+          (
+            await rankItems(["rank-en-cand", "rank-fi-other"], [], ["rank-en-dislike"], {
+              p_params: { centered },
+            })
+          ).map((row) => row.item_id);
+        const enCandidate = itemIds.get("rank-en-cand");
+        const otherCandidate = itemIds.get("rank-fi-other");
+
+        expect(await order(true)).toEqual([enCandidate, otherCandidate]);
+        expect(await order(false)).toEqual([otherCandidate, enCandidate]);
+      });
+
+      it("keeps the documented defaults in sync with the scorer", async () => {
+        const probes = ["rank-probe-article", "rank-probe-video"];
+        const asOf = new Date(Date.parse(publishedAt) + 168 * 3600 * 1000).toISOString();
+        const score = async (params: Record<string, unknown>) =>
+          rankItems(probes, ["rank-like-1"], ["rank-cold-dislike"], {
+            p_as_of: asOf,
+            p_params: params,
+          });
+        const implicit = await score({});
+
+        expect(await score(rankingDefaults)).toEqual(implicit);
+        for (const changed of [
+          { lambda: 0.4 },
+          { recency_weight: 0.2 },
+          { article_half_life_hours: 48 },
+          { video_half_life_hours: 336 },
+          { centered: false },
+        ]) {
+          expect(
+            await score({ ...rankingDefaults, ...changed }),
+            JSON.stringify(changed),
+          ).not.toEqual(implicit);
+        }
+      });
     });
 
     it("denies direct ranking to anonymous and signed-in clients", async () => {

@@ -6,37 +6,45 @@ import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 import { encodeCsv } from "../lib/early-ranking.ts";
 import { parseFrozenParameters, validateTestRun } from "../lib/evaluation-freeze.ts";
 import {
-  type EvaluationLabelItem,
-  type EvaluationPersona,
-  parseLabelJsonLines,
-  validateLabelSet,
+    type EvaluationLabelItem,
+    type EvaluationPersona,
+    parseLabelJsonLines,
+    validateLabelSet,
 } from "../lib/evaluation-labels.ts";
 import {
-  candidateScopes,
-  createFeedbackSequence,
-  feedbackPrefix,
-  jaccard,
-  nearDuplicateIds,
-  pairedDifferenceStatistics,
-  precisionAt10,
-  type ReplayItem,
-  seedStatistics,
-  top10Diversity,
+    balancedCoverage,
+    candidateScopes,
+    compositeFeedbackPrefix,
+    compositePersonas,
+    createCompositeFeedbackSequence,
+    createFeedbackSequence,
+    feedbackPrefix,
+    jaccard,
+    type MemberRelevance,
+    nearDuplicateIds,
+    pairedDifferenceStatistics,
+    precisionAt10,
+    type ReplayFeedback,
+    type ReplayItem,
+    seedStatistics,
+    top10Diversity,
+    unionRelevance,
 } from "../lib/evaluation-replay.ts";
 import {
-  type EvaluationSnapshotManifest,
-  parseJsonLines,
-  requireFinalSnapshot,
-  requireLocalSupabaseUrl,
-  type SnapshotRow,
-  sha256,
-  validateSnapshotData,
+    type EvaluationSnapshotManifest,
+    parseJsonLines,
+    requireFinalSnapshot,
+    requireLocalSupabaseUrl,
+    type SnapshotRow,
+    sha256,
+    validateSnapshotData,
 } from "../lib/evaluation-snapshot.ts";
+import { isRankingMethod, resolveRankingParameters } from "../lib/ranking-parameters.ts";
 import { requireDefined } from "../lib/required.ts";
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const labelsDirectory = resolve(root, "evaluation/labels");
-const methods = [
+const defaultMethods = [
   { method: "nearest_liked", name: "nearest_liked", params: {} },
   {
     method: "nearest_liked",
@@ -49,6 +57,13 @@ const methods = [
 ] as const;
 const seeds = Array.from({ length: 10 }, (_, index) => index);
 const kValues = [0, 1, 3, 5, 10, 20];
+const compositeKValues = [3, 5, 10, 20];
+
+interface ReplayMethod {
+  method: string;
+  name: string;
+  params: Record<string, unknown>;
+}
 
 interface ReplayContentItem extends ReplayItem {
   title: string;
@@ -71,6 +86,7 @@ interface ReplayCell {
   status: "complete" | "missing";
   missingReason: string | null;
   precisionAt10: number | null;
+  balancedCoverage: 0 | 1 | null;
   distinctSources: number | null;
   distinctCategories: number | null;
   top10ItemIds: string[];
@@ -81,6 +97,9 @@ interface ReplayOptions {
   provisional: boolean;
   labelsPath?: string;
   paramsPath?: string;
+  method?: string;
+  paramOverrides: Record<string, unknown>;
+  resultName?: string;
   newExperimentReason?: string;
 }
 
@@ -88,8 +107,11 @@ function parseArguments(args: string[]): ReplayOptions {
   let window: string | undefined;
   let paramsPath: string | undefined;
   let labelsPath: string | undefined;
+  let method: string | undefined;
+  let resultName: string | undefined;
   let newExperimentReason: string | undefined;
   let provisional = false;
+  const paramOverrides: Record<string, unknown> = {};
   for (let index = 0; index < args.length; index += 1) {
     const argument = requireDefined(args[index], "CLI argument");
     if (argument === "--window" || argument.startsWith("--window=")) {
@@ -98,6 +120,18 @@ function parseArguments(args: string[]): ReplayOptions {
       paramsPath = argument === "--params" ? args[++index] : argument.slice("--params=".length);
     } else if (argument === "--labels" || argument.startsWith("--labels=")) {
       labelsPath = argument === "--labels" ? args[++index] : argument.slice("--labels=".length);
+    } else if (argument === "--method" || argument.startsWith("--method=")) {
+      method = argument === "--method" ? args[++index] : argument.slice("--method=".length);
+    } else if (argument === "--param" || argument.startsWith("--param=")) {
+      const assignment = argument === "--param" ? args[++index] : argument.slice("--param=".length);
+      const separator = assignment?.indexOf("=") ?? -1;
+      if (assignment === undefined || separator < 1) {
+        throw new Error("--param requires key=value with a JSON value");
+      }
+      paramOverrides[assignment.slice(0, separator)] = JSON.parse(assignment.slice(separator + 1));
+    } else if (argument === "--result-name" || argument.startsWith("--result-name=")) {
+      resultName =
+        argument === "--result-name" ? args[++index] : argument.slice("--result-name=".length);
     } else if (argument === "--new-experiment" || argument.startsWith("--new-experiment=")) {
       newExperimentReason =
         argument === "--new-experiment"
@@ -112,6 +146,18 @@ function parseArguments(args: string[]): ReplayOptions {
   if (window !== "validation" && window !== "test") {
     throw new Error("--window must be validation or test");
   }
+  if (method !== undefined && !isRankingMethod(method)) {
+    throw new Error(`--method must be a known ranking method; got ${method}`);
+  }
+  if (method === undefined && Object.keys(paramOverrides).length > 0) {
+    throw new Error("--param requires --method");
+  }
+  if (
+    resultName !== undefined &&
+    !/^[a-z0-9][a-z0-9._-]*(\/[a-z0-9][a-z0-9._-]*)*$/.test(resultName)
+  ) {
+    throw new Error("--result-name must be a relative path of lowercase letters, digits, . _ -");
+  }
   if (newExperimentReason !== undefined && newExperimentReason.trim().length === 0) {
     throw new Error("--new-experiment requires a non-empty reason");
   }
@@ -121,11 +167,20 @@ function parseArguments(args: string[]): ReplayOptions {
   if (window === "test" && provisional) {
     throw new Error("test replay refuses provisional snapshots");
   }
+  if (
+    window === "test" &&
+    (method !== undefined || resultName !== undefined || Object.keys(paramOverrides).length > 0)
+  ) {
+    throw new Error("test replay uses only the frozen parameters and fixed result name");
+  }
   return {
     window,
     ...(paramsPath === undefined ? {} : { paramsPath }),
     ...(labelsPath === undefined ? {} : { labelsPath }),
+    ...(method === undefined ? {} : { method }),
+    ...(resultName === undefined ? {} : { resultName }),
     ...(newExperimentReason === undefined ? {} : { newExperimentReason }),
+    paramOverrides,
     provisional,
   };
 }
@@ -311,7 +366,7 @@ async function runRanking(input: {
   likes: string[];
   dislikes: string[];
   asOf: string;
-  method: (typeof methods)[number];
+  method: ReplayMethod;
   params: Record<string, unknown>;
   seed: number;
 }): Promise<string[]> {
@@ -335,6 +390,7 @@ function missingCell(
     | "status"
     | "missingReason"
     | "precisionAt10"
+    | "balancedCoverage"
     | "distinctSources"
     | "distinctCategories"
     | "top10ItemIds"
@@ -346,6 +402,7 @@ function missingCell(
     status: "missing",
     missingReason: reason,
     precisionAt10: null,
+    balancedCoverage: null,
     distinctSources: null,
     distinctCategories: null,
     top10ItemIds: [],
@@ -433,42 +490,79 @@ async function main(): Promise<void> {
     experimentId = guard.experimentId;
     newExperimentReason = guard.newExperimentReason;
   } else {
-    params = await parameterOverrides(options.paramsPath);
+    params = { ...(await parameterOverrides(options.paramsPath)), ...options.paramOverrides };
   }
+  const methods: ReplayMethod[] = options.method
+    ? [{ method: options.method, name: options.method, params: {} }]
+    : [...defaultMethods];
   const candidateWindow = windowItems(snapshot, options.window);
   const feedbackWindow = snapshot.manifest.windows.feedback.itemIds;
   const feedbackItems = snapshot.items.filter((item) => feedbackWindow.includes(item.id));
   const candidateById = new Map(candidateWindow.map((item) => [item.id, item]));
   const itemById = new Map(snapshot.items.map((item) => [item.id, item]));
-  const labelsByPersona = new Map<string, Map<string, boolean>>();
+  const labelsByPersona = new Map<string, Set<string>>();
   for (const persona of snapshot.personas) {
     labelsByPersona.set(
       persona.id,
-      new Map(
+      new Set(
         snapshot.labelSet.labels
-          .filter((label) => label.personaId === persona.id)
-          .map((label) => [label.itemId, label.relevant]),
+          .filter((label) => label.personaId === persona.id && label.relevant)
+          .map((label) => label.itemId),
       ),
     );
   }
+  const replayPersonas = [
+    ...snapshot.personas.map(({ id }) => ({ id, members: [id] })),
+    ...compositePersonas(snapshot.personas.map(({ id }) => id)).map(({ id, members }) => ({
+      id,
+      members: [...members],
+    })),
+  ];
   const cells: ReplayCell[] = [];
   const top10ByPersona = new Map<string, string[]>();
 
-  for (const persona of snapshot.personas) {
-    const relevance = requireDefined(labelsByPersona.get(persona.id), `labels for ${persona.id}`);
-    const relevantFeedbackIds = feedbackItems
-      .filter((item) => relevance.get(item.id) === true)
-      .map((item) => item.id);
-    const standardSequenceItems: ReplayItem[] = feedbackItems;
-    for (const seed of seedsToRun) {
-      const standardSequence = createFeedbackSequence({
-        items: standardSequenceItems,
-        relevantItemIds: relevantFeedbackIds,
+  for (const persona of replayPersonas) {
+    const memberRelevance = persona.members.map((member) =>
+      requireDefined(labelsByPersona.get(member), `labels for ${member}`),
+    );
+    const [firstRelevance, secondRelevance] = memberRelevance;
+    const pair: MemberRelevance | null =
+      firstRelevance && secondRelevance ? [firstRelevance, secondRelevance] : null;
+    const relevance: ReadonlySet<string> = pair
+      ? unionRelevance(pair)
+      : requireDefined(firstRelevance, `labels for ${persona.id}`);
+    const personaKValues = pair
+      ? kValuesToRun.filter((k) => compositeKValues.includes(k))
+      : kValuesToRun;
+    const feedbackFor = (
+      items: ReplayItem[],
+      seed: number,
+      language?: "fi" | "en",
+    ): ((k: number) => ReplayFeedback | null) => {
+      if (!pair) {
+        const sequence = createFeedbackSequence({
+          items,
+          relevantItemIds: items.filter((item) => relevance.has(item.id)).map((item) => item.id),
+          seed,
+          personaId: persona.id,
+          ...(language === undefined ? {} : { language }),
+        });
+        return (k) => feedbackPrefix(sequence, k);
+      }
+      const sequence = createCompositeFeedbackSequence({
+        items,
+        relevance: pair,
+        startMember: seedsToRun.indexOf(seed) % 2 === 0 ? 0 : 1,
         seed,
-        personaId: persona.id,
+        compositeId: persona.id,
+        ...(language === undefined ? {} : { language }),
       });
-      for (const k of kValuesToRun) {
-        const feedback = feedbackPrefix(standardSequence, k);
+      return (k) => compositeFeedbackPrefix(sequence, k);
+    };
+    for (const seed of seedsToRun) {
+      const standardFeedback = feedbackFor(feedbackItems, seed);
+      for (const k of personaKValues) {
+        const feedback = standardFeedback(k);
         for (const method of methods) {
           for (const scope of ["headline", "duplicate-inclusive"] as const) {
             const base = {
@@ -501,7 +595,7 @@ async function main(): Promise<void> {
             const pools = candidateScopes(candidateWindow, ratedIds, duplicates);
             const candidates = scope === "headline" ? pools.headline : pools.duplicateInclusive;
             const relevantIds = new Set(
-              candidates.filter((item) => relevance.get(item.id) === true).map((item) => item.id),
+              candidates.filter((item) => relevance.has(item.id)).map((item) => item.id),
             );
             const filled = {
               ...base,
@@ -529,11 +623,12 @@ async function main(): Promise<void> {
               status: "complete",
               missingReason: null,
               precisionAt10: precisionAt10(rankedIds, candidateIds, relevantIds),
+              balancedCoverage: pair ? balancedCoverage(rankedIds, pair) : null,
               distinctSources: diversity.distinctSources,
               distinctCategories: diversity.distinctCategories,
               top10ItemIds: rankedIds,
             });
-            if (k === 10 && scope === "headline") {
+            if (k === 10 && scope === "headline" && !pair) {
               top10ByPersona.set(`${method.name}:${seed}:${persona.id}`, rankedIds);
             }
           }
@@ -559,19 +654,14 @@ async function main(): Promise<void> {
       const languageFeedback = feedbackItems.filter(
         (item) => item.language === direction.feedbackLanguage,
       );
-      const relevantLanguageIds = languageFeedback
-        .filter((item) => relevance.get(item.id) === true)
-        .map((item) => item.id);
       for (const seed of seedsToRun) {
-        const sequence = createFeedbackSequence({
-          items: languageFeedback,
-          relevantItemIds: relevantLanguageIds,
+        const sameLanguageFeedback = feedbackFor(
+          languageFeedback,
           seed,
-          personaId: persona.id,
-          language: direction.feedbackLanguage,
-        });
-        for (const k of kValuesToRun) {
-          const feedback = feedbackPrefix(sequence, k);
+          direction.feedbackLanguage,
+        );
+        for (const k of personaKValues) {
+          const feedback = sameLanguageFeedback(k);
           for (const method of methods) {
             for (const scope of ["headline", "duplicate-inclusive"] as const) {
               const base = {
@@ -604,7 +694,7 @@ async function main(): Promise<void> {
               const pools = candidateScopes(targetCandidates, rated, duplicates);
               const candidates = scope === "headline" ? pools.headline : pools.duplicateInclusive;
               const relevantIds = new Set(
-                candidates.filter((item) => relevance.get(item.id) === true).map((item) => item.id),
+                candidates.filter((item) => relevance.has(item.id)).map((item) => item.id),
               );
               const filled = {
                 ...base,
@@ -634,6 +724,7 @@ async function main(): Promise<void> {
                 status: "complete",
                 missingReason: null,
                 precisionAt10: precisionAt10(rankedIds, candidateIds, relevantIds),
+                balancedCoverage: null,
                 distinctSources: diversity.distinctSources,
                 distinctCategories: diversity.distinctCategories,
                 top10ItemIds: rankedIds,
@@ -678,6 +769,9 @@ async function main(): Promise<void> {
       k: Number(kString),
       method,
       precisionAt10: stats,
+      balancedCoverage: rows.every((row) => row.balancedCoverage !== null)
+        ? rows.reduce((sum, row) => sum + (row.balancedCoverage ?? 0), 0) / rows.length
+        : null,
       pairedDifferenceToAverageVector: paired,
       completeSeeds: rows.length,
     };
@@ -718,17 +812,29 @@ async function main(): Promise<void> {
     seeds: seedsToRun,
     kValues: kValuesToRun,
     parameters: params,
+    methods: methods.map(({ method, name, params: methodParams }) => ({
+      name,
+      method,
+      parameters: isRankingMethod(method)
+        ? resolveRankingParameters(method, { ...params, ...methodParams })
+        : { ...params, ...methodParams },
+    })),
     experimentId,
     newExperimentReason,
+    tuningRuleHash: await readFile(resolve(root, "evaluation/tuning-rule.json"), "utf8").then(
+      sha256,
+      () => null,
+    ),
   };
   const timestamp = new Date().toISOString().replaceAll(":", "-");
   const resultName =
     options.window === "test"
       ? `test-${experimentId}`
-      : `${options.provisional ? "provisional-" : ""}validation-${timestamp}`;
+      : (options.resultName ??
+        `${options.provisional ? "provisional-" : ""}validation-${timestamp}`);
   const jsonPath = resolve(resultsDirectory, `${resultName}.json`);
   const csvPath = resolve(resultsDirectory, `${resultName}.csv`);
-  await mkdir(resultsDirectory, { recursive: true });
+  await mkdir(dirname(jsonPath), { recursive: true });
   await Promise.all([
     writeFile(
       jsonPath,
@@ -751,6 +857,7 @@ async function main(): Promise<void> {
           "status",
           "missing_reason",
           "precision_at_10",
+          "balanced_coverage",
           "distinct_sources",
           "distinct_categories",
           "top10_item_ids",
@@ -768,6 +875,7 @@ async function main(): Promise<void> {
           cell.status,
           cell.missingReason ?? "",
           cell.precisionAt10 === null ? "" : String(cell.precisionAt10),
+          cell.balancedCoverage === null ? "" : String(cell.balancedCoverage),
           cell.distinctSources === null ? "" : String(cell.distinctSources),
           cell.distinctCategories === null ? "" : String(cell.distinctCategories),
           cell.top10ItemIds.join(" "),

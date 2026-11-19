@@ -6,19 +6,19 @@ import { encodeCsv } from "../lib/early-ranking.ts";
 import { compositePersonas } from "../lib/evaluation-replay.ts";
 import { sha256 } from "../lib/evaluation-snapshot.ts";
 import {
-    assertConsistentMissingCells,
-    baselineConfigurationId,
-    type ConfigurationMetrics,
-    configurationParameters,
-    type EvaluatedConfiguration,
-    type GridConfiguration,
-    measureConfiguration,
-    parseTuningRule,
-    selectWinner,
-    shortlistForStageTwo,
-    stageOneGrid,
-    stageTwoGrid,
-    type TuningCell,
+  assertConsistentMissingCells,
+  baselineConfigurationId,
+  type ConfigurationMetrics,
+  configurationParameters,
+  type EvaluatedConfiguration,
+  type GridConfiguration,
+  measureConfiguration,
+  parseTuningRule,
+  selectWinner,
+  shortlistForStageTwo,
+  stageOneGrid,
+  stageTwoGrid,
+  type TuningCell,
 } from "../lib/evaluation-tuning.ts";
 import { requireDefined } from "../lib/required.ts";
 

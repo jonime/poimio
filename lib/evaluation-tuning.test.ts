@@ -1,22 +1,22 @@
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 import {
-    assertConsistentMissingCells,
-    baselineConfigurationId,
-    type ConfigurationMetrics,
-    configurationId,
-    type EvaluatedConfiguration,
-    evaluateConstraints,
-    type GridConfiguration,
-    InsufficientDataError,
-    measureConfiguration,
-    parseTuningRule,
-    selectWinner,
-    shortlistForStageTwo,
-    stageOneGrid,
-    stageTwoGrid,
-    type TuningCell,
-    type TuningRule,
+  assertConsistentMissingCells,
+  baselineConfigurationId,
+  type ConfigurationMetrics,
+  configurationId,
+  type EvaluatedConfiguration,
+  evaluateConstraints,
+  type GridConfiguration,
+  InsufficientDataError,
+  measureConfiguration,
+  parseTuningRule,
+  selectWinner,
+  shortlistForStageTwo,
+  stageOneGrid,
+  stageTwoGrid,
+  type TuningCell,
+  type TuningRule,
 } from "./evaluation-tuning.ts";
 
 const rule: TuningRule = {

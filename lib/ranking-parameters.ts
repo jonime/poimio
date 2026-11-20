@@ -13,7 +13,7 @@ export type RankingMethod = (typeof rankingMethods)[number];
 // default except `dislike_threshold`.
 export const rankingDefaults = {
   lambda: 0.5,
-  recency_weight: 0.1,
+  recency_weight: 0,
   dislike_threshold: 0.4,
   article_half_life_hours: 24,
   video_half_life_hours: 168,

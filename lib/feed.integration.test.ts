@@ -279,7 +279,7 @@ describe.skipIf(!enabled || anonKey == null || serviceKey == null)(
         p_liked_ids: likedKeys.map((key) => itemIds.get(key)),
         p_disliked_ids: dislikedKeys.map((key) => itemIds.get(key)),
         p_as_of: parameters.p_as_of ?? new Date().toISOString(),
-        p_method: parameters.p_method ?? "nearest_liked",
+        p_method: parameters.p_method,
         p_params: parameters.p_params ?? {},
         p_seed: parameters.p_seed ?? 0,
         p_limit: 100,
@@ -599,21 +599,27 @@ describe.skipIf(!enabled || anonKey == null || serviceKey == null)(
       const candidates = ["page-target"];
       const likes = ["page-old-like", "page-like"];
 
+      const recency = { recency_weight: 0.1 };
       const nearest = await rankItems(candidates, likes, [], {
         p_as_of: asOf,
+        p_method: "nearest_liked",
+        p_params: recency,
       });
       const average = await rankItems(candidates, likes, [], {
         p_as_of: asOf,
         p_method: "average_vector",
+        p_params: recency,
       });
       const disliked = await rankItems(["candidate-close-dislike"], ["liked-fi"], ["disliked-fi"], {
         p_as_of: asOf,
+        p_method: "nearest_liked",
+        p_params: recency,
       });
       const adjustedDislike = await rankItems(
         ["candidate-close-dislike"],
         ["liked-fi"],
         ["disliked-fi"],
-        { p_as_of: asOf, p_params: { lambda: 0.25 } },
+        { p_as_of: asOf, p_method: "nearest_liked", p_params: { ...recency, lambda: 0.25 } },
       );
 
       expect(nearest[0]?.score).toBeCloseTo(0.1 + Math.SQRT1_2, 6);
@@ -827,19 +833,49 @@ describe.skipIf(!enabled || anonKey == null || serviceKey == null)(
         const implicit = await score({});
 
         expect(await score(rankingDefaults)).toEqual(implicit);
-        for (const changed of [
-          { lambda: 0.4 },
-          { recency_weight: 0.2 },
-          { article_half_life_hours: 48 },
-          { video_half_life_hours: 336 },
-          { centered: false },
-        ]) {
+        for (const changed of [{ lambda: 0.4 }, { recency_weight: 0.2 }, { centered: false }]) {
           expect(
             await score({ ...rankingDefaults, ...changed }),
             JSON.stringify(changed),
           ).not.toEqual(implicit);
         }
+
+        // Half-lives only matter with a nonzero recency weight.
+        const recent = await score({ recency_weight: 0.1 });
+        expect(await score({ ...rankingDefaults, recency_weight: 0.1 })).toEqual(recent);
+        for (const changed of [{ article_half_life_hours: 48 }, { video_half_life_hours: 336 }]) {
+          expect(
+            await score({ ...rankingDefaults, recency_weight: 0.1, ...changed }),
+            JSON.stringify(changed),
+          ).not.toEqual(recent);
+        }
       });
+    });
+
+    it("defaults to the tuned blend model in the scorer, wrapper, and get_feed", async () => {
+      const { userAClient } = clients();
+      const asOf = publishedAt;
+      const implicit = await rankItems(
+        ["rank-x"],
+        ["rank-like-1", "rank-like-2", "rank-like-3"],
+        [],
+        {
+          p_as_of: asOf,
+        },
+      );
+      // Blend alpha 0.5 of the nearest like (0.8) and the average-vector similarity, no recency.
+      expect(implicit[0]?.score).toBeCloseTo(0.5 * 0.8 + 0.5 * (7 / (5 * Math.sqrt(3))), 6);
+
+      await setFeedback(userAClient, "liked-fi", "like");
+      await setFeedback(userAClient, "disliked-fi", "not_interested");
+      const feed = await getFeed(userAClient);
+      const blend = await rankItems(
+        rankingFixtureKeys.filter((key) => key !== "liked-fi" && key !== "disliked-fi"),
+        ["liked-fi"],
+        ["disliked-fi"],
+        { p_method: "blend", p_params: { blend_alpha: 0.5, recency_weight: 0 } },
+      );
+      expect(feed.map((row) => row.id)).toEqual(blend.map((row) => row.item_id));
     });
 
     it("denies direct ranking to anonymous and signed-in clients", async () => {

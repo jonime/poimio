@@ -32,6 +32,7 @@ evaluation/labels/*.provisional.jsonl
 evaluation/agreement/provisional/
 evaluation/crosslingual/provisional/
 evaluation/results/provisional/
+evaluation/results/tuning-*/
 evaluation/frozen-params.json
 evaluation/description-quality/items.jsonl
 evaluation/description-quality/labels-*.csv

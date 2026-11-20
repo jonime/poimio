@@ -90,7 +90,7 @@ Not included: exploration slots, interest summary, evaluation harness, cross-lin
 ### 4.2 Final application (due 13 Dec)
 
 - Per-user LLM usage limits, added with the first LLM-triggering user action.
-- Exploration slots and diversity re-ranking; reasons on negative feedback.
+- Exploration slots and diversity re-ranking ([spec 007](specs/007-exploration-diversity.md)); reasons on negative feedback (own spec).
 - Natural-language feed tuning and same-story grouping (see cut order in §9).
 - Evaluation harness and results ([design.md §4](design.md#4-evaluation)).
 - Optional (see cut order in §9): LLM interest summary; click tracking as a weak positive signal.
@@ -158,24 +158,25 @@ Specs are written just in time: the next spec is drafted when the current one re
 | [004](specs/004-deployment-access.md)               | Vercel deployment from CI, authenticated access with database RLS                               | 1    | Done                             |
 | [005](specs/005-description-enrichment.md)          | Enrich missing descriptions from page metadata and article text; backfill existing items        | 1    | Done                             |
 | [006](specs/006-evaluation.md)                      | Evaluation harness, including the cross-lingual check moved from spec 001                       | 2–7  | In progress (test run in week 7) |
+| [007](specs/007-exploration-diversity.md)           | Exploration slots and MMR diversity re-ranking; diversity tuned on validation                   | 5–6  | Approved                         |
 | [008](specs/008-guest-feed-preview.md)              | Cached guest feed preview for signed-out visitors                                               | 2    | Done                             |
-| [009](specs/009-description-quality-jev.md)         | Description quality experiment with TypeSafe Jev (optional)                                     | 2–3  | In progress                      |
+| [009](specs/009-description-quality-jev.md)         | Description quality experiment with TypeSafe Jev (optional)                                     | 2–3  | Done                             |
 | [010](specs/010-site-wide-metadata-descriptions.md) | Reject site-wide metadata descriptions                                                          | 2    | Done                             |
 | [013](specs/013-liked-search.md)                    | Search liked items                                                                              | 2    | Done                             |
-| [014](specs/014-agent-readiness.md)                 | Agent readiness                                                                                 | 2    | Release checks pending           |
+| [014](specs/014-agent-readiness.md)                 | Agent readiness                                                                                 | 2    | Done                             |
 | [015](specs/015-search-and-trust.md)                | Search discovery and trust pages                                                                | 2    | Done                             |
 | [016](specs/016-vercel-scheduled-ingestion.md)      | Hourly ingestion on Vercel                                                                      | 2    | Done                             |
 | [017](specs/017-article-thumbnails.md)              | Article thumbnail quality and coverage                                                          | 2    | Done                             |
 | [018](specs/018-bound-embedding-inputs.md)          | Bound embedding inputs                                                                          | 3    | Done                             |
 | [019](specs/019-bound-ingestion-work.md)            | Bound ingestion and embedding work                                                              | 3    | Done                             |
-| [020](specs/020-ranking-tuning.md)                  | Ranking tuning on validation with multi-interest personas; choose the production interest model | 3–6  | Draft                            |
+| [020](specs/020-ranking-tuning.md)                  | Ranking tuning on validation with multi-interest personas; choose the production interest model | 3–6  | Done                             |
 
 **Planned, not yet drafted** (in order; see the cut order in §9)
 
 | Spec      | Content                                                                                                                                                                                                                           | Week |
 | --------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---- |
-| 007       | Exploration slots and diversity; negative-feedback reasons; per-user LLM limits                                                                                                                                                   | 5–6  |
-| next free | Natural-language feed tuning                                                                                                                                                                                                      | 5–6  |
+| next free | Natural-language feed tuning, including per-user LLM limits                                                                                                                                                                       | 5–6  |
+| next free | Negative-feedback reasons ("not this topic" / "not this source")                                                                                                                                                                  | 6    |
 | next free | Same-story grouping with embeddings and Jev                                                                                                                                                                                       | 6    |
 | next free | Optional: LLM interest summary and click tracking                                                                                                                                                                                 | 6    |
 | next free | Source discovery: (a) catalog-based, (b) LLM web search; only after gate 2                                                                                                                                                        | 6–7  |
@@ -243,13 +244,14 @@ The minimum acceptable result is: ingestion, personal feed with feedback, the re
 - Row Level Security on all tables; shared content is read-only for users, per-user data is owner-only.
 - RSS/Atom feeds (including YouTube channel feeds) are the content source; articles and videos, metadata only.
 - Finnish and English supported from the start.
-- Recommender: nearest-liked-item scoring with negative penalty, recency, diversity, and exploration slots.
+- Recommender: embedding-based interest scoring (tuned `blend` of nearest-liked and average vector, spec 020) with negative penalty, recency, diversity, and exploration slots.
 - Average-vector, newest-first, and random as evaluation baselines.
 - OpenAI for embeddings and LLM; LLM used for missing-description summaries, natural-language preferences, interest summary, evaluation labels, and (stretch) web-search source discovery — not for ranking.
 - Stack: Next.js on Vercel, Supabase Postgres + pgvector, supabase-js with SQL migrations (no ORM), Supabase Auth. Hourly ingestion runs on Vercel Schedules (spec 016); it ran on GitHub Actions until 7 Nov, and that workflow remains as a manual fallback. GitHub Actions also runs CI.
 - Source discovery is a two-stage stretch goal (catalog-based, then LLM web search), attempted only after gate 2; admin-approved sources join a shared pool.
 - Optional offline experiment: TypeSafe Jev for description quality, compared with rules and an LLM judge (spec 009); called with plain `fetch`, no SDK.
-- Additional AI features chosen for product value and measurability: natural-language feed tuning (LLM) and same-story grouping (embeddings + Jev), both not yet drafted; and negative-feedback reasons (spec 007). Jev as a relevance judge was dropped: the Qwen label set was already final when it would have been added, and Jev is evaluated in spec 009 instead.
+- Additional AI features chosen for product value and measurability: natural-language feed tuning (LLM) and same-story grouping (embeddings + Jev), both not yet drafted. Negative-feedback reasons get their own spec, separate from exploration and diversity (spec 007). Jev as a relevance judge was dropped: the Qwen label set was already final when it would have been added, and Jev is evaluated in spec 009 instead.
+- No spec after spec 020 may require bulk manual labeling. Evaluation reuses the existing label set; manual checks are limited to reviewing a few examples (about 10–20 items).
 - Cut order: web-search discovery, catalog discovery, Jev description experiment, LLM interest summary, click tracking, same-story grouping, natural-language feed tuning.
 
 ## 11. Open decisions
@@ -262,4 +264,4 @@ None of these block spec 001; each is decided in the spec that first needs it.
 | Parameter values (click weight, $\lambda$, recency decay, slot mix)                       | Defaults in spec 003; tuned and frozen through evaluation in week 6                                                                        |
 | How long older but relevant items stay in the feed (possibly longer for videos than news) | Spec 003 (recency defaults)                                                                                                                |
 | More YouTube channels or Finnish technology media in the active set                       | After about a week of ingestion data shows volume per topic                                                                                |
-| Per-user LLM limits (e.g. interest summaries per day, discovery runs per week)            | Spec 007 (first LLM-triggering user action)                                                                                                |
+| Per-user LLM limits (e.g. interest summaries per day, discovery runs per week)            | Natural-language feed tuning spec (first LLM-triggering user action)                                                                       |

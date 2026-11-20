@@ -1,6 +1,6 @@
 # 020 — Ranking tuning with multi-interest personas
 
-**Status:** Approved  
+**Status:** Done  
 **Milestone:** Final (weeks 3–6, before the parameter freeze and gate 2)  
 **Depends on:** 006 (evaluation harness, final snapshot, validation run)  
 **Estimate:** 14 h

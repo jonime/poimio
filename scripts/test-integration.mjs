@@ -64,6 +64,7 @@ try {
       "lib/feed.integration.test.ts",
       "lib/guest-feed.integration.test.ts",
       "lib/thumbnails/backfill.integration.test.ts",
+      "--no-file-parallelism",
       "--reporter=default",
       "--reporter=json",
       `--outputFile=${reportPath}`,

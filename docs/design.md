@@ -75,11 +75,52 @@ Why this approach:
 - Works with very little feedback (a handful of likes).
 - Explainable: the closest liked item is the reason for the recommendation.
 
+#### Tuned default (spec 020)
+
+The production default is now `blend` with $\alpha = 0.5$: the interest score is $\alpha \cdot \text{nearest-liked} + (1 - \alpha) \cdot \text{average-vector similarity}$, with language-centered vectors, $\lambda = 0.5$, and recency weight $\beta = 0$. `nearest_liked`, `average_vector`, and `top_m_mean` remain available in the private scorer. The private scorer, the public `rank_items` wrapper, and `get_feed` all use this default (migration `20261120000000`). `because_item_id` is still the most similar like. This is where the data contradicts gate 1: nearest-liked alone was the gate-1 choice, but on the multi-interest personas it covers both interests better than the average vector and ranks worse than either blend or average vector, so a blend beats both.
+
+Method: validation window only, 4 single personas and their 6 pairs as composites, 10 seeds, $k \in \{3, 5, 10, 20\}$, equal persona weights. The objective is mean precision at $k$. Selection used the committed rule in `evaluation/tuning-rule.json` (hash `083b2217…`): balanced coverage within 0.05 of the best configuration, cross-lingual precision constraints, then the simplest configuration within 0.01 of the best objective (fewer parameters; `blend` after simpler methods). Raw results: `evaluation/results/tuning-2026-11-19t07-44-10.395z.json`.
+
+Stage 1 (centered / raw vectors, $\lambda = 0.5$, $\beta = 0.1$; coverage = balanced coverage):
+
+| Method                     | Vectors  | Objective | Coverage | EN→FI | FI→EN | Eligible |
+| -------------------------- | -------- | --------- | -------- | ----- | ----- | -------- |
+| `nearest_liked` (baseline) | centered | 0.7522    | 0.625    | 0.299 | 0.661 | no       |
+| `nearest_liked`            | raw      | 0.7665    | 0.567    | 0.299 | 0.655 | no       |
+| `average_vector`           | centered | 0.8303    | 0.496    | 0.323 | 0.700 | no       |
+| `average_vector`           | raw      | 0.8273    | 0.308    | 0.347 | 0.536 | no       |
+| `top_m_mean`, $m = 2$      | centered | 0.7807    | 0.604    | 0.316 | 0.664 | no       |
+| `top_m_mean`, $m = 2$      | raw      | 0.7990    | 0.500    | 0.316 | 0.643 | no       |
+| `top_m_mean`, $m = 3$      | centered | 0.7737    | 0.613    | 0.306 | 0.644 | no       |
+| `top_m_mean`, $m = 3$      | raw      | 0.7923    | 0.450    | 0.310 | 0.611 | no       |
+| `top_m_mean`, $m = 5$      | centered | 0.7552    | 0.542    | 0.291 | 0.616 | no       |
+| `top_m_mean`, $m = 5$      | raw      | 0.7845    | 0.388    | 0.294 | 0.568 | no       |
+| `blend`, $\alpha = 0.25$   | centered | 0.8195    | 0.567    | 0.322 | 0.704 | no       |
+| `blend`, $\alpha = 0.25$   | raw      | 0.8262    | 0.367    | 0.343 | 0.597 | no       |
+| `blend`, $\alpha = 0.5$    | centered | 0.8038    | 0.638    | 0.320 | 0.711 | yes      |
+| `blend`, $\alpha = 0.5$    | raw      | 0.8123    | 0.508    | 0.337 | 0.641 | no       |
+| `blend`, $\alpha = 0.75$   | centered | 0.7815    | 0.688    | 0.311 | 0.691 | yes      |
+| `blend`, $\alpha = 0.75$   | raw      | 0.7957    | 0.550    | 0.321 | 0.658 | no       |
+
+Stage 2 grid (centered; $\alpha \in \{0.5, 0.75\}$, $\lambda \in \{0, 0.25, 0.5, 1\}$, $\beta \in \{0, 0.05, 0.1, 0.2\}$; 32 configurations). Best objective per $\alpha$ and the winner:
+
+| Configuration                                  | Objective | Coverage | EN→FI | FI→EN | Note                      |
+| ---------------------------------------------- | --------- | -------- | ----- | ----- | ------------------------- |
+| $\alpha = 0.5$, $\lambda = 0$, $\beta = 0$     | 0.8345    | 0.646    | 0.365 | 0.760 | best objective            |
+| $\alpha = 0.5$, $\lambda = 0.25$, $\beta = 0$  | 0.8320    | 0.663    | 0.368 | 0.760 | within 0.01 band          |
+| $\alpha = 0.5$, $\lambda = 0.5$, $\beta = 0$   | 0.8253    | 0.650    | 0.358 | 0.732 | **winner** (within band)  |
+| $\alpha = 0.5$, $\lambda = 0.5$, $\beta = 0.1$ | 0.8038    | 0.638    | 0.320 | 0.711 | stage-1 reference         |
+| $\alpha = 0.75$, $\lambda = 0.5$, $\beta = 0$  | 0.8027    | 0.671    | 0.352 | 0.712 | best $\alpha = 0.75$ rows |
+
+The winner improves the baseline's objective from 0.7522 to 0.8253 and balanced coverage from 0.625 to 0.650. The tie-break rule kept $\lambda = 0.5$ (the existing penalty) over $\lambda = 0$ and $0.25$, which scored within the 0.01 band. Recency weight 0 won every comparison: any positive $\beta$ lowered the objective, and $\beta = 0.2$ lowered it by about 0.07. The labels do not reward newness within the candidate window. Every raw-vector configuration failed the coverage constraint, even where its objective was higher, so the §1 default (centered) is unchanged.
+
+Limitations: the validation window was used for selection, so these numbers are optimistic and the test window stays untouched until the freeze. Labels are LLM proxies (local Qwen), not real feedback. The 4 single and 6 composite personas share items and labels, so their results are correlated and the 10 seeds are not independent evidence. Differences of about 0.01 in the objective should not be treated as real.
+
 ### 2.2 Final ranking and exploration
 
-- The prototype's final score is interest plus $\beta \cdot 0.5^{\text{age}/h}$, with $\beta = 0.1$. The half-life $h$ is 24 hours for articles and 7 days for videos. Candidate windows are 7 days for articles and 30 days for videos; all rated items are excluded.
+- The final score is interest plus $\beta \cdot 0.5^{\text{age}/h}$. The prototype used $\beta = 0.1$; the tuned default is $\beta = 0$ ([§2.1](#21-interest-scoring-nearest-liked-item)), so the age term is a no-op unless a caller passes a weight. The half-life $h$ is 24 hours for articles and 7 days for videos. Candidate windows are 7 days for articles and 30 days for videos; all rated items are excluded.
 - `get_feed` runs as `SECURITY INVOKER`, reads identity from `auth.uid()`, and is executable by authenticated users only. Pages contain 30 items; later pages exclude already shown IDs instead of using offsets. The limit is clamped to 1-100 and exclusions to 1,000 IDs.
-- These defaults are kept together in the SQL function and will be tuned in week 6. Cards already displayed do not reorder; refreshing reloads the ranking, and subsequent pages use the latest feedback.
+- These defaults are kept together in the SQL function and were tuned in spec 020. Cards already displayed do not reorder; refreshing reloads the ranking, and subsequent pages use the latest feedback.
 - Diversity re-ranking (MMR) and exploration slots are deferred to spec 007, not part of the prototype. The planned slot distribution is:
   - ~70% best-matching items
   - ~20% related but unfamiliar items (moderate similarity band)

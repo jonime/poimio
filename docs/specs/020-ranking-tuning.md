@@ -71,7 +71,7 @@ First validation run `evaluation/results/validation-2026-11-12T16-29-08.088Z.jso
 - Stage 2, for each configuration chosen by the stage-2 shortlist rule below: $\lambda \in \{0, 0.25, 0.5, 1\}$ × recency weight $\beta \in \{0, 0.05, 0.1, 0.2\}$.
 - Same seeds, near-duplicate threshold, and label set as the first validation run. Single personas retain $k \in \{0, 1, 3, 5, 10, 20\}$; composites use $k \in \{3, 5, 10, 20\}$. Selection uses only the populations below; other results are diagnostics.
 - The replay takes a method and its parameters as explicit input instead of a fixed method list. Each configuration is one validation result file whose provenance records the method, all resolved parameters (not only overrides), and the hash of `evaluation/tuning-rule.json`.
-- `pnpm eval:tune` drives the grid by calling the replay for each configuration and writes a summary table (`evaluation/results/tuning-<timestamp>.csv` and `.json`).
+- `pnpm eval:tune` drives the grid by calling the replay for each configuration and writes a summary table (`evaluation/results/tuning-<timestamp>.csv` and `.json`). The per-configuration result files (`evaluation/results/tuning-<timestamp>/`, about 180 MB) are gitignored; the summary records each file's hash, and the search can be re-run from the snapshot and the rule.
 - After the task 2 migration and `supabase db reset`, the snapshot is re-imported with `pnpm eval:import` and its hashes verified before the first stage-1 run.
 
 **Selection rule** (fixed before the search runs)
@@ -123,10 +123,10 @@ Each criterion belongs to one task.
 
 ## Tasks
 
-- [ ] 1. Composite personas and balanced coverage in the replay (criterion 1).
-- [ ] 2. Migration: `top_m_mean` and `blend` in the private scorer, parameter validation, integration tests (criterion 2).
-- [ ] 3. Commit the selection rule; replay configuration input; selector and `pnpm eval:tune`; re-import the snapshot; run stage 1 and stage 2 on validation (criterion 3).
-- [ ] 4. Apply the chosen configuration to `get_feed`; update design.md and the AI log (criterion 4).
+- [x] 1. Composite personas and balanced coverage in the replay (criterion 1).
+- [x] 2. Migration: `top_m_mean` and `blend` in the private scorer, parameter validation, integration tests (criterion 2).
+- [x] 3. Commit the selection rule; replay configuration input; selector and `pnpm eval:tune`; re-import the snapshot; run stage 1 and stage 2 on validation (criterion 3).
+- [x] 4. Apply the chosen configuration to `get_feed`; update design.md and the AI log (criterion 4).
 
 ## Decisions
 

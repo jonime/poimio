@@ -95,6 +95,95 @@ export function feedbackPrefix(sequence: ReplayFeedbackSequence, k: number): Rep
   };
 }
 
+export interface CompositePersona {
+  id: string;
+  members: [string, string];
+}
+
+export type MemberRelevance = [ReadonlySet<string>, ReadonlySet<string>];
+
+export interface CompositeFeedbackSequence {
+  exclusiveIds: [string[], string[]];
+  startMember: 0 | 1;
+  neitherIds: string[];
+}
+
+export function compositePersonas(personaIds: string[]): CompositePersona[] {
+  return personaIds.flatMap((first, index) =>
+    personaIds.slice(index + 1).map((second): CompositePersona => {
+      return { id: `${first}+${second}`, members: [first, second] };
+    }),
+  );
+}
+
+export function unionRelevance(relevance: MemberRelevance): Set<string> {
+  return new Set([...relevance[0], ...relevance[1]]);
+}
+
+export function createCompositeFeedbackSequence(input: {
+  items: ReplayItem[];
+  relevance: MemberRelevance;
+  startMember: 0 | 1;
+  seed: number;
+  compositeId: string;
+  language?: "fi" | "en";
+}): CompositeFeedbackSequence {
+  const { items, relevance, startMember, seed, compositeId, language } = input;
+  const eligible = items.filter((item) => language === undefined || item.language === language);
+  const key = (part: string) => `${seed}:${compositeId}:${language ?? "all"}:${part}`;
+  const pick = (matches: (id: string) => boolean, part: string) =>
+    deterministicShuffle(
+      eligible.filter((item) => matches(item.id)).map((item) => item.id),
+      key(part),
+    );
+  return {
+    exclusiveIds: [
+      pick((id) => relevance[0].has(id) && !relevance[1].has(id), "exclusive-0"),
+      pick((id) => relevance[1].has(id) && !relevance[0].has(id), "exclusive-1"),
+    ],
+    startMember,
+    neitherIds: pick((id) => !relevance[0].has(id) && !relevance[1].has(id), "neither"),
+  };
+}
+
+export function compositeFeedbackPrefix(
+  sequence: CompositeFeedbackSequence,
+  k: number,
+): ReplayFeedback | null {
+  if (!Number.isInteger(k) || k < 0) return null;
+  const dislikeCount = Math.floor(k / 2);
+  const starting = sequence.exclusiveIds[sequence.startMember];
+  const other = sequence.exclusiveIds[sequence.startMember === 0 ? 1 : 0];
+  const startingQuota = Math.ceil(k / 2);
+  const otherQuota = k - startingQuota;
+  if (
+    starting.length < startingQuota ||
+    other.length < otherQuota ||
+    sequence.neitherIds.length < dislikeCount
+  ) {
+    return null;
+  }
+  return {
+    likes: Array.from({ length: k }, (_, index) =>
+      requireDefined(
+        (index % 2 === 0 ? starting : other)[Math.floor(index / 2)],
+        `composite like ${index}`,
+      ),
+    ),
+    dislikes: sequence.neitherIds.slice(0, dislikeCount),
+  };
+}
+
+export function balancedCoverage(rankedIds: string[], relevance: MemberRelevance): 0 | 1 {
+  const top = rankedIds.slice(0, 10);
+  const exclusiveCount = (own: ReadonlySet<string>, other: ReadonlySet<string>) =>
+    top.filter((id) => own.has(id) && !other.has(id)).length;
+  return exclusiveCount(relevance[0], relevance[1]) >= 2 &&
+    exclusiveCount(relevance[1], relevance[0]) >= 2
+    ? 1
+    : 0;
+}
+
 function centered(item: ReplayItem, meanByLanguage: Record<"fi" | "en", number[]>): number[] {
   const mean = meanByLanguage[item.language];
   if (mean.length !== item.embedding.length) {

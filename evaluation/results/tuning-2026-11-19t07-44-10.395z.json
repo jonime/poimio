@@ -1,0 +1,2072 @@
+{
+  "createdAt": "2026-11-19T13:46:14.433Z",
+  "window": "validation",
+  "gitCommit": "d3591700f21aeffd508478eedb41f2643e3f764c",
+  "tuningRuleHash": "083b221793b75d97e515eb034696ebd296c2b0daea87c490929268bc5e611f0d",
+  "snapshotManifestHash": "6a8057e2a2278c945d167a21e3cff344a45bfecc5a5d259cb944ab400bd4b314",
+  "labelSetId": "qwen/qwen3.8-27b:relevance-v1:final:bad99fa3aa138349",
+  "labelSetHash": "bad99fa3aa1383492643dfd25d118239e6d0fbbb46770b9f51ea49d8f58db641",
+  "nearDuplicateThreshold": 0.74,
+  "population": {
+    "singles": [
+      "ai-software",
+      "cars-engineering",
+      "science-space",
+      "finnish-sports"
+    ],
+    "composites": [
+      "ai-software+cars-engineering",
+      "ai-software+science-space",
+      "ai-software+finnish-sports",
+      "cars-engineering+science-space",
+      "cars-engineering+finnish-sports",
+      "science-space+finnish-sports"
+    ]
+  },
+  "baselineId": "nearest_liked-centered-l0.5-r0.1",
+  "baseline": {
+    "objective": 0.7522499999999999,
+    "balancedCoverage": 0.6249999999999999,
+    "enFiPrecision": 0.29875,
+    "fiEnPrecision": 0.6605555555555555
+  },
+  "availability": {
+    "objectiveCells": [
+      {
+        "personaId": "ai-software",
+        "k": 3,
+        "completeSeeds": 10
+      },
+      {
+        "personaId": "ai-software",
+        "k": 5,
+        "completeSeeds": 10
+      },
+      {
+        "personaId": "ai-software",
+        "k": 10,
+        "completeSeeds": 10
+      },
+      {
+        "personaId": "ai-software",
+        "k": 20,
+        "completeSeeds": 10
+      },
+      {
+        "personaId": "cars-engineering",
+        "k": 3,
+        "completeSeeds": 10
+      },
+      {
+        "personaId": "cars-engineering",
+        "k": 5,
+        "completeSeeds": 10
+      },
+      {
+        "personaId": "cars-engineering",
+        "k": 10,
+        "completeSeeds": 10
+      },
+      {
+        "personaId": "cars-engineering",
+        "k": 20,
+        "completeSeeds": 10
+      },
+      {
+        "personaId": "science-space",
+        "k": 3,
+        "completeSeeds": 10
+      },
+      {
+        "personaId": "science-space",
+        "k": 5,
+        "completeSeeds": 10
+      },
+      {
+        "personaId": "science-space",
+        "k": 10,
+        "completeSeeds": 10
+      },
+      {
+        "personaId": "science-space",
+        "k": 20,
+        "completeSeeds": 10
+      },
+      {
+        "personaId": "finnish-sports",
+        "k": 3,
+        "completeSeeds": 10
+      },
+      {
+        "personaId": "finnish-sports",
+        "k": 5,
+        "completeSeeds": 10
+      },
+      {
+        "personaId": "finnish-sports",
+        "k": 10,
+        "completeSeeds": 10
+      },
+      {
+        "personaId": "finnish-sports",
+        "k": 20,
+        "completeSeeds": 10
+      },
+      {
+        "personaId": "ai-software+cars-engineering",
+        "k": 3,
+        "completeSeeds": 10
+      },
+      {
+        "personaId": "ai-software+cars-engineering",
+        "k": 5,
+        "completeSeeds": 10
+      },
+      {
+        "personaId": "ai-software+cars-engineering",
+        "k": 10,
+        "completeSeeds": 10
+      },
+      {
+        "personaId": "ai-software+cars-engineering",
+        "k": 20,
+        "completeSeeds": 10
+      },
+      {
+        "personaId": "ai-software+science-space",
+        "k": 3,
+        "completeSeeds": 10
+      },
+      {
+        "personaId": "ai-software+science-space",
+        "k": 5,
+        "completeSeeds": 10
+      },
+      {
+        "personaId": "ai-software+science-space",
+        "k": 10,
+        "completeSeeds": 10
+      },
+      {
+        "personaId": "ai-software+science-space",
+        "k": 20,
+        "completeSeeds": 10
+      },
+      {
+        "personaId": "ai-software+finnish-sports",
+        "k": 3,
+        "completeSeeds": 10
+      },
+      {
+        "personaId": "ai-software+finnish-sports",
+        "k": 5,
+        "completeSeeds": 10
+      },
+      {
+        "personaId": "ai-software+finnish-sports",
+        "k": 10,
+        "completeSeeds": 10
+      },
+      {
+        "personaId": "ai-software+finnish-sports",
+        "k": 20,
+        "completeSeeds": 10
+      },
+      {
+        "personaId": "cars-engineering+science-space",
+        "k": 3,
+        "completeSeeds": 10
+      },
+      {
+        "personaId": "cars-engineering+science-space",
+        "k": 5,
+        "completeSeeds": 10
+      },
+      {
+        "personaId": "cars-engineering+science-space",
+        "k": 10,
+        "completeSeeds": 10
+      },
+      {
+        "personaId": "cars-engineering+science-space",
+        "k": 20,
+        "completeSeeds": 10
+      },
+      {
+        "personaId": "cars-engineering+finnish-sports",
+        "k": 3,
+        "completeSeeds": 10
+      },
+      {
+        "personaId": "cars-engineering+finnish-sports",
+        "k": 5,
+        "completeSeeds": 10
+      },
+      {
+        "personaId": "cars-engineering+finnish-sports",
+        "k": 10,
+        "completeSeeds": 10
+      },
+      {
+        "personaId": "cars-engineering+finnish-sports",
+        "k": 20,
+        "completeSeeds": 10
+      },
+      {
+        "personaId": "science-space+finnish-sports",
+        "k": 3,
+        "completeSeeds": 10
+      },
+      {
+        "personaId": "science-space+finnish-sports",
+        "k": 5,
+        "completeSeeds": 10
+      },
+      {
+        "personaId": "science-space+finnish-sports",
+        "k": 10,
+        "completeSeeds": 10
+      },
+      {
+        "personaId": "science-space+finnish-sports",
+        "k": 20,
+        "completeSeeds": 10
+      }
+    ],
+    "coverageCells": [
+      {
+        "personaId": "ai-software+cars-engineering",
+        "k": 3,
+        "completeSeeds": 10
+      },
+      {
+        "personaId": "ai-software+cars-engineering",
+        "k": 5,
+        "completeSeeds": 10
+      },
+      {
+        "personaId": "ai-software+cars-engineering",
+        "k": 10,
+        "completeSeeds": 10
+      },
+      {
+        "personaId": "ai-software+cars-engineering",
+        "k": 20,
+        "completeSeeds": 10
+      },
+      {
+        "personaId": "ai-software+science-space",
+        "k": 3,
+        "completeSeeds": 10
+      },
+      {
+        "personaId": "ai-software+science-space",
+        "k": 5,
+        "completeSeeds": 10
+      },
+      {
+        "personaId": "ai-software+science-space",
+        "k": 10,
+        "completeSeeds": 10
+      },
+      {
+        "personaId": "ai-software+science-space",
+        "k": 20,
+        "completeSeeds": 10
+      },
+      {
+        "personaId": "ai-software+finnish-sports",
+        "k": 3,
+        "completeSeeds": 10
+      },
+      {
+        "personaId": "ai-software+finnish-sports",
+        "k": 5,
+        "completeSeeds": 10
+      },
+      {
+        "personaId": "ai-software+finnish-sports",
+        "k": 10,
+        "completeSeeds": 10
+      },
+      {
+        "personaId": "ai-software+finnish-sports",
+        "k": 20,
+        "completeSeeds": 10
+      },
+      {
+        "personaId": "cars-engineering+science-space",
+        "k": 3,
+        "completeSeeds": 10
+      },
+      {
+        "personaId": "cars-engineering+science-space",
+        "k": 5,
+        "completeSeeds": 10
+      },
+      {
+        "personaId": "cars-engineering+science-space",
+        "k": 10,
+        "completeSeeds": 10
+      },
+      {
+        "personaId": "cars-engineering+science-space",
+        "k": 20,
+        "completeSeeds": 10
+      },
+      {
+        "personaId": "cars-engineering+finnish-sports",
+        "k": 3,
+        "completeSeeds": 10
+      },
+      {
+        "personaId": "cars-engineering+finnish-sports",
+        "k": 5,
+        "completeSeeds": 10
+      },
+      {
+        "personaId": "cars-engineering+finnish-sports",
+        "k": 10,
+        "completeSeeds": 10
+      },
+      {
+        "personaId": "cars-engineering+finnish-sports",
+        "k": 20,
+        "completeSeeds": 10
+      },
+      {
+        "personaId": "science-space+finnish-sports",
+        "k": 3,
+        "completeSeeds": 10
+      },
+      {
+        "personaId": "science-space+finnish-sports",
+        "k": 5,
+        "completeSeeds": 10
+      },
+      {
+        "personaId": "science-space+finnish-sports",
+        "k": 10,
+        "completeSeeds": 10
+      },
+      {
+        "personaId": "science-space+finnish-sports",
+        "k": 20,
+        "completeSeeds": 10
+      }
+    ],
+    "enFi": {
+      "omittedPersonaIds": [],
+      "notAssessable": false,
+      "cells": [
+        {
+          "personaId": "ai-software",
+          "k": 3,
+          "completeSeeds": 10
+        },
+        {
+          "personaId": "ai-software",
+          "k": 5,
+          "completeSeeds": 10
+        },
+        {
+          "personaId": "ai-software",
+          "k": 10,
+          "completeSeeds": 10
+        },
+        {
+          "personaId": "ai-software",
+          "k": 20,
+          "completeSeeds": 10
+        },
+        {
+          "personaId": "cars-engineering",
+          "k": 3,
+          "completeSeeds": 10
+        },
+        {
+          "personaId": "cars-engineering",
+          "k": 5,
+          "completeSeeds": 10
+        },
+        {
+          "personaId": "cars-engineering",
+          "k": 10,
+          "completeSeeds": 10
+        },
+        {
+          "personaId": "cars-engineering",
+          "k": 20,
+          "completeSeeds": 10
+        },
+        {
+          "personaId": "science-space",
+          "k": 3,
+          "completeSeeds": 10
+        },
+        {
+          "personaId": "science-space",
+          "k": 5,
+          "completeSeeds": 10
+        },
+        {
+          "personaId": "science-space",
+          "k": 10,
+          "completeSeeds": 10
+        },
+        {
+          "personaId": "science-space",
+          "k": 20,
+          "completeSeeds": 10
+        },
+        {
+          "personaId": "finnish-sports",
+          "k": 3,
+          "completeSeeds": 10
+        },
+        {
+          "personaId": "ai-software+cars-engineering",
+          "k": 3,
+          "completeSeeds": 10
+        },
+        {
+          "personaId": "ai-software+cars-engineering",
+          "k": 5,
+          "completeSeeds": 10
+        },
+        {
+          "personaId": "ai-software+cars-engineering",
+          "k": 10,
+          "completeSeeds": 10
+        },
+        {
+          "personaId": "ai-software+cars-engineering",
+          "k": 20,
+          "completeSeeds": 10
+        },
+        {
+          "personaId": "ai-software+science-space",
+          "k": 3,
+          "completeSeeds": 10
+        },
+        {
+          "personaId": "ai-software+science-space",
+          "k": 5,
+          "completeSeeds": 10
+        },
+        {
+          "personaId": "ai-software+science-space",
+          "k": 10,
+          "completeSeeds": 10
+        },
+        {
+          "personaId": "ai-software+science-space",
+          "k": 20,
+          "completeSeeds": 10
+        },
+        {
+          "personaId": "ai-software+finnish-sports",
+          "k": 3,
+          "completeSeeds": 10
+        },
+        {
+          "personaId": "ai-software+finnish-sports",
+          "k": 5,
+          "completeSeeds": 10
+        },
+        {
+          "personaId": "cars-engineering+science-space",
+          "k": 3,
+          "completeSeeds": 10
+        },
+        {
+          "personaId": "cars-engineering+science-space",
+          "k": 5,
+          "completeSeeds": 10
+        },
+        {
+          "personaId": "cars-engineering+science-space",
+          "k": 10,
+          "completeSeeds": 10
+        },
+        {
+          "personaId": "cars-engineering+science-space",
+          "k": 20,
+          "completeSeeds": 10
+        },
+        {
+          "personaId": "cars-engineering+finnish-sports",
+          "k": 3,
+          "completeSeeds": 10
+        },
+        {
+          "personaId": "cars-engineering+finnish-sports",
+          "k": 5,
+          "completeSeeds": 10
+        },
+        {
+          "personaId": "science-space+finnish-sports",
+          "k": 3,
+          "completeSeeds": 10
+        },
+        {
+          "personaId": "science-space+finnish-sports",
+          "k": 5,
+          "completeSeeds": 10
+        }
+      ]
+    },
+    "fiEn": {
+      "omittedPersonaIds": [
+        "finnish-sports"
+      ],
+      "notAssessable": false,
+      "cells": [
+        {
+          "personaId": "ai-software",
+          "k": 3,
+          "completeSeeds": 10
+        },
+        {
+          "personaId": "ai-software",
+          "k": 5,
+          "completeSeeds": 10
+        },
+        {
+          "personaId": "ai-software",
+          "k": 10,
+          "completeSeeds": 10
+        },
+        {
+          "personaId": "ai-software",
+          "k": 20,
+          "completeSeeds": 10
+        },
+        {
+          "personaId": "cars-engineering",
+          "k": 3,
+          "completeSeeds": 10
+        },
+        {
+          "personaId": "cars-engineering",
+          "k": 5,
+          "completeSeeds": 10
+        },
+        {
+          "personaId": "science-space",
+          "k": 3,
+          "completeSeeds": 10
+        },
+        {
+          "personaId": "science-space",
+          "k": 5,
+          "completeSeeds": 10
+        },
+        {
+          "personaId": "ai-software+cars-engineering",
+          "k": 3,
+          "completeSeeds": 10
+        },
+        {
+          "personaId": "ai-software+cars-engineering",
+          "k": 5,
+          "completeSeeds": 10
+        },
+        {
+          "personaId": "ai-software+cars-engineering",
+          "k": 10,
+          "completeSeeds": 10
+        },
+        {
+          "personaId": "ai-software+science-space",
+          "k": 3,
+          "completeSeeds": 10
+        },
+        {
+          "personaId": "ai-software+science-space",
+          "k": 5,
+          "completeSeeds": 10
+        },
+        {
+          "personaId": "ai-software+science-space",
+          "k": 10,
+          "completeSeeds": 10
+        },
+        {
+          "personaId": "ai-software+finnish-sports",
+          "k": 3,
+          "completeSeeds": 10
+        },
+        {
+          "personaId": "ai-software+finnish-sports",
+          "k": 5,
+          "completeSeeds": 10
+        },
+        {
+          "personaId": "ai-software+finnish-sports",
+          "k": 10,
+          "completeSeeds": 10
+        },
+        {
+          "personaId": "ai-software+finnish-sports",
+          "k": 20,
+          "completeSeeds": 10
+        },
+        {
+          "personaId": "cars-engineering+science-space",
+          "k": 3,
+          "completeSeeds": 10
+        },
+        {
+          "personaId": "cars-engineering+science-space",
+          "k": 5,
+          "completeSeeds": 10
+        },
+        {
+          "personaId": "cars-engineering+science-space",
+          "k": 10,
+          "completeSeeds": 10
+        },
+        {
+          "personaId": "cars-engineering+finnish-sports",
+          "k": 3,
+          "completeSeeds": 10
+        },
+        {
+          "personaId": "cars-engineering+finnish-sports",
+          "k": 5,
+          "completeSeeds": 10
+        },
+        {
+          "personaId": "cars-engineering+finnish-sports",
+          "k": 10,
+          "completeSeeds": 10
+        },
+        {
+          "personaId": "science-space+finnish-sports",
+          "k": 3,
+          "completeSeeds": 10
+        },
+        {
+          "personaId": "science-space+finnish-sports",
+          "k": 5,
+          "completeSeeds": 10
+        },
+        {
+          "personaId": "science-space+finnish-sports",
+          "k": 10,
+          "completeSeeds": 10
+        }
+      ]
+    }
+  },
+  "stageOne": {
+    "maxCoverage": 0.6875,
+    "shortlisted": [
+      "blend-blend_alpha0.5-centered-l0.5-r0.1",
+      "blend-blend_alpha0.75-centered-l0.5-r0.1"
+    ],
+    "skippedStageTwoReason": null
+  },
+  "final": {
+    "maxCoverage": 0.6875,
+    "bestObjective": 0.8345,
+    "bandIds": [
+      "blend-blend_alpha0.5-centered-l0.5-r0",
+      "blend-blend_alpha0.5-centered-l0-r0",
+      "blend-blend_alpha0.5-centered-l0.25-r0"
+    ],
+    "winnerId": "blend-blend_alpha0.5-centered-l0.5-r0",
+    "decision": "adopt winner as the production default",
+    "chosen": {
+      "method": "blend",
+      "parameters": {
+        "lambda": 0.5,
+        "recency_weight": 0,
+        "dislike_threshold": 0.4,
+        "article_half_life_hours": 24,
+        "video_half_life_hours": 168,
+        "centered": true,
+        "blend_alpha": 0.5
+      }
+    }
+  },
+  "configurations": [
+    {
+      "id": "nearest_liked-centered-l0.5-r0.1",
+      "stage": 1,
+      "gridOrder": 0,
+      "method": "nearest_liked",
+      "parameters": {
+        "lambda": 0.5,
+        "recency_weight": 0.1,
+        "dislike_threshold": 0.4,
+        "article_half_life_hours": 24,
+        "video_half_life_hours": 168,
+        "centered": true
+      },
+      "objective": 0.7522499999999999,
+      "balancedCoverage": 0.6249999999999999,
+      "enFiPrecision": 0.29875,
+      "fiEnPrecision": 0.6605555555555555,
+      "stageOneEligible": false,
+      "finalConstraints": {
+        "coverageOk": false,
+        "enFiOk": true,
+        "fiEnOk": true,
+        "eligible": false
+      },
+      "withinBand": false,
+      "winner": false,
+      "resultFile": "evaluation/results/tuning-2026-11-19t07-44-10.395z/nearest_liked-centered-l0.5-r0.1.json",
+      "resultHash": "1b741d65d8df02e4454f8f8179b4679e2344866e2c2847fe6ffa93fe7984821e"
+    },
+    {
+      "id": "nearest_liked-raw-l0.5-r0.1",
+      "stage": 1,
+      "gridOrder": 1,
+      "method": "nearest_liked",
+      "parameters": {
+        "lambda": 0.5,
+        "recency_weight": 0.1,
+        "dislike_threshold": 0.4,
+        "article_half_life_hours": 24,
+        "video_half_life_hours": 168,
+        "centered": false
+      },
+      "objective": 0.7665000000000001,
+      "balancedCoverage": 0.5666666666666668,
+      "enFiPrecision": 0.29874999999999996,
+      "fiEnPrecision": 0.6545370370370371,
+      "stageOneEligible": false,
+      "finalConstraints": {
+        "coverageOk": false,
+        "enFiOk": true,
+        "fiEnOk": true,
+        "eligible": false
+      },
+      "withinBand": false,
+      "winner": false,
+      "resultFile": "evaluation/results/tuning-2026-11-19t07-44-10.395z/nearest_liked-raw-l0.5-r0.1.json",
+      "resultHash": "51e8b847349e468fe4e20f7f574dd734fa8baa86458fb051701584af1039f59a"
+    },
+    {
+      "id": "average_vector-centered-l0.5-r0.1",
+      "stage": 1,
+      "gridOrder": 2,
+      "method": "average_vector",
+      "parameters": {
+        "lambda": 0.5,
+        "recency_weight": 0.1,
+        "dislike_threshold": 0.4,
+        "article_half_life_hours": 24,
+        "video_half_life_hours": 168,
+        "centered": true
+      },
+      "objective": 0.83025,
+      "balancedCoverage": 0.4958333333333333,
+      "enFiPrecision": 0.32275,
+      "fiEnPrecision": 0.700462962962963,
+      "stageOneEligible": false,
+      "finalConstraints": {
+        "coverageOk": false,
+        "enFiOk": true,
+        "fiEnOk": true,
+        "eligible": false
+      },
+      "withinBand": false,
+      "winner": false,
+      "resultFile": "evaluation/results/tuning-2026-11-19t07-44-10.395z/average_vector-centered-l0.5-r0.1.json",
+      "resultHash": "fe0374d4b48527fbdc5a006c4fb0f3784b11e1514b56d76a016db62dc7c58b89"
+    },
+    {
+      "id": "average_vector-raw-l0.5-r0.1",
+      "stage": 1,
+      "gridOrder": 3,
+      "method": "average_vector",
+      "parameters": {
+        "lambda": 0.5,
+        "recency_weight": 0.1,
+        "dislike_threshold": 0.4,
+        "article_half_life_hours": 24,
+        "video_half_life_hours": 168,
+        "centered": false
+      },
+      "objective": 0.82725,
+      "balancedCoverage": 0.3083333333333333,
+      "enFiPrecision": 0.34725,
+      "fiEnPrecision": 0.535925925925926,
+      "stageOneEligible": false,
+      "finalConstraints": {
+        "coverageOk": false,
+        "enFiOk": true,
+        "fiEnOk": false,
+        "eligible": false
+      },
+      "withinBand": false,
+      "winner": false,
+      "resultFile": "evaluation/results/tuning-2026-11-19t07-44-10.395z/average_vector-raw-l0.5-r0.1.json",
+      "resultHash": "c7c178773df76772c9b8033f6a752f38f9efaf0ca7e11327fc949f4f98b1b933"
+    },
+    {
+      "id": "top_m_mean-top_m2-centered-l0.5-r0.1",
+      "stage": 1,
+      "gridOrder": 4,
+      "method": "top_m_mean",
+      "parameters": {
+        "lambda": 0.5,
+        "recency_weight": 0.1,
+        "dislike_threshold": 0.4,
+        "article_half_life_hours": 24,
+        "video_half_life_hours": 168,
+        "centered": true,
+        "top_m": 2
+      },
+      "objective": 0.7807499999999999,
+      "balancedCoverage": 0.6041666666666666,
+      "enFiPrecision": 0.3155,
+      "fiEnPrecision": 0.6641666666666667,
+      "stageOneEligible": false,
+      "finalConstraints": {
+        "coverageOk": false,
+        "enFiOk": true,
+        "fiEnOk": true,
+        "eligible": false
+      },
+      "withinBand": false,
+      "winner": false,
+      "resultFile": "evaluation/results/tuning-2026-11-19t07-44-10.395z/top_m_mean-top_m2-centered-l0.5-r0.1.json",
+      "resultHash": "00bf98705213d32b0b52d8b467dedd94bd76d74b4d4c39149f5254a71ec4bcfc"
+    },
+    {
+      "id": "top_m_mean-top_m2-raw-l0.5-r0.1",
+      "stage": 1,
+      "gridOrder": 5,
+      "method": "top_m_mean",
+      "parameters": {
+        "lambda": 0.5,
+        "recency_weight": 0.1,
+        "dislike_threshold": 0.4,
+        "article_half_life_hours": 24,
+        "video_half_life_hours": 168,
+        "centered": false,
+        "top_m": 2
+      },
+      "objective": 0.799,
+      "balancedCoverage": 0.49999999999999994,
+      "enFiPrecision": 0.3155,
+      "fiEnPrecision": 0.6426851851851851,
+      "stageOneEligible": false,
+      "finalConstraints": {
+        "coverageOk": false,
+        "enFiOk": true,
+        "fiEnOk": true,
+        "eligible": false
+      },
+      "withinBand": false,
+      "winner": false,
+      "resultFile": "evaluation/results/tuning-2026-11-19t07-44-10.395z/top_m_mean-top_m2-raw-l0.5-r0.1.json",
+      "resultHash": "edf06853ce5c11d42c2a309fddb2613bb6ad1bb7a5ad1d178cb55d2cca2faf6e"
+    },
+    {
+      "id": "top_m_mean-top_m3-centered-l0.5-r0.1",
+      "stage": 1,
+      "gridOrder": 6,
+      "method": "top_m_mean",
+      "parameters": {
+        "lambda": 0.5,
+        "recency_weight": 0.1,
+        "dislike_threshold": 0.4,
+        "article_half_life_hours": 24,
+        "video_half_life_hours": 168,
+        "centered": true,
+        "top_m": 3
+      },
+      "objective": 0.7737499999999999,
+      "balancedCoverage": 0.6124999999999999,
+      "enFiPrecision": 0.30599999999999994,
+      "fiEnPrecision": 0.6444444444444445,
+      "stageOneEligible": false,
+      "finalConstraints": {
+        "coverageOk": false,
+        "enFiOk": true,
+        "fiEnOk": true,
+        "eligible": false
+      },
+      "withinBand": false,
+      "winner": false,
+      "resultFile": "evaluation/results/tuning-2026-11-19t07-44-10.395z/top_m_mean-top_m3-centered-l0.5-r0.1.json",
+      "resultHash": "b6cafc8092983745fdab34ce17e73dae1ad610af55681d5c3b31066129138e66"
+    },
+    {
+      "id": "top_m_mean-top_m3-raw-l0.5-r0.1",
+      "stage": 1,
+      "gridOrder": 7,
+      "method": "top_m_mean",
+      "parameters": {
+        "lambda": 0.5,
+        "recency_weight": 0.1,
+        "dislike_threshold": 0.4,
+        "article_half_life_hours": 24,
+        "video_half_life_hours": 168,
+        "centered": false,
+        "top_m": 3
+      },
+      "objective": 0.79225,
+      "balancedCoverage": 0.45,
+      "enFiPrecision": 0.31,
+      "fiEnPrecision": 0.6106481481481483,
+      "stageOneEligible": false,
+      "finalConstraints": {
+        "coverageOk": false,
+        "enFiOk": true,
+        "fiEnOk": true,
+        "eligible": false
+      },
+      "withinBand": false,
+      "winner": false,
+      "resultFile": "evaluation/results/tuning-2026-11-19t07-44-10.395z/top_m_mean-top_m3-raw-l0.5-r0.1.json",
+      "resultHash": "8b741d761e983493814408cdcfdad42fb7868ad589745bb2a4aa8f39606bccbe"
+    },
+    {
+      "id": "top_m_mean-top_m5-centered-l0.5-r0.1",
+      "stage": 1,
+      "gridOrder": 8,
+      "method": "top_m_mean",
+      "parameters": {
+        "lambda": 0.5,
+        "recency_weight": 0.1,
+        "dislike_threshold": 0.4,
+        "article_half_life_hours": 24,
+        "video_half_life_hours": 168,
+        "centered": true,
+        "top_m": 5
+      },
+      "objective": 0.75525,
+      "balancedCoverage": 0.5416666666666666,
+      "enFiPrecision": 0.29075,
+      "fiEnPrecision": 0.6158333333333332,
+      "stageOneEligible": false,
+      "finalConstraints": {
+        "coverageOk": false,
+        "enFiOk": true,
+        "fiEnOk": true,
+        "eligible": false
+      },
+      "withinBand": false,
+      "winner": false,
+      "resultFile": "evaluation/results/tuning-2026-11-19t07-44-10.395z/top_m_mean-top_m5-centered-l0.5-r0.1.json",
+      "resultHash": "4cde133088bdcab337bd3959609587d49eed58b5a2eb582e22bbe6610af39334"
+    },
+    {
+      "id": "top_m_mean-top_m5-raw-l0.5-r0.1",
+      "stage": 1,
+      "gridOrder": 9,
+      "method": "top_m_mean",
+      "parameters": {
+        "lambda": 0.5,
+        "recency_weight": 0.1,
+        "dislike_threshold": 0.4,
+        "article_half_life_hours": 24,
+        "video_half_life_hours": 168,
+        "centered": false,
+        "top_m": 5
+      },
+      "objective": 0.7844999999999999,
+      "balancedCoverage": 0.3875,
+      "enFiPrecision": 0.29350000000000004,
+      "fiEnPrecision": 0.5682407407407407,
+      "stageOneEligible": false,
+      "finalConstraints": {
+        "coverageOk": false,
+        "enFiOk": true,
+        "fiEnOk": false,
+        "eligible": false
+      },
+      "withinBand": false,
+      "winner": false,
+      "resultFile": "evaluation/results/tuning-2026-11-19t07-44-10.395z/top_m_mean-top_m5-raw-l0.5-r0.1.json",
+      "resultHash": "8ce89687701d5eb99bf881c7435e9e4e2ebd67d25f051ee1fef0252c85f7fcbc"
+    },
+    {
+      "id": "blend-blend_alpha0.25-centered-l0.5-r0.1",
+      "stage": 1,
+      "gridOrder": 10,
+      "method": "blend",
+      "parameters": {
+        "lambda": 0.5,
+        "recency_weight": 0.1,
+        "dislike_threshold": 0.4,
+        "article_half_life_hours": 24,
+        "video_half_life_hours": 168,
+        "centered": true,
+        "blend_alpha": 0.25
+      },
+      "objective": 0.8194999999999999,
+      "balancedCoverage": 0.5666666666666665,
+      "enFiPrecision": 0.32199999999999995,
+      "fiEnPrecision": 0.7040740740740742,
+      "stageOneEligible": false,
+      "finalConstraints": {
+        "coverageOk": false,
+        "enFiOk": true,
+        "fiEnOk": true,
+        "eligible": false
+      },
+      "withinBand": false,
+      "winner": false,
+      "resultFile": "evaluation/results/tuning-2026-11-19t07-44-10.395z/blend-blend_alpha0.25-centered-l0.5-r0.1.json",
+      "resultHash": "a3a3f9538442efd8059f78427225c9b0fbd3004f3429eb4bae59b27639fa4fb6"
+    },
+    {
+      "id": "blend-blend_alpha0.25-raw-l0.5-r0.1",
+      "stage": 1,
+      "gridOrder": 11,
+      "method": "blend",
+      "parameters": {
+        "lambda": 0.5,
+        "recency_weight": 0.1,
+        "dislike_threshold": 0.4,
+        "article_half_life_hours": 24,
+        "video_half_life_hours": 168,
+        "centered": false,
+        "blend_alpha": 0.25
+      },
+      "objective": 0.8262499999999999,
+      "balancedCoverage": 0.3666666666666667,
+      "enFiPrecision": 0.34325,
+      "fiEnPrecision": 0.5970370370370369,
+      "stageOneEligible": false,
+      "finalConstraints": {
+        "coverageOk": false,
+        "enFiOk": true,
+        "fiEnOk": false,
+        "eligible": false
+      },
+      "withinBand": false,
+      "winner": false,
+      "resultFile": "evaluation/results/tuning-2026-11-19t07-44-10.395z/blend-blend_alpha0.25-raw-l0.5-r0.1.json",
+      "resultHash": "a37b556ced18ab4538444b228da08870abf574e357f8a4d12f4d198310bb0c09"
+    },
+    {
+      "id": "blend-blend_alpha0.5-centered-l0.5-r0.1",
+      "stage": 1,
+      "gridOrder": 12,
+      "method": "blend",
+      "parameters": {
+        "lambda": 0.5,
+        "recency_weight": 0.1,
+        "dislike_threshold": 0.4,
+        "article_half_life_hours": 24,
+        "video_half_life_hours": 168,
+        "centered": true,
+        "blend_alpha": 0.5
+      },
+      "objective": 0.8037500000000002,
+      "balancedCoverage": 0.6375,
+      "enFiPrecision": 0.32025000000000003,
+      "fiEnPrecision": 0.7108333333333332,
+      "stageOneEligible": true,
+      "finalConstraints": {
+        "coverageOk": true,
+        "enFiOk": true,
+        "fiEnOk": true,
+        "eligible": true
+      },
+      "withinBand": false,
+      "winner": false,
+      "resultFile": "evaluation/results/tuning-2026-11-19t07-44-10.395z/blend-blend_alpha0.5-centered-l0.5-r0.1.json",
+      "resultHash": "b4558317901c58febbe09b3e81579b5f1801f05898a6fd3f4c2c60bb768707cb"
+    },
+    {
+      "id": "blend-blend_alpha0.5-raw-l0.5-r0.1",
+      "stage": 1,
+      "gridOrder": 13,
+      "method": "blend",
+      "parameters": {
+        "lambda": 0.5,
+        "recency_weight": 0.1,
+        "dislike_threshold": 0.4,
+        "article_half_life_hours": 24,
+        "video_half_life_hours": 168,
+        "centered": false,
+        "blend_alpha": 0.5
+      },
+      "objective": 0.81225,
+      "balancedCoverage": 0.5083333333333333,
+      "enFiPrecision": 0.33675000000000005,
+      "fiEnPrecision": 0.6405555555555557,
+      "stageOneEligible": false,
+      "finalConstraints": {
+        "coverageOk": false,
+        "enFiOk": true,
+        "fiEnOk": true,
+        "eligible": false
+      },
+      "withinBand": false,
+      "winner": false,
+      "resultFile": "evaluation/results/tuning-2026-11-19t07-44-10.395z/blend-blend_alpha0.5-raw-l0.5-r0.1.json",
+      "resultHash": "adcc9393a20d33f59675cb848ffe25b32181a1f2877c5c0d29f86f25310ea793"
+    },
+    {
+      "id": "blend-blend_alpha0.75-centered-l0.5-r0.1",
+      "stage": 1,
+      "gridOrder": 14,
+      "method": "blend",
+      "parameters": {
+        "lambda": 0.5,
+        "recency_weight": 0.1,
+        "dislike_threshold": 0.4,
+        "article_half_life_hours": 24,
+        "video_half_life_hours": 168,
+        "centered": true,
+        "blend_alpha": 0.75
+      },
+      "objective": 0.7815000000000001,
+      "balancedCoverage": 0.6875,
+      "enFiPrecision": 0.3115,
+      "fiEnPrecision": 0.6905555555555556,
+      "stageOneEligible": true,
+      "finalConstraints": {
+        "coverageOk": true,
+        "enFiOk": true,
+        "fiEnOk": true,
+        "eligible": true
+      },
+      "withinBand": false,
+      "winner": false,
+      "resultFile": "evaluation/results/tuning-2026-11-19t07-44-10.395z/blend-blend_alpha0.75-centered-l0.5-r0.1.json",
+      "resultHash": "99060e825585a1697effb8e2e6e78b8c79cc0bc2375b8db1ad7fffd0ad1a97e6"
+    },
+    {
+      "id": "blend-blend_alpha0.75-raw-l0.5-r0.1",
+      "stage": 1,
+      "gridOrder": 15,
+      "method": "blend",
+      "parameters": {
+        "lambda": 0.5,
+        "recency_weight": 0.1,
+        "dislike_threshold": 0.4,
+        "article_half_life_hours": 24,
+        "video_half_life_hours": 168,
+        "centered": false,
+        "blend_alpha": 0.75
+      },
+      "objective": 0.7957499999999998,
+      "balancedCoverage": 0.55,
+      "enFiPrecision": 0.321,
+      "fiEnPrecision": 0.6576851851851853,
+      "stageOneEligible": false,
+      "finalConstraints": {
+        "coverageOk": false,
+        "enFiOk": true,
+        "fiEnOk": true,
+        "eligible": false
+      },
+      "withinBand": false,
+      "winner": false,
+      "resultFile": "evaluation/results/tuning-2026-11-19t07-44-10.395z/blend-blend_alpha0.75-raw-l0.5-r0.1.json",
+      "resultHash": "ec33235fb9484f4b890e754d5c3186bdd427fb3758a6eba3d4eab40816d121d1"
+    },
+    {
+      "id": "blend-blend_alpha0.5-centered-l0-r0",
+      "stage": 2,
+      "gridOrder": 16,
+      "method": "blend",
+      "parameters": {
+        "lambda": 0,
+        "recency_weight": 0,
+        "dislike_threshold": 0.4,
+        "article_half_life_hours": 24,
+        "video_half_life_hours": 168,
+        "centered": true,
+        "blend_alpha": 0.5
+      },
+      "objective": 0.8345,
+      "balancedCoverage": 0.6458333333333334,
+      "enFiPrecision": 0.36524999999999996,
+      "fiEnPrecision": 0.7597222222222222,
+      "stageOneEligible": null,
+      "finalConstraints": {
+        "coverageOk": true,
+        "enFiOk": true,
+        "fiEnOk": true,
+        "eligible": true
+      },
+      "withinBand": true,
+      "winner": false,
+      "resultFile": "evaluation/results/tuning-2026-11-19t07-44-10.395z/blend-blend_alpha0.5-centered-l0-r0.json",
+      "resultHash": "d3f51fa2d9c9b2bb19f9120c6248f889e92a0f2cdf392b89b4917610e9046160"
+    },
+    {
+      "id": "blend-blend_alpha0.5-centered-l0-r0.05",
+      "stage": 2,
+      "gridOrder": 17,
+      "method": "blend",
+      "parameters": {
+        "lambda": 0,
+        "recency_weight": 0.05,
+        "dislike_threshold": 0.4,
+        "article_half_life_hours": 24,
+        "video_half_life_hours": 168,
+        "centered": true,
+        "blend_alpha": 0.5
+      },
+      "objective": 0.82225,
+      "balancedCoverage": 0.6208333333333333,
+      "enFiPrecision": 0.35225,
+      "fiEnPrecision": 0.7636111111111111,
+      "stageOneEligible": null,
+      "finalConstraints": {
+        "coverageOk": false,
+        "enFiOk": true,
+        "fiEnOk": true,
+        "eligible": false
+      },
+      "withinBand": false,
+      "winner": false,
+      "resultFile": "evaluation/results/tuning-2026-11-19t07-44-10.395z/blend-blend_alpha0.5-centered-l0-r0.05.json",
+      "resultHash": "cb7882b96e1885b847b8c9b951cbd4a6013d763f416a8410deef775fec02b6bf"
+    },
+    {
+      "id": "blend-blend_alpha0.5-centered-l0-r0.1",
+      "stage": 2,
+      "gridOrder": 18,
+      "method": "blend",
+      "parameters": {
+        "lambda": 0,
+        "recency_weight": 0.1,
+        "dislike_threshold": 0.4,
+        "article_half_life_hours": 24,
+        "video_half_life_hours": 168,
+        "centered": true,
+        "blend_alpha": 0.5
+      },
+      "objective": 0.80975,
+      "balancedCoverage": 0.5875,
+      "enFiPrecision": 0.327,
+      "fiEnPrecision": 0.7428703703703703,
+      "stageOneEligible": null,
+      "finalConstraints": {
+        "coverageOk": false,
+        "enFiOk": true,
+        "fiEnOk": true,
+        "eligible": false
+      },
+      "withinBand": false,
+      "winner": false,
+      "resultFile": "evaluation/results/tuning-2026-11-19t07-44-10.395z/blend-blend_alpha0.5-centered-l0-r0.1.json",
+      "resultHash": "74a45fe02238d9bf4b276c4e6abcc3645395e35de5c17cfce9d74b1aa012d9a9"
+    },
+    {
+      "id": "blend-blend_alpha0.5-centered-l0-r0.2",
+      "stage": 2,
+      "gridOrder": 19,
+      "method": "blend",
+      "parameters": {
+        "lambda": 0,
+        "recency_weight": 0.2,
+        "dislike_threshold": 0.4,
+        "article_half_life_hours": 24,
+        "video_half_life_hours": 168,
+        "centered": true,
+        "blend_alpha": 0.5
+      },
+      "objective": 0.75125,
+      "balancedCoverage": 0.6,
+      "enFiPrecision": 0.26125000000000004,
+      "fiEnPrecision": 0.6508333333333334,
+      "stageOneEligible": null,
+      "finalConstraints": {
+        "coverageOk": false,
+        "enFiOk": true,
+        "fiEnOk": true,
+        "eligible": false
+      },
+      "withinBand": false,
+      "winner": false,
+      "resultFile": "evaluation/results/tuning-2026-11-19t07-44-10.395z/blend-blend_alpha0.5-centered-l0-r0.2.json",
+      "resultHash": "3b9315f4d676c0c6c2f24474d3278791ff1327d062f0348d36ad9a3b527027f1"
+    },
+    {
+      "id": "blend-blend_alpha0.5-centered-l0.25-r0",
+      "stage": 2,
+      "gridOrder": 20,
+      "method": "blend",
+      "parameters": {
+        "lambda": 0.25,
+        "recency_weight": 0,
+        "dislike_threshold": 0.4,
+        "article_half_life_hours": 24,
+        "video_half_life_hours": 168,
+        "centered": true,
+        "blend_alpha": 0.5
+      },
+      "objective": 0.8320000000000002,
+      "balancedCoverage": 0.6625000000000001,
+      "enFiPrecision": 0.368,
+      "fiEnPrecision": 0.7602777777777778,
+      "stageOneEligible": null,
+      "finalConstraints": {
+        "coverageOk": true,
+        "enFiOk": true,
+        "fiEnOk": true,
+        "eligible": true
+      },
+      "withinBand": true,
+      "winner": false,
+      "resultFile": "evaluation/results/tuning-2026-11-19t07-44-10.395z/blend-blend_alpha0.5-centered-l0.25-r0.json",
+      "resultHash": "59ae0bfcf2c9e38016551fd297de61a3d9138111a445b6b8bc4a416b56c6df98"
+    },
+    {
+      "id": "blend-blend_alpha0.5-centered-l0.25-r0.05",
+      "stage": 2,
+      "gridOrder": 21,
+      "method": "blend",
+      "parameters": {
+        "lambda": 0.25,
+        "recency_weight": 0.05,
+        "dislike_threshold": 0.4,
+        "article_half_life_hours": 24,
+        "video_half_life_hours": 168,
+        "centered": true,
+        "blend_alpha": 0.5
+      },
+      "objective": 0.8242499999999999,
+      "balancedCoverage": 0.6291666666666668,
+      "enFiPrecision": 0.35325,
+      "fiEnPrecision": 0.7510185185185184,
+      "stageOneEligible": null,
+      "finalConstraints": {
+        "coverageOk": false,
+        "enFiOk": true,
+        "fiEnOk": true,
+        "eligible": false
+      },
+      "withinBand": false,
+      "winner": false,
+      "resultFile": "evaluation/results/tuning-2026-11-19t07-44-10.395z/blend-blend_alpha0.5-centered-l0.25-r0.05.json",
+      "resultHash": "e5084f99a0c7b41ea5687d1029a0bb6d95b616aef58cad1c993685c7f10d1ad0"
+    },
+    {
+      "id": "blend-blend_alpha0.5-centered-l0.25-r0.1",
+      "stage": 2,
+      "gridOrder": 22,
+      "method": "blend",
+      "parameters": {
+        "lambda": 0.25,
+        "recency_weight": 0.1,
+        "dislike_threshold": 0.4,
+        "article_half_life_hours": 24,
+        "video_half_life_hours": 168,
+        "centered": true,
+        "blend_alpha": 0.5
+      },
+      "objective": 0.81125,
+      "balancedCoverage": 0.6458333333333334,
+      "enFiPrecision": 0.3315000000000001,
+      "fiEnPrecision": 0.7324999999999999,
+      "stageOneEligible": null,
+      "finalConstraints": {
+        "coverageOk": true,
+        "enFiOk": true,
+        "fiEnOk": true,
+        "eligible": true
+      },
+      "withinBand": false,
+      "winner": false,
+      "resultFile": "evaluation/results/tuning-2026-11-19t07-44-10.395z/blend-blend_alpha0.5-centered-l0.25-r0.1.json",
+      "resultHash": "4b6916bff33dde009aba08b5bd5e25c96b0193f5cb673e9dcb3f37bf005ab133"
+    },
+    {
+      "id": "blend-blend_alpha0.5-centered-l0.25-r0.2",
+      "stage": 2,
+      "gridOrder": 23,
+      "method": "blend",
+      "parameters": {
+        "lambda": 0.25,
+        "recency_weight": 0.2,
+        "dislike_threshold": 0.4,
+        "article_half_life_hours": 24,
+        "video_half_life_hours": 168,
+        "centered": true,
+        "blend_alpha": 0.5
+      },
+      "objective": 0.75425,
+      "balancedCoverage": 0.6208333333333333,
+      "enFiPrecision": 0.259,
+      "fiEnPrecision": 0.649537037037037,
+      "stageOneEligible": null,
+      "finalConstraints": {
+        "coverageOk": false,
+        "enFiOk": true,
+        "fiEnOk": true,
+        "eligible": false
+      },
+      "withinBand": false,
+      "winner": false,
+      "resultFile": "evaluation/results/tuning-2026-11-19t07-44-10.395z/blend-blend_alpha0.5-centered-l0.25-r0.2.json",
+      "resultHash": "d032e3759d1d21db21c6d40c96d32c6c6095c57c86f8d809b201bb9dea322013"
+    },
+    {
+      "id": "blend-blend_alpha0.5-centered-l0.5-r0",
+      "stage": 2,
+      "gridOrder": 24,
+      "method": "blend",
+      "parameters": {
+        "lambda": 0.5,
+        "recency_weight": 0,
+        "dislike_threshold": 0.4,
+        "article_half_life_hours": 24,
+        "video_half_life_hours": 168,
+        "centered": true,
+        "blend_alpha": 0.5
+      },
+      "objective": 0.8252500000000002,
+      "balancedCoverage": 0.65,
+      "enFiPrecision": 0.35750000000000004,
+      "fiEnPrecision": 0.7324074074074073,
+      "stageOneEligible": null,
+      "finalConstraints": {
+        "coverageOk": true,
+        "enFiOk": true,
+        "fiEnOk": true,
+        "eligible": true
+      },
+      "withinBand": true,
+      "winner": true,
+      "resultFile": "evaluation/results/tuning-2026-11-19t07-44-10.395z/blend-blend_alpha0.5-centered-l0.5-r0.json",
+      "resultHash": "0b32191df65a9e075dd6a06f28e0ce857edaa81a5dfc4c4cd188836da9450fe8"
+    },
+    {
+      "id": "blend-blend_alpha0.5-centered-l0.5-r0.05",
+      "stage": 2,
+      "gridOrder": 25,
+      "method": "blend",
+      "parameters": {
+        "lambda": 0.5,
+        "recency_weight": 0.05,
+        "dislike_threshold": 0.4,
+        "article_half_life_hours": 24,
+        "video_half_life_hours": 168,
+        "centered": true,
+        "blend_alpha": 0.5
+      },
+      "objective": 0.8190000000000002,
+      "balancedCoverage": 0.6375000000000001,
+      "enFiPrecision": 0.34,
+      "fiEnPrecision": 0.7248148148148146,
+      "stageOneEligible": null,
+      "finalConstraints": {
+        "coverageOk": true,
+        "enFiOk": true,
+        "fiEnOk": true,
+        "eligible": true
+      },
+      "withinBand": false,
+      "winner": false,
+      "resultFile": "evaluation/results/tuning-2026-11-19t07-44-10.395z/blend-blend_alpha0.5-centered-l0.5-r0.05.json",
+      "resultHash": "7fe727062894bf31dbbe49defdca3f438df33ebe526f76e0ea02b609224b7756"
+    },
+    {
+      "id": "blend-blend_alpha0.5-centered-l0.5-r0.2",
+      "stage": 2,
+      "gridOrder": 26,
+      "method": "blend",
+      "parameters": {
+        "lambda": 0.5,
+        "recency_weight": 0.2,
+        "dislike_threshold": 0.4,
+        "article_half_life_hours": 24,
+        "video_half_life_hours": 168,
+        "centered": true,
+        "blend_alpha": 0.5
+      },
+      "objective": 0.7512500000000001,
+      "balancedCoverage": 0.6041666666666667,
+      "enFiPrecision": 0.2625,
+      "fiEnPrecision": 0.6298148148148148,
+      "stageOneEligible": null,
+      "finalConstraints": {
+        "coverageOk": false,
+        "enFiOk": true,
+        "fiEnOk": true,
+        "eligible": false
+      },
+      "withinBand": false,
+      "winner": false,
+      "resultFile": "evaluation/results/tuning-2026-11-19t07-44-10.395z/blend-blend_alpha0.5-centered-l0.5-r0.2.json",
+      "resultHash": "56c3d784d52c214deca0c545c8769b8311463a1c11117e7f178be7463d486e02"
+    },
+    {
+      "id": "blend-blend_alpha0.5-centered-l1-r0",
+      "stage": 2,
+      "gridOrder": 27,
+      "method": "blend",
+      "parameters": {
+        "lambda": 1,
+        "recency_weight": 0,
+        "dislike_threshold": 0.4,
+        "article_half_life_hours": 24,
+        "video_half_life_hours": 168,
+        "centered": true,
+        "blend_alpha": 0.5
+      },
+      "objective": 0.80375,
+      "balancedCoverage": 0.5916666666666667,
+      "enFiPrecision": 0.33275,
+      "fiEnPrecision": 0.6639814814814815,
+      "stageOneEligible": null,
+      "finalConstraints": {
+        "coverageOk": false,
+        "enFiOk": true,
+        "fiEnOk": true,
+        "eligible": false
+      },
+      "withinBand": false,
+      "winner": false,
+      "resultFile": "evaluation/results/tuning-2026-11-19t07-44-10.395z/blend-blend_alpha0.5-centered-l1-r0.json",
+      "resultHash": "96187bb19a59b2072d1adeb0821ec09c52c4768c6e03ed030c4386c5379c9c9c"
+    },
+    {
+      "id": "blend-blend_alpha0.5-centered-l1-r0.05",
+      "stage": 2,
+      "gridOrder": 28,
+      "method": "blend",
+      "parameters": {
+        "lambda": 1,
+        "recency_weight": 0.05,
+        "dislike_threshold": 0.4,
+        "article_half_life_hours": 24,
+        "video_half_life_hours": 168,
+        "centered": true,
+        "blend_alpha": 0.5
+      },
+      "objective": 0.7940000000000002,
+      "balancedCoverage": 0.6083333333333334,
+      "enFiPrecision": 0.3215,
+      "fiEnPrecision": 0.6646296296296296,
+      "stageOneEligible": null,
+      "finalConstraints": {
+        "coverageOk": false,
+        "enFiOk": true,
+        "fiEnOk": true,
+        "eligible": false
+      },
+      "withinBand": false,
+      "winner": false,
+      "resultFile": "evaluation/results/tuning-2026-11-19t07-44-10.395z/blend-blend_alpha0.5-centered-l1-r0.05.json",
+      "resultHash": "534278870bc58fa1bf604b9a82718583975d5eec3f0c3ab483ef3385adf69c7d"
+    },
+    {
+      "id": "blend-blend_alpha0.5-centered-l1-r0.1",
+      "stage": 2,
+      "gridOrder": 29,
+      "method": "blend",
+      "parameters": {
+        "lambda": 1,
+        "recency_weight": 0.1,
+        "dislike_threshold": 0.4,
+        "article_half_life_hours": 24,
+        "video_half_life_hours": 168,
+        "centered": true,
+        "blend_alpha": 0.5
+      },
+      "objective": 0.77275,
+      "balancedCoverage": 0.5833333333333334,
+      "enFiPrecision": 0.29975,
+      "fiEnPrecision": 0.654074074074074,
+      "stageOneEligible": null,
+      "finalConstraints": {
+        "coverageOk": false,
+        "enFiOk": true,
+        "fiEnOk": true,
+        "eligible": false
+      },
+      "withinBand": false,
+      "winner": false,
+      "resultFile": "evaluation/results/tuning-2026-11-19t07-44-10.395z/blend-blend_alpha0.5-centered-l1-r0.1.json",
+      "resultHash": "5e0098b1ae50ff52f1ead2b09cb948bd35f61adab71bc914b15987b433325205"
+    },
+    {
+      "id": "blend-blend_alpha0.5-centered-l1-r0.2",
+      "stage": 2,
+      "gridOrder": 30,
+      "method": "blend",
+      "parameters": {
+        "lambda": 1,
+        "recency_weight": 0.2,
+        "dislike_threshold": 0.4,
+        "article_half_life_hours": 24,
+        "video_half_life_hours": 168,
+        "centered": true,
+        "blend_alpha": 0.5
+      },
+      "objective": 0.7290000000000001,
+      "balancedCoverage": 0.5875,
+      "enFiPrecision": 0.2575,
+      "fiEnPrecision": 0.5852777777777778,
+      "stageOneEligible": null,
+      "finalConstraints": {
+        "coverageOk": false,
+        "enFiOk": true,
+        "fiEnOk": false,
+        "eligible": false
+      },
+      "withinBand": false,
+      "winner": false,
+      "resultFile": "evaluation/results/tuning-2026-11-19t07-44-10.395z/blend-blend_alpha0.5-centered-l1-r0.2.json",
+      "resultHash": "7a20a9a605c7571cd1584b21cb18e5ad1e6b40178d8ddb1ab74e3fa442e40ee4"
+    },
+    {
+      "id": "blend-blend_alpha0.75-centered-l0-r0",
+      "stage": 2,
+      "gridOrder": 31,
+      "method": "blend",
+      "parameters": {
+        "lambda": 0,
+        "recency_weight": 0,
+        "dislike_threshold": 0.4,
+        "article_half_life_hours": 24,
+        "video_half_life_hours": 168,
+        "centered": true,
+        "blend_alpha": 0.75
+      },
+      "objective": 0.8009999999999999,
+      "balancedCoverage": 0.6458333333333334,
+      "enFiPrecision": 0.36400000000000005,
+      "fiEnPrecision": 0.7413888888888889,
+      "stageOneEligible": null,
+      "finalConstraints": {
+        "coverageOk": true,
+        "enFiOk": true,
+        "fiEnOk": true,
+        "eligible": true
+      },
+      "withinBand": false,
+      "winner": false,
+      "resultFile": "evaluation/results/tuning-2026-11-19t07-44-10.395z/blend-blend_alpha0.75-centered-l0-r0.json",
+      "resultHash": "e5e6c374f02012750db30784f851d4be3ef60a8a399147d940ebb778d7471977"
+    },
+    {
+      "id": "blend-blend_alpha0.75-centered-l0-r0.05",
+      "stage": 2,
+      "gridOrder": 32,
+      "method": "blend",
+      "parameters": {
+        "lambda": 0,
+        "recency_weight": 0.05,
+        "dislike_threshold": 0.4,
+        "article_half_life_hours": 24,
+        "video_half_life_hours": 168,
+        "centered": true,
+        "blend_alpha": 0.75
+      },
+      "objective": 0.7934999999999999,
+      "balancedCoverage": 0.6166666666666666,
+      "enFiPrecision": 0.34874999999999995,
+      "fiEnPrecision": 0.7455555555555556,
+      "stageOneEligible": null,
+      "finalConstraints": {
+        "coverageOk": false,
+        "enFiOk": true,
+        "fiEnOk": true,
+        "eligible": false
+      },
+      "withinBand": false,
+      "winner": false,
+      "resultFile": "evaluation/results/tuning-2026-11-19t07-44-10.395z/blend-blend_alpha0.75-centered-l0-r0.05.json",
+      "resultHash": "32a42673b61767cb36c7fa12a9cd093b565445600c64d586e85dbe9ecd572827"
+    },
+    {
+      "id": "blend-blend_alpha0.75-centered-l0-r0.1",
+      "stage": 2,
+      "gridOrder": 33,
+      "method": "blend",
+      "parameters": {
+        "lambda": 0,
+        "recency_weight": 0.1,
+        "dislike_threshold": 0.4,
+        "article_half_life_hours": 24,
+        "video_half_life_hours": 168,
+        "centered": true,
+        "blend_alpha": 0.75
+      },
+      "objective": 0.7849999999999999,
+      "balancedCoverage": 0.6333333333333333,
+      "enFiPrecision": 0.323,
+      "fiEnPrecision": 0.7191666666666667,
+      "stageOneEligible": null,
+      "finalConstraints": {
+        "coverageOk": false,
+        "enFiOk": true,
+        "fiEnOk": true,
+        "eligible": false
+      },
+      "withinBand": false,
+      "winner": false,
+      "resultFile": "evaluation/results/tuning-2026-11-19t07-44-10.395z/blend-blend_alpha0.75-centered-l0-r0.1.json",
+      "resultHash": "0c4359269a2a1d695932ef1bee1dd77ad1bd4c7011b27c583f8be221552a155d"
+    },
+    {
+      "id": "blend-blend_alpha0.75-centered-l0-r0.2",
+      "stage": 2,
+      "gridOrder": 34,
+      "method": "blend",
+      "parameters": {
+        "lambda": 0,
+        "recency_weight": 0.2,
+        "dislike_threshold": 0.4,
+        "article_half_life_hours": 24,
+        "video_half_life_hours": 168,
+        "centered": true,
+        "blend_alpha": 0.75
+      },
+      "objective": 0.73725,
+      "balancedCoverage": 0.6458333333333334,
+      "enFiPrecision": 0.25675,
+      "fiEnPrecision": 0.6317592592592594,
+      "stageOneEligible": null,
+      "finalConstraints": {
+        "coverageOk": true,
+        "enFiOk": true,
+        "fiEnOk": true,
+        "eligible": true
+      },
+      "withinBand": false,
+      "winner": false,
+      "resultFile": "evaluation/results/tuning-2026-11-19t07-44-10.395z/blend-blend_alpha0.75-centered-l0-r0.2.json",
+      "resultHash": "fe66b579d775bd6ba235f44e1afa6a25e2e44a02cae3b21387bb03428104ded8"
+    },
+    {
+      "id": "blend-blend_alpha0.75-centered-l0.25-r0",
+      "stage": 2,
+      "gridOrder": 35,
+      "method": "blend",
+      "parameters": {
+        "lambda": 0.25,
+        "recency_weight": 0,
+        "dislike_threshold": 0.4,
+        "article_half_life_hours": 24,
+        "video_half_life_hours": 168,
+        "centered": true,
+        "blend_alpha": 0.75
+      },
+      "objective": 0.8020000000000002,
+      "balancedCoverage": 0.6375000000000001,
+      "enFiPrecision": 0.36699999999999994,
+      "fiEnPrecision": 0.735,
+      "stageOneEligible": null,
+      "finalConstraints": {
+        "coverageOk": true,
+        "enFiOk": true,
+        "fiEnOk": true,
+        "eligible": true
+      },
+      "withinBand": false,
+      "winner": false,
+      "resultFile": "evaluation/results/tuning-2026-11-19t07-44-10.395z/blend-blend_alpha0.75-centered-l0.25-r0.json",
+      "resultHash": "07a57b70f688dbad72cf672302323316f6dec8eb93b4e3451c8cbe10ce030352"
+    },
+    {
+      "id": "blend-blend_alpha0.75-centered-l0.25-r0.05",
+      "stage": 2,
+      "gridOrder": 36,
+      "method": "blend",
+      "parameters": {
+        "lambda": 0.25,
+        "recency_weight": 0.05,
+        "dislike_threshold": 0.4,
+        "article_half_life_hours": 24,
+        "video_half_life_hours": 168,
+        "centered": true,
+        "blend_alpha": 0.75
+      },
+      "objective": 0.79825,
+      "balancedCoverage": 0.6291666666666667,
+      "enFiPrecision": 0.34925000000000006,
+      "fiEnPrecision": 0.7363888888888889,
+      "stageOneEligible": null,
+      "finalConstraints": {
+        "coverageOk": false,
+        "enFiOk": true,
+        "fiEnOk": true,
+        "eligible": false
+      },
+      "withinBand": false,
+      "winner": false,
+      "resultFile": "evaluation/results/tuning-2026-11-19t07-44-10.395z/blend-blend_alpha0.75-centered-l0.25-r0.05.json",
+      "resultHash": "bd0e4c98fc35af8199605067739b6a190fecfda3773bff7af15e0a29bd4ea2f8"
+    },
+    {
+      "id": "blend-blend_alpha0.75-centered-l0.25-r0.1",
+      "stage": 2,
+      "gridOrder": 37,
+      "method": "blend",
+      "parameters": {
+        "lambda": 0.25,
+        "recency_weight": 0.1,
+        "dislike_threshold": 0.4,
+        "article_half_life_hours": 24,
+        "video_half_life_hours": 168,
+        "centered": true,
+        "blend_alpha": 0.75
+      },
+      "objective": 0.788,
+      "balancedCoverage": 0.65,
+      "enFiPrecision": 0.3255,
+      "fiEnPrecision": 0.7107407407407407,
+      "stageOneEligible": null,
+      "finalConstraints": {
+        "coverageOk": true,
+        "enFiOk": true,
+        "fiEnOk": true,
+        "eligible": true
+      },
+      "withinBand": false,
+      "winner": false,
+      "resultFile": "evaluation/results/tuning-2026-11-19t07-44-10.395z/blend-blend_alpha0.75-centered-l0.25-r0.1.json",
+      "resultHash": "db9c668a79eecfedfb9711e234bb2bc2b6cff3b410b9b94bd07dfb997164e96f"
+    },
+    {
+      "id": "blend-blend_alpha0.75-centered-l0.25-r0.2",
+      "stage": 2,
+      "gridOrder": 38,
+      "method": "blend",
+      "parameters": {
+        "lambda": 0.25,
+        "recency_weight": 0.2,
+        "dislike_threshold": 0.4,
+        "article_half_life_hours": 24,
+        "video_half_life_hours": 168,
+        "centered": true,
+        "blend_alpha": 0.75
+      },
+      "objective": 0.7414999999999999,
+      "balancedCoverage": 0.6541666666666667,
+      "enFiPrecision": 0.25650000000000006,
+      "fiEnPrecision": 0.6263888888888888,
+      "stageOneEligible": null,
+      "finalConstraints": {
+        "coverageOk": true,
+        "enFiOk": true,
+        "fiEnOk": true,
+        "eligible": true
+      },
+      "withinBand": false,
+      "winner": false,
+      "resultFile": "evaluation/results/tuning-2026-11-19t07-44-10.395z/blend-blend_alpha0.75-centered-l0.25-r0.2.json",
+      "resultHash": "adc13f2c8544797a05b450011f2f30393a324fe19079c14592071797be1e4c8c"
+    },
+    {
+      "id": "blend-blend_alpha0.75-centered-l0.5-r0",
+      "stage": 2,
+      "gridOrder": 39,
+      "method": "blend",
+      "parameters": {
+        "lambda": 0.5,
+        "recency_weight": 0,
+        "dislike_threshold": 0.4,
+        "article_half_life_hours": 24,
+        "video_half_life_hours": 168,
+        "centered": true,
+        "blend_alpha": 0.75
+      },
+      "objective": 0.80275,
+      "balancedCoverage": 0.6708333333333334,
+      "enFiPrecision": 0.35225,
+      "fiEnPrecision": 0.7117592592592593,
+      "stageOneEligible": null,
+      "finalConstraints": {
+        "coverageOk": true,
+        "enFiOk": true,
+        "fiEnOk": true,
+        "eligible": true
+      },
+      "withinBand": false,
+      "winner": false,
+      "resultFile": "evaluation/results/tuning-2026-11-19t07-44-10.395z/blend-blend_alpha0.75-centered-l0.5-r0.json",
+      "resultHash": "232f40d3b8333e385027bcbdcfca34356015ecfe037f129de95d0da5b889831c"
+    },
+    {
+      "id": "blend-blend_alpha0.75-centered-l0.5-r0.05",
+      "stage": 2,
+      "gridOrder": 40,
+      "method": "blend",
+      "parameters": {
+        "lambda": 0.5,
+        "recency_weight": 0.05,
+        "dislike_threshold": 0.4,
+        "article_half_life_hours": 24,
+        "video_half_life_hours": 168,
+        "centered": true,
+        "blend_alpha": 0.75
+      },
+      "objective": 0.7950000000000002,
+      "balancedCoverage": 0.6666666666666666,
+      "enFiPrecision": 0.33625,
+      "fiEnPrecision": 0.7080555555555557,
+      "stageOneEligible": null,
+      "finalConstraints": {
+        "coverageOk": true,
+        "enFiOk": true,
+        "fiEnOk": true,
+        "eligible": true
+      },
+      "withinBand": false,
+      "winner": false,
+      "resultFile": "evaluation/results/tuning-2026-11-19t07-44-10.395z/blend-blend_alpha0.75-centered-l0.5-r0.05.json",
+      "resultHash": "da88a1d7ff3f357be230486d1c816d57df7867c4536ec1c6538ac8268f97dd8d"
+    },
+    {
+      "id": "blend-blend_alpha0.75-centered-l0.5-r0.2",
+      "stage": 2,
+      "gridOrder": 41,
+      "method": "blend",
+      "parameters": {
+        "lambda": 0.5,
+        "recency_weight": 0.2,
+        "dislike_threshold": 0.4,
+        "article_half_life_hours": 24,
+        "video_half_life_hours": 168,
+        "centered": true,
+        "blend_alpha": 0.75
+      },
+      "objective": 0.742,
+      "balancedCoverage": 0.6208333333333332,
+      "enFiPrecision": 0.2545,
+      "fiEnPrecision": 0.6152777777777777,
+      "stageOneEligible": null,
+      "finalConstraints": {
+        "coverageOk": false,
+        "enFiOk": true,
+        "fiEnOk": true,
+        "eligible": false
+      },
+      "withinBand": false,
+      "winner": false,
+      "resultFile": "evaluation/results/tuning-2026-11-19t07-44-10.395z/blend-blend_alpha0.75-centered-l0.5-r0.2.json",
+      "resultHash": "f77f5864fd5cc74b5b2e85c8cff47df50b272e4663949604802bd8d4994ef323"
+    },
+    {
+      "id": "blend-blend_alpha0.75-centered-l1-r0",
+      "stage": 2,
+      "gridOrder": 42,
+      "method": "blend",
+      "parameters": {
+        "lambda": 1,
+        "recency_weight": 0,
+        "dislike_threshold": 0.4,
+        "article_half_life_hours": 24,
+        "video_half_life_hours": 168,
+        "centered": true,
+        "blend_alpha": 0.75
+      },
+      "objective": 0.7795000000000001,
+      "balancedCoverage": 0.6166666666666667,
+      "enFiPrecision": 0.32199999999999995,
+      "fiEnPrecision": 0.6471296296296296,
+      "stageOneEligible": null,
+      "finalConstraints": {
+        "coverageOk": false,
+        "enFiOk": true,
+        "fiEnOk": true,
+        "eligible": false
+      },
+      "withinBand": false,
+      "winner": false,
+      "resultFile": "evaluation/results/tuning-2026-11-19t07-44-10.395z/blend-blend_alpha0.75-centered-l1-r0.json",
+      "resultHash": "41d5e396ffb23333e0e3e60d5cfabea6f604566627952fdf2efdb0b912724638"
+    },
+    {
+      "id": "blend-blend_alpha0.75-centered-l1-r0.05",
+      "stage": 2,
+      "gridOrder": 43,
+      "method": "blend",
+      "parameters": {
+        "lambda": 1,
+        "recency_weight": 0.05,
+        "dislike_threshold": 0.4,
+        "article_half_life_hours": 24,
+        "video_half_life_hours": 168,
+        "centered": true,
+        "blend_alpha": 0.75
+      },
+      "objective": 0.7752500000000001,
+      "balancedCoverage": 0.6208333333333333,
+      "enFiPrecision": 0.305,
+      "fiEnPrecision": 0.6421296296296296,
+      "stageOneEligible": null,
+      "finalConstraints": {
+        "coverageOk": false,
+        "enFiOk": true,
+        "fiEnOk": true,
+        "eligible": false
+      },
+      "withinBand": false,
+      "winner": false,
+      "resultFile": "evaluation/results/tuning-2026-11-19t07-44-10.395z/blend-blend_alpha0.75-centered-l1-r0.05.json",
+      "resultHash": "962acfb4039bfeead19887b7f5c7cdd178a0ca310e31005f5d39e182b870a887"
+    },
+    {
+      "id": "blend-blend_alpha0.75-centered-l1-r0.1",
+      "stage": 2,
+      "gridOrder": 44,
+      "method": "blend",
+      "parameters": {
+        "lambda": 1,
+        "recency_weight": 0.1,
+        "dislike_threshold": 0.4,
+        "article_half_life_hours": 24,
+        "video_half_life_hours": 168,
+        "centered": true,
+        "blend_alpha": 0.75
+      },
+      "objective": 0.7615,
+      "balancedCoverage": 0.6208333333333332,
+      "enFiPrecision": 0.288,
+      "fiEnPrecision": 0.6375925925925926,
+      "stageOneEligible": null,
+      "finalConstraints": {
+        "coverageOk": false,
+        "enFiOk": true,
+        "fiEnOk": true,
+        "eligible": false
+      },
+      "withinBand": false,
+      "winner": false,
+      "resultFile": "evaluation/results/tuning-2026-11-19t07-44-10.395z/blend-blend_alpha0.75-centered-l1-r0.1.json",
+      "resultHash": "e72331e3204d98562626d439c3ff9e1a691d63acd01ee4f2f02bdb6d3de07bbe"
+    },
+    {
+      "id": "blend-blend_alpha0.75-centered-l1-r0.2",
+      "stage": 2,
+      "gridOrder": 45,
+      "method": "blend",
+      "parameters": {
+        "lambda": 1,
+        "recency_weight": 0.2,
+        "dislike_threshold": 0.4,
+        "article_half_life_hours": 24,
+        "video_half_life_hours": 168,
+        "centered": true,
+        "blend_alpha": 0.75
+      },
+      "objective": 0.7155000000000001,
+      "balancedCoverage": 0.6000000000000001,
+      "enFiPrecision": 0.246,
+      "fiEnPrecision": 0.5735185185185185,
+      "stageOneEligible": null,
+      "finalConstraints": {
+        "coverageOk": false,
+        "enFiOk": false,
+        "fiEnOk": false,
+        "eligible": false
+      },
+      "withinBand": false,
+      "winner": false,
+      "resultFile": "evaluation/results/tuning-2026-11-19t07-44-10.395z/blend-blend_alpha0.75-centered-l1-r0.2.json",
+      "resultHash": "cdf931b7d490fc3ef08a43c48fc64596d18c49b0f3219fffeaef04925bba2ae0"
+    }
+  ]
+}

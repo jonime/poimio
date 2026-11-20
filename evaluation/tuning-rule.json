@@ -1,0 +1,37 @@
+{
+  "schemaVersion": 1,
+  "spec": "docs/specs/020-ranking-tuning.md",
+  "baseline": {
+    "method": "nearest_liked",
+    "centered": true,
+    "lambda": 0.5,
+    "recencyWeight": 0.1
+  },
+  "objectiveKs": [3, 5, 10, 20],
+  "tolerances": {
+    "balancedCoverage": 0.05,
+    "crosslingualPrecision": 0.05,
+    "winnerBand": 0.01
+  },
+  "shortlistSize": 2,
+  "stageOne": {
+    "interestModels": [
+      { "method": "nearest_liked", "parameters": {} },
+      { "method": "average_vector", "parameters": {} },
+      { "method": "top_m_mean", "parameters": { "top_m": 2 } },
+      { "method": "top_m_mean", "parameters": { "top_m": 3 } },
+      { "method": "top_m_mean", "parameters": { "top_m": 5 } },
+      { "method": "blend", "parameters": { "blend_alpha": 0.25 } },
+      { "method": "blend", "parameters": { "blend_alpha": 0.5 } },
+      { "method": "blend", "parameters": { "blend_alpha": 0.75 } }
+    ],
+    "centered": [true, false]
+  },
+  "stageTwo": {
+    "lambda": [0, 0.25, 0.5, 1],
+    "recencyWeight": [0, 0.05, 0.1, 0.2]
+  },
+  "simplicity": {
+    "methodGroups": [["average_vector", "nearest_liked"], ["top_m_mean"], ["blend"]]
+  }
+}

@@ -1,0 +1,3354 @@
+{
+  "createdAt": "2026-11-20T11:53:58.212Z",
+  "window": "validation",
+  "gitCommit": "876fb5278605d4d99972314983067051715d2782",
+  "rulePath": "evaluation/diversity-rule.json",
+  "tuningRuleHash": "2acf8114de6709ac0d33b0d780ed9fa15c4c34c2c752f7cd1aa1c2b758c00a53",
+  "snapshotManifestHash": "6a8057e2a2278c945d167a21e3cff344a45bfecc5a5d259cb944ab400bd4b314",
+  "labelSetId": "qwen/qwen3.8-27b:relevance-v1:final:bad99fa3aa138349",
+  "labelSetHash": "bad99fa3aa1383492643dfd25d118239e6d0fbbb46770b9f51ea49d8f58db641",
+  "nearDuplicateThreshold": 0.74,
+  "population": {
+    "singles": [
+      "ai-software",
+      "cars-engineering",
+      "science-space",
+      "finnish-sports"
+    ],
+    "composites": [
+      "ai-software+cars-engineering",
+      "ai-software+science-space",
+      "ai-software+finnish-sports",
+      "cars-engineering+science-space",
+      "cars-engineering+finnish-sports",
+      "science-space+finnish-sports"
+    ]
+  },
+  "referenceId": "blend-blend_alpha0.5-centeredtrue-diversity0-explorationfalse-lambda0.5-recency_weight0",
+  "selection": {
+    "maxCoverage": null,
+    "bandIds": [],
+    "winnerId": "blend-blend_alpha0.5-centeredtrue-diversity0-explorationfalse-lambda0.5-recency_weight0",
+    "chosen": {
+      "method": "blend",
+      "parameters": {
+        "lambda": 0.5,
+        "recency_weight": 0,
+        "dislike_threshold": 0.4,
+        "article_half_life_hours": 24,
+        "video_half_life_hours": 168,
+        "centered": true,
+        "diversity": 0,
+        "exploration": false,
+        "blend_alpha": 0.5
+      }
+    }
+  },
+  "configurations": [
+    {
+      "id": "blend-blend_alpha0.5-centeredtrue-diversity0-explorationfalse-lambda0.5-recency_weight0",
+      "method": "blend",
+      "parameters": {
+        "lambda": 0.5,
+        "recency_weight": 0,
+        "dislike_threshold": 0.4,
+        "article_half_life_hours": 24,
+        "video_half_life_hours": 168,
+        "centered": true,
+        "diversity": 0,
+        "exploration": false,
+        "blend_alpha": 0.5
+      },
+      "metrics": {
+        "objective": 0.8252500000000002,
+        "balancedCoverage": 0.65,
+        "enFi": {
+          "value": 0.35750000000000004,
+          "omittedPersonaIds": [],
+          "availability": [
+            {
+              "personaId": "ai-software",
+              "k": 3,
+              "completeSeeds": 10
+            },
+            {
+              "personaId": "ai-software",
+              "k": 5,
+              "completeSeeds": 10
+            },
+            {
+              "personaId": "ai-software",
+              "k": 10,
+              "completeSeeds": 10
+            },
+            {
+              "personaId": "ai-software",
+              "k": 20,
+              "completeSeeds": 10
+            },
+            {
+              "personaId": "cars-engineering",
+              "k": 3,
+              "completeSeeds": 10
+            },
+            {
+              "personaId": "cars-engineering",
+              "k": 5,
+              "completeSeeds": 10
+            },
+            {
+              "personaId": "cars-engineering",
+              "k": 10,
+              "completeSeeds": 10
+            },
+            {
+              "personaId": "cars-engineering",
+              "k": 20,
+              "completeSeeds": 10
+            },
+            {
+              "personaId": "science-space",
+              "k": 3,
+              "completeSeeds": 10
+            },
+            {
+              "personaId": "science-space",
+              "k": 5,
+              "completeSeeds": 10
+            },
+            {
+              "personaId": "science-space",
+              "k": 10,
+              "completeSeeds": 10
+            },
+            {
+              "personaId": "science-space",
+              "k": 20,
+              "completeSeeds": 10
+            },
+            {
+              "personaId": "finnish-sports",
+              "k": 3,
+              "completeSeeds": 10
+            },
+            {
+              "personaId": "ai-software+cars-engineering",
+              "k": 3,
+              "completeSeeds": 10
+            },
+            {
+              "personaId": "ai-software+cars-engineering",
+              "k": 5,
+              "completeSeeds": 10
+            },
+            {
+              "personaId": "ai-software+cars-engineering",
+              "k": 10,
+              "completeSeeds": 10
+            },
+            {
+              "personaId": "ai-software+cars-engineering",
+              "k": 20,
+              "completeSeeds": 10
+            },
+            {
+              "personaId": "ai-software+science-space",
+              "k": 3,
+              "completeSeeds": 10
+            },
+            {
+              "personaId": "ai-software+science-space",
+              "k": 5,
+              "completeSeeds": 10
+            },
+            {
+              "personaId": "ai-software+science-space",
+              "k": 10,
+              "completeSeeds": 10
+            },
+            {
+              "personaId": "ai-software+science-space",
+              "k": 20,
+              "completeSeeds": 10
+            },
+            {
+              "personaId": "ai-software+finnish-sports",
+              "k": 3,
+              "completeSeeds": 10
+            },
+            {
+              "personaId": "ai-software+finnish-sports",
+              "k": 5,
+              "completeSeeds": 10
+            },
+            {
+              "personaId": "cars-engineering+science-space",
+              "k": 3,
+              "completeSeeds": 10
+            },
+            {
+              "personaId": "cars-engineering+science-space",
+              "k": 5,
+              "completeSeeds": 10
+            },
+            {
+              "personaId": "cars-engineering+science-space",
+              "k": 10,
+              "completeSeeds": 10
+            },
+            {
+              "personaId": "cars-engineering+science-space",
+              "k": 20,
+              "completeSeeds": 10
+            },
+            {
+              "personaId": "cars-engineering+finnish-sports",
+              "k": 3,
+              "completeSeeds": 10
+            },
+            {
+              "personaId": "cars-engineering+finnish-sports",
+              "k": 5,
+              "completeSeeds": 10
+            },
+            {
+              "personaId": "science-space+finnish-sports",
+              "k": 3,
+              "completeSeeds": 10
+            },
+            {
+              "personaId": "science-space+finnish-sports",
+              "k": 5,
+              "completeSeeds": 10
+            }
+          ]
+        },
+        "fiEn": {
+          "value": 0.7324074074074073,
+          "omittedPersonaIds": [
+            "finnish-sports"
+          ],
+          "availability": [
+            {
+              "personaId": "ai-software",
+              "k": 3,
+              "completeSeeds": 10
+            },
+            {
+              "personaId": "ai-software",
+              "k": 5,
+              "completeSeeds": 10
+            },
+            {
+              "personaId": "ai-software",
+              "k": 10,
+              "completeSeeds": 10
+            },
+            {
+              "personaId": "ai-software",
+              "k": 20,
+              "completeSeeds": 10
+            },
+            {
+              "personaId": "cars-engineering",
+              "k": 3,
+              "completeSeeds": 10
+            },
+            {
+              "personaId": "cars-engineering",
+              "k": 5,
+              "completeSeeds": 10
+            },
+            {
+              "personaId": "science-space",
+              "k": 3,
+              "completeSeeds": 10
+            },
+            {
+              "personaId": "science-space",
+              "k": 5,
+              "completeSeeds": 10
+            },
+            {
+              "personaId": "ai-software+cars-engineering",
+              "k": 3,
+              "completeSeeds": 10
+            },
+            {
+              "personaId": "ai-software+cars-engineering",
+              "k": 5,
+              "completeSeeds": 10
+            },
+            {
+              "personaId": "ai-software+cars-engineering",
+              "k": 10,
+              "completeSeeds": 10
+            },
+            {
+              "personaId": "ai-software+science-space",
+              "k": 3,
+              "completeSeeds": 10
+            },
+            {
+              "personaId": "ai-software+science-space",
+              "k": 5,
+              "completeSeeds": 10
+            },
+            {
+              "personaId": "ai-software+science-space",
+              "k": 10,
+              "completeSeeds": 10
+            },
+            {
+              "personaId": "ai-software+finnish-sports",
+              "k": 3,
+              "completeSeeds": 10
+            },
+            {
+              "personaId": "ai-software+finnish-sports",
+              "k": 5,
+              "completeSeeds": 10
+            },
+            {
+              "personaId": "ai-software+finnish-sports",
+              "k": 10,
+              "completeSeeds": 10
+            },
+            {
+              "personaId": "ai-software+finnish-sports",
+              "k": 20,
+              "completeSeeds": 10
+            },
+            {
+              "personaId": "cars-engineering+science-space",
+              "k": 3,
+              "completeSeeds": 10
+            },
+            {
+              "personaId": "cars-engineering+science-space",
+              "k": 5,
+              "completeSeeds": 10
+            },
+            {
+              "personaId": "cars-engineering+science-space",
+              "k": 10,
+              "completeSeeds": 10
+            },
+            {
+              "personaId": "cars-engineering+finnish-sports",
+              "k": 3,
+              "completeSeeds": 10
+            },
+            {
+              "personaId": "cars-engineering+finnish-sports",
+              "k": 5,
+              "completeSeeds": 10
+            },
+            {
+              "personaId": "cars-engineering+finnish-sports",
+              "k": 10,
+              "completeSeeds": 10
+            },
+            {
+              "personaId": "science-space+finnish-sports",
+              "k": 3,
+              "completeSeeds": 10
+            },
+            {
+              "personaId": "science-space+finnish-sports",
+              "k": 5,
+              "completeSeeds": 10
+            },
+            {
+              "personaId": "science-space+finnish-sports",
+              "k": 10,
+              "completeSeeds": 10
+            }
+          ]
+        },
+        "objectiveAvailability": [
+          {
+            "personaId": "ai-software",
+            "k": 3,
+            "completeSeeds": 10
+          },
+          {
+            "personaId": "ai-software",
+            "k": 5,
+            "completeSeeds": 10
+          },
+          {
+            "personaId": "ai-software",
+            "k": 10,
+            "completeSeeds": 10
+          },
+          {
+            "personaId": "ai-software",
+            "k": 20,
+            "completeSeeds": 10
+          },
+          {
+            "personaId": "cars-engineering",
+            "k": 3,
+            "completeSeeds": 10
+          },
+          {
+            "personaId": "cars-engineering",
+            "k": 5,
+            "completeSeeds": 10
+          },
+          {
+            "personaId": "cars-engineering",
+            "k": 10,
+            "completeSeeds": 10
+          },
+          {
+            "personaId": "cars-engineering",
+            "k": 20,
+            "completeSeeds": 10
+          },
+          {
+            "personaId": "science-space",
+            "k": 3,
+            "completeSeeds": 10
+          },
+          {
+            "personaId": "science-space",
+            "k": 5,
+            "completeSeeds": 10
+          },
+          {
+            "personaId": "science-space",
+            "k": 10,
+            "completeSeeds": 10
+          },
+          {
+            "personaId": "science-space",
+            "k": 20,
+            "completeSeeds": 10
+          },
+          {
+            "personaId": "finnish-sports",
+            "k": 3,
+            "completeSeeds": 10
+          },
+          {
+            "personaId": "finnish-sports",
+            "k": 5,
+            "completeSeeds": 10
+          },
+          {
+            "personaId": "finnish-sports",
+            "k": 10,
+            "completeSeeds": 10
+          },
+          {
+            "personaId": "finnish-sports",
+            "k": 20,
+            "completeSeeds": 10
+          },
+          {
+            "personaId": "ai-software+cars-engineering",
+            "k": 3,
+            "completeSeeds": 10
+          },
+          {
+            "personaId": "ai-software+cars-engineering",
+            "k": 5,
+            "completeSeeds": 10
+          },
+          {
+            "personaId": "ai-software+cars-engineering",
+            "k": 10,
+            "completeSeeds": 10
+          },
+          {
+            "personaId": "ai-software+cars-engineering",
+            "k": 20,
+            "completeSeeds": 10
+          },
+          {
+            "personaId": "ai-software+science-space",
+            "k": 3,
+            "completeSeeds": 10
+          },
+          {
+            "personaId": "ai-software+science-space",
+            "k": 5,
+            "completeSeeds": 10
+          },
+          {
+            "personaId": "ai-software+science-space",
+            "k": 10,
+            "completeSeeds": 10
+          },
+          {
+            "personaId": "ai-software+science-space",
+            "k": 20,
+            "completeSeeds": 10
+          },
+          {
+            "personaId": "ai-software+finnish-sports",
+            "k": 3,
+            "completeSeeds": 10
+          },
+          {
+            "personaId": "ai-software+finnish-sports",
+            "k": 5,
+            "completeSeeds": 10
+          },
+          {
+            "personaId": "ai-software+finnish-sports",
+            "k": 10,
+            "completeSeeds": 10
+          },
+          {
+            "personaId": "ai-software+finnish-sports",
+            "k": 20,
+            "completeSeeds": 10
+          },
+          {
+            "personaId": "cars-engineering+science-space",
+            "k": 3,
+            "completeSeeds": 10
+          },
+          {
+            "personaId": "cars-engineering+science-space",
+            "k": 5,
+            "completeSeeds": 10
+          },
+          {
+            "personaId": "cars-engineering+science-space",
+            "k": 10,
+            "completeSeeds": 10
+          },
+          {
+            "personaId": "cars-engineering+science-space",
+            "k": 20,
+            "completeSeeds": 10
+          },
+          {
+            "personaId": "cars-engineering+finnish-sports",
+            "k": 3,
+            "completeSeeds": 10
+          },
+          {
+            "personaId": "cars-engineering+finnish-sports",
+            "k": 5,
+            "completeSeeds": 10
+          },
+          {
+            "personaId": "cars-engineering+finnish-sports",
+            "k": 10,
+            "completeSeeds": 10
+          },
+          {
+            "personaId": "cars-engineering+finnish-sports",
+            "k": 20,
+            "completeSeeds": 10
+          },
+          {
+            "personaId": "science-space+finnish-sports",
+            "k": 3,
+            "completeSeeds": 10
+          },
+          {
+            "personaId": "science-space+finnish-sports",
+            "k": 5,
+            "completeSeeds": 10
+          },
+          {
+            "personaId": "science-space+finnish-sports",
+            "k": 10,
+            "completeSeeds": 10
+          },
+          {
+            "personaId": "science-space+finnish-sports",
+            "k": 20,
+            "completeSeeds": 10
+          }
+        ],
+        "coverageAvailability": [
+          {
+            "personaId": "ai-software+cars-engineering",
+            "k": 3,
+            "completeSeeds": 10
+          },
+          {
+            "personaId": "ai-software+cars-engineering",
+            "k": 5,
+            "completeSeeds": 10
+          },
+          {
+            "personaId": "ai-software+cars-engineering",
+            "k": 10,
+            "completeSeeds": 10
+          },
+          {
+            "personaId": "ai-software+cars-engineering",
+            "k": 20,
+            "completeSeeds": 10
+          },
+          {
+            "personaId": "ai-software+science-space",
+            "k": 3,
+            "completeSeeds": 10
+          },
+          {
+            "personaId": "ai-software+science-space",
+            "k": 5,
+            "completeSeeds": 10
+          },
+          {
+            "personaId": "ai-software+science-space",
+            "k": 10,
+            "completeSeeds": 10
+          },
+          {
+            "personaId": "ai-software+science-space",
+            "k": 20,
+            "completeSeeds": 10
+          },
+          {
+            "personaId": "ai-software+finnish-sports",
+            "k": 3,
+            "completeSeeds": 10
+          },
+          {
+            "personaId": "ai-software+finnish-sports",
+            "k": 5,
+            "completeSeeds": 10
+          },
+          {
+            "personaId": "ai-software+finnish-sports",
+            "k": 10,
+            "completeSeeds": 10
+          },
+          {
+            "personaId": "ai-software+finnish-sports",
+            "k": 20,
+            "completeSeeds": 10
+          },
+          {
+            "personaId": "cars-engineering+science-space",
+            "k": 3,
+            "completeSeeds": 10
+          },
+          {
+            "personaId": "cars-engineering+science-space",
+            "k": 5,
+            "completeSeeds": 10
+          },
+          {
+            "personaId": "cars-engineering+science-space",
+            "k": 10,
+            "completeSeeds": 10
+          },
+          {
+            "personaId": "cars-engineering+science-space",
+            "k": 20,
+            "completeSeeds": 10
+          },
+          {
+            "personaId": "cars-engineering+finnish-sports",
+            "k": 3,
+            "completeSeeds": 10
+          },
+          {
+            "personaId": "cars-engineering+finnish-sports",
+            "k": 5,
+            "completeSeeds": 10
+          },
+          {
+            "personaId": "cars-engineering+finnish-sports",
+            "k": 10,
+            "completeSeeds": 10
+          },
+          {
+            "personaId": "cars-engineering+finnish-sports",
+            "k": 20,
+            "completeSeeds": 10
+          },
+          {
+            "personaId": "science-space+finnish-sports",
+            "k": 3,
+            "completeSeeds": 10
+          },
+          {
+            "personaId": "science-space+finnish-sports",
+            "k": 5,
+            "completeSeeds": 10
+          },
+          {
+            "personaId": "science-space+finnish-sports",
+            "k": 10,
+            "completeSeeds": 10
+          },
+          {
+            "personaId": "science-space+finnish-sports",
+            "k": 20,
+            "completeSeeds": 10
+          }
+        ],
+        "distinctSources": 3.9775
+      },
+      "eligibility": {
+        "objectiveOk": true,
+        "coverageOk": false,
+        "enFiOk": true,
+        "fiEnOk": true,
+        "eligible": false
+      },
+      "winner": true,
+      "resultFile": "evaluation/results/diversity-2026-11-20t08-59-10.840z/blend-blend_alpha0.5-centeredtrue-diversity0-explorationfalse-lambda0.5-recency_weight0.json",
+      "resultHash": "2b9cac758bc4ce628399e729107f839e405b5ed0efac9c42f37473a6f5d2fc74"
+    },
+    {
+      "id": "blend-blend_alpha0.5-centeredtrue-diversity0.1-explorationfalse-lambda0.5-recency_weight0",
+      "method": "blend",
+      "parameters": {
+        "lambda": 0.5,
+        "recency_weight": 0,
+        "dislike_threshold": 0.4,
+        "article_half_life_hours": 24,
+        "video_half_life_hours": 168,
+        "centered": true,
+        "diversity": 0.1,
+        "exploration": false,
+        "blend_alpha": 0.5
+      },
+      "metrics": {
+        "objective": 0.813,
+        "balancedCoverage": 0.6708333333333334,
+        "enFi": {
+          "value": 0.35725,
+          "omittedPersonaIds": [],
+          "availability": [
+            {
+              "personaId": "ai-software",
+              "k": 3,
+              "completeSeeds": 10
+            },
+            {
+              "personaId": "ai-software",
+              "k": 5,
+              "completeSeeds": 10
+            },
+            {
+              "personaId": "ai-software",
+              "k": 10,
+              "completeSeeds": 10
+            },
+            {
+              "personaId": "ai-software",
+              "k": 20,
+              "completeSeeds": 10
+            },
+            {
+              "personaId": "cars-engineering",
+              "k": 3,
+              "completeSeeds": 10
+            },
+            {
+              "personaId": "cars-engineering",
+              "k": 5,
+              "completeSeeds": 10
+            },
+            {
+              "personaId": "cars-engineering",
+              "k": 10,
+              "completeSeeds": 10
+            },
+            {
+              "personaId": "cars-engineering",
+              "k": 20,
+              "completeSeeds": 10
+            },
+            {
+              "personaId": "science-space",
+              "k": 3,
+              "completeSeeds": 10
+            },
+            {
+              "personaId": "science-space",
+              "k": 5,
+              "completeSeeds": 10
+            },
+            {
+              "personaId": "science-space",
+              "k": 10,
+              "completeSeeds": 10
+            },
+            {
+              "personaId": "science-space",
+              "k": 20,
+              "completeSeeds": 10
+            },
+            {
+              "personaId": "finnish-sports",
+              "k": 3,
+              "completeSeeds": 10
+            },
+            {
+              "personaId": "ai-software+cars-engineering",
+              "k": 3,
+              "completeSeeds": 10
+            },
+            {
+              "personaId": "ai-software+cars-engineering",
+              "k": 5,
+              "completeSeeds": 10
+            },
+            {
+              "personaId": "ai-software+cars-engineering",
+              "k": 10,
+              "completeSeeds": 10
+            },
+            {
+              "personaId": "ai-software+cars-engineering",
+              "k": 20,
+              "completeSeeds": 10
+            },
+            {
+              "personaId": "ai-software+science-space",
+              "k": 3,
+              "completeSeeds": 10
+            },
+            {
+              "personaId": "ai-software+science-space",
+              "k": 5,
+              "completeSeeds": 10
+            },
+            {
+              "personaId": "ai-software+science-space",
+              "k": 10,
+              "completeSeeds": 10
+            },
+            {
+              "personaId": "ai-software+science-space",
+              "k": 20,
+              "completeSeeds": 10
+            },
+            {
+              "personaId": "ai-software+finnish-sports",
+              "k": 3,
+              "completeSeeds": 10
+            },
+            {
+              "personaId": "ai-software+finnish-sports",
+              "k": 5,
+              "completeSeeds": 10
+            },
+            {
+              "personaId": "cars-engineering+science-space",
+              "k": 3,
+              "completeSeeds": 10
+            },
+            {
+              "personaId": "cars-engineering+science-space",
+              "k": 5,
+              "completeSeeds": 10
+            },
+            {
+              "personaId": "cars-engineering+science-space",
+              "k": 10,
+              "completeSeeds": 10
+            },
+            {
+              "personaId": "cars-engineering+science-space",
+              "k": 20,
+              "completeSeeds": 10
+            },
+            {
+              "personaId": "cars-engineering+finnish-sports",
+              "k": 3,
+              "completeSeeds": 10
+            },
+            {
+              "personaId": "cars-engineering+finnish-sports",
+              "k": 5,
+              "completeSeeds": 10
+            },
+            {
+              "personaId": "science-space+finnish-sports",
+              "k": 3,
+              "completeSeeds": 10
+            },
+            {
+              "personaId": "science-space+finnish-sports",
+              "k": 5,
+              "completeSeeds": 10
+            }
+          ]
+        },
+        "fiEn": {
+          "value": 0.6799999999999999,
+          "omittedPersonaIds": [
+            "finnish-sports"
+          ],
+          "availability": [
+            {
+              "personaId": "ai-software",
+              "k": 3,
+              "completeSeeds": 10
+            },
+            {
+              "personaId": "ai-software",
+              "k": 5,
+              "completeSeeds": 10
+            },
+            {
+              "personaId": "ai-software",
+              "k": 10,
+              "completeSeeds": 10
+            },
+            {
+              "personaId": "ai-software",
+              "k": 20,
+              "completeSeeds": 10
+            },
+            {
+              "personaId": "cars-engineering",
+              "k": 3,
+              "completeSeeds": 10
+            },
+            {
+              "personaId": "cars-engineering",
+              "k": 5,
+              "completeSeeds": 10
+            },
+            {
+              "personaId": "science-space",
+              "k": 3,
+              "completeSeeds": 10
+            },
+            {
+              "personaId": "science-space",
+              "k": 5,
+              "completeSeeds": 10
+            },
+            {
+              "personaId": "ai-software+cars-engineering",
+              "k": 3,
+              "completeSeeds": 10
+            },
+            {
+              "personaId": "ai-software+cars-engineering",
+              "k": 5,
+              "completeSeeds": 10
+            },
+            {
+              "personaId": "ai-software+cars-engineering",
+              "k": 10,
+              "completeSeeds": 10
+            },
+            {
+              "personaId": "ai-software+science-space",
+              "k": 3,
+              "completeSeeds": 10
+            },
+            {
+              "personaId": "ai-software+science-space",
+              "k": 5,
+              "completeSeeds": 10
+            },
+            {
+              "personaId": "ai-software+science-space",
+              "k": 10,
+              "completeSeeds": 10
+            },
+            {
+              "personaId": "ai-software+finnish-sports",
+              "k": 3,
+              "completeSeeds": 10
+            },
+            {
+              "personaId": "ai-software+finnish-sports",
+              "k": 5,
+              "completeSeeds": 10
+            },
+            {
+              "personaId": "ai-software+finnish-sports",
+              "k": 10,
+              "completeSeeds": 10
+            },
+            {
+              "personaId": "ai-software+finnish-sports",
+              "k": 20,
+              "completeSeeds": 10
+            },
+            {
+              "personaId": "cars-engineering+science-space",
+              "k": 3,
+              "completeSeeds": 10
+            },
+            {
+              "personaId": "cars-engineering+science-space",
+              "k": 5,
+              "completeSeeds": 10
+            },
+            {
+              "personaId": "cars-engineering+science-space",
+              "k": 10,
+              "completeSeeds": 10
+            },
+            {
+              "personaId": "cars-engineering+finnish-sports",
+              "k": 3,
+              "completeSeeds": 10
+            },
+            {
+              "personaId": "cars-engineering+finnish-sports",
+              "k": 5,
+              "completeSeeds": 10
+            },
+            {
+              "personaId": "cars-engineering+finnish-sports",
+              "k": 10,
+              "completeSeeds": 10
+            },
+            {
+              "personaId": "science-space+finnish-sports",
+              "k": 3,
+              "completeSeeds": 10
+            },
+            {
+              "personaId": "science-space+finnish-sports",
+              "k": 5,
+              "completeSeeds": 10
+            },
+            {
+              "personaId": "science-space+finnish-sports",
+              "k": 10,
+              "completeSeeds": 10
+            }
+          ]
+        },
+        "objectiveAvailability": [
+          {
+            "personaId": "ai-software",
+            "k": 3,
+            "completeSeeds": 10
+          },
+          {
+            "personaId": "ai-software",
+            "k": 5,
+            "completeSeeds": 10
+          },
+          {
+            "personaId": "ai-software",
+            "k": 10,
+            "completeSeeds": 10
+          },
+          {
+            "personaId": "ai-software",
+            "k": 20,
+            "completeSeeds": 10
+          },
+          {
+            "personaId": "cars-engineering",
+            "k": 3,
+            "completeSeeds": 10
+          },
+          {
+            "personaId": "cars-engineering",
+            "k": 5,
+            "completeSeeds": 10
+          },
+          {
+            "personaId": "cars-engineering",
+            "k": 10,
+            "completeSeeds": 10
+          },
+          {
+            "personaId": "cars-engineering",
+            "k": 20,
+            "completeSeeds": 10
+          },
+          {
+            "personaId": "science-space",
+            "k": 3,
+            "completeSeeds": 10
+          },
+          {
+            "personaId": "science-space",
+            "k": 5,
+            "completeSeeds": 10
+          },
+          {
+            "personaId": "science-space",
+            "k": 10,
+            "completeSeeds": 10
+          },
+          {
+            "personaId": "science-space",
+            "k": 20,
+            "completeSeeds": 10
+          },
+          {
+            "personaId": "finnish-sports",
+            "k": 3,
+            "completeSeeds": 10
+          },
+          {
+            "personaId": "finnish-sports",
+            "k": 5,
+            "completeSeeds": 10
+          },
+          {
+            "personaId": "finnish-sports",
+            "k": 10,
+            "completeSeeds": 10
+          },
+          {
+            "personaId": "finnish-sports",
+            "k": 20,
+            "completeSeeds": 10
+          },
+          {
+            "personaId": "ai-software+cars-engineering",
+            "k": 3,
+            "completeSeeds": 10
+          },
+          {
+            "personaId": "ai-software+cars-engineering",
+            "k": 5,
+            "completeSeeds": 10
+          },
+          {
+            "personaId": "ai-software+cars-engineering",
+            "k": 10,
+            "completeSeeds": 10
+          },
+          {
+            "personaId": "ai-software+cars-engineering",
+            "k": 20,
+            "completeSeeds": 10
+          },
+          {
+            "personaId": "ai-software+science-space",
+            "k": 3,
+            "completeSeeds": 10
+          },
+          {
+            "personaId": "ai-software+science-space",
+            "k": 5,
+            "completeSeeds": 10
+          },
+          {
+            "personaId": "ai-software+science-space",
+            "k": 10,
+            "completeSeeds": 10
+          },
+          {
+            "personaId": "ai-software+science-space",
+            "k": 20,
+            "completeSeeds": 10
+          },
+          {
+            "personaId": "ai-software+finnish-sports",
+            "k": 3,
+            "completeSeeds": 10
+          },
+          {
+            "personaId": "ai-software+finnish-sports",
+            "k": 5,
+            "completeSeeds": 10
+          },
+          {
+            "personaId": "ai-software+finnish-sports",
+            "k": 10,
+            "completeSeeds": 10
+          },
+          {
+            "personaId": "ai-software+finnish-sports",
+            "k": 20,
+            "completeSeeds": 10
+          },
+          {
+            "personaId": "cars-engineering+science-space",
+            "k": 3,
+            "completeSeeds": 10
+          },
+          {
+            "personaId": "cars-engineering+science-space",
+            "k": 5,
+            "completeSeeds": 10
+          },
+          {
+            "personaId": "cars-engineering+science-space",
+            "k": 10,
+            "completeSeeds": 10
+          },
+          {
+            "personaId": "cars-engineering+science-space",
+            "k": 20,
+            "completeSeeds": 10
+          },
+          {
+            "personaId": "cars-engineering+finnish-sports",
+            "k": 3,
+            "completeSeeds": 10
+          },
+          {
+            "personaId": "cars-engineering+finnish-sports",
+            "k": 5,
+            "completeSeeds": 10
+          },
+          {
+            "personaId": "cars-engineering+finnish-sports",
+            "k": 10,
+            "completeSeeds": 10
+          },
+          {
+            "personaId": "cars-engineering+finnish-sports",
+            "k": 20,
+            "completeSeeds": 10
+          },
+          {
+            "personaId": "science-space+finnish-sports",
+            "k": 3,
+            "completeSeeds": 10
+          },
+          {
+            "personaId": "science-space+finnish-sports",
+            "k": 5,
+            "completeSeeds": 10
+          },
+          {
+            "personaId": "science-space+finnish-sports",
+            "k": 10,
+            "completeSeeds": 10
+          },
+          {
+            "personaId": "science-space+finnish-sports",
+            "k": 20,
+            "completeSeeds": 10
+          }
+        ],
+        "coverageAvailability": [
+          {
+            "personaId": "ai-software+cars-engineering",
+            "k": 3,
+            "completeSeeds": 10
+          },
+          {
+            "personaId": "ai-software+cars-engineering",
+            "k": 5,
+            "completeSeeds": 10
+          },
+          {
+            "personaId": "ai-software+cars-engineering",
+            "k": 10,
+            "completeSeeds": 10
+          },
+          {
+            "personaId": "ai-software+cars-engineering",
+            "k": 20,
+            "completeSeeds": 10
+          },
+          {
+            "personaId": "ai-software+science-space",
+            "k": 3,
+            "completeSeeds": 10
+          },
+          {
+            "personaId": "ai-software+science-space",
+            "k": 5,
+            "completeSeeds": 10
+          },
+          {
+            "personaId": "ai-software+science-space",
+            "k": 10,
+            "completeSeeds": 10
+          },
+          {
+            "personaId": "ai-software+science-space",
+            "k": 20,
+            "completeSeeds": 10
+          },
+          {
+            "personaId": "ai-software+finnish-sports",
+            "k": 3,
+            "completeSeeds": 10
+          },
+          {
+            "personaId": "ai-software+finnish-sports",
+            "k": 5,
+            "completeSeeds": 10
+          },
+          {
+            "personaId": "ai-software+finnish-sports",
+            "k": 10,
+            "completeSeeds": 10
+          },
+          {
+            "personaId": "ai-software+finnish-sports",
+            "k": 20,
+            "completeSeeds": 10
+          },
+          {
+            "personaId": "cars-engineering+science-space",
+            "k": 3,
+            "completeSeeds": 10
+          },
+          {
+            "personaId": "cars-engineering+science-space",
+            "k": 5,
+            "completeSeeds": 10
+          },
+          {
+            "personaId": "cars-engineering+science-space",
+            "k": 10,
+            "completeSeeds": 10
+          },
+          {
+            "personaId": "cars-engineering+science-space",
+            "k": 20,
+            "completeSeeds": 10
+          },
+          {
+            "personaId": "cars-engineering+finnish-sports",
+            "k": 3,
+            "completeSeeds": 10
+          },
+          {
+            "personaId": "cars-engineering+finnish-sports",
+            "k": 5,
+            "completeSeeds": 10
+          },
+          {
+            "personaId": "cars-engineering+finnish-sports",
+            "k": 10,
+            "completeSeeds": 10
+          },
+          {
+            "personaId": "cars-engineering+finnish-sports",
+            "k": 20,
+            "completeSeeds": 10
+          },
+          {
+            "personaId": "science-space+finnish-sports",
+            "k": 3,
+            "completeSeeds": 10
+          },
+          {
+            "personaId": "science-space+finnish-sports",
+            "k": 5,
+            "completeSeeds": 10
+          },
+          {
+            "personaId": "science-space+finnish-sports",
+            "k": 10,
+            "completeSeeds": 10
+          },
+          {
+            "personaId": "science-space+finnish-sports",
+            "k": 20,
+            "completeSeeds": 10
+          }
+        ],
+        "distinctSources": 4.165
+      },
+      "eligibility": {
+        "objectiveOk": true,
+        "coverageOk": true,
+        "enFiOk": true,
+        "fiEnOk": false,
+        "eligible": false
+      },
+      "winner": false,
+      "resultFile": "evaluation/results/diversity-2026-11-20t08-59-10.840z/blend-blend_alpha0.5-centeredtrue-diversity0.1-explorationfalse-lambda0.5-recency_weight0.json",
+      "resultHash": "333767e5c8899693b59b11374aa10ecb509c77adbf5c0d788bc4e246d2b45d0f"
+    },
+    {
+      "id": "blend-blend_alpha0.5-centeredtrue-diversity0.2-explorationfalse-lambda0.5-recency_weight0",
+      "method": "blend",
+      "parameters": {
+        "lambda": 0.5,
+        "recency_weight": 0,
+        "dislike_threshold": 0.4,
+        "article_half_life_hours": 24,
+        "video_half_life_hours": 168,
+        "centered": true,
+        "diversity": 0.2,
+        "exploration": false,
+        "blend_alpha": 0.5
+      },
+      "metrics": {
+        "objective": 0.7917500000000001,
+        "balancedCoverage": 0.7291666666666666,
+        "enFi": {
+          "value": 0.34725000000000006,
+          "omittedPersonaIds": [],
+          "availability": [
+            {
+              "personaId": "ai-software",
+              "k": 3,
+              "completeSeeds": 10
+            },
+            {
+              "personaId": "ai-software",
+              "k": 5,
+              "completeSeeds": 10
+            },
+            {
+              "personaId": "ai-software",
+              "k": 10,
+              "completeSeeds": 10
+            },
+            {
+              "personaId": "ai-software",
+              "k": 20,
+              "completeSeeds": 10
+            },
+            {
+              "personaId": "cars-engineering",
+              "k": 3,
+              "completeSeeds": 10
+            },
+            {
+              "personaId": "cars-engineering",
+              "k": 5,
+              "completeSeeds": 10
+            },
+            {
+              "personaId": "cars-engineering",
+              "k": 10,
+              "completeSeeds": 10
+            },
+            {
+              "personaId": "cars-engineering",
+              "k": 20,
+              "completeSeeds": 10
+            },
+            {
+              "personaId": "science-space",
+              "k": 3,
+              "completeSeeds": 10
+            },
+            {
+              "personaId": "science-space",
+              "k": 5,
+              "completeSeeds": 10
+            },
+            {
+              "personaId": "science-space",
+              "k": 10,
+              "completeSeeds": 10
+            },
+            {
+              "personaId": "science-space",
+              "k": 20,
+              "completeSeeds": 10
+            },
+            {
+              "personaId": "finnish-sports",
+              "k": 3,
+              "completeSeeds": 10
+            },
+            {
+              "personaId": "ai-software+cars-engineering",
+              "k": 3,
+              "completeSeeds": 10
+            },
+            {
+              "personaId": "ai-software+cars-engineering",
+              "k": 5,
+              "completeSeeds": 10
+            },
+            {
+              "personaId": "ai-software+cars-engineering",
+              "k": 10,
+              "completeSeeds": 10
+            },
+            {
+              "personaId": "ai-software+cars-engineering",
+              "k": 20,
+              "completeSeeds": 10
+            },
+            {
+              "personaId": "ai-software+science-space",
+              "k": 3,
+              "completeSeeds": 10
+            },
+            {
+              "personaId": "ai-software+science-space",
+              "k": 5,
+              "completeSeeds": 10
+            },
+            {
+              "personaId": "ai-software+science-space",
+              "k": 10,
+              "completeSeeds": 10
+            },
+            {
+              "personaId": "ai-software+science-space",
+              "k": 20,
+              "completeSeeds": 10
+            },
+            {
+              "personaId": "ai-software+finnish-sports",
+              "k": 3,
+              "completeSeeds": 10
+            },
+            {
+              "personaId": "ai-software+finnish-sports",
+              "k": 5,
+              "completeSeeds": 10
+            },
+            {
+              "personaId": "cars-engineering+science-space",
+              "k": 3,
+              "completeSeeds": 10
+            },
+            {
+              "personaId": "cars-engineering+science-space",
+              "k": 5,
+              "completeSeeds": 10
+            },
+            {
+              "personaId": "cars-engineering+science-space",
+              "k": 10,
+              "completeSeeds": 10
+            },
+            {
+              "personaId": "cars-engineering+science-space",
+              "k": 20,
+              "completeSeeds": 10
+            },
+            {
+              "personaId": "cars-engineering+finnish-sports",
+              "k": 3,
+              "completeSeeds": 10
+            },
+            {
+              "personaId": "cars-engineering+finnish-sports",
+              "k": 5,
+              "completeSeeds": 10
+            },
+            {
+              "personaId": "science-space+finnish-sports",
+              "k": 3,
+              "completeSeeds": 10
+            },
+            {
+              "personaId": "science-space+finnish-sports",
+              "k": 5,
+              "completeSeeds": 10
+            }
+          ]
+        },
+        "fiEn": {
+          "value": 0.6376851851851852,
+          "omittedPersonaIds": [
+            "finnish-sports"
+          ],
+          "availability": [
+            {
+              "personaId": "ai-software",
+              "k": 3,
+              "completeSeeds": 10
+            },
+            {
+              "personaId": "ai-software",
+              "k": 5,
+              "completeSeeds": 10
+            },
+            {
+              "personaId": "ai-software",
+              "k": 10,
+              "completeSeeds": 10
+            },
+            {
+              "personaId": "ai-software",
+              "k": 20,
+              "completeSeeds": 10
+            },
+            {
+              "personaId": "cars-engineering",
+              "k": 3,
+              "completeSeeds": 10
+            },
+            {
+              "personaId": "cars-engineering",
+              "k": 5,
+              "completeSeeds": 10
+            },
+            {
+              "personaId": "science-space",
+              "k": 3,
+              "completeSeeds": 10
+            },
+            {
+              "personaId": "science-space",
+              "k": 5,
+              "completeSeeds": 10
+            },
+            {
+              "personaId": "ai-software+cars-engineering",
+              "k": 3,
+              "completeSeeds": 10
+            },
+            {
+              "personaId": "ai-software+cars-engineering",
+              "k": 5,
+              "completeSeeds": 10
+            },
+            {
+              "personaId": "ai-software+cars-engineering",
+              "k": 10,
+              "completeSeeds": 10
+            },
+            {
+              "personaId": "ai-software+science-space",
+              "k": 3,
+              "completeSeeds": 10
+            },
+            {
+              "personaId": "ai-software+science-space",
+              "k": 5,
+              "completeSeeds": 10
+            },
+            {
+              "personaId": "ai-software+science-space",
+              "k": 10,
+              "completeSeeds": 10
+            },
+            {
+              "personaId": "ai-software+finnish-sports",
+              "k": 3,
+              "completeSeeds": 10
+            },
+            {
+              "personaId": "ai-software+finnish-sports",
+              "k": 5,
+              "completeSeeds": 10
+            },
+            {
+              "personaId": "ai-software+finnish-sports",
+              "k": 10,
+              "completeSeeds": 10
+            },
+            {
+              "personaId": "ai-software+finnish-sports",
+              "k": 20,
+              "completeSeeds": 10
+            },
+            {
+              "personaId": "cars-engineering+science-space",
+              "k": 3,
+              "completeSeeds": 10
+            },
+            {
+              "personaId": "cars-engineering+science-space",
+              "k": 5,
+              "completeSeeds": 10
+            },
+            {
+              "personaId": "cars-engineering+science-space",
+              "k": 10,
+              "completeSeeds": 10
+            },
+            {
+              "personaId": "cars-engineering+finnish-sports",
+              "k": 3,
+              "completeSeeds": 10
+            },
+            {
+              "personaId": "cars-engineering+finnish-sports",
+              "k": 5,
+              "completeSeeds": 10
+            },
+            {
+              "personaId": "cars-engineering+finnish-sports",
+              "k": 10,
+              "completeSeeds": 10
+            },
+            {
+              "personaId": "science-space+finnish-sports",
+              "k": 3,
+              "completeSeeds": 10
+            },
+            {
+              "personaId": "science-space+finnish-sports",
+              "k": 5,
+              "completeSeeds": 10
+            },
+            {
+              "personaId": "science-space+finnish-sports",
+              "k": 10,
+              "completeSeeds": 10
+            }
+          ]
+        },
+        "objectiveAvailability": [
+          {
+            "personaId": "ai-software",
+            "k": 3,
+            "completeSeeds": 10
+          },
+          {
+            "personaId": "ai-software",
+            "k": 5,
+            "completeSeeds": 10
+          },
+          {
+            "personaId": "ai-software",
+            "k": 10,
+            "completeSeeds": 10
+          },
+          {
+            "personaId": "ai-software",
+            "k": 20,
+            "completeSeeds": 10
+          },
+          {
+            "personaId": "cars-engineering",
+            "k": 3,
+            "completeSeeds": 10
+          },
+          {
+            "personaId": "cars-engineering",
+            "k": 5,
+            "completeSeeds": 10
+          },
+          {
+            "personaId": "cars-engineering",
+            "k": 10,
+            "completeSeeds": 10
+          },
+          {
+            "personaId": "cars-engineering",
+            "k": 20,
+            "completeSeeds": 10
+          },
+          {
+            "personaId": "science-space",
+            "k": 3,
+            "completeSeeds": 10
+          },
+          {
+            "personaId": "science-space",
+            "k": 5,
+            "completeSeeds": 10
+          },
+          {
+            "personaId": "science-space",
+            "k": 10,
+            "completeSeeds": 10
+          },
+          {
+            "personaId": "science-space",
+            "k": 20,
+            "completeSeeds": 10
+          },
+          {
+            "personaId": "finnish-sports",
+            "k": 3,
+            "completeSeeds": 10
+          },
+          {
+            "personaId": "finnish-sports",
+            "k": 5,
+            "completeSeeds": 10
+          },
+          {
+            "personaId": "finnish-sports",
+            "k": 10,
+            "completeSeeds": 10
+          },
+          {
+            "personaId": "finnish-sports",
+            "k": 20,
+            "completeSeeds": 10
+          },
+          {
+            "personaId": "ai-software+cars-engineering",
+            "k": 3,
+            "completeSeeds": 10
+          },
+          {
+            "personaId": "ai-software+cars-engineering",
+            "k": 5,
+            "completeSeeds": 10
+          },
+          {
+            "personaId": "ai-software+cars-engineering",
+            "k": 10,
+            "completeSeeds": 10
+          },
+          {
+            "personaId": "ai-software+cars-engineering",
+            "k": 20,
+            "completeSeeds": 10
+          },
+          {
+            "personaId": "ai-software+science-space",
+            "k": 3,
+            "completeSeeds": 10
+          },
+          {
+            "personaId": "ai-software+science-space",
+            "k": 5,
+            "completeSeeds": 10
+          },
+          {
+            "personaId": "ai-software+science-space",
+            "k": 10,
+            "completeSeeds": 10
+          },
+          {
+            "personaId": "ai-software+science-space",
+            "k": 20,
+            "completeSeeds": 10
+          },
+          {
+            "personaId": "ai-software+finnish-sports",
+            "k": 3,
+            "completeSeeds": 10
+          },
+          {
+            "personaId": "ai-software+finnish-sports",
+            "k": 5,
+            "completeSeeds": 10
+          },
+          {
+            "personaId": "ai-software+finnish-sports",
+            "k": 10,
+            "completeSeeds": 10
+          },
+          {
+            "personaId": "ai-software+finnish-sports",
+            "k": 20,
+            "completeSeeds": 10
+          },
+          {
+            "personaId": "cars-engineering+science-space",
+            "k": 3,
+            "completeSeeds": 10
+          },
+          {
+            "personaId": "cars-engineering+science-space",
+            "k": 5,
+            "completeSeeds": 10
+          },
+          {
+            "personaId": "cars-engineering+science-space",
+            "k": 10,
+            "completeSeeds": 10
+          },
+          {
+            "personaId": "cars-engineering+science-space",
+            "k": 20,
+            "completeSeeds": 10
+          },
+          {
+            "personaId": "cars-engineering+finnish-sports",
+            "k": 3,
+            "completeSeeds": 10
+          },
+          {
+            "personaId": "cars-engineering+finnish-sports",
+            "k": 5,
+            "completeSeeds": 10
+          },
+          {
+            "personaId": "cars-engineering+finnish-sports",
+            "k": 10,
+            "completeSeeds": 10
+          },
+          {
+            "personaId": "cars-engineering+finnish-sports",
+            "k": 20,
+            "completeSeeds": 10
+          },
+          {
+            "personaId": "science-space+finnish-sports",
+            "k": 3,
+            "completeSeeds": 10
+          },
+          {
+            "personaId": "science-space+finnish-sports",
+            "k": 5,
+            "completeSeeds": 10
+          },
+          {
+            "personaId": "science-space+finnish-sports",
+            "k": 10,
+            "completeSeeds": 10
+          },
+          {
+            "personaId": "science-space+finnish-sports",
+            "k": 20,
+            "completeSeeds": 10
+          }
+        ],
+        "coverageAvailability": [
+          {
+            "personaId": "ai-software+cars-engineering",
+            "k": 3,
+            "completeSeeds": 10
+          },
+          {
+            "personaId": "ai-software+cars-engineering",
+            "k": 5,
+            "completeSeeds": 10
+          },
+          {
+            "personaId": "ai-software+cars-engineering",
+            "k": 10,
+            "completeSeeds": 10
+          },
+          {
+            "personaId": "ai-software+cars-engineering",
+            "k": 20,
+            "completeSeeds": 10
+          },
+          {
+            "personaId": "ai-software+science-space",
+            "k": 3,
+            "completeSeeds": 10
+          },
+          {
+            "personaId": "ai-software+science-space",
+            "k": 5,
+            "completeSeeds": 10
+          },
+          {
+            "personaId": "ai-software+science-space",
+            "k": 10,
+            "completeSeeds": 10
+          },
+          {
+            "personaId": "ai-software+science-space",
+            "k": 20,
+            "completeSeeds": 10
+          },
+          {
+            "personaId": "ai-software+finnish-sports",
+            "k": 3,
+            "completeSeeds": 10
+          },
+          {
+            "personaId": "ai-software+finnish-sports",
+            "k": 5,
+            "completeSeeds": 10
+          },
+          {
+            "personaId": "ai-software+finnish-sports",
+            "k": 10,
+            "completeSeeds": 10
+          },
+          {
+            "personaId": "ai-software+finnish-sports",
+            "k": 20,
+            "completeSeeds": 10
+          },
+          {
+            "personaId": "cars-engineering+science-space",
+            "k": 3,
+            "completeSeeds": 10
+          },
+          {
+            "personaId": "cars-engineering+science-space",
+            "k": 5,
+            "completeSeeds": 10
+          },
+          {
+            "personaId": "cars-engineering+science-space",
+            "k": 10,
+            "completeSeeds": 10
+          },
+          {
+            "personaId": "cars-engineering+science-space",
+            "k": 20,
+            "completeSeeds": 10
+          },
+          {
+            "personaId": "cars-engineering+finnish-sports",
+            "k": 3,
+            "completeSeeds": 10
+          },
+          {
+            "personaId": "cars-engineering+finnish-sports",
+            "k": 5,
+            "completeSeeds": 10
+          },
+          {
+            "personaId": "cars-engineering+finnish-sports",
+            "k": 10,
+            "completeSeeds": 10
+          },
+          {
+            "personaId": "cars-engineering+finnish-sports",
+            "k": 20,
+            "completeSeeds": 10
+          },
+          {
+            "personaId": "science-space+finnish-sports",
+            "k": 3,
+            "completeSeeds": 10
+          },
+          {
+            "personaId": "science-space+finnish-sports",
+            "k": 5,
+            "completeSeeds": 10
+          },
+          {
+            "personaId": "science-space+finnish-sports",
+            "k": 10,
+            "completeSeeds": 10
+          },
+          {
+            "personaId": "science-space+finnish-sports",
+            "k": 20,
+            "completeSeeds": 10
+          }
+        ],
+        "distinctSources": 4.43
+      },
+      "eligibility": {
+        "objectiveOk": false,
+        "coverageOk": true,
+        "enFiOk": true,
+        "fiEnOk": false,
+        "eligible": false
+      },
+      "winner": false,
+      "resultFile": "evaluation/results/diversity-2026-11-20t08-59-10.840z/blend-blend_alpha0.5-centeredtrue-diversity0.2-explorationfalse-lambda0.5-recency_weight0.json",
+      "resultHash": "d68770e481fe7f09f13b14357d2ec7a995b2a7b05fb6b96f493101c6a93f2907"
+    },
+    {
+      "id": "blend-blend_alpha0.5-centeredtrue-diversity0.3-explorationfalse-lambda0.5-recency_weight0",
+      "method": "blend",
+      "parameters": {
+        "lambda": 0.5,
+        "recency_weight": 0,
+        "dislike_threshold": 0.4,
+        "article_half_life_hours": 24,
+        "video_half_life_hours": 168,
+        "centered": true,
+        "diversity": 0.3,
+        "exploration": false,
+        "blend_alpha": 0.5
+      },
+      "metrics": {
+        "objective": 0.75975,
+        "balancedCoverage": 0.8041666666666667,
+        "enFi": {
+          "value": 0.334,
+          "omittedPersonaIds": [],
+          "availability": [
+            {
+              "personaId": "ai-software",
+              "k": 3,
+              "completeSeeds": 10
+            },
+            {
+              "personaId": "ai-software",
+              "k": 5,
+              "completeSeeds": 10
+            },
+            {
+              "personaId": "ai-software",
+              "k": 10,
+              "completeSeeds": 10
+            },
+            {
+              "personaId": "ai-software",
+              "k": 20,
+              "completeSeeds": 10
+            },
+            {
+              "personaId": "cars-engineering",
+              "k": 3,
+              "completeSeeds": 10
+            },
+            {
+              "personaId": "cars-engineering",
+              "k": 5,
+              "completeSeeds": 10
+            },
+            {
+              "personaId": "cars-engineering",
+              "k": 10,
+              "completeSeeds": 10
+            },
+            {
+              "personaId": "cars-engineering",
+              "k": 20,
+              "completeSeeds": 10
+            },
+            {
+              "personaId": "science-space",
+              "k": 3,
+              "completeSeeds": 10
+            },
+            {
+              "personaId": "science-space",
+              "k": 5,
+              "completeSeeds": 10
+            },
+            {
+              "personaId": "science-space",
+              "k": 10,
+              "completeSeeds": 10
+            },
+            {
+              "personaId": "science-space",
+              "k": 20,
+              "completeSeeds": 10
+            },
+            {
+              "personaId": "finnish-sports",
+              "k": 3,
+              "completeSeeds": 10
+            },
+            {
+              "personaId": "ai-software+cars-engineering",
+              "k": 3,
+              "completeSeeds": 10
+            },
+            {
+              "personaId": "ai-software+cars-engineering",
+              "k": 5,
+              "completeSeeds": 10
+            },
+            {
+              "personaId": "ai-software+cars-engineering",
+              "k": 10,
+              "completeSeeds": 10
+            },
+            {
+              "personaId": "ai-software+cars-engineering",
+              "k": 20,
+              "completeSeeds": 10
+            },
+            {
+              "personaId": "ai-software+science-space",
+              "k": 3,
+              "completeSeeds": 10
+            },
+            {
+              "personaId": "ai-software+science-space",
+              "k": 5,
+              "completeSeeds": 10
+            },
+            {
+              "personaId": "ai-software+science-space",
+              "k": 10,
+              "completeSeeds": 10
+            },
+            {
+              "personaId": "ai-software+science-space",
+              "k": 20,
+              "completeSeeds": 10
+            },
+            {
+              "personaId": "ai-software+finnish-sports",
+              "k": 3,
+              "completeSeeds": 10
+            },
+            {
+              "personaId": "ai-software+finnish-sports",
+              "k": 5,
+              "completeSeeds": 10
+            },
+            {
+              "personaId": "cars-engineering+science-space",
+              "k": 3,
+              "completeSeeds": 10
+            },
+            {
+              "personaId": "cars-engineering+science-space",
+              "k": 5,
+              "completeSeeds": 10
+            },
+            {
+              "personaId": "cars-engineering+science-space",
+              "k": 10,
+              "completeSeeds": 10
+            },
+            {
+              "personaId": "cars-engineering+science-space",
+              "k": 20,
+              "completeSeeds": 10
+            },
+            {
+              "personaId": "cars-engineering+finnish-sports",
+              "k": 3,
+              "completeSeeds": 10
+            },
+            {
+              "personaId": "cars-engineering+finnish-sports",
+              "k": 5,
+              "completeSeeds": 10
+            },
+            {
+              "personaId": "science-space+finnish-sports",
+              "k": 3,
+              "completeSeeds": 10
+            },
+            {
+              "personaId": "science-space+finnish-sports",
+              "k": 5,
+              "completeSeeds": 10
+            }
+          ]
+        },
+        "fiEn": {
+          "value": 0.5901851851851851,
+          "omittedPersonaIds": [
+            "finnish-sports"
+          ],
+          "availability": [
+            {
+              "personaId": "ai-software",
+              "k": 3,
+              "completeSeeds": 10
+            },
+            {
+              "personaId": "ai-software",
+              "k": 5,
+              "completeSeeds": 10
+            },
+            {
+              "personaId": "ai-software",
+              "k": 10,
+              "completeSeeds": 10
+            },
+            {
+              "personaId": "ai-software",
+              "k": 20,
+              "completeSeeds": 10
+            },
+            {
+              "personaId": "cars-engineering",
+              "k": 3,
+              "completeSeeds": 10
+            },
+            {
+              "personaId": "cars-engineering",
+              "k": 5,
+              "completeSeeds": 10
+            },
+            {
+              "personaId": "science-space",
+              "k": 3,
+              "completeSeeds": 10
+            },
+            {
+              "personaId": "science-space",
+              "k": 5,
+              "completeSeeds": 10
+            },
+            {
+              "personaId": "ai-software+cars-engineering",
+              "k": 3,
+              "completeSeeds": 10
+            },
+            {
+              "personaId": "ai-software+cars-engineering",
+              "k": 5,
+              "completeSeeds": 10
+            },
+            {
+              "personaId": "ai-software+cars-engineering",
+              "k": 10,
+              "completeSeeds": 10
+            },
+            {
+              "personaId": "ai-software+science-space",
+              "k": 3,
+              "completeSeeds": 10
+            },
+            {
+              "personaId": "ai-software+science-space",
+              "k": 5,
+              "completeSeeds": 10
+            },
+            {
+              "personaId": "ai-software+science-space",
+              "k": 10,
+              "completeSeeds": 10
+            },
+            {
+              "personaId": "ai-software+finnish-sports",
+              "k": 3,
+              "completeSeeds": 10
+            },
+            {
+              "personaId": "ai-software+finnish-sports",
+              "k": 5,
+              "completeSeeds": 10
+            },
+            {
+              "personaId": "ai-software+finnish-sports",
+              "k": 10,
+              "completeSeeds": 10
+            },
+            {
+              "personaId": "ai-software+finnish-sports",
+              "k": 20,
+              "completeSeeds": 10
+            },
+            {
+              "personaId": "cars-engineering+science-space",
+              "k": 3,
+              "completeSeeds": 10
+            },
+            {
+              "personaId": "cars-engineering+science-space",
+              "k": 5,
+              "completeSeeds": 10
+            },
+            {
+              "personaId": "cars-engineering+science-space",
+              "k": 10,
+              "completeSeeds": 10
+            },
+            {
+              "personaId": "cars-engineering+finnish-sports",
+              "k": 3,
+              "completeSeeds": 10
+            },
+            {
+              "personaId": "cars-engineering+finnish-sports",
+              "k": 5,
+              "completeSeeds": 10
+            },
+            {
+              "personaId": "cars-engineering+finnish-sports",
+              "k": 10,
+              "completeSeeds": 10
+            },
+            {
+              "personaId": "science-space+finnish-sports",
+              "k": 3,
+              "completeSeeds": 10
+            },
+            {
+              "personaId": "science-space+finnish-sports",
+              "k": 5,
+              "completeSeeds": 10
+            },
+            {
+              "personaId": "science-space+finnish-sports",
+              "k": 10,
+              "completeSeeds": 10
+            }
+          ]
+        },
+        "objectiveAvailability": [
+          {
+            "personaId": "ai-software",
+            "k": 3,
+            "completeSeeds": 10
+          },
+          {
+            "personaId": "ai-software",
+            "k": 5,
+            "completeSeeds": 10
+          },
+          {
+            "personaId": "ai-software",
+            "k": 10,
+            "completeSeeds": 10
+          },
+          {
+            "personaId": "ai-software",
+            "k": 20,
+            "completeSeeds": 10
+          },
+          {
+            "personaId": "cars-engineering",
+            "k": 3,
+            "completeSeeds": 10
+          },
+          {
+            "personaId": "cars-engineering",
+            "k": 5,
+            "completeSeeds": 10
+          },
+          {
+            "personaId": "cars-engineering",
+            "k": 10,
+            "completeSeeds": 10
+          },
+          {
+            "personaId": "cars-engineering",
+            "k": 20,
+            "completeSeeds": 10
+          },
+          {
+            "personaId": "science-space",
+            "k": 3,
+            "completeSeeds": 10
+          },
+          {
+            "personaId": "science-space",
+            "k": 5,
+            "completeSeeds": 10
+          },
+          {
+            "personaId": "science-space",
+            "k": 10,
+            "completeSeeds": 10
+          },
+          {
+            "personaId": "science-space",
+            "k": 20,
+            "completeSeeds": 10
+          },
+          {
+            "personaId": "finnish-sports",
+            "k": 3,
+            "completeSeeds": 10
+          },
+          {
+            "personaId": "finnish-sports",
+            "k": 5,
+            "completeSeeds": 10
+          },
+          {
+            "personaId": "finnish-sports",
+            "k": 10,
+            "completeSeeds": 10
+          },
+          {
+            "personaId": "finnish-sports",
+            "k": 20,
+            "completeSeeds": 10
+          },
+          {
+            "personaId": "ai-software+cars-engineering",
+            "k": 3,
+            "completeSeeds": 10
+          },
+          {
+            "personaId": "ai-software+cars-engineering",
+            "k": 5,
+            "completeSeeds": 10
+          },
+          {
+            "personaId": "ai-software+cars-engineering",
+            "k": 10,
+            "completeSeeds": 10
+          },
+          {
+            "personaId": "ai-software+cars-engineering",
+            "k": 20,
+            "completeSeeds": 10
+          },
+          {
+            "personaId": "ai-software+science-space",
+            "k": 3,
+            "completeSeeds": 10
+          },
+          {
+            "personaId": "ai-software+science-space",
+            "k": 5,
+            "completeSeeds": 10
+          },
+          {
+            "personaId": "ai-software+science-space",
+            "k": 10,
+            "completeSeeds": 10
+          },
+          {
+            "personaId": "ai-software+science-space",
+            "k": 20,
+            "completeSeeds": 10
+          },
+          {
+            "personaId": "ai-software+finnish-sports",
+            "k": 3,
+            "completeSeeds": 10
+          },
+          {
+            "personaId": "ai-software+finnish-sports",
+            "k": 5,
+            "completeSeeds": 10
+          },
+          {
+            "personaId": "ai-software+finnish-sports",
+            "k": 10,
+            "completeSeeds": 10
+          },
+          {
+            "personaId": "ai-software+finnish-sports",
+            "k": 20,
+            "completeSeeds": 10
+          },
+          {
+            "personaId": "cars-engineering+science-space",
+            "k": 3,
+            "completeSeeds": 10
+          },
+          {
+            "personaId": "cars-engineering+science-space",
+            "k": 5,
+            "completeSeeds": 10
+          },
+          {
+            "personaId": "cars-engineering+science-space",
+            "k": 10,
+            "completeSeeds": 10
+          },
+          {
+            "personaId": "cars-engineering+science-space",
+            "k": 20,
+            "completeSeeds": 10
+          },
+          {
+            "personaId": "cars-engineering+finnish-sports",
+            "k": 3,
+            "completeSeeds": 10
+          },
+          {
+            "personaId": "cars-engineering+finnish-sports",
+            "k": 5,
+            "completeSeeds": 10
+          },
+          {
+            "personaId": "cars-engineering+finnish-sports",
+            "k": 10,
+            "completeSeeds": 10
+          },
+          {
+            "personaId": "cars-engineering+finnish-sports",
+            "k": 20,
+            "completeSeeds": 10
+          },
+          {
+            "personaId": "science-space+finnish-sports",
+            "k": 3,
+            "completeSeeds": 10
+          },
+          {
+            "personaId": "science-space+finnish-sports",
+            "k": 5,
+            "completeSeeds": 10
+          },
+          {
+            "personaId": "science-space+finnish-sports",
+            "k": 10,
+            "completeSeeds": 10
+          },
+          {
+            "personaId": "science-space+finnish-sports",
+            "k": 20,
+            "completeSeeds": 10
+          }
+        ],
+        "coverageAvailability": [
+          {
+            "personaId": "ai-software+cars-engineering",
+            "k": 3,
+            "completeSeeds": 10
+          },
+          {
+            "personaId": "ai-software+cars-engineering",
+            "k": 5,
+            "completeSeeds": 10
+          },
+          {
+            "personaId": "ai-software+cars-engineering",
+            "k": 10,
+            "completeSeeds": 10
+          },
+          {
+            "personaId": "ai-software+cars-engineering",
+            "k": 20,
+            "completeSeeds": 10
+          },
+          {
+            "personaId": "ai-software+science-space",
+            "k": 3,
+            "completeSeeds": 10
+          },
+          {
+            "personaId": "ai-software+science-space",
+            "k": 5,
+            "completeSeeds": 10
+          },
+          {
+            "personaId": "ai-software+science-space",
+            "k": 10,
+            "completeSeeds": 10
+          },
+          {
+            "personaId": "ai-software+science-space",
+            "k": 20,
+            "completeSeeds": 10
+          },
+          {
+            "personaId": "ai-software+finnish-sports",
+            "k": 3,
+            "completeSeeds": 10
+          },
+          {
+            "personaId": "ai-software+finnish-sports",
+            "k": 5,
+            "completeSeeds": 10
+          },
+          {
+            "personaId": "ai-software+finnish-sports",
+            "k": 10,
+            "completeSeeds": 10
+          },
+          {
+            "personaId": "ai-software+finnish-sports",
+            "k": 20,
+            "completeSeeds": 10
+          },
+          {
+            "personaId": "cars-engineering+science-space",
+            "k": 3,
+            "completeSeeds": 10
+          },
+          {
+            "personaId": "cars-engineering+science-space",
+            "k": 5,
+            "completeSeeds": 10
+          },
+          {
+            "personaId": "cars-engineering+science-space",
+            "k": 10,
+            "completeSeeds": 10
+          },
+          {
+            "personaId": "cars-engineering+science-space",
+            "k": 20,
+            "completeSeeds": 10
+          },
+          {
+            "personaId": "cars-engineering+finnish-sports",
+            "k": 3,
+            "completeSeeds": 10
+          },
+          {
+            "personaId": "cars-engineering+finnish-sports",
+            "k": 5,
+            "completeSeeds": 10
+          },
+          {
+            "personaId": "cars-engineering+finnish-sports",
+            "k": 10,
+            "completeSeeds": 10
+          },
+          {
+            "personaId": "cars-engineering+finnish-sports",
+            "k": 20,
+            "completeSeeds": 10
+          },
+          {
+            "personaId": "science-space+finnish-sports",
+            "k": 3,
+            "completeSeeds": 10
+          },
+          {
+            "personaId": "science-space+finnish-sports",
+            "k": 5,
+            "completeSeeds": 10
+          },
+          {
+            "personaId": "science-space+finnish-sports",
+            "k": 10,
+            "completeSeeds": 10
+          },
+          {
+            "personaId": "science-space+finnish-sports",
+            "k": 20,
+            "completeSeeds": 10
+          }
+        ],
+        "distinctSources": 4.8199999999999985
+      },
+      "eligibility": {
+        "objectiveOk": false,
+        "coverageOk": true,
+        "enFiOk": true,
+        "fiEnOk": false,
+        "eligible": false
+      },
+      "winner": false,
+      "resultFile": "evaluation/results/diversity-2026-11-20t08-59-10.840z/blend-blend_alpha0.5-centeredtrue-diversity0.3-explorationfalse-lambda0.5-recency_weight0.json",
+      "resultHash": "b7c394a21c901642ec1f4d747b51f6b6ef08ab7c03634db0c3117b5d9b907d48"
+    },
+    {
+      "id": "blend-blend_alpha0.5-centeredtrue-diversity0.5-explorationfalse-lambda0.5-recency_weight0",
+      "method": "blend",
+      "parameters": {
+        "lambda": 0.5,
+        "recency_weight": 0,
+        "dislike_threshold": 0.4,
+        "article_half_life_hours": 24,
+        "video_half_life_hours": 168,
+        "centered": true,
+        "diversity": 0.5,
+        "exploration": false,
+        "blend_alpha": 0.5
+      },
+      "metrics": {
+        "objective": 0.6417499999999999,
+        "balancedCoverage": 0.775,
+        "enFi": {
+          "value": 0.27525,
+          "omittedPersonaIds": [],
+          "availability": [
+            {
+              "personaId": "ai-software",
+              "k": 3,
+              "completeSeeds": 10
+            },
+            {
+              "personaId": "ai-software",
+              "k": 5,
+              "completeSeeds": 10
+            },
+            {
+              "personaId": "ai-software",
+              "k": 10,
+              "completeSeeds": 10
+            },
+            {
+              "personaId": "ai-software",
+              "k": 20,
+              "completeSeeds": 10
+            },
+            {
+              "personaId": "cars-engineering",
+              "k": 3,
+              "completeSeeds": 10
+            },
+            {
+              "personaId": "cars-engineering",
+              "k": 5,
+              "completeSeeds": 10
+            },
+            {
+              "personaId": "cars-engineering",
+              "k": 10,
+              "completeSeeds": 10
+            },
+            {
+              "personaId": "cars-engineering",
+              "k": 20,
+              "completeSeeds": 10
+            },
+            {
+              "personaId": "science-space",
+              "k": 3,
+              "completeSeeds": 10
+            },
+            {
+              "personaId": "science-space",
+              "k": 5,
+              "completeSeeds": 10
+            },
+            {
+              "personaId": "science-space",
+              "k": 10,
+              "completeSeeds": 10
+            },
+            {
+              "personaId": "science-space",
+              "k": 20,
+              "completeSeeds": 10
+            },
+            {
+              "personaId": "finnish-sports",
+              "k": 3,
+              "completeSeeds": 10
+            },
+            {
+              "personaId": "ai-software+cars-engineering",
+              "k": 3,
+              "completeSeeds": 10
+            },
+            {
+              "personaId": "ai-software+cars-engineering",
+              "k": 5,
+              "completeSeeds": 10
+            },
+            {
+              "personaId": "ai-software+cars-engineering",
+              "k": 10,
+              "completeSeeds": 10
+            },
+            {
+              "personaId": "ai-software+cars-engineering",
+              "k": 20,
+              "completeSeeds": 10
+            },
+            {
+              "personaId": "ai-software+science-space",
+              "k": 3,
+              "completeSeeds": 10
+            },
+            {
+              "personaId": "ai-software+science-space",
+              "k": 5,
+              "completeSeeds": 10
+            },
+            {
+              "personaId": "ai-software+science-space",
+              "k": 10,
+              "completeSeeds": 10
+            },
+            {
+              "personaId": "ai-software+science-space",
+              "k": 20,
+              "completeSeeds": 10
+            },
+            {
+              "personaId": "ai-software+finnish-sports",
+              "k": 3,
+              "completeSeeds": 10
+            },
+            {
+              "personaId": "ai-software+finnish-sports",
+              "k": 5,
+              "completeSeeds": 10
+            },
+            {
+              "personaId": "cars-engineering+science-space",
+              "k": 3,
+              "completeSeeds": 10
+            },
+            {
+              "personaId": "cars-engineering+science-space",
+              "k": 5,
+              "completeSeeds": 10
+            },
+            {
+              "personaId": "cars-engineering+science-space",
+              "k": 10,
+              "completeSeeds": 10
+            },
+            {
+              "personaId": "cars-engineering+science-space",
+              "k": 20,
+              "completeSeeds": 10
+            },
+            {
+              "personaId": "cars-engineering+finnish-sports",
+              "k": 3,
+              "completeSeeds": 10
+            },
+            {
+              "personaId": "cars-engineering+finnish-sports",
+              "k": 5,
+              "completeSeeds": 10
+            },
+            {
+              "personaId": "science-space+finnish-sports",
+              "k": 3,
+              "completeSeeds": 10
+            },
+            {
+              "personaId": "science-space+finnish-sports",
+              "k": 5,
+              "completeSeeds": 10
+            }
+          ]
+        },
+        "fiEn": {
+          "value": 0.5040740740740741,
+          "omittedPersonaIds": [
+            "finnish-sports"
+          ],
+          "availability": [
+            {
+              "personaId": "ai-software",
+              "k": 3,
+              "completeSeeds": 10
+            },
+            {
+              "personaId": "ai-software",
+              "k": 5,
+              "completeSeeds": 10
+            },
+            {
+              "personaId": "ai-software",
+              "k": 10,
+              "completeSeeds": 10
+            },
+            {
+              "personaId": "ai-software",
+              "k": 20,
+              "completeSeeds": 10
+            },
+            {
+              "personaId": "cars-engineering",
+              "k": 3,
+              "completeSeeds": 10
+            },
+            {
+              "personaId": "cars-engineering",
+              "k": 5,
+              "completeSeeds": 10
+            },
+            {
+              "personaId": "science-space",
+              "k": 3,
+              "completeSeeds": 10
+            },
+            {
+              "personaId": "science-space",
+              "k": 5,
+              "completeSeeds": 10
+            },
+            {
+              "personaId": "ai-software+cars-engineering",
+              "k": 3,
+              "completeSeeds": 10
+            },
+            {
+              "personaId": "ai-software+cars-engineering",
+              "k": 5,
+              "completeSeeds": 10
+            },
+            {
+              "personaId": "ai-software+cars-engineering",
+              "k": 10,
+              "completeSeeds": 10
+            },
+            {
+              "personaId": "ai-software+science-space",
+              "k": 3,
+              "completeSeeds": 10
+            },
+            {
+              "personaId": "ai-software+science-space",
+              "k": 5,
+              "completeSeeds": 10
+            },
+            {
+              "personaId": "ai-software+science-space",
+              "k": 10,
+              "completeSeeds": 10
+            },
+            {
+              "personaId": "ai-software+finnish-sports",
+              "k": 3,
+              "completeSeeds": 10
+            },
+            {
+              "personaId": "ai-software+finnish-sports",
+              "k": 5,
+              "completeSeeds": 10
+            },
+            {
+              "personaId": "ai-software+finnish-sports",
+              "k": 10,
+              "completeSeeds": 10
+            },
+            {
+              "personaId": "ai-software+finnish-sports",
+              "k": 20,
+              "completeSeeds": 10
+            },
+            {
+              "personaId": "cars-engineering+science-space",
+              "k": 3,
+              "completeSeeds": 10
+            },
+            {
+              "personaId": "cars-engineering+science-space",
+              "k": 5,
+              "completeSeeds": 10
+            },
+            {
+              "personaId": "cars-engineering+science-space",
+              "k": 10,
+              "completeSeeds": 10
+            },
+            {
+              "personaId": "cars-engineering+finnish-sports",
+              "k": 3,
+              "completeSeeds": 10
+            },
+            {
+              "personaId": "cars-engineering+finnish-sports",
+              "k": 5,
+              "completeSeeds": 10
+            },
+            {
+              "personaId": "cars-engineering+finnish-sports",
+              "k": 10,
+              "completeSeeds": 10
+            },
+            {
+              "personaId": "science-space+finnish-sports",
+              "k": 3,
+              "completeSeeds": 10
+            },
+            {
+              "personaId": "science-space+finnish-sports",
+              "k": 5,
+              "completeSeeds": 10
+            },
+            {
+              "personaId": "science-space+finnish-sports",
+              "k": 10,
+              "completeSeeds": 10
+            }
+          ]
+        },
+        "objectiveAvailability": [
+          {
+            "personaId": "ai-software",
+            "k": 3,
+            "completeSeeds": 10
+          },
+          {
+            "personaId": "ai-software",
+            "k": 5,
+            "completeSeeds": 10
+          },
+          {
+            "personaId": "ai-software",
+            "k": 10,
+            "completeSeeds": 10
+          },
+          {
+            "personaId": "ai-software",
+            "k": 20,
+            "completeSeeds": 10
+          },
+          {
+            "personaId": "cars-engineering",
+            "k": 3,
+            "completeSeeds": 10
+          },
+          {
+            "personaId": "cars-engineering",
+            "k": 5,
+            "completeSeeds": 10
+          },
+          {
+            "personaId": "cars-engineering",
+            "k": 10,
+            "completeSeeds": 10
+          },
+          {
+            "personaId": "cars-engineering",
+            "k": 20,
+            "completeSeeds": 10
+          },
+          {
+            "personaId": "science-space",
+            "k": 3,
+            "completeSeeds": 10
+          },
+          {
+            "personaId": "science-space",
+            "k": 5,
+            "completeSeeds": 10
+          },
+          {
+            "personaId": "science-space",
+            "k": 10,
+            "completeSeeds": 10
+          },
+          {
+            "personaId": "science-space",
+            "k": 20,
+            "completeSeeds": 10
+          },
+          {
+            "personaId": "finnish-sports",
+            "k": 3,
+            "completeSeeds": 10
+          },
+          {
+            "personaId": "finnish-sports",
+            "k": 5,
+            "completeSeeds": 10
+          },
+          {
+            "personaId": "finnish-sports",
+            "k": 10,
+            "completeSeeds": 10
+          },
+          {
+            "personaId": "finnish-sports",
+            "k": 20,
+            "completeSeeds": 10
+          },
+          {
+            "personaId": "ai-software+cars-engineering",
+            "k": 3,
+            "completeSeeds": 10
+          },
+          {
+            "personaId": "ai-software+cars-engineering",
+            "k": 5,
+            "completeSeeds": 10
+          },
+          {
+            "personaId": "ai-software+cars-engineering",
+            "k": 10,
+            "completeSeeds": 10
+          },
+          {
+            "personaId": "ai-software+cars-engineering",
+            "k": 20,
+            "completeSeeds": 10
+          },
+          {
+            "personaId": "ai-software+science-space",
+            "k": 3,
+            "completeSeeds": 10
+          },
+          {
+            "personaId": "ai-software+science-space",
+            "k": 5,
+            "completeSeeds": 10
+          },
+          {
+            "personaId": "ai-software+science-space",
+            "k": 10,
+            "completeSeeds": 10
+          },
+          {
+            "personaId": "ai-software+science-space",
+            "k": 20,
+            "completeSeeds": 10
+          },
+          {
+            "personaId": "ai-software+finnish-sports",
+            "k": 3,
+            "completeSeeds": 10
+          },
+          {
+            "personaId": "ai-software+finnish-sports",
+            "k": 5,
+            "completeSeeds": 10
+          },
+          {
+            "personaId": "ai-software+finnish-sports",
+            "k": 10,
+            "completeSeeds": 10
+          },
+          {
+            "personaId": "ai-software+finnish-sports",
+            "k": 20,
+            "completeSeeds": 10
+          },
+          {
+            "personaId": "cars-engineering+science-space",
+            "k": 3,
+            "completeSeeds": 10
+          },
+          {
+            "personaId": "cars-engineering+science-space",
+            "k": 5,
+            "completeSeeds": 10
+          },
+          {
+            "personaId": "cars-engineering+science-space",
+            "k": 10,
+            "completeSeeds": 10
+          },
+          {
+            "personaId": "cars-engineering+science-space",
+            "k": 20,
+            "completeSeeds": 10
+          },
+          {
+            "personaId": "cars-engineering+finnish-sports",
+            "k": 3,
+            "completeSeeds": 10
+          },
+          {
+            "personaId": "cars-engineering+finnish-sports",
+            "k": 5,
+            "completeSeeds": 10
+          },
+          {
+            "personaId": "cars-engineering+finnish-sports",
+            "k": 10,
+            "completeSeeds": 10
+          },
+          {
+            "personaId": "cars-engineering+finnish-sports",
+            "k": 20,
+            "completeSeeds": 10
+          },
+          {
+            "personaId": "science-space+finnish-sports",
+            "k": 3,
+            "completeSeeds": 10
+          },
+          {
+            "personaId": "science-space+finnish-sports",
+            "k": 5,
+            "completeSeeds": 10
+          },
+          {
+            "personaId": "science-space+finnish-sports",
+            "k": 10,
+            "completeSeeds": 10
+          },
+          {
+            "personaId": "science-space+finnish-sports",
+            "k": 20,
+            "completeSeeds": 10
+          }
+        ],
+        "coverageAvailability": [
+          {
+            "personaId": "ai-software+cars-engineering",
+            "k": 3,
+            "completeSeeds": 10
+          },
+          {
+            "personaId": "ai-software+cars-engineering",
+            "k": 5,
+            "completeSeeds": 10
+          },
+          {
+            "personaId": "ai-software+cars-engineering",
+            "k": 10,
+            "completeSeeds": 10
+          },
+          {
+            "personaId": "ai-software+cars-engineering",
+            "k": 20,
+            "completeSeeds": 10
+          },
+          {
+            "personaId": "ai-software+science-space",
+            "k": 3,
+            "completeSeeds": 10
+          },
+          {
+            "personaId": "ai-software+science-space",
+            "k": 5,
+            "completeSeeds": 10
+          },
+          {
+            "personaId": "ai-software+science-space",
+            "k": 10,
+            "completeSeeds": 10
+          },
+          {
+            "personaId": "ai-software+science-space",
+            "k": 20,
+            "completeSeeds": 10
+          },
+          {
+            "personaId": "ai-software+finnish-sports",
+            "k": 3,
+            "completeSeeds": 10
+          },
+          {
+            "personaId": "ai-software+finnish-sports",
+            "k": 5,
+            "completeSeeds": 10
+          },
+          {
+            "personaId": "ai-software+finnish-sports",
+            "k": 10,
+            "completeSeeds": 10
+          },
+          {
+            "personaId": "ai-software+finnish-sports",
+            "k": 20,
+            "completeSeeds": 10
+          },
+          {
+            "personaId": "cars-engineering+science-space",
+            "k": 3,
+            "completeSeeds": 10
+          },
+          {
+            "personaId": "cars-engineering+science-space",
+            "k": 5,
+            "completeSeeds": 10
+          },
+          {
+            "personaId": "cars-engineering+science-space",
+            "k": 10,
+            "completeSeeds": 10
+          },
+          {
+            "personaId": "cars-engineering+science-space",
+            "k": 20,
+            "completeSeeds": 10
+          },
+          {
+            "personaId": "cars-engineering+finnish-sports",
+            "k": 3,
+            "completeSeeds": 10
+          },
+          {
+            "personaId": "cars-engineering+finnish-sports",
+            "k": 5,
+            "completeSeeds": 10
+          },
+          {
+            "personaId": "cars-engineering+finnish-sports",
+            "k": 10,
+            "completeSeeds": 10
+          },
+          {
+            "personaId": "cars-engineering+finnish-sports",
+            "k": 20,
+            "completeSeeds": 10
+          },
+          {
+            "personaId": "science-space+finnish-sports",
+            "k": 3,
+            "completeSeeds": 10
+          },
+          {
+            "personaId": "science-space+finnish-sports",
+            "k": 5,
+            "completeSeeds": 10
+          },
+          {
+            "personaId": "science-space+finnish-sports",
+            "k": 10,
+            "completeSeeds": 10
+          },
+          {
+            "personaId": "science-space+finnish-sports",
+            "k": 20,
+            "completeSeeds": 10
+          }
+        ],
+        "distinctSources": 5.494999999999999
+      },
+      "eligibility": {
+        "objectiveOk": false,
+        "coverageOk": true,
+        "enFiOk": false,
+        "fiEnOk": false,
+        "eligible": false
+      },
+      "winner": false,
+      "resultFile": "evaluation/results/diversity-2026-11-20t08-59-10.840z/blend-blend_alpha0.5-centeredtrue-diversity0.5-explorationfalse-lambda0.5-recency_weight0.json",
+      "resultHash": "3d241ccd5b99796644fa30cb7fcd1ec0790cd4ed5aa9a7aa1c4a83312b3e94a3"
+    }
+  ],
+  "exploration": {
+    "offResultFile": "evaluation/results/diversity-2026-11-20t08-59-10.840z/blend-blend_alpha0.5-centeredtrue-diversity0-explorationfalse-lambda0.5-recency_weight0.json",
+    "offResultHash": "2b9cac758bc4ce628399e729107f839e405b5ed0efac9c42f37473a6f5d2fc74",
+    "onResultFile": "evaluation/results/diversity-2026-11-20t08-59-10.840z/blend-blend_alpha0.5-centeredtrue-diversity0-explorationtrue-lambda0.5-recency_weight0.json",
+    "onResultHash": "bd7879305c867e69949002e3060b2c3fc4cbe265eb22297b33ea92ec5e57abf9",
+    "report": {
+      "runCount": 480,
+      "objectiveDifference": -0.003958333333333335,
+      "distinctSourcesDifference": 0.28125,
+      "slotFillRate": 0.9166666666666666,
+      "flaggedItemCount": 440,
+      "relevantFlaggedItemCount": 309,
+      "hitRate": 0.7022727272727273
+    }
+  }
+}

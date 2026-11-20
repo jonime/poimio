@@ -4,34 +4,34 @@ import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { encodeCsv } from "../lib/early-ranking.ts";
 import {
-    type DiversityConfiguration,
-    type DiversityRule,
-    diversityConfiguration,
-    diversityGrid,
-    type EvaluatedDiversityConfiguration,
-    type ExplorationReplayCell,
-    explorationReport,
-    parseDiversityRule,
-    selectDiversityWinner,
+  type DiversityConfiguration,
+  type DiversityRule,
+  diversityConfiguration,
+  diversityGrid,
+  type EvaluatedDiversityConfiguration,
+  type ExplorationReplayCell,
+  explorationReport,
+  parseDiversityRule,
+  selectDiversityWinner,
 } from "../lib/evaluation-diversity.ts";
 import { compositePersonas } from "../lib/evaluation-replay.ts";
 import { assertEvaluationRuleHash, normalizeEvaluationRulePath } from "../lib/evaluation-rule.ts";
 import { sha256 } from "../lib/evaluation-snapshot.ts";
 import {
-    assertConsistentMissingCells,
-    baselineConfigurationId,
-    type ConfigurationMetrics,
-    configurationParameters,
-    type EvaluatedConfiguration,
-    type GridConfiguration,
-    measureConfiguration,
-    measureDistinctSources,
-    parseTuningRule,
-    selectWinner,
-    shortlistForStageTwo,
-    stageOneGrid,
-    stageTwoGrid,
-    type TuningCell,
+  assertConsistentMissingCells,
+  baselineConfigurationId,
+  type ConfigurationMetrics,
+  configurationParameters,
+  type EvaluatedConfiguration,
+  type GridConfiguration,
+  measureConfiguration,
+  measureDistinctSources,
+  parseTuningRule,
+  selectWinner,
+  shortlistForStageTwo,
+  stageOneGrid,
+  stageTwoGrid,
+  type TuningCell,
 } from "../lib/evaluation-tuning.ts";
 import { requireDefined } from "../lib/required.ts";
 

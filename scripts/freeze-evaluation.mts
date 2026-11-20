@@ -3,24 +3,24 @@ import { mkdir, readdir, readFile, writeFile } from "node:fs/promises";
 import { dirname, isAbsolute, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import {
-    EVALUATION_FREEZE_SCHEMA_VERSION,
-    type FrozenEvaluationParameters,
-    frozenParametersHash,
-    resolveFrozenTreatment,
+  EVALUATION_FREEZE_SCHEMA_VERSION,
+  type FrozenEvaluationParameters,
+  frozenParametersHash,
+  resolveFrozenTreatment,
 } from "../lib/evaluation-freeze.ts";
 import {
-    type EvaluationLabelItem,
-    type EvaluationPersona,
-    parseLabelJsonLines,
-    validateLabelSet,
+  type EvaluationLabelItem,
+  type EvaluationPersona,
+  parseLabelJsonLines,
+  validateLabelSet,
 } from "../lib/evaluation-labels.ts";
 import {
-    type EvaluationSnapshotManifest,
-    parseJsonLines,
-    requireFinalSnapshot,
-    type SnapshotRow,
-    sha256,
-    validateSnapshotData,
+  type EvaluationSnapshotManifest,
+  parseJsonLines,
+  requireFinalSnapshot,
+  type SnapshotRow,
+  sha256,
+  validateSnapshotData,
 } from "../lib/evaluation-snapshot.ts";
 import { requireDefined } from "../lib/required.ts";
 

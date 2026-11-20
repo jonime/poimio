@@ -504,9 +504,10 @@ describe.skipIf(!enabled || anonKey == null || serviceKey == null)(
         feed.findIndex((row) => row.id === itemIds.get("foreign-match")),
       );
       for (const row of feed) {
-        expect(row.reason).toBe("similar");
+        expect(["similar", "exploring"]).toContain(row.reason);
         expect(row.because_item_id).toBe(itemIds.get("liked-fi"));
       }
+      expect(feed.some((row) => row.reason === "exploring")).toBe(true);
     });
 
     it("ranks an item near a like above an unrelated item of the same age", async () => {
@@ -570,6 +571,7 @@ describe.skipIf(!enabled || anonKey == null || serviceKey == null)(
         rankingFixtureKeys.filter((key) => key !== "liked-fi" && key !== "disliked-fi"),
         ["liked-fi"],
         ["disliked-fi"],
+        { p_params: { diversity: 0, exploration: true } },
       );
 
       expect(ranking.map((row) => row.item_id)).toEqual(feed.map((row) => row.id));
@@ -1050,7 +1052,10 @@ describe.skipIf(!enabled || anonKey == null || serviceKey == null)(
         rankingFixtureKeys.filter((key) => key !== "liked-fi" && key !== "disliked-fi"),
         ["liked-fi"],
         ["disliked-fi"],
-        { p_method: "blend", p_params: { blend_alpha: 0.5, recency_weight: 0 } },
+        {
+          p_method: "blend",
+          p_params: { blend_alpha: 0.5, recency_weight: 0, diversity: 0, exploration: true },
+        },
       );
       expect(feed.map((row) => row.id)).toEqual(blend.map((row) => row.item_id));
     });

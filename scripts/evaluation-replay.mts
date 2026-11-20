@@ -6,38 +6,39 @@ import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 import { encodeCsv } from "../lib/early-ranking.ts";
 import { parseFrozenParameters, validateTestRun } from "../lib/evaluation-freeze.ts";
 import {
-  type EvaluationLabelItem,
-  type EvaluationPersona,
-  parseLabelJsonLines,
-  validateLabelSet,
+    type EvaluationLabelItem,
+    type EvaluationPersona,
+    parseLabelJsonLines,
+    validateLabelSet,
 } from "../lib/evaluation-labels.ts";
 import {
-  balancedCoverage,
-  candidateScopes,
-  compositeFeedbackPrefix,
-  compositePersonas,
-  createCompositeFeedbackSequence,
-  createFeedbackSequence,
-  feedbackPrefix,
-  jaccard,
-  type MemberRelevance,
-  nearDuplicateIds,
-  pairedDifferenceStatistics,
-  precisionAt10,
-  type ReplayFeedback,
-  type ReplayItem,
-  seedStatistics,
-  top10Diversity,
-  unionRelevance,
+    balancedCoverage,
+    candidateScopes,
+    compositeFeedbackPrefix,
+    compositePersonas,
+    createCompositeFeedbackSequence,
+    createFeedbackSequence,
+    feedbackPrefix,
+    jaccard,
+    type MemberRelevance,
+    nearDuplicateIds,
+    pairedDifferenceStatistics,
+    precisionAt10,
+    type ReplayFeedback,
+    type ReplayItem,
+    seedStatistics,
+    top10Diversity,
+    unionRelevance,
 } from "../lib/evaluation-replay.ts";
+import { normalizeEvaluationRulePath } from "../lib/evaluation-rule.ts";
 import {
-  type EvaluationSnapshotManifest,
-  parseJsonLines,
-  requireFinalSnapshot,
-  requireLocalSupabaseUrl,
-  type SnapshotRow,
-  sha256,
-  validateSnapshotData,
+    type EvaluationSnapshotManifest,
+    parseJsonLines,
+    requireFinalSnapshot,
+    requireLocalSupabaseUrl,
+    type SnapshotRow,
+    sha256,
+    validateSnapshotData,
 } from "../lib/evaluation-snapshot.ts";
 import { isRankingMethod, resolveRankingParameters } from "../lib/ranking-parameters.ts";
 import { requireDefined } from "../lib/required.ts";
@@ -90,6 +91,8 @@ interface ReplayCell {
   distinctSources: number | null;
   distinctCategories: number | null;
   top10ItemIds: string[];
+  position5Exploration: boolean;
+  position5Relevant: boolean | null;
 }
 
 interface ReplayOptions {
@@ -97,6 +100,7 @@ interface ReplayOptions {
   provisional: boolean;
   labelsPath?: string;
   paramsPath?: string;
+  rulePath: string;
   method?: string;
   paramOverrides: Record<string, unknown>;
   resultName?: string;
@@ -108,6 +112,7 @@ function parseArguments(args: string[]): ReplayOptions {
   let paramsPath: string | undefined;
   let labelsPath: string | undefined;
   let method: string | undefined;
+  let rulePath: string | undefined;
   let resultName: string | undefined;
   let newExperimentReason: string | undefined;
   let provisional = false;
@@ -122,6 +127,8 @@ function parseArguments(args: string[]): ReplayOptions {
       labelsPath = argument === "--labels" ? args[++index] : argument.slice("--labels=".length);
     } else if (argument === "--method" || argument.startsWith("--method=")) {
       method = argument === "--method" ? args[++index] : argument.slice("--method=".length);
+    } else if (argument === "--rule" || argument.startsWith("--rule=")) {
+      rulePath = argument === "--rule" ? args[++index] : argument.slice("--rule=".length);
     } else if (argument === "--param" || argument.startsWith("--param=")) {
       const assignment = argument === "--param" ? args[++index] : argument.slice("--param=".length);
       const separator = assignment?.indexOf("=") ?? -1;
@@ -175,6 +182,7 @@ function parseArguments(args: string[]): ReplayOptions {
   }
   return {
     window,
+    rulePath: normalizeEvaluationRulePath(rulePath),
     ...(paramsPath === undefined ? {} : { paramsPath }),
     ...(labelsPath === undefined ? {} : { labelsPath }),
     ...(method === undefined ? {} : { method }),
@@ -360,6 +368,11 @@ function pAsOf(
   return boundary;
 }
 
+interface RankingResult {
+  itemIds: string[];
+  exploration: boolean[];
+}
+
 async function runRanking(input: {
   client: SupabaseClient;
   candidateIds: string[];
@@ -369,7 +382,7 @@ async function runRanking(input: {
   method: ReplayMethod;
   params: Record<string, unknown>;
   seed: number;
-}): Promise<string[]> {
+}): Promise<RankingResult> {
   const { data, error } = await input.client.rpc("rank_items", {
     p_candidate_ids: input.candidateIds,
     p_liked_ids: input.likes,
@@ -381,7 +394,11 @@ async function runRanking(input: {
     p_limit: 10,
   });
   if (error) throw new Error(`rank_items ${input.method.name} failed: ${error.message}`);
-  return ((data ?? []) as Array<{ item_id: string }>).map((row) => row.item_id);
+  const rows = (data ?? []) as Array<{ item_id: string; exploration?: boolean }>;
+  return {
+    itemIds: rows.map((row) => row.item_id),
+    exploration: rows.map((row) => row.exploration === true),
+  };
 }
 
 function missingCell(
@@ -394,6 +411,8 @@ function missingCell(
     | "distinctSources"
     | "distinctCategories"
     | "top10ItemIds"
+    | "position5Exploration"
+    | "position5Relevant"
   >,
   reason: string,
 ): ReplayCell {
@@ -406,6 +425,8 @@ function missingCell(
     distinctSources: null,
     distinctCategories: null,
     top10ItemIds: [],
+    position5Exploration: false,
+    position5Relevant: null,
   };
 }
 
@@ -454,6 +475,7 @@ async function main(): Promise<void> {
   let seedsToRun = seeds;
   let kValuesToRun = kValues;
   let experimentId: string | null = null;
+  let productionMethod: string | null = null;
   let newExperimentReason: string | null = null;
   await mkdir(resultsDirectory, { recursive: true });
   if (options.window === "test") {
@@ -485,6 +507,7 @@ async function main(): Promise<void> {
     });
     threshold = frozen.nearDuplicateThreshold;
     params = frozen.parameters;
+    productionMethod = frozen.method;
     seedsToRun = frozen.seeds;
     kValuesToRun = frozen.kValues;
     experimentId = guard.experimentId;
@@ -492,9 +515,22 @@ async function main(): Promise<void> {
   } else {
     params = { ...(await parameterOverrides(options.paramsPath)), ...options.paramOverrides };
   }
-  const methods: ReplayMethod[] = options.method
-    ? [{ method: options.method, name: options.method, params: {} }]
-    : [...defaultMethods];
+  const methods: ReplayMethod[] =
+    options.window === "test"
+      ? [
+          {
+            method: requireDefined(productionMethod, "frozen production method"),
+            name: "production",
+            params: {},
+          },
+          ...defaultMethods.map((baseline) => ({
+            ...baseline,
+            params: { ...baseline.params, diversity: 0, exploration: false },
+          })),
+        ]
+      : options.method
+        ? [{ method: options.method, name: options.method, params: {} }]
+        : [...defaultMethods];
   const candidateWindow = windowItems(snapshot, options.window);
   const feedbackWindow = snapshot.manifest.windows.feedback.itemIds;
   const feedbackItems = snapshot.items.filter((item) => feedbackWindow.includes(item.id));
@@ -607,7 +643,7 @@ async function main(): Promise<void> {
               continue;
             }
             const candidateIds = candidates.map((item) => item.id);
-            const rankedIds = await runRanking({
+            const ranking = await runRanking({
               client,
               candidateIds,
               likes: feedback.likes,
@@ -617,19 +653,22 @@ async function main(): Promise<void> {
               params,
               seed,
             });
-            const diversity = top10Diversity(rankedIds, candidateById);
+            const diversity = top10Diversity(ranking.itemIds, candidateById);
+            const position5Id = ranking.itemIds[4];
             cells.push({
               ...filled,
               status: "complete",
               missingReason: null,
-              precisionAt10: precisionAt10(rankedIds, candidateIds, relevantIds),
-              balancedCoverage: pair ? balancedCoverage(rankedIds, pair) : null,
+              precisionAt10: precisionAt10(ranking.itemIds, candidateIds, relevantIds),
+              balancedCoverage: pair ? balancedCoverage(ranking.itemIds, pair) : null,
               distinctSources: diversity.distinctSources,
               distinctCategories: diversity.distinctCategories,
-              top10ItemIds: rankedIds,
+              top10ItemIds: ranking.itemIds,
+              position5Exploration: ranking.exploration[4] === true,
+              position5Relevant: position5Id ? relevantIds.has(position5Id) : null,
             });
             if (k === 10 && scope === "headline" && !pair) {
-              top10ByPersona.set(`${method.name}:${seed}:${persona.id}`, rankedIds);
+              top10ByPersona.set(`${method.name}:${seed}:${persona.id}`, ranking.itemIds);
             }
           }
         }
@@ -708,7 +747,7 @@ async function main(): Promise<void> {
                 continue;
               }
               const candidateIds = candidates.map((item) => item.id);
-              const rankedIds = await runRanking({
+              const ranking = await runRanking({
                 client,
                 candidateIds,
                 likes: feedback.likes,
@@ -718,16 +757,19 @@ async function main(): Promise<void> {
                 params,
                 seed,
               });
-              const diversity = top10Diversity(rankedIds, candidateById);
+              const diversity = top10Diversity(ranking.itemIds, candidateById);
+              const position5Id = ranking.itemIds[4];
               cells.push({
                 ...filled,
                 status: "complete",
                 missingReason: null,
-                precisionAt10: precisionAt10(rankedIds, candidateIds, relevantIds),
+                precisionAt10: precisionAt10(ranking.itemIds, candidateIds, relevantIds),
                 balancedCoverage: null,
                 distinctSources: diversity.distinctSources,
                 distinctCategories: diversity.distinctCategories,
-                top10ItemIds: rankedIds,
+                top10ItemIds: ranking.itemIds,
+                position5Exploration: ranking.exploration[4] === true,
+                position5Relevant: position5Id ? relevantIds.has(position5Id) : null,
               });
             }
           }
@@ -821,10 +863,8 @@ async function main(): Promise<void> {
     })),
     experimentId,
     newExperimentReason,
-    tuningRuleHash: await readFile(resolve(root, "evaluation/tuning-rule.json"), "utf8").then(
-      sha256,
-      () => null,
-    ),
+    rulePath: options.rulePath,
+    tuningRuleHash: sha256(await readFile(resolve(root, options.rulePath), "utf8")),
   };
   const timestamp = new Date().toISOString().replaceAll(":", "-");
   const resultName =
@@ -861,6 +901,8 @@ async function main(): Promise<void> {
           "distinct_sources",
           "distinct_categories",
           "top10_item_ids",
+          "position5_exploration",
+          "position5_relevant",
         ],
         ...cells.map((cell) => [
           cell.runType,
@@ -879,6 +921,8 @@ async function main(): Promise<void> {
           cell.distinctSources === null ? "" : String(cell.distinctSources),
           cell.distinctCategories === null ? "" : String(cell.distinctCategories),
           cell.top10ItemIds.join(" "),
+          String(cell.position5Exploration),
+          cell.position5Relevant === null ? "" : String(cell.position5Relevant),
         ]),
       ]),
       { flag: "wx" },

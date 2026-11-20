@@ -3,27 +3,39 @@ import { mkdir, readFile, writeFile } from "node:fs/promises";
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { encodeCsv } from "../lib/early-ranking.ts";
+import {
+    type DiversityConfiguration,
+    type DiversityRule,
+    diversityConfiguration,
+    diversityGrid,
+    type EvaluatedDiversityConfiguration,
+    type ExplorationReplayCell,
+    explorationReport,
+    parseDiversityRule,
+    selectDiversityWinner,
+} from "../lib/evaluation-diversity.ts";
 import { compositePersonas } from "../lib/evaluation-replay.ts";
+import { assertEvaluationRuleHash, normalizeEvaluationRulePath } from "../lib/evaluation-rule.ts";
 import { sha256 } from "../lib/evaluation-snapshot.ts";
 import {
-  assertConsistentMissingCells,
-  baselineConfigurationId,
-  type ConfigurationMetrics,
-  configurationParameters,
-  type EvaluatedConfiguration,
-  type GridConfiguration,
-  measureConfiguration,
-  parseTuningRule,
-  selectWinner,
-  shortlistForStageTwo,
-  stageOneGrid,
-  stageTwoGrid,
-  type TuningCell,
+    assertConsistentMissingCells,
+    baselineConfigurationId,
+    type ConfigurationMetrics,
+    configurationParameters,
+    type EvaluatedConfiguration,
+    type GridConfiguration,
+    measureConfiguration,
+    measureDistinctSources,
+    parseTuningRule,
+    selectWinner,
+    shortlistForStageTwo,
+    stageOneGrid,
+    stageTwoGrid,
+    type TuningCell,
 } from "../lib/evaluation-tuning.ts";
 import { requireDefined } from "../lib/required.ts";
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), "..");
-const rulePath = "evaluation/tuning-rule.json";
 
 interface ReplayResult {
   provenance: {
@@ -34,7 +46,7 @@ interface ReplayResult {
     tuningRuleHash: string | null;
     methods: { name: string; method: string; parameters: Record<string, unknown> }[];
   };
-  cells: TuningCell[];
+  cells: Array<TuningCell & ExplorationReplayCell>;
 }
 
 interface RunRecord {
@@ -45,7 +57,8 @@ interface RunRecord {
   resultHash: string;
 }
 
-function parseArguments(args: string[]): void {
+function parseArguments(args: string[]): string {
+  let rulePath: string | undefined;
   for (let index = 0; index < args.length; index += 1) {
     const argument = requireDefined(args[index], "CLI argument");
     if (argument === "--window" || argument.startsWith("--window=")) {
@@ -53,17 +66,20 @@ function parseArguments(args: string[]): void {
       if (window !== "validation") {
         throw new Error("eval:tune runs on the validation window only; it refuses --window test");
       }
+    } else if (argument === "--rule" || argument.startsWith("--rule=")) {
+      rulePath = argument === "--rule" ? args[++index] : argument.slice("--rule=".length);
     } else {
       throw new Error(`Unknown option: ${argument}`);
     }
   }
+  return normalizeEvaluationRulePath(rulePath);
 }
 
 function git(args: string[]): string {
   return execFileSync("git", args, { cwd: root, encoding: "utf8" }).trim();
 }
 
-function requireCommittedRule(): void {
+function requireCommittedRule(rulePath: string): void {
   try {
     git(["ls-files", "--error-unmatch", rulePath]);
   } catch {
@@ -77,6 +93,7 @@ function requireCommittedRule(): void {
 function runReplay(
   configuration: GridConfiguration,
   directoryName: string,
+  rulePath: string,
 ): { resultName: string; relativePath: string } {
   const resultName = `${directoryName}/${configuration.id}`;
   const parameterArguments = Object.entries(configurationParameters(configuration)).flatMap(
@@ -90,6 +107,8 @@ function runReplay(
       "validation",
       "--method",
       configuration.method,
+      "--rule",
+      rulePath,
       ...parameterArguments,
       "--result-name",
       resultName,
@@ -108,14 +127,13 @@ async function runConfiguration(
   ruleHash: string,
   population: { singles: string[]; composites: string[] },
   rule: ReturnType<typeof parseTuningRule>,
+  rulePath: string,
 ): Promise<RunRecord> {
   console.log(`Running ${configuration.id} (stage ${configuration.stage})`);
-  const { relativePath } = runReplay(configuration, directoryName);
+  const { relativePath } = runReplay(configuration, directoryName, rulePath);
   const text = await readFile(resolve(root, relativePath), "utf8");
   const result = JSON.parse(text) as ReplayResult;
-  if (result.provenance.tuningRuleHash !== ruleHash) {
-    throw new Error(`${configuration.id}: result was not produced with the committed tuning rule`);
-  }
+  assertEvaluationRuleHash(result.provenance.tuningRuleHash, ruleHash, rulePath);
   const resolved = requireDefined(result.provenance.methods[0], "resolved method");
   for (const [key, value] of Object.entries(configurationParameters(configuration))) {
     if (resolved.parameters[key] !== value) {
@@ -163,10 +181,196 @@ function summaryRow(
   };
 }
 
+interface DiversityRunRecord {
+  evaluated: EvaluatedDiversityConfiguration;
+  cells: Array<TuningCell & ExplorationReplayCell>;
+  parameters: Record<string, unknown>;
+  resultFile: string;
+  resultHash: string;
+}
+
+function runDiversityReplay(
+  configuration: DiversityConfiguration,
+  directoryName: string,
+  rulePath: string,
+): string {
+  const relativePath = `evaluation/results/${directoryName}/${configuration.id}.json`;
+  const parameterArguments = Object.entries(configuration.parameters).flatMap(([key, value]) => [
+    "--param",
+    `${key}=${JSON.stringify(value)}`,
+  ]);
+  const result = spawnSync(
+    process.execPath,
+    [
+      resolve(root, "scripts/evaluation-replay.mts"),
+      "--window",
+      "validation",
+      "--method",
+      configuration.method,
+      "--rule",
+      rulePath,
+      ...parameterArguments,
+      "--result-name",
+      `${directoryName}/${configuration.id}`,
+    ],
+    { cwd: root, env: process.env, stdio: ["ignore", "inherit", "inherit"] },
+  );
+  if (result.status !== 0) {
+    throw new Error(`Replay for ${configuration.id} failed with status ${result.status}`);
+  }
+  return relativePath;
+}
+
+async function runDiversityConfiguration(
+  configuration: DiversityConfiguration,
+  directoryName: string,
+  rulePath: string,
+  ruleHash: string,
+  rule: DiversityRule,
+  population: { singles: string[]; composites: string[] },
+): Promise<DiversityRunRecord> {
+  console.log(`Running ${configuration.id}`);
+  const resultFile = runDiversityReplay(configuration, directoryName, rulePath);
+  const text = await readFile(resolve(root, resultFile), "utf8");
+  const result = JSON.parse(text) as ReplayResult;
+  assertEvaluationRuleHash(result.provenance.tuningRuleHash, ruleHash, rulePath);
+  const resolved = requireDefined(result.provenance.methods[0], "resolved method");
+  for (const [key, value] of Object.entries(configuration.parameters)) {
+    if (resolved.parameters[key] !== value) {
+      throw new Error(`${configuration.id}: resolved ${key} differs from the requested value`);
+    }
+  }
+  return {
+    evaluated: {
+      configuration,
+      metrics: {
+        ...measureConfiguration(result.cells, rule, population),
+        distinctSources: measureDistinctSources(result.cells, rule.objectiveKs, population),
+      },
+    },
+    cells: result.cells,
+    parameters: resolved.parameters,
+    resultFile,
+    resultHash: sha256(text),
+  };
+}
+
+async function runDiversitySearch(
+  rulePath: string,
+  ruleText: string,
+  rule: DiversityRule,
+): Promise<void> {
+  const ruleHash = sha256(ruleText);
+  const personas = JSON.parse(
+    await readFile(resolve(root, "evaluation/personas.json"), "utf8"),
+  ) as { id: string }[];
+  const singles = personas.map(({ id }) => id);
+  const population = {
+    singles,
+    composites: compositePersonas(singles).map(({ id }) => id),
+  };
+  const timestamp = new Date().toISOString().replaceAll(":", "-").toLowerCase();
+  const directoryName = `diversity-${timestamp}`;
+  const records: DiversityRunRecord[] = [];
+  for (const configuration of diversityGrid(rule)) {
+    records.push(
+      await runDiversityConfiguration(
+        configuration,
+        directoryName,
+        rulePath,
+        ruleHash,
+        rule,
+        population,
+      ),
+    );
+  }
+  assertConsistentMissingCells(
+    records.map(({ evaluated, cells }) => ({ id: evaluated.configuration.id, cells })),
+  );
+  const selection = selectDiversityWinner(
+    records.map(({ evaluated }) => evaluated),
+    rule,
+  );
+  const chosenOff = requireDefined(
+    records.find(({ evaluated }) => evaluated.configuration.id === selection.winnerId),
+    "chosen diversity configuration",
+  );
+  const explorationConfiguration = diversityConfiguration(
+    rule,
+    chosenOff.evaluated.configuration.diversity,
+    true,
+  );
+  const explorationOn = await runDiversityConfiguration(
+    explorationConfiguration,
+    directoryName,
+    rulePath,
+    ruleHash,
+    rule,
+    population,
+  );
+  const firstResult = JSON.parse(
+    await readFile(
+      resolve(root, requireDefined(records[0], "first diversity run").resultFile),
+      "utf8",
+    ),
+  ) as ReplayResult;
+  const constraintsById = new Map(selection.rows.map((row) => [row.id, row.constraints]));
+  const configurations = records.map((record) => ({
+    id: record.evaluated.configuration.id,
+    method: record.evaluated.configuration.method,
+    parameters: record.parameters,
+    metrics: record.evaluated.metrics,
+    eligibility: constraintsById.get(record.evaluated.configuration.id),
+    winner: record.evaluated.configuration.id === selection.winnerId,
+    resultFile: record.resultFile,
+    resultHash: record.resultHash,
+  }));
+  const summary = {
+    createdAt: new Date().toISOString(),
+    window: "validation",
+    gitCommit: git(["rev-parse", "HEAD"]),
+    rulePath,
+    tuningRuleHash: ruleHash,
+    snapshotManifestHash: firstResult.provenance.snapshotManifestHash,
+    labelSetId: firstResult.provenance.labelSetId,
+    labelSetHash: firstResult.provenance.labelSetHash,
+    nearDuplicateThreshold: firstResult.provenance.nearDuplicateThreshold,
+    population,
+    referenceId: selection.referenceId,
+    selection: {
+      maxCoverage: selection.maxCoverage,
+      bandIds: selection.bandIds,
+      winnerId: selection.winnerId,
+      chosen: {
+        method: chosenOff.evaluated.configuration.method,
+        parameters: chosenOff.parameters,
+      },
+    },
+    configurations,
+    exploration: {
+      offResultFile: chosenOff.resultFile,
+      offResultHash: chosenOff.resultHash,
+      onResultFile: explorationOn.resultFile,
+      onResultHash: explorationOn.resultHash,
+      report: explorationReport(chosenOff.cells, explorationOn.cells),
+    },
+  };
+  const outputBase = resolve(root, "evaluation/results", directoryName);
+  await mkdir(dirname(outputBase), { recursive: true });
+  await writeFile(`${outputBase}.json`, `${JSON.stringify(summary, null, 2)}\n`, { flag: "wx" });
+  console.log(`Wrote diversity summary to ${outputBase}.json`);
+  console.log("Chosen treatment", summary.selection.chosen);
+}
+
 async function main(): Promise<void> {
-  parseArguments(process.argv.slice(2));
-  requireCommittedRule();
+  const rulePath = parseArguments(process.argv.slice(2));
+  requireCommittedRule(rulePath);
   const ruleText = await readFile(resolve(root, rulePath), "utf8");
+  const parsedRule = JSON.parse(ruleText) as Record<string, unknown>;
+  if (Array.isArray(parsedRule.diversityGrid)) {
+    await runDiversitySearch(rulePath, ruleText, parseDiversityRule(ruleText));
+    return;
+  }
   const ruleHash = sha256(ruleText);
   const rule = parseTuningRule(ruleText);
   const personas = JSON.parse(
@@ -182,7 +386,9 @@ async function main(): Promise<void> {
 
   const stageOne: RunRecord[] = [];
   for (const configuration of stageOneGrid(rule)) {
-    stageOne.push(await runConfiguration(configuration, directoryName, ruleHash, population, rule));
+    stageOne.push(
+      await runConfiguration(configuration, directoryName, ruleHash, population, rule, rulePath),
+    );
   }
   assertConsistentMissingCells(
     stageOne.map(({ evaluated, cells }) => ({ id: evaluated.configuration.id, cells })),
@@ -203,7 +409,7 @@ async function main(): Promise<void> {
   for (const base of shortlist.shortlisted) {
     for (const configuration of stageTwoGrid(rule, base, nextGridOrder)) {
       stageTwo.push(
-        await runConfiguration(configuration, directoryName, ruleHash, population, rule),
+        await runConfiguration(configuration, directoryName, ruleHash, population, rule, rulePath),
       );
       nextGridOrder += 1;
     }
@@ -233,6 +439,7 @@ async function main(): Promise<void> {
     createdAt: new Date().toISOString(),
     window: "validation",
     gitCommit: git(["rev-parse", "HEAD"]),
+    rulePath,
     tuningRuleHash: ruleHash,
     snapshotManifestHash: firstResult.provenance.snapshotManifestHash,
     labelSetId: firstResult.provenance.labelSetId,

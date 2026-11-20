@@ -3,23 +3,24 @@ import { mkdir, readdir, readFile, writeFile } from "node:fs/promises";
 import { dirname, isAbsolute, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import {
-  EVALUATION_FREEZE_SCHEMA_VERSION,
-  type FrozenEvaluationParameters,
-  frozenParametersHash,
+    EVALUATION_FREEZE_SCHEMA_VERSION,
+    type FrozenEvaluationParameters,
+    frozenParametersHash,
+    resolveFrozenTreatment,
 } from "../lib/evaluation-freeze.ts";
 import {
-  type EvaluationLabelItem,
-  type EvaluationPersona,
-  parseLabelJsonLines,
-  validateLabelSet,
+    type EvaluationLabelItem,
+    type EvaluationPersona,
+    parseLabelJsonLines,
+    validateLabelSet,
 } from "../lib/evaluation-labels.ts";
 import {
-  type EvaluationSnapshotManifest,
-  parseJsonLines,
-  requireFinalSnapshot,
-  type SnapshotRow,
-  sha256,
-  validateSnapshotData,
+    type EvaluationSnapshotManifest,
+    parseJsonLines,
+    requireFinalSnapshot,
+    type SnapshotRow,
+    sha256,
+    validateSnapshotData,
 } from "../lib/evaluation-snapshot.ts";
 import { requireDefined } from "../lib/required.ts";
 
@@ -136,18 +137,16 @@ async function main(): Promise<void> {
   ) {
     throw new Error("evaluation/config.json must define a valid nearDuplicateThreshold");
   }
-  const parameterOverrides: Record<string, unknown> = {};
-  if (paramsPath) {
-    const path = isAbsolute(paramsPath) ? paramsPath : resolve(root, paramsPath);
-    const parsed: unknown = JSON.parse(await readFile(path, "utf8"));
-    if (parsed === null || typeof parsed !== "object" || Array.isArray(parsed)) {
-      throw new Error("--params must contain a JSON object");
-    }
-    Object.assign(parameterOverrides, parsed);
+  if (!paramsPath) throw new Error("--params must provide the production method and parameters");
+  const path = isAbsolute(paramsPath) ? paramsPath : resolve(root, paramsPath);
+  const parsed: unknown = JSON.parse(await readFile(path, "utf8"));
+  if (parsed === null || typeof parsed !== "object" || Array.isArray(parsed)) {
+    throw new Error("--params must contain a JSON object");
   }
+  const treatment = resolveFrozenTreatment(parsed);
   const frozen: FrozenEvaluationParameters = {
     schemaVersion: EVALUATION_FREEZE_SCHEMA_VERSION,
-    parameters: parameterOverrides,
+    ...treatment,
     commitHash,
     snapshotManifestHash: sha256(manifestText),
     labelSetId: labelSet.id,

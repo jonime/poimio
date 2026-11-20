@@ -22,6 +22,7 @@ export interface TuningCell {
   status: "complete" | "missing";
   precisionAt10: number | null;
   balancedCoverage: number | null;
+  distinctSources?: number | null;
 }
 
 export interface ConfigurationSpec {
@@ -212,7 +213,7 @@ function aggregate(
 
 export function measureConfiguration(
   cells: TuningCell[],
-  rule: TuningRule,
+  rule: Pick<TuningRule, "objectiveKs">,
   population: Population,
 ): ConfigurationMetrics {
   const complete = cells.filter(
@@ -266,6 +267,32 @@ function cellSignature(cell: TuningCell): string {
     cell.k,
     cell.status,
   ].join("|");
+}
+
+export function measureDistinctSources(
+  cells: TuningCell[],
+  objectiveKs: number[],
+  population: Population,
+): number {
+  const complete = cells.filter(
+    (cell) =>
+      cell.runType === "standard" &&
+      cell.status === "complete" &&
+      cell.scope === "headline" &&
+      objectiveKs.includes(cell.k),
+  );
+  const value = aggregate(
+    complete,
+    [...population.singles, ...population.composites],
+    objectiveKs,
+    (cell) => cell.distinctSources ?? null,
+  );
+  if (value.value === null || value.omittedPersonaIds.length > 0) {
+    throw new InsufficientDataError(
+      `No available distinct-source cell for: ${value.omittedPersonaIds.join(", ")}`,
+    );
+  }
+  return value.value;
 }
 
 export function assertConsistentMissingCells(

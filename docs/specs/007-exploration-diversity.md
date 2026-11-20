@@ -133,7 +133,7 @@ Each criterion belongs to one task.
 ## Tasks
 
 - [ ] 1. Migration: MMR, exploration slots, `exploration` column, `exploring` reason in `get_feed` (exploration still off there), grants, tests, latency check (criterion 1).
-- [ ] 2. Feed card explanation for exploration items (criterion 2).
+- [x] 2. Feed card explanation for exploration items (criterion 2).
 - [ ] 3. `--rule` and the diversity selector, parameters in IDs and provenance, freeze contract, exploration report; commit the rule; re-import the snapshot; run the grid and the report (criterion 3).
 - [ ] 4. Apply the chosen $\mu$ and turn exploration on in `get_feed`; manual check; update design.md and the AI log (criterion 4).
 

@@ -1,15 +1,18 @@
 import { describe, expect, it } from "vitest";
 import {
-  type FrozenEvaluationParameters,
-  frozenParametersHash,
-  parseFrozenParameters,
-  type TestRunState,
-  validateTestRun,
+    type FrozenEvaluationParameters,
+    frozenParametersHash,
+    parseFrozenParameters,
+    resolveFrozenTreatment,
+    type TestRunState,
+    validateTestRun,
 } from "./evaluation-freeze.ts";
+import { rankingDefaults } from "./ranking-parameters.ts";
 
 const frozen: FrozenEvaluationParameters = {
-  schemaVersion: 1,
-  parameters: { lambda: 0.5 },
+  schemaVersion: 2,
+  method: "blend",
+  parameters: { lambda: 0.5, diversity: 0.3, exploration: true },
   commitHash: "commit-1",
   snapshotManifestHash: "snapshot-1",
   labelSetId: "labels-1",
@@ -38,6 +41,23 @@ describe("evaluation test-window freeze", () => {
     expect(frozenParametersHash(frozen)).toMatch(/^[a-f0-9]{64}$/u);
   });
 
+  it("resolves the method and every production parameter", () => {
+    expect(
+      resolveFrozenTreatment({
+        method: "blend",
+        parameters: { blend_alpha: 0.5, diversity: 0.3, exploration: true },
+      }),
+    ).toEqual({
+      method: "blend",
+      parameters: {
+        ...rankingDefaults,
+        blend_alpha: 0.5,
+        diversity: 0.3,
+        exploration: true,
+      },
+    });
+  });
+
   it("rejects invalid freeze schemas", () => {
     expect(() => parseFrozenParameters(JSON.stringify({ ...frozen, schemaVersion: 9 }))).toThrow(
       /schema version/u,
@@ -45,6 +65,16 @@ describe("evaluation test-window freeze", () => {
     expect(() => parseFrozenParameters(JSON.stringify({ ...frozen, seeds: [1, 2] }))).toThrow(
       /invalid schema/u,
     );
+    expect(() =>
+      parseFrozenParameters(
+        JSON.stringify({ ...frozen, parameters: { lambda: 0.5, exploration: true } }),
+      ),
+    ).toThrow(/invalid schema/u);
+    expect(() =>
+      parseFrozenParameters(
+        JSON.stringify({ ...frozen, parameters: { lambda: 0.5, diversity: 0.3 } }),
+      ),
+    ).toThrow(/invalid schema/u);
   });
 
   it("rejects missing freeze, dirty tree, wrong HEAD, mismatched hashes, and params", () => {

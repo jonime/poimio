@@ -121,10 +121,23 @@ Limitations: the validation window was used for selection, so these numbers are 
 - The final score is interest plus $\beta \cdot 0.5^{\text{age}/h}$. The prototype used $\beta = 0.1$; the tuned default is $\beta = 0$ ([§2.1](#21-interest-scoring-nearest-liked-item)), so the age term is a no-op unless a caller passes a weight. The half-life $h$ is 24 hours for articles and 7 days for videos. Candidate windows are 7 days for articles and 30 days for videos; all rated items are excluded.
 - `get_feed` runs as `SECURITY INVOKER`, reads identity from `auth.uid()`, and is executable by authenticated users only. Pages contain 30 items; later pages exclude already shown IDs instead of using offsets. The limit is clamped to 1-100 and exclusions to 1,000 IDs.
 - These defaults are kept together in the SQL function and were tuned in spec 020. Cards already displayed do not reorder; refreshing reloads the ranking, and subsequent pages use the latest feedback.
-- Diversity re-ranking (MMR) and exploration slots are deferred to spec 007, not part of the prototype. The planned slot distribution is:
-  - ~70% best-matching items
-  - ~20% related but unfamiliar items (moderate similarity band)
-  - ~10% exploratory items (topics/sources the user rarely engages with)
+- The spec 007 validation search fixed the spec 020 winner and compared MMR strengths $\mu \in \{0, 0.1, 0.2, 0.3, 0.5\}$:
+
+  | $\mu$ | Objective | Coverage | EN→FI  | FI→EN  | Distinct sources | Eligible                   |
+  | ----- | --------- | -------- | ------ | ------ | ---------------- | -------------------------- |
+  | 0     | 0.8253    | 0.6500   | 0.3575 | 0.7324 | 3.978            | reference                  |
+  | 0.1   | 0.8130    | 0.6708   | 0.3573 | 0.6800 | 4.165            | no (FI→EN)                 |
+  | 0.2   | 0.7918    | 0.7292   | 0.3473 | 0.6377 | 4.430            | no (objective, FI→EN)      |
+  | 0.3   | 0.7598    | 0.8042   | 0.3340 | 0.5902 | 4.820            | no (objective, FI→EN)      |
+  | 0.5   | 0.6417    | 0.7750   | 0.2753 | 0.5041 | 5.495            | no (objective, directions) |
+
+  The committed rule therefore retains $\mu = 0$: MMR remains off because no positive strength met all guardrails. Distinct-source count rose with stronger MMR, but the same rows lost headline and Finnish-to-English relevance.
+
+- Positions 5, 15, and 25 are exploration slots. Each takes the highest-scoring remaining item from a source that has no eligible item in the latest 200 likes; if no such item exists, the slot falls back to the next main item without an exploration flag. A 30-item page therefore has up to three exploration items. Other unliked-source items can still appear normally, and exploration feedback is stored as an ordinary signal.
+- With $\mu = 0$, turning exploration on over 480 same-language validation runs changed headline precision@10 by $-0.003958$ and mean distinct sources by $+0.28125$. Position 5 was flagged in 440 runs (91.67% fill rate); 309 flagged items were relevant (70.23% hit rate). Cross-lingual runs are excluded because every target-language source is unliked by construction.
+- After local ingestion, the user reviewed about ten exploration items and found them useful, not irrelevant or repetitive. Two composite-persona top-10 lists were not manually reviewed; the selected $\mu = 0$ leaves MMR off, so those lists have no before/after ranking difference from MMR.
+- A source counts as liked only through the latest 200 eligible likes supplied to the scorer. Older likes fall out of this determination, so a previously liked source can be treated as unliked. This is a documented product limitation, not an identity lookup in the ranking function.
+- These validation numbers are optimistic because selection used the validation window. Labels are LLM proxies, and the four single and six composite persona results share items and labels and are correlated. They do not measure long-term learning or the value of discovering a new interest.
 
 ### 2.3 Cold start
 

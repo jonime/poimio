@@ -6,6 +6,7 @@ import {
   EVALUATION_FREEZE_SCHEMA_VERSION,
   type FrozenEvaluationParameters,
   frozenParametersHash,
+  resolveFrozenTreatment,
 } from "../lib/evaluation-freeze.ts";
 import {
   type EvaluationLabelItem,
@@ -136,18 +137,16 @@ async function main(): Promise<void> {
   ) {
     throw new Error("evaluation/config.json must define a valid nearDuplicateThreshold");
   }
-  const parameterOverrides: Record<string, unknown> = {};
-  if (paramsPath) {
-    const path = isAbsolute(paramsPath) ? paramsPath : resolve(root, paramsPath);
-    const parsed: unknown = JSON.parse(await readFile(path, "utf8"));
-    if (parsed === null || typeof parsed !== "object" || Array.isArray(parsed)) {
-      throw new Error("--params must contain a JSON object");
-    }
-    Object.assign(parameterOverrides, parsed);
+  if (!paramsPath) throw new Error("--params must provide the production method and parameters");
+  const path = isAbsolute(paramsPath) ? paramsPath : resolve(root, paramsPath);
+  const parsed: unknown = JSON.parse(await readFile(path, "utf8"));
+  if (parsed === null || typeof parsed !== "object" || Array.isArray(parsed)) {
+    throw new Error("--params must contain a JSON object");
   }
+  const treatment = resolveFrozenTreatment(parsed);
   const frozen: FrozenEvaluationParameters = {
     schemaVersion: EVALUATION_FREEZE_SCHEMA_VERSION,
-    parameters: parameterOverrides,
+    ...treatment,
     commitHash,
     snapshotManifestHash: sha256(manifestText),
     labelSetId: labelSet.id,

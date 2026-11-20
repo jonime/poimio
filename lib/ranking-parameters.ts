@@ -18,6 +18,8 @@ export const rankingDefaults = {
   article_half_life_hours: 24,
   video_half_life_hours: 168,
   centered: true,
+  diversity: 0,
+  exploration: false,
 };
 
 const interestDefaults: Partial<Record<RankingMethod, Record<string, number>>> = {

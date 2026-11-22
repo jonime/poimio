@@ -1,6 +1,6 @@
 # 007 — Exploration slots and diversity
 
-**Status:** Approved  
+**Status:** Done
 **Milestone:** Final (weeks 5–6, before the parameter freeze and gate 2)  
 **Depends on:** 006 (evaluation harness), 020 (tuned `blend` default and tuning tools)  
 **Estimate:** 13 h

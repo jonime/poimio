@@ -1,9 +1,11 @@
 import { createHash } from "node:crypto";
+import { isRankingMethod, resolveRankingParameters } from "./ranking-parameters.ts";
 
-export const EVALUATION_FREEZE_SCHEMA_VERSION = 1;
+export const EVALUATION_FREEZE_SCHEMA_VERSION = 2;
 
 export interface FrozenEvaluationParameters {
   schemaVersion: number;
+  method: string;
   parameters: Record<string, unknown>;
   commitHash: string;
   snapshotManifestHash: string;
@@ -40,6 +42,32 @@ function canonicalize(value: unknown): unknown {
   return value;
 }
 
+export function resolveFrozenTreatment(value: unknown): {
+  method: string;
+  parameters: Record<string, unknown>;
+} {
+  if (value === null || typeof value !== "object" || Array.isArray(value)) {
+    throw new Error("--params must contain a JSON object");
+  }
+  const treatment = value as Record<string, unknown>;
+  const method = treatment.method;
+  if (typeof method !== "string" || !isRankingMethod(method)) {
+    throw new Error("--params method must be a known ranking method");
+  }
+  const nestedParameters = treatment.parameters;
+  const parameters =
+    nestedParameters === undefined
+      ? Object.fromEntries(Object.entries(treatment).filter(([key]) => key !== "method"))
+      : nestedParameters !== null &&
+          typeof nestedParameters === "object" &&
+          !Array.isArray(nestedParameters)
+        ? (nestedParameters as Record<string, unknown>)
+        : (() => {
+            throw new Error("--params parameters must be a JSON object");
+          })();
+  return { method, parameters: resolveRankingParameters(method, parameters) };
+}
+
 export function frozenParametersHash(frozen: FrozenEvaluationParameters): string {
   return createHash("sha256")
     .update(JSON.stringify(canonicalize(frozen)))
@@ -60,7 +88,18 @@ export function parseFrozenParameters(content: string): FrozenEvaluationParamete
   if (value.schemaVersion !== EVALUATION_FREEZE_SCHEMA_VERSION) {
     throw new Error("frozen parameter schema version is unsupported");
   }
+  const parameters = value.parameters;
   if (
+    typeof value.method !== "string" ||
+    value.method.length === 0 ||
+    parameters === null ||
+    typeof parameters !== "object" ||
+    Array.isArray(parameters) ||
+    typeof (parameters as Record<string, unknown>).diversity !== "number" ||
+    !Number.isFinite((parameters as Record<string, unknown>).diversity) ||
+    Number((parameters as Record<string, unknown>).diversity) < 0 ||
+    Number((parameters as Record<string, unknown>).diversity) > 1 ||
+    typeof (parameters as Record<string, unknown>).exploration !== "boolean" ||
     value.parameters === null ||
     typeof value.parameters !== "object" ||
     Array.isArray(value.parameters) ||

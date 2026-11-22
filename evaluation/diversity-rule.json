@@ -1,0 +1,22 @@
+{
+  "schemaVersion": 1,
+  "spec": "docs/specs/007-exploration-diversity.md",
+  "fixed": {
+    "method": "blend",
+    "parameters": {
+      "blend_alpha": 0.5,
+      "centered": true,
+      "lambda": 0.5,
+      "recency_weight": 0
+    },
+    "exploration": false
+  },
+  "objectiveKs": [3, 5, 10, 20],
+  "diversityGrid": [0, 0.1, 0.2, 0.3, 0.5],
+  "tolerances": {
+    "objective": 0.02,
+    "crosslingualPrecision": 0.05,
+    "balancedCoverageImprovement": 0.02,
+    "winnerBand": 0.01
+  }
+}

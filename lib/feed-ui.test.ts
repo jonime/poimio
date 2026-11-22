@@ -33,6 +33,13 @@ describe("feed UI helpers", () => {
         because_title: null,
       }),
     ).toBe("Recent from Example News");
+    expect(
+      explanationForFeedItem({
+        ...item,
+        reason: "exploring",
+        because_title: null,
+      }),
+    ).toBe("Exploring: something new");
   });
 
   it("allows only absolute HTTP and HTTPS URLs", () => {

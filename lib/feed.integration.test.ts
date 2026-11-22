@@ -178,11 +178,28 @@ const itemDefinitions: ItemDefinition[] = [
     center: addVectors(axisVector(10), axisVector(13)),
     type: "video",
   },
+  { key: "mmr-like-a", source: 0, language: "fi", center: axisVector(20) },
+  { key: "mmr-like-b", source: 0, language: "fi", center: axisVector(21) },
+  { key: "mmr-a", source: 0, language: "fi", center: axisVector(20) },
+  {
+    key: "mmr-b",
+    source: 1,
+    language: "fi",
+    center: addVectors(axisVector(20, 0.9), axisVector(22, Math.sqrt(0.19))),
+  },
+  {
+    key: "mmr-c",
+    source: 2,
+    language: "fi",
+    center: addVectors(axisVector(21, 0.8), axisVector(23, 0.6)),
+  },
+  { key: "mmr-negative", source: 1, language: "fi", center: axisVector(20, -1) },
+  { key: "mmr-zero", source: 2, language: "fi", center: axisVector(24) },
   ...Array.from({ length: 105 }, (_, index) => ({
     key: `limit-candidate-${index}`,
-    source: index % 3,
+    source: index < 100 ? 0 : index % 3,
     language: "fi" as const,
-    center: axisVector(2),
+    center: index < 100 ? axisVector(10) : axisVector(2),
   })),
 ];
 
@@ -271,6 +288,7 @@ describe.skipIf(!enabled || anonKey == null || serviceKey == null)(
         p_method?: string;
         p_params?: Record<string, unknown>;
         p_seed?: number;
+        p_limit?: number;
       } = {},
     ) {
       const { service } = clients();
@@ -282,13 +300,14 @@ describe.skipIf(!enabled || anonKey == null || serviceKey == null)(
         p_method: parameters.p_method,
         p_params: parameters.p_params ?? {},
         p_seed: parameters.p_seed ?? 0,
-        p_limit: 100,
+        p_limit: parameters.p_limit ?? 100,
       });
       if (error) throw new Error(`Ranking items failed: ${error.message}`);
       return (data ?? []) as {
         item_id: string;
         score: number | null;
         because_item_id: string | null;
+        exploration: boolean;
       }[];
     }
 
@@ -485,9 +504,10 @@ describe.skipIf(!enabled || anonKey == null || serviceKey == null)(
         feed.findIndex((row) => row.id === itemIds.get("foreign-match")),
       );
       for (const row of feed) {
-        expect(row.reason).toBe("similar");
+        expect(["similar", "exploring"]).toContain(row.reason);
         expect(row.because_item_id).toBe(itemIds.get("liked-fi"));
       }
+      expect(feed.some((row) => row.reason === "exploring")).toBe(true);
     });
 
     it("ranks an item near a like above an unrelated item of the same age", async () => {
@@ -551,6 +571,7 @@ describe.skipIf(!enabled || anonKey == null || serviceKey == null)(
         rankingFixtureKeys.filter((key) => key !== "liked-fi" && key !== "disliked-fi"),
         ["liked-fi"],
         ["disliked-fi"],
+        { p_params: { diversity: 0, exploration: true } },
       );
 
       expect(ranking.map((row) => row.item_id)).toEqual(feed.map((row) => row.id));
@@ -852,6 +873,164 @@ describe.skipIf(!enabled || anonKey == null || serviceKey == null)(
       });
     });
 
+    describe("diversity and exploration", () => {
+      const mmrCandidates = ["mmr-a", "mmr-b", "mmr-c", "mmr-negative", "mmr-zero"];
+      const mmrLikes = ["mmr-like-a", "mmr-like-b"];
+
+      const keyFor = (id: string | null | undefined) =>
+        [...itemIds.entries()].find(([, fixtureId]) => fixtureId === id)?.[0];
+
+      it("preserves scores and uses MMR in centered and raw-vector modes", async () => {
+        for (const centered of [true, false]) {
+          const baseline = await rankItems(mmrCandidates, mmrLikes, [], {
+            p_as_of: publishedAt,
+            p_method: "nearest_liked",
+            p_params: { centered, diversity: 0 },
+          });
+          const implicit = await rankItems(mmrCandidates, mmrLikes, [], {
+            p_as_of: publishedAt,
+            p_method: "nearest_liked",
+            p_params: { centered },
+          });
+          const diversified = await rankItems(mmrCandidates, mmrLikes, [], {
+            p_as_of: publishedAt,
+            p_method: "nearest_liked",
+            p_params: { centered, diversity: 0.5 },
+          });
+
+          expect(implicit).toEqual(baseline);
+          expect(diversified.slice(0, 3).map((row) => keyFor(row.item_id))).toEqual([
+            "mmr-a",
+            "mmr-negative",
+            "mmr-c",
+          ]);
+          expect(new Set(diversified.map((row) => row.item_id)).size).toBe(mmrCandidates.length);
+          for (const row of diversified) {
+            expect(row.score).toBe(
+              baseline.find((candidate) => candidate.item_id === row.item_id)?.score,
+            );
+          }
+        }
+      });
+
+      it("uses signed similarity at diversity one and deterministic tie breaks", async () => {
+        const params = {
+          p_as_of: publishedAt,
+          p_method: "nearest_liked",
+          p_params: { diversity: 1 },
+        };
+        const first = await rankItems(mmrCandidates, mmrLikes, [], params);
+        const second = await rankItems(mmrCandidates, mmrLikes, [], params);
+
+        expect(first.slice(0, 2).map((row) => keyFor(row.item_id))).toEqual([
+          "mmr-a",
+          "mmr-negative",
+        ]);
+        expect(second).toEqual(first);
+      });
+
+      it("fills fixed exploration slots from any rank without losing main-sequence order", async () => {
+        const limitCandidates = itemDefinitions
+          .filter(({ key }) => key.startsWith("limit-candidate-"))
+          .map(({ key }) => key);
+        const base = await rankItems(limitCandidates, ["rank-like-1"], [], {
+          p_as_of: publishedAt,
+          p_params: { exploration: false },
+          p_limit: 105,
+        });
+        const full = await rankItems(limitCandidates, ["rank-like-1"], [], {
+          p_as_of: publishedAt,
+          p_params: { exploration: true },
+          p_limit: 30,
+        });
+        const short = await rankItems(limitCandidates, ["rank-like-1"], [], {
+          p_as_of: publishedAt,
+          p_params: { exploration: true },
+          p_limit: 10,
+        });
+        const flagged = full.filter((row) => row.exploration);
+
+        expect(flagged).toHaveLength(3);
+        expect(flagged.map((row) => full.indexOf(row) + 1)).toEqual([5, 15, 25]);
+        expect(
+          flagged.every(
+            (row) => base.findIndex((candidate) => candidate.item_id === row.item_id) >= 100,
+          ),
+        ).toBe(true);
+        expect(full.filter((row) => !row.exploration).map((row) => row.item_id)).toEqual(
+          base
+            .filter((row) => !flagged.some((flag) => flag.item_id === row.item_id))
+            .slice(0, 27)
+            .map((row) => row.item_id),
+        );
+        expect(short).toEqual(full.slice(0, 10));
+        expect(base.every((row) => row.exploration === false)).toBe(true);
+      });
+
+      it("ignores ineligible liked sources and falls back when a slot has no candidate", async () => {
+        const topOfLikedSource = Array.from(
+          { length: 10 },
+          (_, index) => `limit-candidate-${index}`,
+        );
+        const withIneligibleLike = await rankItems(
+          [...topOfLikedSource, "mmr-c"],
+          ["rank-like-1", "no-embedding-signal"],
+          [],
+          {
+            p_as_of: publishedAt,
+            p_params: { exploration: true },
+            p_limit: 10,
+          },
+        );
+        expect(withIneligibleLike[4]?.item_id).toBe(itemIds.get("mmr-c"));
+        expect(withIneligibleLike[4]?.exploration).toBe(true);
+
+        const noAlternative = await rankItems(topOfLikedSource, ["rank-like-1"], [], {
+          p_as_of: publishedAt,
+          p_params: { exploration: true },
+          p_limit: 10,
+        });
+        expect(noAlternative.every((row) => row.exploration === false)).toBe(true);
+      });
+
+      it("ignores both transformations for cold start and baseline methods", async () => {
+        for (const method of ["nearest_liked", "average_vector", "newest_first", "random"]) {
+          const params = { diversity: 1, exploration: true, centered: true };
+          const normal = await rankItems(mmrCandidates, [], [], {
+            p_as_of: publishedAt,
+            p_method: method,
+            p_params: {},
+          });
+          const transformed = await rankItems(mmrCandidates, [], [], {
+            p_as_of: publishedAt,
+            p_method: method,
+            p_params: params,
+          });
+          expect(transformed).toEqual(normal);
+        }
+      });
+
+      it("rejects invalid diversity and exploration parameters", async () => {
+        const { service } = clients();
+        for (const params of [
+          { diversity: -0.1 },
+          { diversity: 1.1 },
+          { diversity: "0.3" },
+          { exploration: "true" },
+          { exploration: 1 },
+        ]) {
+          const { error } = await service.rpc("rank_items", {
+            p_candidate_ids: [itemIds.get("mmr-a")],
+            p_liked_ids: [itemIds.get("mmr-like-a")],
+            p_disliked_ids: [],
+            p_as_of: publishedAt,
+            p_params: params,
+          });
+          expect(error, JSON.stringify(params)).not.toBeNull();
+        }
+      });
+    });
+
     it("defaults to the tuned blend model in the scorer, wrapper, and get_feed", async () => {
       const { userAClient } = clients();
       const asOf = publishedAt;
@@ -873,7 +1052,10 @@ describe.skipIf(!enabled || anonKey == null || serviceKey == null)(
         rankingFixtureKeys.filter((key) => key !== "liked-fi" && key !== "disliked-fi"),
         ["liked-fi"],
         ["disliked-fi"],
-        { p_method: "blend", p_params: { blend_alpha: 0.5, recency_weight: 0 } },
+        {
+          p_method: "blend",
+          p_params: { blend_alpha: 0.5, recency_weight: 0, diversity: 0, exploration: true },
+        },
       );
       expect(feed.map((row) => row.id)).toEqual(blend.map((row) => row.item_id));
     });
@@ -903,6 +1085,7 @@ describe.skipIf(!enabled || anonKey == null || serviceKey == null)(
           item_id: args.p_candidate_ids[0],
           score: expect.any(Number),
           because_item_id: args.p_liked_ids[0],
+          exploration: false,
         },
       ]);
     });

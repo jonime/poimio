@@ -170,7 +170,7 @@ Specs are written just in time: the next spec is drafted when the current one re
 | [018](specs/018-bound-embedding-inputs.md)          | Bound embedding inputs                                                                          | 3    | Done                             |
 | [019](specs/019-bound-ingestion-work.md)            | Bound ingestion and embedding work                                                              | 3    | Done                             |
 | [020](specs/020-ranking-tuning.md)                  | Ranking tuning on validation with multi-interest personas; choose the production interest model | 3–6  | Done                             |
-| [021](specs/021-natural-language-tuning.md)         | Natural-language feed tuning with per-user LLM limits                                           | 5–6  | Draft                            |
+| [021](specs/021-natural-language-tuning.md)         | Natural-language feed tuning with per-user LLM limits                                           | 5–6  | Approved                         |
 
 **Planned, not yet drafted** (in order; see the cut order in §9)
 

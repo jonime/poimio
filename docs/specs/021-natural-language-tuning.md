@@ -1,9 +1,9 @@
 # 021 — Natural-language feed tuning
 
-**Status:** Draft  
+**Status:** Approved  
 **Milestone:** Final (weeks 5–6)  
-**Depends on:** 007 (current scorer), 006 (the freeze and the test-window run happen before task 2 is merged)  
-**Estimate:** 14 h
+**Depends on:** 007 (current scorer), 006 (freeze and test-window run, done in task 0)  
+**Estimate:** 17 h
 
 ## Goal
 
@@ -36,94 +36,118 @@ Let a signed-in user steer their feed in their own words, such as "more space ne
 
 **Preferences**
 
-- A preference has a short `label` (for display, ≤ 40 characters), a `direction` (`more` or `less`), and two search descriptions, one Finnish and one English (each one sentence, ≤ 200 characters). The descriptions are what gets embedded, so each preference matches items in both languages.
-- At most 20 active preferences per user; a request yields at most 5.
+- A preference has a short `label` (for display, ≤ 40 characters), a `direction` (`more` or `less`), and two search descriptions, one Finnish and one English (each one sentence, ≤ 200 characters). The descriptions are what gets embedded, so each preference can match items in both languages.
+- Descriptions name the subject positively ("Football matches, leagues, and players" for "less football"); only `direction` carries the polarity.
+- At most 20 active preferences per user, enforced in the database and safe under concurrent inserts: a batch that would exceed 20 saves nothing. A request yields at most 5.
 - Users can flip the direction or delete a preference. To change its meaning they write a new request.
 
 **Turning a request into preferences** (server action `tunePreferences(text)`)
 
-1. Verify the user with `getClaims()`. Trim the text; reject empty text or more than 300 characters.
-2. Reserve one LLM call with `reserve_llm_call('preferences')` (below). If the limit is reached, return a clear message and call nothing.
-3. Call `gpt-6-luna` through the Responses API with plain `fetch`: a fixed instruction, the user's text as untrusted input, a strict JSON schema output (array of `{label, direction, description_fi, description_en}`), no tools, at most 400 output tokens, 20 s timeout.
-4. Validate the output against the schema and length limits; drop invalid items. Reject the request if nothing valid remains or if saving would exceed 20 active preferences.
-5. Embed all descriptions in one `text-embedding-3-small@512` request (≤ 10 inputs) and save the preferences in one insert with the service-role client, setting `user_id` from the verified claims.
-6. Return the saved preferences; the page shows them immediately, and the feed uses them on the next load or **Refresh feed**.
+1. Verify the user with `getClaims()`. Validate the input type at runtime; trim the text; reject empty text or more than 300 characters.
+2. Reserve one LLM call with `reserve_llm_call('preferences')` (below). An error, null, or false result means no call: return the limit message and the remaining count.
+3. Call `gpt-6-luna` through the Responses API with plain `fetch`, following the request conventions in `lib/evaluation-description-judges.ts`: `reasoning: {effort: "none"}`, `store: false`, no tools, at most 800 output tokens, 20 s timeout, response body at most 64 KB. The instruction is fixed; the user's text is untrusted input; the output uses `text.format` with a strict JSON schema whose root is an object `{preferences: [...]}` (at most 5 items; each with required `label`, `direction` enum `more`/`less`, `description_fi`, `description_en`; `additionalProperties: false`). The instruction asks for an empty list when the text expresses no topic preference.
+4. Accept only a `completed` response; reject refusals, incomplete or truncated output, and malformed payloads without recovering fragments. Validate lengths locally (no new dependency); drop invalid items. Reject the request if nothing valid remains or if saving would exceed 20 active preferences.
+5. Embed all descriptions in one `text-embedding-3-small@512` request (≤ 10 inputs, 10 s timeout, body at most 1 MB). Check count, index order, dimensions, and finite values, as `lib/embeddings.ts` does, and map each vector to its description.
+6. Save the preferences in one insert with the service-role client, setting `user_id` from the verified claims. On any failure in steps 3–6 nothing is saved.
+7. Return a narrow result: the saved preferences or an error code, plus the remaining request count. The page shows the preferences immediately; the feed uses them on the next load or **Refresh feed**.
 
-The request text is the user's own and only affects their own preferences; the model output is data, never instructions. The request text itself is not stored.
+The request text is the user's own and only affects their own preferences; the model output is data, never instructions. Neither the request text nor the model output is stored outside the saved preferences or written to logs (status codes only). OpenAI helpers live in server-only modules, not in exported `"use server"` entry points.
+
+**Flip and delete** (server actions)
+
+- Each action verifies the user with `getClaims()` itself, validates the preference ID (UUID) and direction at runtime, and writes through the user's own client, so RLS limits it to the caller's rows. A missing or foreign ID returns "not found".
 
 **Per-user LLM limit**
 
-- `reserve_llm_call(p_kind text) returns boolean`: `SECURITY INVOKER`, user from `auth.uid()`, executable by `authenticated`. It takes a transaction-level advisory lock on the user, counts the user's `llm_usage` rows of that kind in the last 24 hours, and inserts a row only if the count is below the limit (10 for `preferences`). It returns whether a row was inserted.
-- Users can insert only their own usage rows (which can only use up their own quota) and cannot update or delete them, so the limit cannot be reset from the client.
-- A failed LLM call still counts. The limit is checked before any OpenAI request.
+- `reserve_llm_call(p_kind text) returns boolean`: volatile, `SECURITY INVOKER`, empty search path, user from `auth.uid()`; execute revoked from `PUBLIC` and `anon` and granted to `authenticated`. It rejects unknown kinds (only `preferences` exists), takes a transaction-level advisory lock on the user, counts the user's `llm_usage` rows of that kind with `created_at` in the last 24 hours, and inserts a row only if the count is below the limit (10 for `preferences`). It returns whether a row was inserted.
+- `created_at` is set by the database; users can insert only `kind` (column grant), only for themselves, and cannot update or delete usage rows, so they cannot reset or backdate the limit. A direct insert only uses up the user's own quota.
+- A failed LLM call still counts. The limit is checked before any OpenAI request. The remaining count is the limit minus the user's rows in the window, read with the user's client.
 
 **Data model** (added to design.md §6)
 
-- `feed_preferences` (per-user): `id`, `user_id` (default `auth.uid()`), `label`, `direction`, `description_fi`, `description_en`, `embedding_fi`, `embedding_en` (`vector(512)`), `embedding_model`, `created_at`, `updated_at`. RLS owner-only `select`, `update (direction)` via column grant, and `delete`; no user `insert` (only the server action inserts, with service role, after verifying the user). A trigger rejects a 21st row per user.
-- `llm_usage` (per-user): `id`, `user_id` (default `auth.uid()`), `kind`, `created_at`. RLS owner-only `select` and `insert` (with `user_id = auth.uid()`); no `update` or `delete`.
+- `feed_preferences` (per-user): `id`, `user_id` (default `auth.uid()`), `label`, `direction`, `description_fi`, `description_en`, `embedding_fi`, `embedding_en` (`vector(512)`), `embedding_model`, `created_at`, `updated_at`. RLS owner-only `select`, `update (direction)` via column grant, and `delete`; no user `insert` (only the server action inserts, with service role, after verifying the user). The 20-row cap is enforced in the database with a per-user lock before counting.
+- `llm_usage` (per-user): `id`, `user_id` (default `auth.uid()`), `kind`, `created_at` (default `now()`). RLS owner-only `select` and `insert` (with `user_id = auth.uid()`, column grant on `kind` only); no `update` or `delete`.
 
 **Scoring with preferences**
 
-- The private scorer and the public wrapper get two new parameters, `p_more_preference_ids uuid[] default '{}'` and `p_less_preference_ids uuid[] default '{}'`. Each preference contributes two signal vectors (Finnish and English description), centered with the mean of its description's language when `centered` is true.
-- Positive signals are eligible likes plus `more` preference vectors; negative signals are eligible dislikes plus `less` preference vectors. The interest models use these sets unchanged (the nearest term takes the maximum over all positive vectors; the average term uses the mean of all positive vectors; the penalty takes the maximum over all negative vectors).
-- Personalization starts when there is at least one positive signal, so a user with only `more` preferences gets a personalized feed. In cold start, `less` vectors join dislikes in the existing $\theta$ demotion.
-- Exploration's liked sources come from eligible likes only; preferences have no source.
-- The returned explanation is the closest positive signal. The scorer returns a new column `because_preference_id` (set when that signal is a preference; `because_item_id` is then null).
-- `get_feed` reads the caller's preferences (RLS owner) and passes them. Its return columns stay the same: reason `preference` with `because_title` set to the label. The card shows "Matches your preference: _label_".
+- The private scorer and the public wrapper get two new parameters after the existing ones, `p_more_preference_ids uuid[] default '{}'` and `p_less_preference_ids uuid[] default '{}'`, and a new last return column `because_preference_id uuid`. Duplicate IDs are ignored; an ID in both lists raises an error. The scorer reads only the given IDs; in `get_feed` RLS limits them to the caller's rows, and the service-role wrapper (evaluation only) reads any given ID.
+- **Eligibility:** a preference vector is eligible if its `embedding_model` is the active model and a mean exists for its language (Finnish or English). Centering and zero-vector handling are as for items. A preference with no eligible vector is ignored entirely: it does not start personalization and is never an explanation.
+- **One signal per preference:** its similarity to a candidate is $s(c, q) = \max(\text{sim}(c, q_{fi}), \text{sim}(c, q_{en}))$ over its eligible vectors. In the average term a preference contributes one vector, the mean of its eligible centered vectors. In `top_m_mean` it counts once with $s(c, q)$. So a preference weighs the same as one like.
+- Positive signals are eligible likes plus `more` preferences; negative signals are eligible dislikes plus `less` preferences. The interest models, $\lambda$, and all other parameters are unchanged. `less` is a soft penalty, not a filter: a strongly matching item can still appear.
+- Personalization starts when there is at least one positive signal, so a user with only `more` preferences gets a personalized feed. MMR and exploration still require eligible likes (unchanged), so a preference-only feed has no exploration slots. In cold start (no positive signals), source round-robin is unchanged and `less` preferences join dislikes in the existing $\theta$ demotion ($s(c, q) \ge \theta$).
+- `newest_first` and `random` ignore preferences.
+- **Explanation:** the closest positive signal; ties go to likes before preferences, then the smaller ID. `because_preference_id` is set when it is a preference (`because_item_id` is then null).
+- `get_feed` reads the caller's preferences and passes them by direction. Its return columns stay the same. Reason precedence: `exploring`, then `preference` (with `because_title` set to the label), then `similar`, then `recent`. The card shows "Matches your preference: _label_" as plain text.
 - Without preferences, every result is identical to today's, so the evaluation replay and the freeze are unaffected.
-- The private scorer and the public wrapper are dropped and recreated by exact signature without `CASCADE`, and their grants, `SECURITY INVOKER`, and empty search path are restored exactly as in spec 007.
+- Migration safety as in spec 007: the private scorer and the public wrapper are dropped and recreated by exact signature in one transaction without `CASCADE`; both `with ordinality` alias lists (wrapper and `get_feed`) are updated; grants, `SECURITY INVOKER`, and empty search paths are restored exactly.
 
-**Preferences page** (`/preferences`, signed-in only; linked from the app navigation)
+**Preferences page** (`/preferences`, linked from the app navigation)
 
-- A textarea (300-character limit with a counter) and a **Tune feed** button, with pending and error states and the remaining daily requests.
-- The list of active preferences: label, a `more`/`less` badge, a flip button, and a delete button; an empty state when there are none.
+- The page verifies the user with `getClaims()` itself and redirects to login without a user; the layout is not the authorization gate.
+- A textarea (300-character limit with a counter) and a **Tune feed** button, with pending and error states. The remaining daily requests come from the server and update after every attempt, successful or not. At 20 preferences the form explains the cap.
+- The list of active preferences: label, a `more`/`less` badge, a flip button, and a delete button, each with its own pending and error state; an empty state when there are none. Changes persist after reload.
 - shadcn/ui components per [AGENTS.md](../../AGENTS.md) (`Field`, `Textarea`, `Button`, `Badge`, `Empty`, `Alert`).
 
 **Checks** (no bulk labeling)
 
-1. **LLM output:** `evaluation/preference-requests.json` holds 12 example requests (6 Finnish, 6 English; mixed `more`/`less`, one off-topic or empty-meaning request). `pnpm eval:preferences --parse` runs them once and writes the outputs. The user reviews the 12 outputs and notes whether each is correct; the target is at least 10 of 12.
-2. **Ranking effect:** on the local evaluation snapshot (validation window), with one hand-written preference per persona (fixed in the same file, both languages, not LLM output), `pnpm eval:preferences --rank` reports with existing labels:
-   - `more` only, no likes: precision@10 against plain cold start, for each of the 4 personas; expected higher for at least 3 of 4;
-   - `less`: for each composite persona with $k = 10$ likes and a `less` preference for one member (12 cases), the share of that member's exclusive items in the top 10, averaged over seeds; expected lower in at least 10 of 12.
+1. **Ranking effect** (task 2, before merging the scorer change; no LLM). `evaluation/preferences.json` holds one hand-written preference per persona (label and both descriptions), written from the persona's scope in `evaluation/personas.json` so the existing labels stay valid. Their embeddings are computed once and cached in `evaluation/preference-embeddings.json`.
+   - `pnpm eval:preferences --rank` refuses non-local Supabase URLs (as `eval:import` does). It creates one disposable local auth user, inserts the cached preferences for it with the service role, ranks through the service-role wrapper, and deletes the user afterwards.
+   - Treatment: the production configuration (`blend`, $\alpha = 0.5$, centered, $\lambda = 0.5$, $\beta = 0$, `diversity` 0) with `exploration: false`. Validation window, headline candidate pools, seeds 0–9, existing label set; result provenance records the hashes of both files.
+   - **`more` alone:** for each of the 4 personas, precision@10 with only its `more` preference against cold start with no signals (both deterministic). Expected: higher for at least 3 of 4.
+   - **`less`:** for each composite persona A+B and each member (12 ordered cases), the existing composite sampling at $k = 10$, with and without a `less` preference for B. Per seed: the share of B-exclusive items in the top 10 (relevant to B and not to A), the share of A-exclusive items, and composite precision@10; mean over seeds, paired by seed. Expected: the B-exclusive share is lower in at least 10 of 12 cases. Missing cells (spec 020 rules) and cases with a zero baseline share count as not met.
+   - The A-exclusive share and composite precision are reported and reviewed, not gated.
+2. **LLM output** (task 3, before the page exposes the action). `evaluation/preference-requests.json` holds 12 requests, committed before the first run: 6 Finnish and 6 English, including two negations ("I don't want …"), one injection attempt, one ambiguous request, one request with five topics, and one off-topic request. `pnpm eval:preferences --parse` runs them once and writes the outputs. The user marks each output correct if every intended topic is present, nothing is invented, each direction is right, and both descriptions name the same subject positively; an empty result for the off-topic request is correct. Target: at least 10 of 12.
 
-   If either expectation fails, stop and discuss before task 4 merges; there is no tuning loop.
+If either target is missed, stop and discuss; there is no tuning loop.
 
 ## Acceptance criteria
 
 Each criterion belongs to one task.
 
+0. **Task 0 — freeze, test run, and parity baseline** (done by the implementing agent before any migration of this spec)
+   1. On an up-to-date, clean `main` with the final snapshot imported into local Supabase (`pnpm eval:import` if needed), the agent writes a validation replay result for the production treatment (spec 007 tuning summary) with no preferences, and records its path in this spec as the parity baseline for criterion 2.1.
+   2. At the same clean `HEAD`, the agent runs `pnpm eval:freeze` with that treatment and then the one-time `pnpm eval:replay --window test` under the spec 006 guard, without `--params` or `--new-experiment`. `evaluation/frozen-params.json` is gitignored, so the tree stays clean between the two commands.
+   3. The test result (`evaluation/results/test-<experiment ID>.json` and `.csv`) and the baseline file are committed. design.md §4 records the test-window numbers next to the validation numbers; spec 006's status no longer says the test run is deferred. The AI log entry follows AGENTS.md (the agent asks the user to confirm the model first).
+   4. If any guard refuses to run, the agent stops and reports the error instead of working around it.
+
 1. **Task 1 — tables and limit**
    1. `supabase db reset` applies the migration cleanly.
-   2. Two-user tests: user A cannot read, update, or delete B's preferences or read B's usage rows; users cannot insert preferences or update/delete usage rows; a user cannot insert a usage row for another user; only `direction` is updatable.
-   3. `reserve_llm_call`: returns true 10 times and then false for the same user within 24 hours; other users are unaffected; two concurrent calls at count 9 insert one row in total.
-   4. The 21st preference for one user is rejected.
+   2. Two-user tests: user A cannot read, update, or delete B's preferences or read B's usage rows; users cannot insert preferences or update/delete usage rows; a user cannot insert a usage row for another user or set its `created_at`; only `direction` is updatable; `anon` has no access to either table or the function.
+   3. `reserve_llm_call`: returns true 10 times and then false for the same user; other users are unaffected; a row older than 24 hours (inserted with the service role) does not count; an unknown kind raises an error; two concurrent calls at count 9 insert one row in total.
+   4. The cap: a single insert reaching 21 rows saves nothing; two concurrent batches at 19 rows leave at most 20.
    5. `pnpm test:integration` passes with 0 skipped.
 2. **Task 2 — scorer and feed**
-   1. Existing `rank_items` and `get_feed` integration tests pass; with no preferences, results equal those of the previous scorer for every method (parity test).
-   2. Controlled-vector tests: a `more` preference alone personalizes (no cold start) and ranks a matching item first; a `less` preference lowers a matching item; preference vectors are centered by description language; `because_preference_id` is set when a preference is the closest positive signal and `because_item_id` is null; `newest_first` and `random` ignore preferences.
-   3. `get_feed` passes only the caller's preferences (two-user test) and returns reason `preference` with the label.
-   4. Grants match spec 007 exactly; `pnpm test:integration` passes with 0 skipped.
+   1. Existing `rank_items` and `get_feed` integration tests pass, updated only for the new return column. Parity: `pnpm eval:replay` on validation with the production treatment and no preferences reproduces the ranked IDs of the task 0 parity baseline.
+   2. Controlled-vector tests: a `more` preference alone personalizes and moves a matching item to first place; a `less` preference moves a matching item down in rank; centering uses each description's language; hand-computed scores for a mix of likes and a preference in `average_vector`, `blend`, and `top_m_mean` (one signal per preference); an ineligible preference (wrong model, missing mean) does not personalize or explain; duplicate IDs are ignored and an ID in both lists raises an error; explanation ties go to likes; `newest_first` and `random` ignore preferences.
+   3. Preference-only feeds have no exploration slots; with only `less` preferences, cold start keeps source round-robin and demotes matches at $s \ge \theta$.
+   4. `get_feed` passes only the caller's preferences (two-user test), applies the reason precedence, and returns the label for `preference`.
+   5. The ranking-effect check (check 1) has run and its targets are met, or the user has decided how to proceed.
+   6. Grants match spec 007 exactly; `pnpm test:integration` passes with 0 skipped.
 3. **Task 3 — server action**
-   1. Unit tests with mocked `fetch`: unauthenticated calls are rejected; text over 300 characters or empty is rejected before any request; a reached limit makes no OpenAI request; the request uses the strict schema, no tools, and the token and time limits; invalid items are dropped; an all-invalid result saves nothing; exceeding 20 active preferences saves nothing; the embedding request has at most 10 inputs; `user_id` comes from the verified claims.
-   2. Flip and delete go through the user's own client (RLS), not the service role.
-4. **Task 4 — page, checks, and docs**
-   1. The page works on phone and desktop widths: submit, pending, error, limit message, list, flip, delete, empty state; the feed card shows the preference explanation. Unit tests for the reason mapping.
-   2. Both checks run; the outputs, the user's review notes, and the ranking table are recorded in `docs/ai-log.md` and design.md §2 and §2.5. Expectations hold, or the user has decided how to proceed.
+   1. Unit tests with mocked `fetch`: unauthenticated calls are rejected; text over 300 characters, empty, or not a string is rejected before any request; a reservation error, null, or false makes no OpenAI request; the request has the object-root strict schema, `store: false`, no tools, and the token, time, and size limits; refusal, incomplete, and malformed responses save nothing; invalid items are dropped; an all-invalid result saves nothing; exceeding 20 active preferences saves nothing; an embedding failure or a count or dimension mismatch saves nothing; the embedding request has at most 10 inputs; `user_id` comes from the verified claims; no log line contains the request text or model output.
+   2. Flip and delete verify the user themselves and write through the user's own client: unauthenticated calls, invalid IDs or directions, and another user's preference ID change nothing.
+   3. The LLM-output check (check 2) has run and its target is met, or the user has decided how to proceed.
+4. **Task 4 — page and docs**
+   1. The page verifies the user itself and works on phone and desktop widths: submit, pending, error, limit message with remaining count updated after each attempt, cap message, list, flip and delete with per-row pending and errors, empty state, persistence after reload; the feed card shows the preference explanation. Unit tests for the reason mapping.
+   2. The check outputs, the user's review notes, and the ranking table are recorded in `docs/ai-log.md` and design.md §2 and §2.5, including that `less` is a soft penalty and that description-to-article similarity was a hypothesis tested by check 1.
    3. design.md §6 documents both tables; plan.md marks per-user LLM limits as decided.
 5. **Every task:** `pnpm lint`, `pnpm typecheck`, and `pnpm test` pass; tasks touching the database also pass `pnpm test:integration` with 0 skipped.
 
 ## Tasks
 
+- [ ] 0. Parity baseline, freeze, and the one-time test-window run under spec 006 (criterion 0).
 - [ ] 1. Migration: `feed_preferences`, `llm_usage`, `reserve_llm_call`, RLS, cap trigger, two-user tests (criterion 1).
-- [ ] 2. Migration: preferences in the private scorer and wrapper, `because_preference_id`, `get_feed` changes, tests (criterion 2).
-- [ ] 3. Server actions: tune, flip, delete; LLM and embedding calls with limits (criterion 3).
-- [ ] 4. Preferences page and feed explanation; `pnpm eval:preferences`; checks; design.md, plan.md, and AI log (criterion 4).
+- [ ] 2. Migration: preferences in the private scorer and wrapper, `because_preference_id`, `get_feed` changes, tests; `pnpm eval:preferences --rank` and check 1 before merging (criterion 2).
+- [ ] 3. Server actions: tune, flip, delete; LLM and embedding calls with limits; `pnpm eval:preferences --parse` and check 2 (criterion 3).
+- [ ] 4. Preferences page and feed explanation; design.md, plan.md, and AI log (criterion 4).
 
 ## Decisions
 
 - Preferences are saved straight away and shown immediately, instead of a separate confirmation step. The user sees and can flip or delete every item before the next feed load, and the server never has to trust preference text sent back from the client.
-- Each preference is embedded as a one-sentence description in both Finnish and English, not just the label: short labels embed far from full articles, and two languages keep cross-lingual matching symmetric.
+- Each preference is embedded as a one-sentence description in both Finnish and English, not just the label. The hypothesis is that a sentence lands closer to article embeddings than a short label, and that two languages help cross-lingual matching; check 1 tests the effect.
+- A preference counts as one signal (the better of its two language vectors), so it weighs the same as one like.
 - Preferences use the existing signal sets and parameters; no new weight is tuned. The ranking check decides whether that is good enough.
+- Preference-only users get personalization but no exploration slots: exploration relies on liked sources, and without likes every source would count as unliked.
 - Only the server action inserts preferences (service role, user from verified claims), so caps, validation, and embedding cost are enforced in one place.
 - The limit is 10 requests per user per rolling 24 hours, counted before the call; at the current `gpt-6-luna` rates this is far below a cent per user per day.
 

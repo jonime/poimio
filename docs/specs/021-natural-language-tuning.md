@@ -1,6 +1,6 @@
 # 021 — Natural-language feed tuning
 
-**Status:** Approved  
+**Status:** Done  
 **Milestone:** Final (weeks 5–6)  
 **Depends on:** 007 (current scorer), 006 (freeze and test-window run, done in task 0)  
 **Estimate:** 17 h
@@ -135,11 +135,11 @@ Each criterion belongs to one task.
 
 ## Tasks
 
-- [ ] 0. Parity baseline, freeze, and the one-time test-window run under spec 006 (criterion 0).
-- [ ] 1. Migration: `feed_preferences`, `llm_usage`, `reserve_llm_call`, RLS, cap trigger, two-user tests (criterion 1).
-- [ ] 2. Migration: preferences in the private scorer and wrapper, `because_preference_id`, `get_feed` changes, tests; `pnpm eval:preferences --rank` and check 1 before merging (criterion 2).
-- [ ] 3. Server actions: tune, flip, delete; LLM and embedding calls with limits; `pnpm eval:preferences --parse` and check 2 (criterion 3).
-- [ ] 4. Preferences page and feed explanation; design.md, plan.md, and AI log (criterion 4).
+- [x] 0. Parity baseline, freeze, and the one-time test-window run under spec 006 (criterion 0). Parity baseline: `evaluation/results/parity-021-production.json` (and `.csv`), commit `c65b6c8d715956f1275104a487c6caa6d196f59a`, production treatment, no preferences. Test result: `evaluation/results/test-5c4b9226cf16d14720a63969c11b696fd32bdefa839d41e141f07e2acd40bb0f.json` (and `.csv`).
+- [x] 1. Migration: `feed_preferences`, `llm_usage`, `reserve_llm_call`, RLS, cap trigger, two-user tests (criterion 1).
+- [x] 2. Migration: preferences in the private scorer and wrapper, `because_preference_id`, `get_feed` changes, tests; `pnpm eval:preferences --rank` and check 1 before merging (criterion 2). Check 1: `evaluation/results/preferences-021-check1.json`. More improved 4/4; less lowered the B-exclusive share in 12/12. Parity replay: `evaluation/results/parity-021-after-scorer.json`.
+- [x] 3. Server actions: tune, flip, delete; LLM and embedding calls with limits; `pnpm eval:preferences --parse` and check 2 (criterion 3). Check 2: `evaluation/results/preferences-021-check2.json`. The user marked 12 of 12 outputs correct.
+- [x] 4. Preferences page and feed explanation; design.md, plan.md, and AI log (criterion 4). Check 1: `evaluation/results/preferences-021-check1.json` (more 4/4, less 12/12). Check 2: `evaluation/results/preferences-021-check2.json` (user marked 12 of 12 correct). Ranking table and review notes: design.md §2.6 and §2.5; AI log 2026-11-23.
 
 ## Decisions
 

@@ -1,0 +1,1606 @@
+{
+  "provenance": {
+    "createdAt": "2026-11-23T08:55:19.900Z",
+    "window": "validation",
+    "gitCommit": "c65b6c8d715956f1275104a487c6caa6d196f59a",
+    "snapshotManifestHash": "6a8057e2a2278c945d167a21e3cff344a45bfecc5a5d259cb944ab400bd4b314",
+    "labelSetId": "qwen/qwen3.8-27b:relevance-v1:final:bad99fa3aa138349",
+    "labelSetHash": "bad99fa3aa1383492643dfd25d118239e6d0fbbb46770b9f51ea49d8f58db641",
+    "preferencesHash": "85b6e2f129bd30073fd3248bb53a34b0ac6383e42dc2b08fd192ff388da541db",
+    "preferenceEmbeddingsHash": "434db268d92f78ca5b1cd634a753f62df026a6e5cad60b53a12bed62dc4c2606",
+    "seeds": [
+      0,
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      7,
+      8,
+      9
+    ],
+    "treatment": {
+      "method": "blend",
+      "parameters": {
+        "lambda": 0.5,
+        "recency_weight": 0,
+        "dislike_threshold": 0.4,
+        "article_half_life_hours": 24,
+        "video_half_life_hours": 168,
+        "centered": true,
+        "diversity": 0,
+        "exploration": false,
+        "blend_alpha": 0.5
+      }
+    }
+  },
+  "more": [
+    {
+      "personaId": "ai-software",
+      "coldPrecisionAt10": 0.2,
+      "morePrecisionAt10": 0.9,
+      "improved": true,
+      "coldTop10ItemIds": [
+        "bd928a21-2219-4545-9159-84d52b29a0ac",
+        "9e21b7a2-e2a8-4fc2-9c31-e33bfb3fd251",
+        "a10e1e81-b7fd-404b-9401-86ac0730e0ff",
+        "05d8a67e-2c3e-4e00-bb80-0382a5ba96d5",
+        "f057797d-3f08-4b06-96e0-8f755f38eb21",
+        "faa57f09-9bfc-4b3d-90a0-3dc68be329cb",
+        "cc889f30-98c8-4020-94e9-80c9cb47de70",
+        "67a7f457-c54d-441d-9848-d08d939510a6",
+        "aacaa5f9-4ccc-4e97-b5ad-b294bbdda9b5",
+        "5f69a222-201c-4492-a243-b3c258157789"
+      ],
+      "moreTop10ItemIds": [
+        "4d13ef44-afbe-41c7-8c28-d4ec41fc83da",
+        "60591c31-c0ed-45d6-88a4-f9ed9e8ff70b",
+        "4adc0260-8b3a-4d8c-a96c-49be0f8db655",
+        "fd9ebe37-4cc9-4433-901b-27b87a37805c",
+        "b1beff10-fc37-423c-af21-b786571f80c5",
+        "d730f255-eda5-4d42-a05e-264810124c7a",
+        "b6e3643b-ca43-41be-bcc2-bf8bbd2101ce",
+        "a9d5d71a-7a59-4393-a4f2-30c656c4f07d",
+        "09197f60-e641-44e4-9677-647718a57a65",
+        "93f8d7d4-647e-435c-9e40-3e9ad05cd550"
+      ]
+    },
+    {
+      "personaId": "cars-engineering",
+      "coldPrecisionAt10": 0.2,
+      "morePrecisionAt10": 0.5,
+      "improved": true,
+      "coldTop10ItemIds": [
+        "bd928a21-2219-4545-9159-84d52b29a0ac",
+        "9e21b7a2-e2a8-4fc2-9c31-e33bfb3fd251",
+        "a10e1e81-b7fd-404b-9401-86ac0730e0ff",
+        "05d8a67e-2c3e-4e00-bb80-0382a5ba96d5",
+        "f057797d-3f08-4b06-96e0-8f755f38eb21",
+        "faa57f09-9bfc-4b3d-90a0-3dc68be329cb",
+        "cc889f30-98c8-4020-94e9-80c9cb47de70",
+        "67a7f457-c54d-441d-9848-d08d939510a6",
+        "aacaa5f9-4ccc-4e97-b5ad-b294bbdda9b5",
+        "5f69a222-201c-4492-a243-b3c258157789"
+      ],
+      "moreTop10ItemIds": [
+        "c36657da-e3a4-4e05-9f3f-2433453381f8",
+        "441b838f-0e23-4e77-8ea8-b65981989b2c",
+        "19e094f4-f7db-4249-8ea1-35766378c3ad",
+        "ea19a530-4585-4b69-9b36-d620b416526d",
+        "0aba11a2-e948-4126-9c90-bc3d4fbcb6a8",
+        "5f69a222-201c-4492-a243-b3c258157789",
+        "1961b5b7-b10e-46f4-a6d9-a75a1cbc1c77",
+        "42e14ea4-0ae3-4c43-aae1-a4d66e18a1d6",
+        "581eb7e5-93db-41dd-82b8-71cd572764eb",
+        "79468863-9149-4acb-9734-e23a46f8f493"
+      ]
+    },
+    {
+      "personaId": "science-space",
+      "coldPrecisionAt10": 0.2,
+      "morePrecisionAt10": 0.8,
+      "improved": true,
+      "coldTop10ItemIds": [
+        "bd928a21-2219-4545-9159-84d52b29a0ac",
+        "9e21b7a2-e2a8-4fc2-9c31-e33bfb3fd251",
+        "a10e1e81-b7fd-404b-9401-86ac0730e0ff",
+        "05d8a67e-2c3e-4e00-bb80-0382a5ba96d5",
+        "f057797d-3f08-4b06-96e0-8f755f38eb21",
+        "faa57f09-9bfc-4b3d-90a0-3dc68be329cb",
+        "cc889f30-98c8-4020-94e9-80c9cb47de70",
+        "67a7f457-c54d-441d-9848-d08d939510a6",
+        "aacaa5f9-4ccc-4e97-b5ad-b294bbdda9b5",
+        "5f69a222-201c-4492-a243-b3c258157789"
+      ],
+      "moreTop10ItemIds": [
+        "539ae3e3-d0da-497b-8778-cbe814b0b2f8",
+        "5f3af99b-19e9-4684-be90-8ccbebaa0e69",
+        "67a7f457-c54d-441d-9848-d08d939510a6",
+        "35f7bc6a-1c60-4653-90e4-958fb6be6273",
+        "92806377-d9fc-4cd7-9dc9-878df3541ebe",
+        "4d13ef44-afbe-41c7-8c28-d4ec41fc83da",
+        "04341d89-f3ab-4e6b-a247-fd4f8447a028",
+        "b09fb102-0c5a-40c4-a414-c697712cd6a2",
+        "ae02ea60-95be-4bc8-9b11-f5c41e5809c0",
+        "8be42d3e-448e-4e95-a0ae-7c24cf80cc90"
+      ]
+    },
+    {
+      "personaId": "finnish-sports",
+      "coldPrecisionAt10": 0,
+      "morePrecisionAt10": 0.6,
+      "improved": true,
+      "coldTop10ItemIds": [
+        "bd928a21-2219-4545-9159-84d52b29a0ac",
+        "9e21b7a2-e2a8-4fc2-9c31-e33bfb3fd251",
+        "a10e1e81-b7fd-404b-9401-86ac0730e0ff",
+        "05d8a67e-2c3e-4e00-bb80-0382a5ba96d5",
+        "f057797d-3f08-4b06-96e0-8f755f38eb21",
+        "faa57f09-9bfc-4b3d-90a0-3dc68be329cb",
+        "cc889f30-98c8-4020-94e9-80c9cb47de70",
+        "67a7f457-c54d-441d-9848-d08d939510a6",
+        "aacaa5f9-4ccc-4e97-b5ad-b294bbdda9b5",
+        "5f69a222-201c-4492-a243-b3c258157789"
+      ],
+      "moreTop10ItemIds": [
+        "b6a85bce-79e8-43ff-a26a-c47d6c2b0d08",
+        "0f08bcaa-66e5-49e7-9f55-3c72e6d6d8d1",
+        "70923604-45a9-499e-8ae1-87261d746c33",
+        "2d63ac37-4e4b-4b3e-be60-5818e1440374",
+        "063900e4-5e48-43f2-b3f0-ac1c84aca41b",
+        "f2d24e5a-3539-4049-87eb-9f8aa38241fa",
+        "1f9a26d3-06a7-4b53-a71d-79b80b3e3b1e",
+        "faa57f09-9bfc-4b3d-90a0-3dc68be329cb",
+        "490d405a-2746-4905-9c72-5f5e20193fc8",
+        "b040522b-6d44-480b-a35b-5bebd4fe9fda"
+      ]
+    }
+  ],
+  "moreImprovedCount": 4,
+  "moreTargetMet": true,
+  "less": [
+    {
+      "compositeId": "ai-software+cars-engineering",
+      "members": [
+        "ai-software",
+        "cars-engineering"
+      ],
+      "bIndex": 0,
+      "bPersonaId": "ai-software",
+      "aPersonaId": "cars-engineering",
+      "met": true,
+      "reason": null,
+      "baselineBExclusiveShare": 0.56,
+      "treatmentBExclusiveShare": 0.44,
+      "baselineAExclusiveShare": 0.22,
+      "treatmentAExclusiveShare": 0.28,
+      "baselinePrecisionAt10": 0.85,
+      "treatmentPrecisionAt10": 0.81,
+      "seeds": [
+        {
+          "seed": 0,
+          "missing": false,
+          "baselineBExclusiveCount": 6,
+          "treatmentBExclusiveCount": 7,
+          "baselineAExclusiveCount": 2,
+          "treatmentAExclusiveCount": 1,
+          "baselineRelevantCount": 8,
+          "treatmentRelevantCount": 8
+        },
+        {
+          "seed": 1,
+          "missing": false,
+          "baselineBExclusiveCount": 2,
+          "treatmentBExclusiveCount": 1,
+          "baselineAExclusiveCount": 4,
+          "treatmentAExclusiveCount": 4,
+          "baselineRelevantCount": 7,
+          "treatmentRelevantCount": 6
+        },
+        {
+          "seed": 2,
+          "missing": false,
+          "baselineBExclusiveCount": 4,
+          "treatmentBExclusiveCount": 3,
+          "baselineAExclusiveCount": 4,
+          "treatmentAExclusiveCount": 4,
+          "baselineRelevantCount": 9,
+          "treatmentRelevantCount": 8
+        },
+        {
+          "seed": 3,
+          "missing": false,
+          "baselineBExclusiveCount": 7,
+          "treatmentBExclusiveCount": 3,
+          "baselineAExclusiveCount": 1,
+          "treatmentAExclusiveCount": 5,
+          "baselineRelevantCount": 9,
+          "treatmentRelevantCount": 9
+        },
+        {
+          "seed": 4,
+          "missing": false,
+          "baselineBExclusiveCount": 6,
+          "treatmentBExclusiveCount": 5,
+          "baselineAExclusiveCount": 2,
+          "treatmentAExclusiveCount": 3,
+          "baselineRelevantCount": 9,
+          "treatmentRelevantCount": 9
+        },
+        {
+          "seed": 5,
+          "missing": false,
+          "baselineBExclusiveCount": 9,
+          "treatmentBExclusiveCount": 6,
+          "baselineAExclusiveCount": 0,
+          "treatmentAExclusiveCount": 2,
+          "baselineRelevantCount": 10,
+          "treatmentRelevantCount": 10
+        },
+        {
+          "seed": 6,
+          "missing": false,
+          "baselineBExclusiveCount": 5,
+          "treatmentBExclusiveCount": 4,
+          "baselineAExclusiveCount": 1,
+          "treatmentAExclusiveCount": 1,
+          "baselineRelevantCount": 6,
+          "treatmentRelevantCount": 5
+        },
+        {
+          "seed": 7,
+          "missing": false,
+          "baselineBExclusiveCount": 8,
+          "treatmentBExclusiveCount": 7,
+          "baselineAExclusiveCount": 0,
+          "treatmentAExclusiveCount": 0,
+          "baselineRelevantCount": 9,
+          "treatmentRelevantCount": 9
+        },
+        {
+          "seed": 8,
+          "missing": false,
+          "baselineBExclusiveCount": 5,
+          "treatmentBExclusiveCount": 5,
+          "baselineAExclusiveCount": 3,
+          "treatmentAExclusiveCount": 3,
+          "baselineRelevantCount": 8,
+          "treatmentRelevantCount": 8
+        },
+        {
+          "seed": 9,
+          "missing": false,
+          "baselineBExclusiveCount": 4,
+          "treatmentBExclusiveCount": 3,
+          "baselineAExclusiveCount": 5,
+          "treatmentAExclusiveCount": 5,
+          "baselineRelevantCount": 10,
+          "treatmentRelevantCount": 9
+        }
+      ]
+    },
+    {
+      "compositeId": "ai-software+cars-engineering",
+      "members": [
+        "ai-software",
+        "cars-engineering"
+      ],
+      "bIndex": 1,
+      "bPersonaId": "cars-engineering",
+      "aPersonaId": "ai-software",
+      "met": true,
+      "reason": null,
+      "baselineBExclusiveShare": 0.22,
+      "treatmentBExclusiveShare": 0.19,
+      "baselineAExclusiveShare": 0.56,
+      "treatmentAExclusiveShare": 0.58,
+      "baselinePrecisionAt10": 0.85,
+      "treatmentPrecisionAt10": 0.84,
+      "seeds": [
+        {
+          "seed": 0,
+          "missing": false,
+          "baselineBExclusiveCount": 2,
+          "treatmentBExclusiveCount": 1,
+          "baselineAExclusiveCount": 6,
+          "treatmentAExclusiveCount": 7,
+          "baselineRelevantCount": 8,
+          "treatmentRelevantCount": 8
+        },
+        {
+          "seed": 1,
+          "missing": false,
+          "baselineBExclusiveCount": 4,
+          "treatmentBExclusiveCount": 3,
+          "baselineAExclusiveCount": 2,
+          "treatmentAExclusiveCount": 1,
+          "baselineRelevantCount": 7,
+          "treatmentRelevantCount": 6
+        },
+        {
+          "seed": 2,
+          "missing": false,
+          "baselineBExclusiveCount": 4,
+          "treatmentBExclusiveCount": 2,
+          "baselineAExclusiveCount": 4,
+          "treatmentAExclusiveCount": 6,
+          "baselineRelevantCount": 9,
+          "treatmentRelevantCount": 9
+        },
+        {
+          "seed": 3,
+          "missing": false,
+          "baselineBExclusiveCount": 1,
+          "treatmentBExclusiveCount": 1,
+          "baselineAExclusiveCount": 7,
+          "treatmentAExclusiveCount": 7,
+          "baselineRelevantCount": 9,
+          "treatmentRelevantCount": 9
+        },
+        {
+          "seed": 4,
+          "missing": false,
+          "baselineBExclusiveCount": 2,
+          "treatmentBExclusiveCount": 2,
+          "baselineAExclusiveCount": 6,
+          "treatmentAExclusiveCount": 6,
+          "baselineRelevantCount": 9,
+          "treatmentRelevantCount": 9
+        },
+        {
+          "seed": 5,
+          "missing": false,
+          "baselineBExclusiveCount": 0,
+          "treatmentBExclusiveCount": 1,
+          "baselineAExclusiveCount": 9,
+          "treatmentAExclusiveCount": 8,
+          "baselineRelevantCount": 10,
+          "treatmentRelevantCount": 10
+        },
+        {
+          "seed": 6,
+          "missing": false,
+          "baselineBExclusiveCount": 1,
+          "treatmentBExclusiveCount": 1,
+          "baselineAExclusiveCount": 5,
+          "treatmentAExclusiveCount": 5,
+          "baselineRelevantCount": 6,
+          "treatmentRelevantCount": 6
+        },
+        {
+          "seed": 7,
+          "missing": false,
+          "baselineBExclusiveCount": 0,
+          "treatmentBExclusiveCount": 0,
+          "baselineAExclusiveCount": 8,
+          "treatmentAExclusiveCount": 8,
+          "baselineRelevantCount": 9,
+          "treatmentRelevantCount": 9
+        },
+        {
+          "seed": 8,
+          "missing": false,
+          "baselineBExclusiveCount": 3,
+          "treatmentBExclusiveCount": 3,
+          "baselineAExclusiveCount": 5,
+          "treatmentAExclusiveCount": 5,
+          "baselineRelevantCount": 8,
+          "treatmentRelevantCount": 8
+        },
+        {
+          "seed": 9,
+          "missing": false,
+          "baselineBExclusiveCount": 5,
+          "treatmentBExclusiveCount": 5,
+          "baselineAExclusiveCount": 4,
+          "treatmentAExclusiveCount": 5,
+          "baselineRelevantCount": 10,
+          "treatmentRelevantCount": 10
+        }
+      ]
+    },
+    {
+      "compositeId": "ai-software+science-space",
+      "members": [
+        "ai-software",
+        "science-space"
+      ],
+      "bIndex": 0,
+      "bPersonaId": "ai-software",
+      "aPersonaId": "science-space",
+      "met": true,
+      "reason": null,
+      "baselineBExclusiveShare": 0.45,
+      "treatmentBExclusiveShare": 0.3,
+      "baselineAExclusiveShare": 0.44,
+      "treatmentAExclusiveShare": 0.6,
+      "baselinePrecisionAt10": 0.94,
+      "treatmentPrecisionAt10": 0.94,
+      "seeds": [
+        {
+          "seed": 0,
+          "missing": false,
+          "baselineBExclusiveCount": 6,
+          "treatmentBExclusiveCount": 4,
+          "baselineAExclusiveCount": 3,
+          "treatmentAExclusiveCount": 6,
+          "baselineRelevantCount": 9,
+          "treatmentRelevantCount": 10
+        },
+        {
+          "seed": 1,
+          "missing": false,
+          "baselineBExclusiveCount": 7,
+          "treatmentBExclusiveCount": 4,
+          "baselineAExclusiveCount": 2,
+          "treatmentAExclusiveCount": 5,
+          "baselineRelevantCount": 10,
+          "treatmentRelevantCount": 10
+        },
+        {
+          "seed": 2,
+          "missing": false,
+          "baselineBExclusiveCount": 7,
+          "treatmentBExclusiveCount": 5,
+          "baselineAExclusiveCount": 3,
+          "treatmentAExclusiveCount": 5,
+          "baselineRelevantCount": 10,
+          "treatmentRelevantCount": 10
+        },
+        {
+          "seed": 3,
+          "missing": false,
+          "baselineBExclusiveCount": 0,
+          "treatmentBExclusiveCount": 0,
+          "baselineAExclusiveCount": 7,
+          "treatmentAExclusiveCount": 8,
+          "baselineRelevantCount": 8,
+          "treatmentRelevantCount": 8
+        },
+        {
+          "seed": 4,
+          "missing": false,
+          "baselineBExclusiveCount": 0,
+          "treatmentBExclusiveCount": 0,
+          "baselineAExclusiveCount": 7,
+          "treatmentAExclusiveCount": 6,
+          "baselineRelevantCount": 9,
+          "treatmentRelevantCount": 9
+        },
+        {
+          "seed": 5,
+          "missing": false,
+          "baselineBExclusiveCount": 6,
+          "treatmentBExclusiveCount": 4,
+          "baselineAExclusiveCount": 4,
+          "treatmentAExclusiveCount": 6,
+          "baselineRelevantCount": 10,
+          "treatmentRelevantCount": 10
+        },
+        {
+          "seed": 6,
+          "missing": false,
+          "baselineBExclusiveCount": 6,
+          "treatmentBExclusiveCount": 5,
+          "baselineAExclusiveCount": 3,
+          "treatmentAExclusiveCount": 5,
+          "baselineRelevantCount": 10,
+          "treatmentRelevantCount": 10
+        },
+        {
+          "seed": 7,
+          "missing": false,
+          "baselineBExclusiveCount": 6,
+          "treatmentBExclusiveCount": 3,
+          "baselineAExclusiveCount": 4,
+          "treatmentAExclusiveCount": 7,
+          "baselineRelevantCount": 10,
+          "treatmentRelevantCount": 10
+        },
+        {
+          "seed": 8,
+          "missing": false,
+          "baselineBExclusiveCount": 5,
+          "treatmentBExclusiveCount": 4,
+          "baselineAExclusiveCount": 3,
+          "treatmentAExclusiveCount": 3,
+          "baselineRelevantCount": 8,
+          "treatmentRelevantCount": 7
+        },
+        {
+          "seed": 9,
+          "missing": false,
+          "baselineBExclusiveCount": 2,
+          "treatmentBExclusiveCount": 1,
+          "baselineAExclusiveCount": 8,
+          "treatmentAExclusiveCount": 9,
+          "baselineRelevantCount": 10,
+          "treatmentRelevantCount": 10
+        }
+      ]
+    },
+    {
+      "compositeId": "ai-software+science-space",
+      "members": [
+        "ai-software",
+        "science-space"
+      ],
+      "bIndex": 1,
+      "bPersonaId": "science-space",
+      "aPersonaId": "ai-software",
+      "met": true,
+      "reason": null,
+      "baselineBExclusiveShare": 0.44,
+      "treatmentBExclusiveShare": 0.34,
+      "baselineAExclusiveShare": 0.45,
+      "treatmentAExclusiveShare": 0.56,
+      "baselinePrecisionAt10": 0.94,
+      "treatmentPrecisionAt10": 0.94,
+      "seeds": [
+        {
+          "seed": 0,
+          "missing": false,
+          "baselineBExclusiveCount": 3,
+          "treatmentBExclusiveCount": 3,
+          "baselineAExclusiveCount": 6,
+          "treatmentAExclusiveCount": 6,
+          "baselineRelevantCount": 9,
+          "treatmentRelevantCount": 9
+        },
+        {
+          "seed": 1,
+          "missing": false,
+          "baselineBExclusiveCount": 2,
+          "treatmentBExclusiveCount": 1,
+          "baselineAExclusiveCount": 7,
+          "treatmentAExclusiveCount": 8,
+          "baselineRelevantCount": 10,
+          "treatmentRelevantCount": 10
+        },
+        {
+          "seed": 2,
+          "missing": false,
+          "baselineBExclusiveCount": 3,
+          "treatmentBExclusiveCount": 3,
+          "baselineAExclusiveCount": 7,
+          "treatmentAExclusiveCount": 7,
+          "baselineRelevantCount": 10,
+          "treatmentRelevantCount": 10
+        },
+        {
+          "seed": 3,
+          "missing": false,
+          "baselineBExclusiveCount": 7,
+          "treatmentBExclusiveCount": 6,
+          "baselineAExclusiveCount": 0,
+          "treatmentAExclusiveCount": 2,
+          "baselineRelevantCount": 8,
+          "treatmentRelevantCount": 8
+        },
+        {
+          "seed": 4,
+          "missing": false,
+          "baselineBExclusiveCount": 7,
+          "treatmentBExclusiveCount": 4,
+          "baselineAExclusiveCount": 0,
+          "treatmentAExclusiveCount": 2,
+          "baselineRelevantCount": 9,
+          "treatmentRelevantCount": 9
+        },
+        {
+          "seed": 5,
+          "missing": false,
+          "baselineBExclusiveCount": 4,
+          "treatmentBExclusiveCount": 3,
+          "baselineAExclusiveCount": 6,
+          "treatmentAExclusiveCount": 7,
+          "baselineRelevantCount": 10,
+          "treatmentRelevantCount": 10
+        },
+        {
+          "seed": 6,
+          "missing": false,
+          "baselineBExclusiveCount": 3,
+          "treatmentBExclusiveCount": 3,
+          "baselineAExclusiveCount": 6,
+          "treatmentAExclusiveCount": 7,
+          "baselineRelevantCount": 10,
+          "treatmentRelevantCount": 10
+        },
+        {
+          "seed": 7,
+          "missing": false,
+          "baselineBExclusiveCount": 4,
+          "treatmentBExclusiveCount": 3,
+          "baselineAExclusiveCount": 6,
+          "treatmentAExclusiveCount": 7,
+          "baselineRelevantCount": 10,
+          "treatmentRelevantCount": 10
+        },
+        {
+          "seed": 8,
+          "missing": false,
+          "baselineBExclusiveCount": 3,
+          "treatmentBExclusiveCount": 3,
+          "baselineAExclusiveCount": 5,
+          "treatmentAExclusiveCount": 5,
+          "baselineRelevantCount": 8,
+          "treatmentRelevantCount": 8
+        },
+        {
+          "seed": 9,
+          "missing": false,
+          "baselineBExclusiveCount": 8,
+          "treatmentBExclusiveCount": 5,
+          "baselineAExclusiveCount": 2,
+          "treatmentAExclusiveCount": 5,
+          "baselineRelevantCount": 10,
+          "treatmentRelevantCount": 10
+        }
+      ]
+    },
+    {
+      "compositeId": "ai-software+finnish-sports",
+      "members": [
+        "ai-software",
+        "finnish-sports"
+      ],
+      "bIndex": 0,
+      "bPersonaId": "ai-software",
+      "aPersonaId": "finnish-sports",
+      "met": true,
+      "reason": null,
+      "baselineBExclusiveShare": 0.4,
+      "treatmentBExclusiveShare": 0.33,
+      "baselineAExclusiveShare": 0.42,
+      "treatmentAExclusiveShare": 0.49,
+      "baselinePrecisionAt10": 0.82,
+      "treatmentPrecisionAt10": 0.82,
+      "seeds": [
+        {
+          "seed": 0,
+          "missing": false,
+          "baselineBExclusiveCount": 1,
+          "treatmentBExclusiveCount": 1,
+          "baselineAExclusiveCount": 7,
+          "treatmentAExclusiveCount": 7,
+          "baselineRelevantCount": 8,
+          "treatmentRelevantCount": 8
+        },
+        {
+          "seed": 1,
+          "missing": false,
+          "baselineBExclusiveCount": 3,
+          "treatmentBExclusiveCount": 3,
+          "baselineAExclusiveCount": 7,
+          "treatmentAExclusiveCount": 7,
+          "baselineRelevantCount": 10,
+          "treatmentRelevantCount": 10
+        },
+        {
+          "seed": 2,
+          "missing": false,
+          "baselineBExclusiveCount": 2,
+          "treatmentBExclusiveCount": 1,
+          "baselineAExclusiveCount": 4,
+          "treatmentAExclusiveCount": 5,
+          "baselineRelevantCount": 6,
+          "treatmentRelevantCount": 6
+        },
+        {
+          "seed": 3,
+          "missing": false,
+          "baselineBExclusiveCount": 6,
+          "treatmentBExclusiveCount": 4,
+          "baselineAExclusiveCount": 4,
+          "treatmentAExclusiveCount": 6,
+          "baselineRelevantCount": 10,
+          "treatmentRelevantCount": 10
+        },
+        {
+          "seed": 4,
+          "missing": false,
+          "baselineBExclusiveCount": 6,
+          "treatmentBExclusiveCount": 5,
+          "baselineAExclusiveCount": 2,
+          "treatmentAExclusiveCount": 4,
+          "baselineRelevantCount": 8,
+          "treatmentRelevantCount": 9
+        },
+        {
+          "seed": 5,
+          "missing": false,
+          "baselineBExclusiveCount": 5,
+          "treatmentBExclusiveCount": 4,
+          "baselineAExclusiveCount": 2,
+          "treatmentAExclusiveCount": 2,
+          "baselineRelevantCount": 7,
+          "treatmentRelevantCount": 6
+        },
+        {
+          "seed": 6,
+          "missing": false,
+          "baselineBExclusiveCount": 5,
+          "treatmentBExclusiveCount": 5,
+          "baselineAExclusiveCount": 1,
+          "treatmentAExclusiveCount": 1,
+          "baselineRelevantCount": 6,
+          "treatmentRelevantCount": 6
+        },
+        {
+          "seed": 7,
+          "missing": false,
+          "baselineBExclusiveCount": 5,
+          "treatmentBExclusiveCount": 4,
+          "baselineAExclusiveCount": 4,
+          "treatmentAExclusiveCount": 5,
+          "baselineRelevantCount": 9,
+          "treatmentRelevantCount": 9
+        },
+        {
+          "seed": 8,
+          "missing": false,
+          "baselineBExclusiveCount": 3,
+          "treatmentBExclusiveCount": 3,
+          "baselineAExclusiveCount": 5,
+          "treatmentAExclusiveCount": 5,
+          "baselineRelevantCount": 8,
+          "treatmentRelevantCount": 8
+        },
+        {
+          "seed": 9,
+          "missing": false,
+          "baselineBExclusiveCount": 4,
+          "treatmentBExclusiveCount": 3,
+          "baselineAExclusiveCount": 6,
+          "treatmentAExclusiveCount": 7,
+          "baselineRelevantCount": 10,
+          "treatmentRelevantCount": 10
+        }
+      ]
+    },
+    {
+      "compositeId": "ai-software+finnish-sports",
+      "members": [
+        "ai-software",
+        "finnish-sports"
+      ],
+      "bIndex": 1,
+      "bPersonaId": "finnish-sports",
+      "aPersonaId": "ai-software",
+      "met": true,
+      "reason": null,
+      "baselineBExclusiveShare": 0.42,
+      "treatmentBExclusiveShare": 0.31,
+      "baselineAExclusiveShare": 0.4,
+      "treatmentAExclusiveShare": 0.55,
+      "baselinePrecisionAt10": 0.82,
+      "treatmentPrecisionAt10": 0.86,
+      "seeds": [
+        {
+          "seed": 0,
+          "missing": false,
+          "baselineBExclusiveCount": 7,
+          "treatmentBExclusiveCount": 5,
+          "baselineAExclusiveCount": 1,
+          "treatmentAExclusiveCount": 4,
+          "baselineRelevantCount": 8,
+          "treatmentRelevantCount": 9
+        },
+        {
+          "seed": 1,
+          "missing": false,
+          "baselineBExclusiveCount": 7,
+          "treatmentBExclusiveCount": 5,
+          "baselineAExclusiveCount": 3,
+          "treatmentAExclusiveCount": 5,
+          "baselineRelevantCount": 10,
+          "treatmentRelevantCount": 10
+        },
+        {
+          "seed": 2,
+          "missing": false,
+          "baselineBExclusiveCount": 4,
+          "treatmentBExclusiveCount": 3,
+          "baselineAExclusiveCount": 2,
+          "treatmentAExclusiveCount": 4,
+          "baselineRelevantCount": 6,
+          "treatmentRelevantCount": 7
+        },
+        {
+          "seed": 3,
+          "missing": false,
+          "baselineBExclusiveCount": 4,
+          "treatmentBExclusiveCount": 4,
+          "baselineAExclusiveCount": 6,
+          "treatmentAExclusiveCount": 6,
+          "baselineRelevantCount": 10,
+          "treatmentRelevantCount": 10
+        },
+        {
+          "seed": 4,
+          "missing": false,
+          "baselineBExclusiveCount": 2,
+          "treatmentBExclusiveCount": 2,
+          "baselineAExclusiveCount": 6,
+          "treatmentAExclusiveCount": 6,
+          "baselineRelevantCount": 8,
+          "treatmentRelevantCount": 8
+        },
+        {
+          "seed": 5,
+          "missing": false,
+          "baselineBExclusiveCount": 2,
+          "treatmentBExclusiveCount": 1,
+          "baselineAExclusiveCount": 5,
+          "treatmentAExclusiveCount": 7,
+          "baselineRelevantCount": 7,
+          "treatmentRelevantCount": 8
+        },
+        {
+          "seed": 6,
+          "missing": false,
+          "baselineBExclusiveCount": 1,
+          "treatmentBExclusiveCount": 0,
+          "baselineAExclusiveCount": 5,
+          "treatmentAExclusiveCount": 6,
+          "baselineRelevantCount": 6,
+          "treatmentRelevantCount": 6
+        },
+        {
+          "seed": 7,
+          "missing": false,
+          "baselineBExclusiveCount": 4,
+          "treatmentBExclusiveCount": 2,
+          "baselineAExclusiveCount": 5,
+          "treatmentAExclusiveCount": 7,
+          "baselineRelevantCount": 9,
+          "treatmentRelevantCount": 9
+        },
+        {
+          "seed": 8,
+          "missing": false,
+          "baselineBExclusiveCount": 5,
+          "treatmentBExclusiveCount": 4,
+          "baselineAExclusiveCount": 3,
+          "treatmentAExclusiveCount": 5,
+          "baselineRelevantCount": 8,
+          "treatmentRelevantCount": 9
+        },
+        {
+          "seed": 9,
+          "missing": false,
+          "baselineBExclusiveCount": 6,
+          "treatmentBExclusiveCount": 5,
+          "baselineAExclusiveCount": 4,
+          "treatmentAExclusiveCount": 5,
+          "baselineRelevantCount": 10,
+          "treatmentRelevantCount": 10
+        }
+      ]
+    },
+    {
+      "compositeId": "cars-engineering+science-space",
+      "members": [
+        "cars-engineering",
+        "science-space"
+      ],
+      "bIndex": 0,
+      "bPersonaId": "cars-engineering",
+      "aPersonaId": "science-space",
+      "met": true,
+      "reason": null,
+      "baselineBExclusiveShare": 0.22,
+      "treatmentBExclusiveShare": 0.13,
+      "baselineAExclusiveShare": 0.47,
+      "treatmentAExclusiveShare": 0.53,
+      "baselinePrecisionAt10": 0.79,
+      "treatmentPrecisionAt10": 0.76,
+      "seeds": [
+        {
+          "seed": 0,
+          "missing": false,
+          "baselineBExclusiveCount": 0,
+          "treatmentBExclusiveCount": 0,
+          "baselineAExclusiveCount": 7,
+          "treatmentAExclusiveCount": 8,
+          "baselineRelevantCount": 9,
+          "treatmentRelevantCount": 10
+        },
+        {
+          "seed": 1,
+          "missing": false,
+          "baselineBExclusiveCount": 3,
+          "treatmentBExclusiveCount": 0,
+          "baselineAExclusiveCount": 4,
+          "treatmentAExclusiveCount": 6,
+          "baselineRelevantCount": 10,
+          "treatmentRelevantCount": 9
+        },
+        {
+          "seed": 2,
+          "missing": false,
+          "baselineBExclusiveCount": 3,
+          "treatmentBExclusiveCount": 3,
+          "baselineAExclusiveCount": 3,
+          "treatmentAExclusiveCount": 2,
+          "baselineRelevantCount": 6,
+          "treatmentRelevantCount": 5
+        },
+        {
+          "seed": 3,
+          "missing": false,
+          "baselineBExclusiveCount": 0,
+          "treatmentBExclusiveCount": 0,
+          "baselineAExclusiveCount": 8,
+          "treatmentAExclusiveCount": 8,
+          "baselineRelevantCount": 8,
+          "treatmentRelevantCount": 8
+        },
+        {
+          "seed": 4,
+          "missing": false,
+          "baselineBExclusiveCount": 3,
+          "treatmentBExclusiveCount": 2,
+          "baselineAExclusiveCount": 7,
+          "treatmentAExclusiveCount": 7,
+          "baselineRelevantCount": 10,
+          "treatmentRelevantCount": 9
+        },
+        {
+          "seed": 5,
+          "missing": false,
+          "baselineBExclusiveCount": 1,
+          "treatmentBExclusiveCount": 2,
+          "baselineAExclusiveCount": 2,
+          "treatmentAExclusiveCount": 2,
+          "baselineRelevantCount": 7,
+          "treatmentRelevantCount": 7
+        },
+        {
+          "seed": 6,
+          "missing": false,
+          "baselineBExclusiveCount": 3,
+          "treatmentBExclusiveCount": 1,
+          "baselineAExclusiveCount": 4,
+          "treatmentAExclusiveCount": 7,
+          "baselineRelevantCount": 7,
+          "treatmentRelevantCount": 8
+        },
+        {
+          "seed": 7,
+          "missing": false,
+          "baselineBExclusiveCount": 4,
+          "treatmentBExclusiveCount": 3,
+          "baselineAExclusiveCount": 3,
+          "treatmentAExclusiveCount": 3,
+          "baselineRelevantCount": 8,
+          "treatmentRelevantCount": 7
+        },
+        {
+          "seed": 8,
+          "missing": false,
+          "baselineBExclusiveCount": 3,
+          "treatmentBExclusiveCount": 1,
+          "baselineAExclusiveCount": 4,
+          "treatmentAExclusiveCount": 5,
+          "baselineRelevantCount": 7,
+          "treatmentRelevantCount": 6
+        },
+        {
+          "seed": 9,
+          "missing": false,
+          "baselineBExclusiveCount": 2,
+          "treatmentBExclusiveCount": 1,
+          "baselineAExclusiveCount": 5,
+          "treatmentAExclusiveCount": 5,
+          "baselineRelevantCount": 7,
+          "treatmentRelevantCount": 7
+        }
+      ]
+    },
+    {
+      "compositeId": "cars-engineering+science-space",
+      "members": [
+        "cars-engineering",
+        "science-space"
+      ],
+      "bIndex": 1,
+      "bPersonaId": "science-space",
+      "aPersonaId": "cars-engineering",
+      "met": true,
+      "reason": null,
+      "baselineBExclusiveShare": 0.47,
+      "treatmentBExclusiveShare": 0.3,
+      "baselineAExclusiveShare": 0.22,
+      "treatmentAExclusiveShare": 0.39,
+      "baselinePrecisionAt10": 0.79,
+      "treatmentPrecisionAt10": 0.73,
+      "seeds": [
+        {
+          "seed": 0,
+          "missing": false,
+          "baselineBExclusiveCount": 7,
+          "treatmentBExclusiveCount": 7,
+          "baselineAExclusiveCount": 0,
+          "treatmentAExclusiveCount": 2,
+          "baselineRelevantCount": 9,
+          "treatmentRelevantCount": 10
+        },
+        {
+          "seed": 1,
+          "missing": false,
+          "baselineBExclusiveCount": 4,
+          "treatmentBExclusiveCount": 4,
+          "baselineAExclusiveCount": 3,
+          "treatmentAExclusiveCount": 5,
+          "baselineRelevantCount": 10,
+          "treatmentRelevantCount": 10
+        },
+        {
+          "seed": 2,
+          "missing": false,
+          "baselineBExclusiveCount": 3,
+          "treatmentBExclusiveCount": 1,
+          "baselineAExclusiveCount": 3,
+          "treatmentAExclusiveCount": 4,
+          "baselineRelevantCount": 6,
+          "treatmentRelevantCount": 5
+        },
+        {
+          "seed": 3,
+          "missing": false,
+          "baselineBExclusiveCount": 8,
+          "treatmentBExclusiveCount": 4,
+          "baselineAExclusiveCount": 0,
+          "treatmentAExclusiveCount": 3,
+          "baselineRelevantCount": 8,
+          "treatmentRelevantCount": 7
+        },
+        {
+          "seed": 4,
+          "missing": false,
+          "baselineBExclusiveCount": 7,
+          "treatmentBExclusiveCount": 5,
+          "baselineAExclusiveCount": 3,
+          "treatmentAExclusiveCount": 5,
+          "baselineRelevantCount": 10,
+          "treatmentRelevantCount": 10
+        },
+        {
+          "seed": 5,
+          "missing": false,
+          "baselineBExclusiveCount": 2,
+          "treatmentBExclusiveCount": 1,
+          "baselineAExclusiveCount": 1,
+          "treatmentAExclusiveCount": 2,
+          "baselineRelevantCount": 7,
+          "treatmentRelevantCount": 4
+        },
+        {
+          "seed": 6,
+          "missing": false,
+          "baselineBExclusiveCount": 4,
+          "treatmentBExclusiveCount": 3,
+          "baselineAExclusiveCount": 3,
+          "treatmentAExclusiveCount": 5,
+          "baselineRelevantCount": 7,
+          "treatmentRelevantCount": 8
+        },
+        {
+          "seed": 7,
+          "missing": false,
+          "baselineBExclusiveCount": 3,
+          "treatmentBExclusiveCount": 2,
+          "baselineAExclusiveCount": 4,
+          "treatmentAExclusiveCount": 5,
+          "baselineRelevantCount": 8,
+          "treatmentRelevantCount": 7
+        },
+        {
+          "seed": 8,
+          "missing": false,
+          "baselineBExclusiveCount": 4,
+          "treatmentBExclusiveCount": 2,
+          "baselineAExclusiveCount": 3,
+          "treatmentAExclusiveCount": 4,
+          "baselineRelevantCount": 7,
+          "treatmentRelevantCount": 6
+        },
+        {
+          "seed": 9,
+          "missing": false,
+          "baselineBExclusiveCount": 5,
+          "treatmentBExclusiveCount": 1,
+          "baselineAExclusiveCount": 2,
+          "treatmentAExclusiveCount": 4,
+          "baselineRelevantCount": 7,
+          "treatmentRelevantCount": 6
+        }
+      ]
+    },
+    {
+      "compositeId": "cars-engineering+finnish-sports",
+      "members": [
+        "cars-engineering",
+        "finnish-sports"
+      ],
+      "bIndex": 0,
+      "bPersonaId": "cars-engineering",
+      "aPersonaId": "finnish-sports",
+      "met": true,
+      "reason": null,
+      "baselineBExclusiveShare": 0.34,
+      "treatmentBExclusiveShare": 0.22,
+      "baselineAExclusiveShare": 0.43,
+      "treatmentAExclusiveShare": 0.51,
+      "baselinePrecisionAt10": 0.77,
+      "treatmentPrecisionAt10": 0.73,
+      "seeds": [
+        {
+          "seed": 0,
+          "missing": false,
+          "baselineBExclusiveCount": 4,
+          "treatmentBExclusiveCount": 2,
+          "baselineAExclusiveCount": 5,
+          "treatmentAExclusiveCount": 6,
+          "baselineRelevantCount": 9,
+          "treatmentRelevantCount": 8
+        },
+        {
+          "seed": 1,
+          "missing": false,
+          "baselineBExclusiveCount": 5,
+          "treatmentBExclusiveCount": 4,
+          "baselineAExclusiveCount": 4,
+          "treatmentAExclusiveCount": 5,
+          "baselineRelevantCount": 9,
+          "treatmentRelevantCount": 9
+        },
+        {
+          "seed": 2,
+          "missing": false,
+          "baselineBExclusiveCount": 3,
+          "treatmentBExclusiveCount": 2,
+          "baselineAExclusiveCount": 3,
+          "treatmentAExclusiveCount": 4,
+          "baselineRelevantCount": 6,
+          "treatmentRelevantCount": 6
+        },
+        {
+          "seed": 3,
+          "missing": false,
+          "baselineBExclusiveCount": 4,
+          "treatmentBExclusiveCount": 3,
+          "baselineAExclusiveCount": 3,
+          "treatmentAExclusiveCount": 3,
+          "baselineRelevantCount": 7,
+          "treatmentRelevantCount": 6
+        },
+        {
+          "seed": 4,
+          "missing": false,
+          "baselineBExclusiveCount": 2,
+          "treatmentBExclusiveCount": 1,
+          "baselineAExclusiveCount": 6,
+          "treatmentAExclusiveCount": 7,
+          "baselineRelevantCount": 8,
+          "treatmentRelevantCount": 8
+        },
+        {
+          "seed": 5,
+          "missing": false,
+          "baselineBExclusiveCount": 1,
+          "treatmentBExclusiveCount": 0,
+          "baselineAExclusiveCount": 5,
+          "treatmentAExclusiveCount": 6,
+          "baselineRelevantCount": 6,
+          "treatmentRelevantCount": 6
+        },
+        {
+          "seed": 6,
+          "missing": false,
+          "baselineBExclusiveCount": 3,
+          "treatmentBExclusiveCount": 2,
+          "baselineAExclusiveCount": 4,
+          "treatmentAExclusiveCount": 5,
+          "baselineRelevantCount": 7,
+          "treatmentRelevantCount": 7
+        },
+        {
+          "seed": 7,
+          "missing": false,
+          "baselineBExclusiveCount": 8,
+          "treatmentBExclusiveCount": 7,
+          "baselineAExclusiveCount": 2,
+          "treatmentAExclusiveCount": 2,
+          "baselineRelevantCount": 10,
+          "treatmentRelevantCount": 9
+        },
+        {
+          "seed": 8,
+          "missing": false,
+          "baselineBExclusiveCount": 1,
+          "treatmentBExclusiveCount": 1,
+          "baselineAExclusiveCount": 4,
+          "treatmentAExclusiveCount": 4,
+          "baselineRelevantCount": 5,
+          "treatmentRelevantCount": 5
+        },
+        {
+          "seed": 9,
+          "missing": false,
+          "baselineBExclusiveCount": 3,
+          "treatmentBExclusiveCount": 0,
+          "baselineAExclusiveCount": 7,
+          "treatmentAExclusiveCount": 9,
+          "baselineRelevantCount": 10,
+          "treatmentRelevantCount": 9
+        }
+      ]
+    },
+    {
+      "compositeId": "cars-engineering+finnish-sports",
+      "members": [
+        "cars-engineering",
+        "finnish-sports"
+      ],
+      "bIndex": 1,
+      "bPersonaId": "finnish-sports",
+      "aPersonaId": "cars-engineering",
+      "met": true,
+      "reason": null,
+      "baselineBExclusiveShare": 0.43,
+      "treatmentBExclusiveShare": 0.24,
+      "baselineAExclusiveShare": 0.34,
+      "treatmentAExclusiveShare": 0.5,
+      "baselinePrecisionAt10": 0.77,
+      "treatmentPrecisionAt10": 0.74,
+      "seeds": [
+        {
+          "seed": 0,
+          "missing": false,
+          "baselineBExclusiveCount": 5,
+          "treatmentBExclusiveCount": 2,
+          "baselineAExclusiveCount": 4,
+          "treatmentAExclusiveCount": 7,
+          "baselineRelevantCount": 9,
+          "treatmentRelevantCount": 9
+        },
+        {
+          "seed": 1,
+          "missing": false,
+          "baselineBExclusiveCount": 4,
+          "treatmentBExclusiveCount": 1,
+          "baselineAExclusiveCount": 5,
+          "treatmentAExclusiveCount": 6,
+          "baselineRelevantCount": 9,
+          "treatmentRelevantCount": 7
+        },
+        {
+          "seed": 2,
+          "missing": false,
+          "baselineBExclusiveCount": 3,
+          "treatmentBExclusiveCount": 3,
+          "baselineAExclusiveCount": 3,
+          "treatmentAExclusiveCount": 4,
+          "baselineRelevantCount": 6,
+          "treatmentRelevantCount": 7
+        },
+        {
+          "seed": 3,
+          "missing": false,
+          "baselineBExclusiveCount": 3,
+          "treatmentBExclusiveCount": 1,
+          "baselineAExclusiveCount": 4,
+          "treatmentAExclusiveCount": 7,
+          "baselineRelevantCount": 7,
+          "treatmentRelevantCount": 8
+        },
+        {
+          "seed": 4,
+          "missing": false,
+          "baselineBExclusiveCount": 6,
+          "treatmentBExclusiveCount": 5,
+          "baselineAExclusiveCount": 2,
+          "treatmentAExclusiveCount": 4,
+          "baselineRelevantCount": 8,
+          "treatmentRelevantCount": 9
+        },
+        {
+          "seed": 5,
+          "missing": false,
+          "baselineBExclusiveCount": 5,
+          "treatmentBExclusiveCount": 3,
+          "baselineAExclusiveCount": 1,
+          "treatmentAExclusiveCount": 2,
+          "baselineRelevantCount": 6,
+          "treatmentRelevantCount": 5
+        },
+        {
+          "seed": 6,
+          "missing": false,
+          "baselineBExclusiveCount": 4,
+          "treatmentBExclusiveCount": 2,
+          "baselineAExclusiveCount": 3,
+          "treatmentAExclusiveCount": 4,
+          "baselineRelevantCount": 7,
+          "treatmentRelevantCount": 6
+        },
+        {
+          "seed": 7,
+          "missing": false,
+          "baselineBExclusiveCount": 2,
+          "treatmentBExclusiveCount": 2,
+          "baselineAExclusiveCount": 8,
+          "treatmentAExclusiveCount": 8,
+          "baselineRelevantCount": 10,
+          "treatmentRelevantCount": 10
+        },
+        {
+          "seed": 8,
+          "missing": false,
+          "baselineBExclusiveCount": 4,
+          "treatmentBExclusiveCount": 2,
+          "baselineAExclusiveCount": 1,
+          "treatmentAExclusiveCount": 2,
+          "baselineRelevantCount": 5,
+          "treatmentRelevantCount": 4
+        },
+        {
+          "seed": 9,
+          "missing": false,
+          "baselineBExclusiveCount": 7,
+          "treatmentBExclusiveCount": 3,
+          "baselineAExclusiveCount": 3,
+          "treatmentAExclusiveCount": 6,
+          "baselineRelevantCount": 10,
+          "treatmentRelevantCount": 9
+        }
+      ]
+    },
+    {
+      "compositeId": "science-space+finnish-sports",
+      "members": [
+        "science-space",
+        "finnish-sports"
+      ],
+      "bIndex": 0,
+      "bPersonaId": "science-space",
+      "aPersonaId": "finnish-sports",
+      "met": true,
+      "reason": null,
+      "baselineBExclusiveShare": 0.51,
+      "treatmentBExclusiveShare": 0.23,
+      "baselineAExclusiveShare": 0.37,
+      "treatmentAExclusiveShare": 0.59,
+      "baselinePrecisionAt10": 0.88,
+      "treatmentPrecisionAt10": 0.82,
+      "seeds": [
+        {
+          "seed": 0,
+          "missing": false,
+          "baselineBExclusiveCount": 2,
+          "treatmentBExclusiveCount": 1,
+          "baselineAExclusiveCount": 7,
+          "treatmentAExclusiveCount": 9,
+          "baselineRelevantCount": 9,
+          "treatmentRelevantCount": 10
+        },
+        {
+          "seed": 1,
+          "missing": false,
+          "baselineBExclusiveCount": 6,
+          "treatmentBExclusiveCount": 2,
+          "baselineAExclusiveCount": 4,
+          "treatmentAExclusiveCount": 8,
+          "baselineRelevantCount": 10,
+          "treatmentRelevantCount": 10
+        },
+        {
+          "seed": 2,
+          "missing": false,
+          "baselineBExclusiveCount": 3,
+          "treatmentBExclusiveCount": 0,
+          "baselineAExclusiveCount": 4,
+          "treatmentAExclusiveCount": 6,
+          "baselineRelevantCount": 7,
+          "treatmentRelevantCount": 6
+        },
+        {
+          "seed": 3,
+          "missing": false,
+          "baselineBExclusiveCount": 8,
+          "treatmentBExclusiveCount": 3,
+          "baselineAExclusiveCount": 2,
+          "treatmentAExclusiveCount": 6,
+          "baselineRelevantCount": 10,
+          "treatmentRelevantCount": 9
+        },
+        {
+          "seed": 4,
+          "missing": false,
+          "baselineBExclusiveCount": 8,
+          "treatmentBExclusiveCount": 4,
+          "baselineAExclusiveCount": 2,
+          "treatmentAExclusiveCount": 5,
+          "baselineRelevantCount": 10,
+          "treatmentRelevantCount": 9
+        },
+        {
+          "seed": 5,
+          "missing": false,
+          "baselineBExclusiveCount": 8,
+          "treatmentBExclusiveCount": 5,
+          "baselineAExclusiveCount": 1,
+          "treatmentAExclusiveCount": 4,
+          "baselineRelevantCount": 9,
+          "treatmentRelevantCount": 9
+        },
+        {
+          "seed": 6,
+          "missing": false,
+          "baselineBExclusiveCount": 3,
+          "treatmentBExclusiveCount": 1,
+          "baselineAExclusiveCount": 4,
+          "treatmentAExclusiveCount": 4,
+          "baselineRelevantCount": 7,
+          "treatmentRelevantCount": 5
+        },
+        {
+          "seed": 7,
+          "missing": false,
+          "baselineBExclusiveCount": 6,
+          "treatmentBExclusiveCount": 3,
+          "baselineAExclusiveCount": 3,
+          "treatmentAExclusiveCount": 5,
+          "baselineRelevantCount": 9,
+          "treatmentRelevantCount": 8
+        },
+        {
+          "seed": 8,
+          "missing": false,
+          "baselineBExclusiveCount": 4,
+          "treatmentBExclusiveCount": 2,
+          "baselineAExclusiveCount": 5,
+          "treatmentAExclusiveCount": 6,
+          "baselineRelevantCount": 9,
+          "treatmentRelevantCount": 8
+        },
+        {
+          "seed": 9,
+          "missing": false,
+          "baselineBExclusiveCount": 3,
+          "treatmentBExclusiveCount": 2,
+          "baselineAExclusiveCount": 5,
+          "treatmentAExclusiveCount": 6,
+          "baselineRelevantCount": 8,
+          "treatmentRelevantCount": 8
+        }
+      ]
+    },
+    {
+      "compositeId": "science-space+finnish-sports",
+      "members": [
+        "science-space",
+        "finnish-sports"
+      ],
+      "bIndex": 1,
+      "bPersonaId": "finnish-sports",
+      "aPersonaId": "science-space",
+      "met": true,
+      "reason": null,
+      "baselineBExclusiveShare": 0.37,
+      "treatmentBExclusiveShare": 0.19,
+      "baselineAExclusiveShare": 0.51,
+      "treatmentAExclusiveShare": 0.69,
+      "baselinePrecisionAt10": 0.88,
+      "treatmentPrecisionAt10": 0.88,
+      "seeds": [
+        {
+          "seed": 0,
+          "missing": false,
+          "baselineBExclusiveCount": 7,
+          "treatmentBExclusiveCount": 4,
+          "baselineAExclusiveCount": 2,
+          "treatmentAExclusiveCount": 5,
+          "baselineRelevantCount": 9,
+          "treatmentRelevantCount": 9
+        },
+        {
+          "seed": 1,
+          "missing": false,
+          "baselineBExclusiveCount": 4,
+          "treatmentBExclusiveCount": 0,
+          "baselineAExclusiveCount": 6,
+          "treatmentAExclusiveCount": 10,
+          "baselineRelevantCount": 10,
+          "treatmentRelevantCount": 10
+        },
+        {
+          "seed": 2,
+          "missing": false,
+          "baselineBExclusiveCount": 4,
+          "treatmentBExclusiveCount": 3,
+          "baselineAExclusiveCount": 3,
+          "treatmentAExclusiveCount": 5,
+          "baselineRelevantCount": 7,
+          "treatmentRelevantCount": 8
+        },
+        {
+          "seed": 3,
+          "missing": false,
+          "baselineBExclusiveCount": 2,
+          "treatmentBExclusiveCount": 1,
+          "baselineAExclusiveCount": 8,
+          "treatmentAExclusiveCount": 9,
+          "baselineRelevantCount": 10,
+          "treatmentRelevantCount": 10
+        },
+        {
+          "seed": 4,
+          "missing": false,
+          "baselineBExclusiveCount": 2,
+          "treatmentBExclusiveCount": 0,
+          "baselineAExclusiveCount": 8,
+          "treatmentAExclusiveCount": 10,
+          "baselineRelevantCount": 10,
+          "treatmentRelevantCount": 10
+        },
+        {
+          "seed": 5,
+          "missing": false,
+          "baselineBExclusiveCount": 1,
+          "treatmentBExclusiveCount": 0,
+          "baselineAExclusiveCount": 8,
+          "treatmentAExclusiveCount": 9,
+          "baselineRelevantCount": 9,
+          "treatmentRelevantCount": 9
+        },
+        {
+          "seed": 6,
+          "missing": false,
+          "baselineBExclusiveCount": 4,
+          "treatmentBExclusiveCount": 3,
+          "baselineAExclusiveCount": 3,
+          "treatmentAExclusiveCount": 4,
+          "baselineRelevantCount": 7,
+          "treatmentRelevantCount": 7
+        },
+        {
+          "seed": 7,
+          "missing": false,
+          "baselineBExclusiveCount": 3,
+          "treatmentBExclusiveCount": 1,
+          "baselineAExclusiveCount": 6,
+          "treatmentAExclusiveCount": 8,
+          "baselineRelevantCount": 9,
+          "treatmentRelevantCount": 9
+        },
+        {
+          "seed": 8,
+          "missing": false,
+          "baselineBExclusiveCount": 5,
+          "treatmentBExclusiveCount": 4,
+          "baselineAExclusiveCount": 4,
+          "treatmentAExclusiveCount": 4,
+          "baselineRelevantCount": 9,
+          "treatmentRelevantCount": 8
+        },
+        {
+          "seed": 9,
+          "missing": false,
+          "baselineBExclusiveCount": 5,
+          "treatmentBExclusiveCount": 3,
+          "baselineAExclusiveCount": 3,
+          "treatmentAExclusiveCount": 5,
+          "baselineRelevantCount": 8,
+          "treatmentRelevantCount": 8
+        }
+      ]
+    }
+  ],
+  "lessMetCount": 12,
+  "lessTargetMet": true
+}

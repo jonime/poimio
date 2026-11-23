@@ -1,0 +1,26 @@
+[
+  {
+    "personaId": "ai-software",
+    "label": "AI and software",
+    "description_fi": "Tekoäly, ohjelmistokehitys, ohjelmointityökalut ja teknologia-ala.",
+    "description_en": "Artificial intelligence, software engineering, programming tools, and the technology industry."
+  },
+  {
+    "personaId": "cars-engineering",
+    "label": "Cars and machines",
+    "description_fi": "Autot, ajoneuvotekniikka, konetekniikka ja koneiden toiminta.",
+    "description_en": "Cars, vehicle technology, mechanical engineering, and how machines work."
+  },
+  {
+    "personaId": "science-space",
+    "label": "Science and space",
+    "description_fi": "Tiede, tähtitiede, avaruustutkimus ja merkittävät tieteelliset löydöt.",
+    "description_en": "Science, astronomy, space exploration, and major scientific discoveries."
+  },
+  {
+    "personaId": "finnish-sports",
+    "label": "Finnish sports",
+    "description_fi": "Suomalainen urheilu, mukaan lukien suomalaiset joukkueet, urheilijat, kilpailut ja urheilun kehitys Suomessa.",
+    "description_en": "Finnish sports, including Finnish teams, athletes, competitions, and sports developments in Finland."
+  }
+]

@@ -170,7 +170,7 @@ Specs are written just in time: the next spec is drafted when the current one re
 | [018](specs/018-bound-embedding-inputs.md)          | Bound embedding inputs                                                                          | 3    | Done                             |
 | [019](specs/019-bound-ingestion-work.md)            | Bound ingestion and embedding work                                                              | 3    | Done                             |
 | [020](specs/020-ranking-tuning.md)                  | Ranking tuning on validation with multi-interest personas; choose the production interest model | 3–6  | Done                             |
-| [021](specs/021-natural-language-tuning.md)         | Natural-language feed tuning with per-user LLM limits                                           | 5–6  | Approved                         |
+| [021](specs/021-natural-language-tuning.md)         | Natural-language feed tuning with per-user LLM limits                                           | 5–6  | Done                             |
 
 **Planned, not yet drafted** (in order; see the cut order in §9)
 
@@ -258,10 +258,10 @@ The minimum acceptable result is: ingestion, personal feed with feedback, the re
 
 None of these block spec 001; each is decided in the spec that first needs it.
 
-| Decision                                                                                  | Decided in                                                                                                                                 |
-| ----------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------ |
-| LLM models (price, Finnish quality)                                                       | Decided: `gpt-6-luna` for descriptions (spec 005); local Qwen 3.8 27B via MTPLX for evaluation labels, `gpt-6-luna` as fallback (spec 006) |
-| Parameter values (click weight, $\lambda$, recency decay, slot mix)                       | Defaults in spec 003; tuned and frozen through evaluation in week 6                                                                        |
-| How long older but relevant items stay in the feed (possibly longer for videos than news) | Spec 003 (recency defaults)                                                                                                                |
-| More YouTube channels or Finnish technology media in the active set                       | After about a week of ingestion data shows volume per topic                                                                                |
-| Per-user LLM limits (e.g. interest summaries per day, discovery runs per week)            | Spec 021 (first LLM-triggering user action)                                                                                                |
+| Decision                                                                                  | Decided in                                                                                                                                                                                     |
+| ----------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| LLM models (price, Finnish quality)                                                       | Decided: `gpt-6-luna` for descriptions (spec 005); local Qwen 3.8 27B via MTPLX for evaluation labels, `gpt-6-luna` as fallback (spec 006)                                                     |
+| Parameter values (click weight, $\lambda$, recency decay, slot mix)                       | Defaults in spec 003; tuned and frozen through evaluation in week 6                                                                                                                            |
+| How long older but relevant items stay in the feed (possibly longer for videos than news) | Spec 003 (recency defaults)                                                                                                                                                                    |
+| More YouTube channels or Finnish technology media in the active set                       | After about a week of ingestion data shows volume per topic                                                                                                                                    |
+| Per-user LLM limits (e.g. interest summaries per day, discovery runs per week)            | Decided for preferences: 10 requests per user per rolling 24 hours, counted before the call; a failed call still counts (spec 021). Other LLM-triggering actions remain open until their spec. |

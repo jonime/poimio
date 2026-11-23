@@ -61,6 +61,7 @@ try {
       "lib/db.integration.test.ts",
       "lib/rls.integration.test.ts",
       "lib/feedback.integration.test.ts",
+      "lib/preferences.integration.test.ts",
       "lib/feed.integration.test.ts",
       "lib/guest-feed.integration.test.ts",
       "lib/thumbnails/backfill.integration.test.ts",

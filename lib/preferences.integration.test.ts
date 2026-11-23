@@ -17,6 +17,32 @@ const options = {
 };
 const zeroVector = `[${Array.from({ length: 512 }, () => 0).join(",")}]`;
 
+const preferenceSchemaColumns = [
+  "preferences_rls",
+  "usage_rls",
+  "preference_policies",
+  "usage_policies",
+  "preference_user_default",
+  "usage_user_default",
+  "preference_select",
+  "preference_insert_denied",
+  "preference_delete",
+  "direction_update",
+  "label_update_denied",
+  "anon_preference_denied",
+  "usage_select",
+  "usage_kind_insert",
+  "usage_user_insert_denied",
+  "usage_created_insert_denied",
+  "usage_update_denied",
+  "usage_delete_denied",
+  "anon_usage_denied",
+  "authenticated_reserve",
+  "anon_reserve_denied",
+  "reserve_is_invoker",
+  "reserve_is_volatile",
+] as const;
+
 function parseSupabaseQueryResult(output: string): { rows: unknown[] } {
   let searchFrom = 0;
   const observedObjectKeys: string[] = [];
@@ -56,14 +82,36 @@ function parseSupabaseQueryResult(output: string): { rows: unknown[] } {
     const candidate = output.slice(start, end + 1);
     searchFrom = end + 1;
     try {
-      const parsed = JSON.parse(candidate) as { rows?: unknown[] };
-      observedObjectKeys.push(Object.keys(parsed).sort().join(","));
-      if (Array.isArray(parsed.rows)) return { rows: parsed.rows };
+      const parsed: unknown = JSON.parse(candidate);
+      if (typeof parsed !== "object" || parsed === null) continue;
+      if ("rows" in parsed && Array.isArray(parsed.rows)) return { rows: parsed.rows };
+      const keys = Object.keys(parsed);
+      observedObjectKeys.push(keys.sort().join(","));
+      if (preferenceSchemaColumns.every((column) => column in parsed)) {
+        return { rows: [parsed] };
+      }
     } catch {
       // Keep scanning; CLI status JSON can precede the query result.
     }
   }
 }
+
+describe("parseSupabaseQueryResult", () => {
+  it("finds wrapped query rows after other JSON output", () => {
+    expect(
+      parseSupabaseQueryResult(
+        'Connecting to local database...\n{"boundary":"id"}\n{"rows":[{"preferences_rls":true}]}\n{"other":true}',
+      ),
+    ).toEqual({ rows: [{ preferences_rls: true }] });
+  });
+
+  it("accepts a direct schema row from the CLI", () => {
+    const row = Object.fromEntries(preferenceSchemaColumns.map((column) => [column, true]));
+    expect(parseSupabaseQueryResult(`Connecting...\n${JSON.stringify([row])}`)).toEqual({
+      rows: [row],
+    });
+  });
+});
 
 function preferenceRow(userId: string, label: string, direction: "more" | "less" = "more") {
   return {

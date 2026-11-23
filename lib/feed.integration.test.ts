@@ -36,6 +36,7 @@ interface FeedRow {
   reason: string;
   because_item_id: string | null;
   because_title: string | null;
+  because_preference_id: string | null;
 }
 
 interface LanguageMeanRow {
@@ -58,6 +59,24 @@ function addVectors(left: number[], right: number[]): number[] {
 
 function pgVector(vector: number[]): string {
   return `[${vector.join(",")}]`;
+}
+
+function dot(left: number[], right: number[]): number {
+  return left.reduce(
+    (sum, value, index) => sum + value * requireDefined(right[index], `vector component ${index}`),
+    0,
+  );
+}
+
+function vectorNorm(vector: number[]): number {
+  return Math.sqrt(dot(vector, vector));
+}
+
+function cosine(left: number[], right: number[]): number {
+  const leftNorm = vectorNorm(left);
+  const rightNorm = vectorNorm(right);
+  if (leftNorm === 0 || rightNorm === 0) return 0;
+  return dot(left, right) / (leftNorm * rightNorm);
 }
 
 const itemDefinitions: ItemDefinition[] = [
@@ -289,6 +308,8 @@ describe.skipIf(!enabled || anonKey == null || serviceKey == null)(
         p_params?: Record<string, unknown>;
         p_seed?: number;
         p_limit?: number;
+        p_more_preference_ids?: string[];
+        p_less_preference_ids?: string[];
       } = {},
     ) {
       const { service } = clients();
@@ -301,6 +322,8 @@ describe.skipIf(!enabled || anonKey == null || serviceKey == null)(
         p_params: parameters.p_params ?? {},
         p_seed: parameters.p_seed ?? 0,
         p_limit: parameters.p_limit ?? 100,
+        p_more_preference_ids: parameters.p_more_preference_ids,
+        p_less_preference_ids: parameters.p_less_preference_ids,
       });
       if (error) throw new Error(`Ranking items failed: ${error.message}`);
       return (data ?? []) as {
@@ -308,7 +331,39 @@ describe.skipIf(!enabled || anonKey == null || serviceKey == null)(
         score: number | null;
         because_item_id: string | null;
         exploration: boolean;
+        because_preference_id: string | null;
       }[];
+    }
+
+    async function insertPreference(input: {
+      userId: string;
+      label: string;
+      direction: "more" | "less";
+      fi: number[];
+      en: number[];
+      model?: string;
+      id?: string;
+    }) {
+      const { service } = clients();
+      const inserted = await service
+        .from("feed_preferences")
+        .insert({
+          id: input.id,
+          user_id: input.userId,
+          label: input.label,
+          direction: input.direction,
+          description_fi: "Yksi lause suomeksi.",
+          description_en: "One sentence in English.",
+          embedding_fi: pgVector(input.fi),
+          embedding_en: pgVector(input.en),
+          embedding_model: input.model ?? activeModel,
+        })
+        .select("id")
+        .single();
+      if (inserted.error || !inserted.data) {
+        throw new Error(`Creating preference failed: ${inserted.error?.message ?? "row missing"}`);
+      }
+      return inserted.data.id as string;
     }
 
     const rankingFixtureKeys = itemDefinitions
@@ -463,6 +518,13 @@ describe.skipIf(!enabled || anonKey == null || serviceKey == null)(
           .in("user_id", [userAId, userBId])
           .in("item_id", [...itemIds.values()]);
         if (error) throw new Error(`Clearing test feedback failed: ${error.message}`);
+        const { error: preferenceError } = await service
+          .from("feed_preferences")
+          .delete()
+          .in("user_id", [userAId, userBId]);
+        if (preferenceError) {
+          throw new Error(`Clearing test preferences failed: ${preferenceError.message}`);
+        }
       }
     });
 
@@ -1086,6 +1148,7 @@ describe.skipIf(!enabled || anonKey == null || serviceKey == null)(
           score: expect.any(Number),
           because_item_id: args.p_liked_ids[0],
           exploration: false,
+          because_preference_id: null,
         },
       ]);
     });
@@ -1211,6 +1274,374 @@ describe.skipIf(!enabled || anonKey == null || serviceKey == null)(
       const feed = await getFeed(userAClient);
       expect(feed.some((row) => row.id === unresolved?.id)).toBe(false);
       expect(feed.every((row) => row.reason === "recent")).toBe(true);
+    });
+
+    it("personalizes from a more preference and penalizes a less preference", async () => {
+      if (!userAId) throw new Error("Fixture user is missing.");
+      const moreId = await insertPreference({
+        userId: userAId,
+        label: "Axis zero",
+        direction: "more",
+        fi: axisVector(0),
+        en: addVectors(meanVectors.en, axisVector(30)),
+      });
+      const personalized = await rankItems(["candidate-close", "candidate-neutral"], [], [], {
+        p_as_of: publishedAt,
+        p_method: "nearest_liked",
+        p_params: { recency_weight: 0, exploration: true },
+        p_more_preference_ids: [moreId],
+      });
+      expect(personalized.map((row) => row.item_id)).toEqual([
+        itemIds.get("candidate-close"),
+        itemIds.get("candidate-neutral"),
+      ]);
+      expect(personalized[0]?.score).toBeCloseTo(1, 6);
+      expect(personalized[0]?.because_item_id).toBeNull();
+      expect(personalized[0]?.because_preference_id).toBe(moreId);
+      expect(personalized.every((row) => row.exploration === false)).toBe(true);
+
+      const lessId = await insertPreference({
+        userId: userAId,
+        label: "Axis zero less",
+        direction: "less",
+        fi: axisVector(0),
+        en: addVectors(meanVectors.en, axisVector(31)),
+      });
+      const penalized = await rankItems(
+        ["candidate-close", "candidate-unrelated"],
+        ["candidate-neutral"],
+        [],
+        {
+          p_as_of: publishedAt,
+          p_method: "nearest_liked",
+          p_params: { recency_weight: 0, lambda: 0.5 },
+          p_less_preference_ids: [lessId],
+        },
+      );
+      expect(penalized.map((row) => row.item_id)).toEqual([
+        itemIds.get("candidate-unrelated"),
+        itemIds.get("candidate-close"),
+      ]);
+      expect(penalized[1]?.score).toBeLessThan(penalized[0]?.score ?? 0);
+    });
+
+    it("centers each preference description in its own language", async () => {
+      const { service } = clients();
+      if (!userAId) throw new Error("Fixture user is missing.");
+      const { data: candidate, error } = await service
+        .from("content_items")
+        .insert({
+          source_id: sourceIds[0],
+          type: "article",
+          url: `https://feed-integration.example/${suffix}/preference-centering`,
+          title: "Preference centering fixture",
+          summary: "Ranking integration description",
+          summary_origin: "feed",
+          enrichment_status: "completed",
+          language: "fi",
+          published_at: publishedAt,
+          embedding: pgVector(axisVector(4)),
+          embedding_model: activeModel,
+        })
+        .select("id")
+        .single();
+      if (error || !candidate)
+        throw new Error(`Creating centering fixture failed: ${error?.message}`);
+
+      const preferenceId = await insertPreference({
+        userId: userAId,
+        label: "English axis",
+        direction: "more",
+        fi: axisVector(30),
+        en: axisVector(4),
+      });
+      const { data, error: rankError } = await service.rpc("rank_items", {
+        p_candidate_ids: [candidate.id],
+        p_liked_ids: [],
+        p_disliked_ids: [],
+        p_as_of: publishedAt,
+        p_method: "nearest_liked",
+        p_params: { recency_weight: 0, centered: true },
+        p_more_preference_ids: [preferenceId],
+      });
+      expect(rankError).toBeNull();
+      expect(data?.[0]?.score).toBeCloseTo(0, 6);
+      expect(data?.[0]?.score).not.toBeCloseTo(1, 6);
+      expect(data?.[0]?.because_preference_id).toBe(preferenceId);
+    });
+
+    it("counts a preference as one signal in average, blend, and top-m scores", async () => {
+      const { service } = clients();
+      if (!userAId) throw new Error("Fixture user is missing.");
+      const like = axisVector(10);
+      const preferenceFi = addVectors(axisVector(10), axisVector(11));
+      const preferenceEn = addVectors(meanVectors.en, axisVector(12));
+      const candidate = axisVector(10);
+      const inserted = await service
+        .from("content_items")
+        .insert([
+          {
+            source_id: sourceIds[0],
+            type: "article",
+            url: `https://feed-integration.example/${suffix}/preference-like`,
+            title: "Preference score like",
+            summary: "Ranking integration description",
+            summary_origin: "feed",
+            enrichment_status: "completed",
+            language: "fi",
+            published_at: publishedAt,
+            embedding: pgVector(like),
+            embedding_model: activeModel,
+          },
+          {
+            source_id: sourceIds[1],
+            type: "article",
+            url: `https://feed-integration.example/${suffix}/preference-candidate`,
+            title: "Preference score candidate",
+            summary: "Ranking integration description",
+            summary_origin: "feed",
+            enrichment_status: "completed",
+            language: "fi",
+            published_at: publishedAt,
+            embedding: pgVector(candidate),
+            embedding_model: activeModel,
+          },
+        ])
+        .select("id,title");
+      if (inserted.error || !inserted.data) {
+        throw new Error(`Creating score fixtures failed: ${inserted.error?.message}`);
+      }
+      const likeId = inserted.data.find((row) => row.title === "Preference score like")?.id;
+      const candidateId = inserted.data.find(
+        (row) => row.title === "Preference score candidate",
+      )?.id;
+      if (!likeId || !candidateId) throw new Error("Score fixtures were not created.");
+
+      const preferenceId = await insertPreference({
+        userId: userAId,
+        label: "One signal",
+        direction: "more",
+        fi: preferenceFi,
+        en: preferenceEn,
+      });
+      const averageVector = addVectors(
+        axisVector(10, 0.75),
+        addVectors(axisVector(11, 0.25), axisVector(12, 0.25)),
+      );
+      const wrongAverage = addVectors(
+        axisVector(10, 2 / 3),
+        addVectors(axisVector(11, 1 / 3), axisVector(12, 1 / 3)),
+      );
+      const averageSimilarity = cosine(candidate, averageVector);
+      const wrongAverageSimilarity = cosine(candidate, wrongAverage);
+      const preferenceSimilarity = Math.max(
+        cosine(candidate, preferenceFi),
+        cosine(candidate, axisVector(12)),
+      );
+      const nearest = Math.max(cosine(candidate, like), preferenceSimilarity);
+      const oneSignalTopM = (nearest + preferenceSimilarity) / 2;
+      const twoSignalTopM =
+        (nearest + preferenceSimilarity + cosine(candidate, axisVector(12))) / 3;
+      expect(averageSimilarity).not.toBeCloseTo(wrongAverageSimilarity, 3);
+      expect(oneSignalTopM).not.toBeCloseTo(twoSignalTopM, 3);
+
+      const rank = (method: string, params: Record<string, unknown> = {}) =>
+        service.rpc("rank_items", {
+          p_candidate_ids: [candidateId],
+          p_liked_ids: [likeId],
+          p_disliked_ids: [],
+          p_as_of: publishedAt,
+          p_method: method,
+          p_params: { recency_weight: 0, lambda: 0, centered: true, top_m: 3, ...params },
+          p_more_preference_ids: [preferenceId],
+        });
+      const average = await rank("average_vector");
+      const blend = await rank("blend", { blend_alpha: 0.5 });
+      const topM = await rank("top_m_mean");
+      expect(average.error).toBeNull();
+      expect(blend.error).toBeNull();
+      expect(topM.error).toBeNull();
+      expect(average.data?.[0]?.score).toBeCloseTo(averageSimilarity, 6);
+      expect(average.data?.[0]?.score).not.toBeCloseTo(wrongAverageSimilarity, 3);
+      expect(blend.data?.[0]?.score).toBeCloseTo(0.5 * nearest + 0.5 * averageSimilarity, 6);
+      expect(topM.data?.[0]?.score).toBeCloseTo(oneSignalTopM, 6);
+      expect(topM.data?.[0]?.score).not.toBeCloseTo(twoSignalTopM, 3);
+    });
+
+    it("ignores ineligible and duplicate preferences and rejects an ID in both lists", async () => {
+      const { service } = clients();
+      if (!userAId) throw new Error("Fixture user is missing.");
+      const { error: meanError } = await service.from("embedding_language_means").upsert(
+        {
+          embedding_model: otherModel,
+          language: "fi",
+          mean: pgVector(meanVectors.fi),
+          item_count: 50,
+          computed_at: new Date().toISOString(),
+        },
+        { onConflict: "embedding_model,language" },
+      );
+      if (meanError) throw new Error(`Creating other-model mean failed: ${meanError.message}`);
+
+      const wrongModel = await insertPreference({
+        userId: userAId,
+        label: "Wrong model",
+        direction: "more",
+        fi: axisVector(0),
+        en: axisVector(0),
+        model: otherModel,
+      });
+      const missingMean = await insertPreference({
+        userId: userAId,
+        label: "Missing mean",
+        direction: "more",
+        fi: axisVector(0),
+        en: axisVector(0),
+        model: "missing-mean@512",
+      });
+      const cold = await rankItems(["candidate-close", "candidate-neutral"], [], [], {
+        p_as_of: publishedAt,
+        p_more_preference_ids: [wrongModel, missingMean],
+      });
+      const baseline = await rankItems(["candidate-close", "candidate-neutral"], [], [], {
+        p_as_of: publishedAt,
+      });
+      expect(cold.map((row) => row.item_id)).toEqual(baseline.map((row) => row.item_id));
+      expect(cold.every((row) => row.because_preference_id === null)).toBe(true);
+
+      const eligible = await insertPreference({
+        userId: userAId,
+        label: "Eligible",
+        direction: "more",
+        fi: axisVector(0),
+        en: addVectors(meanVectors.en, axisVector(30)),
+      });
+      const once = await rankItems(["candidate-close"], [], [], {
+        p_as_of: publishedAt,
+        p_params: { recency_weight: 0 },
+        p_more_preference_ids: [eligible],
+      });
+      const twice = await rankItems(["candidate-close"], [], [], {
+        p_as_of: publishedAt,
+        p_params: { recency_weight: 0 },
+        p_more_preference_ids: [eligible, eligible],
+      });
+      expect(twice).toEqual(once);
+
+      const { error } = await service.rpc("rank_items", {
+        p_candidate_ids: [itemIds.get("candidate-close")],
+        p_liked_ids: [],
+        p_disliked_ids: [],
+        p_as_of: publishedAt,
+        p_more_preference_ids: [eligible],
+        p_less_preference_ids: [eligible],
+      });
+      expect(error).not.toBeNull();
+    });
+
+    it("explains a tied positive signal with the like and ignores preferences in baselines", async () => {
+      if (!userAId) throw new Error("Fixture user is missing.");
+      const preferenceId = await insertPreference({
+        userId: userAId,
+        label: "Tied",
+        direction: "more",
+        fi: axisVector(0),
+        en: addVectors(meanVectors.en, axisVector(30)),
+        id: "00000000-0000-0000-0000-000000000001",
+      });
+      const tied = await rankItems(["candidate-close"], ["liked-fi"], [], {
+        p_as_of: publishedAt,
+        p_params: { recency_weight: 0 },
+        p_more_preference_ids: [preferenceId],
+      });
+      expect(preferenceId < requireDefined(itemIds.get("liked-fi"), "like fixture")).toBe(true);
+      expect(tied[0]?.because_item_id).toBe(itemIds.get("liked-fi"));
+      expect(tied[0]?.because_preference_id).toBeNull();
+
+      const candidates = ["candidate-close", "candidate-neutral"];
+      const newest = await rankItems(candidates, [], [], { p_method: "newest_first" });
+      const newestWithPreference = await rankItems(candidates, [], [], {
+        p_method: "newest_first",
+        p_less_preference_ids: [preferenceId],
+      });
+      const random = await rankItems(candidates, [], [], { p_method: "random", p_seed: 7 });
+      const randomWithPreference = await rankItems(candidates, [], [], {
+        p_method: "random",
+        p_seed: 7,
+        p_more_preference_ids: [preferenceId],
+      });
+      expect(newestWithPreference.map((row) => row.item_id)).toEqual(
+        newest.map((row) => row.item_id),
+      );
+      expect(randomWithPreference.map((row) => row.item_id)).toEqual(
+        random.map((row) => row.item_id),
+      );
+      expect(newestWithPreference.every((row) => row.because_preference_id === null)).toBe(true);
+      expect(randomWithPreference.every((row) => row.because_preference_id === null)).toBe(true);
+    });
+
+    it("keeps cold-start round-robin and demotes less matches at the dislike threshold", async () => {
+      if (!userAId) throw new Error("Fixture user is missing.");
+      const lessId = await insertPreference({
+        userId: userAId,
+        label: "Cold less",
+        direction: "less",
+        fi: axisVector(13),
+        en: addVectors(meanVectors.en, axisVector(31)),
+      });
+      const keys = ["rank-cold-1", "rank-cold-2", "rank-cold-3"];
+      const baseline = await rankItems(keys, [], [], { p_as_of: publishedAt, p_method: "blend" });
+      const others = await rankItems(["rank-cold-2", "rank-cold-3"], [], [], {
+        p_as_of: publishedAt,
+        p_method: "blend",
+      });
+      const demoted = await rankItems(keys, [], [], {
+        p_as_of: publishedAt,
+        p_method: "blend",
+        p_less_preference_ids: [lessId],
+      });
+      const matchedId = itemIds.get("rank-cold-1");
+      expect(demoted.at(-1)?.item_id).toBe(matchedId);
+      expect(baseline.findIndex((row) => row.item_id === matchedId)).toBeLessThan(
+        demoted.findIndex((row) => row.item_id === matchedId),
+      );
+      expect(demoted.slice(0, -1).map((row) => row.item_id)).toEqual(
+        others.map((row) => row.item_id),
+      );
+      expect(demoted.every((row) => row.exploration === false)).toBe(true);
+    });
+
+    it("passes only the caller's preferences and returns the preference label", async () => {
+      const { userAClient, userBClient } = clients();
+      if (!userAId || !userBId) throw new Error("Fixture users are missing.");
+      await insertPreference({
+        userId: userAId,
+        label: "A topic",
+        direction: "more",
+        fi: axisVector(2),
+        en: addVectors(meanVectors.en, axisVector(30)),
+      });
+      await insertPreference({
+        userId: userBId,
+        label: "B topic",
+        direction: "more",
+        fi: axisVector(0),
+        en: addVectors(meanVectors.en, axisVector(31)),
+      });
+
+      const feedA = await getFeed(userAClient);
+      const feedB = await getFeed(userBClient);
+      const closeA = feedA.find((row) => row.id === itemIds.get("candidate-close"));
+      const closeB = feedB.find((row) => row.id === itemIds.get("candidate-close"));
+      assert(closeA, "User A feed must include the close candidate");
+      assert(closeB, "User B feed must include the close candidate");
+      expect(closeA.reason).toBe("preference");
+      expect(closeA.because_title).toBe("A topic");
+      expect(closeB.reason).toBe("preference");
+      expect(closeB.because_title).toBe("B topic");
+      expect(feedA.every((row) => row.because_title !== "B topic")).toBe(true);
+      expect(feedB.every((row) => row.because_title !== "A topic")).toBe(true);
+      expect(feedA.every((row) => row.reason !== "exploring")).toBe(true);
     });
   },
 );

@@ -69,6 +69,8 @@ $$
 
 Prototype implementation (spec 003): only explicit likes and _Not interested_ feedback are scoring signals. Each set contains at most the 200 most recently updated eligible items of the caller; likes have weight 1 and the dislike penalty is $\lambda = 0.5$. Similarity uses language-centered embeddings of `text-embedding-3-small@512` only. An eligible item has an embedding and a matching `(embedding_model, language)` mean row. Zero-length centered vectors have similarity 0. Newly embedded items use the existing frozen mean immediately; recomputing the means is not required for each ingestion run.
 
+Saved preferences (spec 021) join those same signal sets. A `more` preference is one positive signal and a `less` preference is one negative signal, with the same $\lambda$ and no extra weight. A preference with both language vectors still counts once: its similarity is the better of the two centered vectors. `less` is a soft penalty, not a filter, so a strongly matching item can still appear. Whether a one-sentence description embeds close enough to articles to steer the feed was a hypothesis; check 1 tested that effect ([§2.6](#26-natural-language-preferences)).
+
 Why this approach:
 
 - Handles multiple unrelated interests (an averaged profile of "Linux + astronomy" matches neither well).
@@ -114,7 +116,7 @@ Stage 2 grid (centered; $\alpha \in \{0.5, 0.75\}$, $\lambda \in \{0, 0.25, 0.5,
 
 The winner improves the baseline's objective from 0.7522 to 0.8253 and balanced coverage from 0.625 to 0.650. The tie-break rule kept $\lambda = 0.5$ (the existing penalty) over $\lambda = 0$ and $0.25$, which scored within the 0.01 band. Recency weight 0 won every comparison: any positive $\beta$ lowered the objective, and $\beta = 0.2$ lowered it by about 0.07. The labels do not reward newness within the candidate window. Every raw-vector configuration failed the coverage constraint, even where its objective was higher, so the §1 default (centered) is unchanged.
 
-Limitations: the validation window was used for selection, so these numbers are optimistic and the test window stays untouched until the freeze. Labels are LLM proxies (local Qwen), not real feedback. The 4 single and 6 composite personas share items and labels, so their results are correlated and the 10 seeds are not independent evidence. Differences of about 0.01 in the objective should not be treated as real.
+Limitations: the validation window was used for selection, so these numbers are optimistic. The held-out test-window run is recorded in [§4.5](#45-held-out-test-run). Labels are LLM proxies (local Qwen), not real feedback. The 4 single and 6 composite personas share items and labels, so their results are correlated and the 10 seeds are not independent evidence. Differences of about 0.01 in the objective should not be treated as real.
 
 ### 2.2 Final ranking and exploration
 
@@ -141,7 +143,7 @@ Limitations: the validation window was used for selection, so these numbers are 
 
 ### 2.3 Cold start
 
-With no eligible likes, the prototype round-robins sources, newest first within each source. Candidates with similarity at least $\theta = 0.4$ to any eligible _Not interested_ signal follow all other candidates, with source round-robin within each group. Explanations say "Recent from source". Personalization starts after the first eligible like and explains each result using its closest liked item.
+With no eligible positive signals, the feed round-robins sources, newest first within each source. Candidates with similarity at least $\theta = 0.4$ to any eligible _Not interested_ item or `less` preference follow all other candidates, with source round-robin within each group. Explanations say "Recent from source". Personalization starts after the first eligible like or `more` preference. The closest positive signal is the explanation; a tie prefers a like over a preference. MMR and exploration still require eligible likes, so a preference-only feed has no exploration slots.
 
 ### 2.4 Baselines (evaluation only)
 
@@ -157,10 +159,49 @@ OpenAI API with `gpt-6-luna` (chosen in week 1). The LLM is **not** used to rank
 2. **Evaluation judge:** labels items as relevant/not relevant for simulated personas. The primary labeler is Qwen 3.8 27B, with `gpt-6-luna` as fallback (§4.2). The final snapshot was labeled via OpenRouter with approval after local MTPLX proved too slow.
 3. **Source discovery** (stretch, stage b): finds candidate sites with the built-in web search tool and assesses source quality.
 4. **Description enrichment:** `gpt-6-luna` via the Responses API creates a concise, factual description only when feed and page metadata descriptions are unavailable. The request has no tools or URL access; extracted article text is untrusted content, not instructions. The output must preserve Finnish or English, use only facts in the text, and fit the existing 1,000-character summary limit. Prompt constraints and representative tests live with the enrichment implementation.
+5. **Natural-language feed tuning** (spec 021): one `gpt-6-luna` call turns a request of at most 300 characters into at most five preferences. The instruction is fixed; the user's text is untrusted and is not stored or logged. Each saved preference has a short label, a direction (`more` or `less`), and one positive sentence in Finnish and one in English. Those sentences are embedded once with `text-embedding-3-small` at 512 dimensions. Ranking uses the vectors and does not call the LLM. Each user may make 10 preference requests per rolling 24 hours. The count is reserved before the call, and a failed call still counts. At most 20 active preferences are stored.
 
 Description generation is bounded to 20 API requests per ingestion run, including retries, at most 24,000 extracted characters per item and 200 output tokens per request. At an estimated 6,000 input tokens per request, the full request budget is about $0.014 at the model's current standard rates ($0.10/M input tokens and $0.50/M output tokens); this is an estimate, not a hard dollar cap. A failed item gets at most three attempts total, with retries due after 1 hour and 6 hours; exhausted items require an explicit backfill retry. Readable article text is extracted with the approved `@mozilla/readability` and `jsdom` dependencies. No full page or article text is retained.
 
-Planned AI features (natural-language feed tuning, same-story grouping, and TypeSafe Jev experiments; see [plan.md §3](plan.md#3-ai-in-the-application-summary)) are designed in their own specs and added here when implemented.
+Check 2 (`evaluation/results/preferences-021-check2.json`) ran the 12 committed requests once. The user marked 12 of 12 outputs correct (target 10). Two named subjects were split into two preferences. Empty lists for the ambiguous and off-topic requests were correct. The injection attempt did not change the football preference, and negation stayed in `direction`. Command-like and first-person descriptions were accepted because they still named the subject positively. The prompt was not tuned after the run. The ranking effect is in [§2.6](#26-natural-language-preferences).
+
+Planned AI features that are not implemented yet (same-story grouping and TypeSafe Jev experiments; see [plan.md §3](plan.md#3-ai-in-the-application-summary)) are designed in their own specs and added here when implemented.
+
+### 2.6 Natural-language preferences
+
+A signed-in user can save preferences from a short request. `get_feed` reads that user's rows and passes them by direction. A card whose closest positive signal is a preference says "Matches your preference: _label_" as plain text. Saved preferences apply on the next load or **Refresh feed**.
+
+Check 1 tested the hypothesis that a one-sentence description, embedded in Finnish and English, is similar enough to articles to steer ranking. It did not compare sentences with labels. The run used the production blend ($\alpha = 0.5$, centered, $\lambda = 0.5$, $\beta = 0$, diversity 0, exploration off) on the validation window, seeds 0–9, and the existing labels. Result: `evaluation/results/preferences-021-check1.json`.
+
+`more` alone, against cold start with no signals (target: higher precision@10 for at least 3 of 4):
+
+| Persona              | Cold precision@10 | `more` precision@10 |
+| -------------------- | ----------------: | ------------------: |
+| AI and software      |              0.20 |                0.90 |
+| Cars and engineering |              0.20 |                0.50 |
+| Science and space    |              0.20 |                0.80 |
+| Finnish sports       |              0.00 |                0.60 |
+
+All 4 improved.
+
+`less` is a soft penalty. For each composite and each member (12 ordered cases, $k = 10$), the treatment was the same likes plus a `less` preference for member B. The gated measure was the share of top-10 items relevant to B and not to A (target: lower in at least 10 of 12). A-exclusive share and composite precision were reported, not gated.
+
+| Liked pair                       | `less` for           | B-exclusive share | Precision@10 |
+| -------------------------------- | -------------------- | ----------------: | -----------: |
+| AI and software + Cars           | AI and software      |       0.56 → 0.44 |  0.85 → 0.81 |
+| AI and software + Cars           | Cars and engineering |       0.22 → 0.19 |  0.85 → 0.84 |
+| AI and software + Science        | AI and software      |       0.45 → 0.30 |  0.94 → 0.94 |
+| AI and software + Science        | Science and space    |       0.44 → 0.34 |  0.94 → 0.94 |
+| AI and software + Finnish sports | AI and software      |       0.40 → 0.33 |  0.82 → 0.82 |
+| AI and software + Finnish sports | Finnish sports       |       0.42 → 0.31 |  0.82 → 0.86 |
+| Cars + Science                   | Cars and engineering |       0.22 → 0.13 |  0.79 → 0.76 |
+| Cars + Science                   | Science and space    |       0.47 → 0.30 |  0.79 → 0.73 |
+| Cars + Finnish sports            | Cars and engineering |       0.34 → 0.22 |  0.77 → 0.73 |
+| Cars + Finnish sports            | Finnish sports       |       0.43 → 0.24 |  0.77 → 0.74 |
+| Science + Finnish sports         | Science and space    |       0.51 → 0.23 |  0.88 → 0.82 |
+| Science + Finnish sports         | Finnish sports       |       0.37 → 0.19 |  0.88 → 0.88 |
+
+The B-exclusive share fell in all 12 cases. The A-exclusive share rose in all 12. Composite precision@10 fell in 7, stayed the same in 4, and rose in 1. That is the expected cost of a soft penalty: unwanted items become less common, but some relevant items can move down with them. The held-out ranking table without preferences is in [§4.5](#45-held-out-test-run).
 
 ## 3. Source discovery (stretch goal)
 
@@ -218,6 +259,34 @@ Goal: a rigorous comparison of the recommender against simple baselines. A caref
 - The separate embedding check compares at least 10 manually confirmed Yle Finnish-English event pairs against the 95th percentile of random cross-language pairs, for raw and centered vectors. If fewer than 9 of 10 matched pairs exceed the random threshold for both variants, compare a local multilingual embedding model.
 
 Limitation: this demonstrates adaptation in a controlled setting, not real-world recommendation accuracy.
+
+### 4.5 Held-out test run
+
+The one-time test-window replay ran at commit `c65b6c8` under the spec 006 guard (experiment `5c4b9226cf16d14720a63969c11b696fd32bdefa839d41e141f07e2acd40bb0f`). The production treatment is `blend`, $\alpha = 0.5$, centered, $\lambda = 0.5$, $\beta = 0$, $\mu = 0$, exploration on. Baselines ran with diversity 0 and exploration off. Result: `evaluation/results/test-5c4b9226cf16d14720a63969c11b696fd32bdefa839d41e141f07e2acd40bb0f.json`.
+
+The same treatment on the validation window, with no preferences, is `evaluation/results/parity-021-production.json` (objective 0.8213). The earlier tuning validation, exploration off, was objective 0.8253, coverage 0.650, EN→FI 0.358, FI→EN 0.732 ([§2.1](#21-interest-scoring-nearest-liked-item), [§2.2](#22-final-ranking-and-exploration)).
+
+Test-window headline objective (mean precision@10 over $k \in \{3, 5, 10, 20\}$, equal persona weight):
+
+| Method                               | Objective | Coverage |  EN→FI |  FI→EN |
+| ------------------------------------ | --------: | -------: | -----: | -----: |
+| production (`blend`, exploration on) |    0.8297 |   0.5833 | 0.3810 | 0.6682 |
+| `nearest_liked`                      |    0.7722 |   0.5833 | 0.3493 | 0.6210 |
+| `nearest_liked`, raw                 |    0.7808 |   0.4750 | 0.3675 | 0.6069 |
+| `average_vector`                     |    0.8485 |   0.4375 | 0.3837 | 0.6445 |
+| `newest_first`                       |    0.0400 |   0.0000 | 0.1200 | 0.1600 |
+| `random`                             |    0.2140 |   0.0500 | 0.0870 | 0.2420 |
+
+Headline precision@10 at $k = 10$ for the four single personas, next to the first validation run (`nearest_liked`, $\beta = 0.1$, commit `7c0549f`) and the production-treatment validation baseline:
+
+| Persona              | Validation `nearest_liked` | Validation production | Test production |
+| -------------------- | -------------------------: | --------------------: | --------------: |
+| AI and software      |                       0.93 |                  0.93 |            0.90 |
+| Cars and engineering |                       0.47 |                  0.78 |            0.67 |
+| Science and space    |                       0.87 |                  0.94 |            0.94 |
+| Finnish sports       |                       0.68 |                  0.79 |            0.90 |
+
+The test objective (0.8297) is close to the same-treatment validation objective (0.8213). `average_vector` still scores higher on the objective and lower on coverage. These are held-out estimates against LLM proxy labels, not real-user relevance. Persona results remain correlated.
 
 ## 5. Technology stack
 
@@ -349,7 +418,38 @@ The email allowlist table was removed by a forward migration. `public.is_allowed
 
 ### 6.6 Later tables
 
-Click events, interest summaries, and discovery candidates are defined in their specs.
+Click events, interest summaries, and discovery candidates are defined in their specs. Feed preferences and LLM usage are in §6.7 and §6.8.
+
+### 6.7 `feed_preferences` (per-user)
+
+| Column            | Type                   | Notes                                                   |
+| ----------------- | ---------------------- | ------------------------------------------------------- |
+| `id`              | `uuid` PK              | `gen_random_uuid()`                                     |
+| `user_id`         | `uuid` not null        | Default `auth.uid()`; cascade when the user is deleted  |
+| `label`           | `text` not null        | 1–40 characters after trim                              |
+| `direction`       | `text` not null        | `more` or `less`                                        |
+| `description_fi`  | `text` not null        | 1–200 characters; the Finnish sentence that is embedded |
+| `description_en`  | `text` not null        | 1–200 characters; the English sentence that is embedded |
+| `embedding_fi`    | `vector(512)` not null | Centered at ranking time                                |
+| `embedding_en`    | `vector(512)` not null | Centered at ranking time                                |
+| `embedding_model` | `text` not null        | Active model, `text-embedding-3-small@512`              |
+| `created_at`      | `timestamptz` not null | Default `now()`                                         |
+| `updated_at`      | `timestamptz` not null | Set by a trigger on update                              |
+
+RLS is owner-only `select`, `update`, and `delete`. Authenticated users can update only `direction`. They cannot insert. The server action inserts with the service role after `getClaims()`, and sets `user_id` from those claims. A trigger takes a per-user advisory lock, counts rows, and rejects an insert that would exceed 20; the whole batch rolls back. Two-user tests cover read, update, and delete.
+
+### 6.8 `llm_usage` (per-user)
+
+| Column       | Type                   | Notes                                        |
+| ------------ | ---------------------- | -------------------------------------------- |
+| `id`         | `uuid` PK              | `gen_random_uuid()`                          |
+| `user_id`    | `uuid` not null        | Default `auth.uid()`; cascade on user delete |
+| `kind`       | `text` not null        | Only `preferences`                           |
+| `created_at` | `timestamptz` not null | Default `now()`; the user cannot set it      |
+
+RLS is owner-only `select` and `insert`. There is no update or delete policy. Authenticated users can insert only `kind`; `user_id` and `created_at` come from column defaults. A direct insert uses up the caller's own quota and cannot be backdated or deleted by the user.
+
+`reserve_llm_call(p_kind text)` is volatile, `SECURITY INVOKER`, and has an empty search path. It reads the user from `auth.uid()`, rejects an unknown kind, locks the user for the transaction, and inserts a row only when that user has fewer than 10 `preferences` rows in the last 24 hours. It inserts only `kind`. Execute is granted to `authenticated` and revoked from `PUBLIC` and `anon`. The preference action calls it before any OpenAI request. A failed call still counts.
 
 ## 7. User interaction
 
@@ -382,11 +482,12 @@ Swipe-to-dismiss is a common habit (e.g. in email), so a left swipe meaning "alr
 
 ### 7.3 Ranking updates
 
-The ranking does not reorder while the user is interacting. New feedback takes effect on the next load or when the user presses **Refresh feed**.
+The ranking does not reorder while the user is interacting. New feedback and saved preferences take effect on the next load or when the user presses **Refresh feed**.
 
 ### 7.4 Explanations
 
 - Personalized items: "Similar to _X_, which you liked".
+- Preference matches: "Matches your preference: _label_".
 - Exploration slots: "Exploring: something new".
 - Cold start: "Recent from _source_".
 

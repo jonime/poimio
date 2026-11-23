@@ -40,6 +40,14 @@ describe("feed UI helpers", () => {
         because_title: null,
       }),
     ).toBe("Exploring: something new");
+    expect(
+      explanationForFeedItem({
+        ...item,
+        reason: "preference",
+        because_item_id: null,
+        because_title: "Finnish sports",
+      }),
+    ).toBe("Matches your preference: Finnish sports");
   });
 
   it("allows only absolute HTTP and HTTPS URLs", () => {

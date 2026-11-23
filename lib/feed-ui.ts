@@ -10,7 +10,7 @@ export interface FeedItem {
   published_at: string;
   source_name: string;
   score: number;
-  reason: "similar" | "recent" | "exploring";
+  reason: "similar" | "recent" | "exploring" | "preference";
   because_item_id: string | null;
   because_title: string | null;
 }
@@ -41,6 +41,9 @@ export function safeHttpUrl(value: string | null | undefined): string | null {
 
 export function explanationForFeedItem(item: FeedItem): string {
   if (item.reason === "exploring") return "Exploring: something new";
+  if (item.reason === "preference" && item.because_title) {
+    return `Matches your preference: ${item.because_title}`;
+  }
   if (item.reason === "similar" && item.because_title) {
     return `Similar to ${item.because_title}, which you liked`;
   }

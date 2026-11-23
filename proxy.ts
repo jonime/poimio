@@ -12,6 +12,7 @@ export const sessionRoutes = new Set([
   "/privacy",
   "/auth/callback",
   "/liked",
+  "/preferences",
 ]);
 
 export const otherRoutes = new Set([

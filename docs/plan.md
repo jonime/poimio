@@ -171,12 +171,12 @@ Specs are written just in time: the next spec is drafted when the current one re
 | [019](specs/019-bound-ingestion-work.md)            | Bound ingestion and embedding work                                                              | 3    | Done                             |
 | [020](specs/020-ranking-tuning.md)                  | Ranking tuning on validation with multi-interest personas; choose the production interest model | 3–6  | Done                             |
 | [021](specs/021-natural-language-tuning.md)         | Natural-language feed tuning with per-user LLM limits                                           | 5–6  | Done                             |
+| [022](specs/022-hide-source.md)                     | Hide a source (negative-feedback reasons: "not this source")                                    | 6    | Draft                            |
 
 **Planned, not yet drafted** (in order; see the cut order in §9)
 
 | Spec      | Content                                                                                                                                                                                                                           | Week |
 | --------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---- |
-| next free | Negative-feedback reasons ("not this topic" / "not this source")                                                                                                                                                                  | 6    |
 | next free | Same-story grouping with embeddings and Jev                                                                                                                                                                                       | 6    |
 | next free | Optional: LLM interest summary and click tracking                                                                                                                                                                                 | 6    |
 | next free | Source discovery: (a) catalog-based, (b) LLM web search; only after gate 2                                                                                                                                                        | 6–7  |
@@ -220,6 +220,8 @@ Specs are written just in time: the next spec is drafted when the current one re
 - RLS tests pass.
 
 If gate 2 has not passed by the end of week 6, week 7 goes to the final evaluation run, documentation, and fixes only.
+
+**Gate 2 status (24 Nov, week 5): passed.** The core application is deployed at poimio.cc; parameters were frozen and the one-time test-window run completed on 23 Nov (spec 021 task 0, `evaluation/results/test-5c4b9226….json`); RLS integration tests pass in CI. Source discovery may start after spec 022 and same-story grouping, following the cut order below.
 
 **Cut order** if time runs short:
 

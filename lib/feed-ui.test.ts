@@ -16,6 +16,7 @@ const item: FeedItem = {
   language: "en",
   thumbnail_url: null,
   published_at: "2026-10-29T11:00:00.000Z",
+  source_id: "source-a",
   source_name: "Example News",
   score: 0.9,
   reason: "similar",

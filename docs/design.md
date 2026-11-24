@@ -122,6 +122,7 @@ Limitations: the validation window was used for selection, so these numbers are 
 
 - The final score is interest plus $\beta \cdot 0.5^{\text{age}/h}$. The prototype used $\beta = 0.1$; the tuned default is $\beta = 0$ ([§2.1](#21-interest-scoring-nearest-liked-item)), so the age term is a no-op unless a caller passes a weight. The half-life $h$ is 24 hours for articles and 7 days for videos. Candidate windows are 7 days for articles and 30 days for videos; all rated items are excluded.
 - `get_feed` runs as `SECURITY INVOKER`, reads identity from `auth.uid()`, and is executable by authenticated users only. Pages contain 30 items; later pages exclude already shown IDs instead of using offsets. The limit is clamped to 1-100 and exclusions to 1,000 IDs.
+- Before ranking, `get_feed` removes items from the caller's `hidden_sources` set. The filter changes only candidate selection: likes and dislikes from hidden sources still contribute as topic signals, and the remaining candidates fill personalized, cold-start, and exploration slots to the requested limit. Each row returns `source_id` so the client can match sources independently of non-unique source names.
 - These defaults are kept together in the SQL function and were tuned in spec 020. Cards already displayed do not reorder; refreshing reloads the ranking, and subsequent pages use the latest feedback.
 - The spec 007 validation search fixed the spec 020 winner and compared MMR strengths $\mu \in \{0, 0.1, 0.2, 0.3, 0.5\}$:
 
@@ -320,10 +321,10 @@ Implementation notes:
 
 User-facing queries run through supabase-js with the user's session, or a cookie-free anonymous client for the public preview. Row Level Security (RLS) and column privileges are enforced by the database.
 
-| Data     | Examples                                           | Read                                                 | Write                                |
-| -------- | -------------------------------------------------- | ---------------------------------------------------- | ------------------------------------ |
-| Shared   | `sources`, content items, embedding language means | Authenticated users; public metadata exception below | Service role only (ingestion, admin) |
-| Per-user | feedback, interest summaries, discovery candidates | Owner only (`user_id = auth.uid()`)                  | Owner only                           |
+| Data     | Examples                                                     | Read                                                 | Write                                |
+| -------- | ------------------------------------------------------------ | ---------------------------------------------------- | ------------------------------------ |
+| Shared   | `sources`, content items, embedding language means           | Authenticated users; public metadata exception below | Service role only (ingestion, admin) |
+| Per-user | feedback, feed preferences, hidden sources, usage, discovery | Owner only (`user_id = auth.uid()`)                  | Owner only where applicable          |
 
 Rules:
 
@@ -332,6 +333,7 @@ Rules:
 - Any verified Google user can use the app; no invitation or email provisioning is required.
 - App pages verify identity with `getClaims()`; RLS and database functions remain the authorization boundary. Google OAuth must be published to Production for sign-in beyond Google's configured test users.
 - Feed and scoring functions read the user from `auth.uid()` internally and never accept a `user_id` parameter; they run as `SECURITY INVOKER`.
+- `hidden_sources` and `hide_source_of_item` are owner-scoped per-user surfaces. Anonymous clients have no table or function access, and hiding an item never writes feedback for it.
 - Views are created with `security_invoker = true`.
 - The service-role key is used only in GitHub Actions secrets and server-only environment variables, never in `NEXT_PUBLIC_` variables.
 - Description enrichment fetches only an ingested item's canonical `http` or `https` URL. It rejects loopback, private, link-local, reserved, and mixed DNS answers; pins each validated public answer to its connection; and validates every redirect target before connecting, preserving the hostname for Host and TLS verification. It forwards no credentials or feed validators, accepts only HTML, caps each request at 8 seconds and 1 MB with at most 3 redirects and 3 concurrent fetches, executes no JavaScript, and never stores or logs fetched page/article text.
@@ -451,23 +453,36 @@ RLS is owner-only `select` and `insert`. There is no update or delete policy. Au
 
 `reserve_llm_call(p_kind text)` is volatile, `SECURITY INVOKER`, and has an empty search path. It reads the user from `auth.uid()`, rejects an unknown kind, locks the user for the transaction, and inserts a row only when that user has fewer than 10 `preferences` rows in the last 24 hours. It inserts only `kind`. Execute is granted to `authenticated` and revoked from `PUBLIC` and `anon`. The preference action calls it before any OpenAI request. A failed call still counts.
 
+### 6.9 `hidden_sources` (per-user)
+
+| Column       | Type                     | Notes                                           |
+| ------------ | ------------------------ | ----------------------------------------------- |
+| `user_id`    | `uuid` FK → `auth.users` | Part of PK; defaults to `auth.uid()`; cascades  |
+| `source_id`  | `uuid` FK → `sources`    | Part of PK; cascades when the source is deleted |
+| `created_at` | `timestamptz` not null   | Default `now()`                                 |
+
+RLS is owner-only `select`, `insert`, and `delete`; there is no update policy. Anonymous users have no access. `hide_source_of_item(p_item_id uuid)` is `SECURITY INVOKER` with an empty search path and reads the caller from `auth.uid()`. It accepts any readable item, inserts the source idempotently, and returns the source ID and name for UI feedback. Showing a source again is a direct owner-only delete.
+
 ## 7. User interaction
 
 The feed is a single column of compact cards, responsive for phone and desktop. Each card shows title, source, time, thumbnail (if any), and a one-line explanation.
 
 ### 7.1 Actions
 
-| Action           | Button     | Touch gesture | Signal   | Effect in the feed                                                      |
-| ---------------- | ---------- | ------------- | -------- | ----------------------------------------------------------------------- |
-| _Like_           | 👍         | Swipe right   | Positive | Card stays, marked as liked                                             |
-| _Not interested_ | 👎         | Swipe left    | Negative | Card collapses immediately                                              |
-| _Seen_           | ✓ ("Seen") | —             | Neutral  | Card collapses immediately; for items already read or watched elsewhere |
+| Action           | Control   | Touch gesture | Meaning           | Effect in the feed                                                           |
+| ---------------- | --------- | ------------- | ----------------- | ---------------------------------------------------------------------------- |
+| _Like_           | Button    | Swipe right   | Positive topic    | Card stays, marked as liked                                                  |
+| _Not interested_ | Button    | Swipe left    | Negative topic    | Card collapses immediately; similar content ranks lower                      |
+| _Seen_           | Button    | —             | Neutral item      | Card collapses immediately; for items already read or watched elsewhere      |
+| **Hide source**  | Card menu | —             | Source visibility | Every loaded card from that source is masked; future candidates are filtered |
 
-- Pressing the active button again undoes the action; choosing another action replaces it.
-- Every action that hides a card shows a short **Undo** toast.
+- Pressing an active Like, Not interested, or Seen button again undoes the action; choosing another action replaces it.
+- Every action that hides content shows a short **Undo** toast. Hiding a source records no item feedback, so Undo restores visibility rather than changing a rating.
 - Buttons are always available on every device; gestures are a touch shortcut, not the only way (accessibility).
-- Rated items (any action) do not return in the feed. A _Liked_ page lists liked items.
-- _Seen_ is a button only, so that swipe-left keeps a single meaning.
+- Rated items (any feedback action) do not return in the feed. A hidden source's existing likes and dislikes remain valid topic signals.
+- _Seen_ is a button only, so swipe-left keeps its existing _Not interested_ meaning. **Hide source** is separate and available from the card's accessible action menu.
+- Hidden cards stay mounted in their original positions, preserve feedback state, and still count as loaded for pagination exclusions. Late-arriving pages use the same source-ID mask. The list does not re-fetch or re-rank after hiding or Undo; the next feed load applies the persistent database filter.
+- Hidden sources can be shown again on the preferences page. The source name, hidden date, and per-row **Show again** action are listed there.
 
 The Liked page searches the titles, full summaries, and source names of items already loaded by the page. It trims the query and matches it as a case-insensitive substring in any one field, preserving accents, punctuation, and newest-liked-first order. The result count is relative to the loaded list, which can be smaller than the user's full liked history. The query stays active when the mounted list refreshes after Unlike and starts empty on a new mount.
 
@@ -493,7 +508,7 @@ The ranking does not reorder while the user is interacting. New feedback and sav
 
 ### 7.5 Not included
 
-Reasons for dislikes ("not this topic" / "not this source"), hiding a whole source, and impression tracking are possible later additions.
+Impression tracking and weak implicit skip signals remain possible later additions. Hiding a source is already implemented as a separate source-visibility action, not as a negative-feedback reason.
 
 **Implicit skip signals** (scrolling quickly past an item as a weak negative) are deliberately left out:
 

@@ -5,6 +5,7 @@ import { Alert, AlertTitle } from "@/components/ui/alert";
 import { Skeleton } from "@/components/ui/skeleton";
 import { PREFERENCE_DAILY_LIMIT } from "@/lib/preference-tuning";
 import { createClient } from "@/lib/supabase/server";
+import { type HiddenSourceListItem, HiddenSources } from "./hidden-sources";
 import { type PreferenceListItem, PreferencesForm } from "./preferences-form";
 
 export const instant = true;
@@ -13,6 +14,12 @@ interface PreferenceRow {
   id: string;
   label: string;
   direction: string;
+}
+
+interface HiddenSourceRow {
+  source_id: string;
+  created_at: string;
+  sources: { name: string } | { name: string }[] | null;
 }
 
 export default function PreferencesPage() {
@@ -44,7 +51,7 @@ async function PreferencesContent() {
   if (claimsError || !claimsData?.claims?.sub) redirect("/login");
 
   const since = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
-  const [preferencesResult, usageResult] = await Promise.all([
+  const [preferencesResult, usageResult, hiddenResult] = await Promise.all([
     supabase
       .from("feed_preferences")
       .select("id,label,direction")
@@ -54,6 +61,10 @@ async function PreferencesContent() {
       .select("id", { count: "exact", head: true })
       .eq("kind", "preferences")
       .gte("created_at", since),
+    supabase
+      .from("hidden_sources")
+      .select("source_id,created_at,sources(name)")
+      .order("created_at", { ascending: false }),
   ]);
 
   if (preferencesResult.error) {
@@ -78,6 +89,21 @@ async function PreferencesContent() {
     usageResult.error || usageResult.count === null
       ? null
       : Math.max(0, PREFERENCE_DAILY_LIMIT - usageResult.count);
+  const hiddenItems = ((hiddenResult.data ?? []) as HiddenSourceRow[]).flatMap((row) => {
+    const source = Array.isArray(row.sources) ? row.sources[0] : row.sources;
+    if (!source) return [];
+    const item: HiddenSourceListItem = {
+      sourceId: row.source_id,
+      sourceName: source.name,
+      createdAt: row.created_at,
+    };
+    return [item];
+  });
 
-  return <PreferencesForm items={items} remaining={remaining} />;
+  return (
+    <div className="flex flex-col gap-10">
+      <PreferencesForm items={items} remaining={remaining} />
+      <HiddenSources items={hiddenItems} loadFailed={Boolean(hiddenResult.error)} />
+    </div>
+  );
 }

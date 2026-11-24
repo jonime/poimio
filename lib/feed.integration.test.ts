@@ -37,6 +37,7 @@ interface FeedRow {
   because_item_id: string | null;
   because_title: string | null;
   because_preference_id: string | null;
+  source_id: string;
 }
 
 interface LanguageMeanRow {
@@ -525,6 +526,13 @@ describe.skipIf(!enabled || anonKey == null || serviceKey == null)(
         if (preferenceError) {
           throw new Error(`Clearing test preferences failed: ${preferenceError.message}`);
         }
+        const { error: hiddenError } = await service
+          .from("hidden_sources")
+          .delete()
+          .in("user_id", [userAId, userBId]);
+        if (hiddenError) {
+          throw new Error(`Clearing hidden test sources failed: ${hiddenError.message}`);
+        }
       }
     });
 
@@ -553,6 +561,175 @@ describe.skipIf(!enabled || anonKey == null || serviceKey == null)(
         expect(returnedIds.has(requireDefined(itemIds.get(key), `fixture item ${key}`))).toBe(
           false,
         );
+      }
+    });
+
+    it("filters hidden sources in personalized, cold-start, and preference-only feeds", async () => {
+      const { userAClient } = clients();
+      if (!userAId) throw new Error("Fixture user A is missing.");
+      const hiddenSourceId = requireDefined(sourceIds[1], "hidden source fixture");
+
+      const personalizedControl = await getFeed(userAClient);
+      expect(personalizedControl.some((row) => row.source_id === hiddenSourceId)).toBe(true);
+      await setFeedback(userAClient, "liked-fi", "like");
+      const personalized = await getFeed(userAClient);
+      expect(personalized.some((row) => row.source_id === hiddenSourceId)).toBe(true);
+      const hidden = await userAClient.rpc("hide_source_of_item", {
+        p_item_id: itemIds.get("candidate-close"),
+      });
+      expect(hidden.error).toBeNull();
+      const maskedPersonalized = await getFeed(userAClient);
+      expect(maskedPersonalized.some((row) => row.source_id === hiddenSourceId)).toBe(false);
+      expect(maskedPersonalized.some((row) => row.source_id !== hiddenSourceId)).toBe(true);
+
+      await userAClient.from("feedback").delete().eq("user_id", userAId);
+      const coldControl = await getFeed(userAClient);
+      expect(coldControl.some((row) => row.source_id === hiddenSourceId)).toBe(false);
+      const deletedHide = await userAClient
+        .from("hidden_sources")
+        .delete()
+        .eq("user_id", userAId)
+        .eq("source_id", hiddenSourceId);
+      expect(deletedHide.error).toBeNull();
+      expect((await getFeed(userAClient)).some((row) => row.source_id === hiddenSourceId)).toBe(
+        true,
+      );
+      await userAClient.rpc("hide_source_of_item", {
+        p_item_id: itemIds.get("candidate-close"),
+      });
+      await insertPreference({
+        userId: userAId,
+        label: "More matching topics",
+        direction: "more",
+        fi: axisVector(0),
+        en: axisVector(0),
+      });
+      const preferenceOnly = await getFeed(userAClient);
+      expect(preferenceOnly.some((row) => row.source_id === hiddenSourceId)).toBe(false);
+      expect(preferenceOnly.some((row) => row.reason === "preference")).toBe(true);
+
+      const fullPage = await getFeed(userAClient, { p_limit: 30, includeLimitFixtures: true });
+      expect(fullPage).toHaveLength(30);
+      expect(fullPage.every((row) => row.source_id !== hiddenSourceId)).toBe(true);
+    });
+
+    it("falls back to another source for exploration slots", async () => {
+      const { userAClient } = clients();
+      const hiddenSourceId = requireDefined(sourceIds[1], "exploration source fixture");
+      await setFeedback(userAClient, "liked-fi", "like");
+      const control = await getFeed(userAClient);
+      expect(control.some((row) => row.reason === "exploring")).toBe(true);
+
+      const hidden = await userAClient.rpc("hide_source_of_item", {
+        p_item_id: itemIds.get("candidate-close"),
+      });
+      expect(hidden.error).toBeNull();
+      const feed = await getFeed(userAClient);
+      expect(feed.every((row) => row.source_id !== hiddenSourceId)).toBe(true);
+      expect(feed.some((row) => row.reason === "exploring" && row.source_id === sourceIds[2])).toBe(
+        true,
+      );
+    });
+
+    it("filters a source hidden between feed pages", async () => {
+      const { userAClient } = clients();
+      await setFeedback(userAClient, "liked-fi", "like");
+      const firstPage = await getFeed(userAClient, { p_limit: 1 });
+      const nextBeforeHide = await getFeed(userAClient, {
+        p_limit: 20,
+        p_exclude: firstPage.map((row) => row.id),
+      });
+      const target = nextBeforeHide[0];
+      assert(target, "A second-page item must exist before hiding");
+
+      const hidden = await userAClient.rpc("hide_source_of_item", { p_item_id: target.id });
+      expect(hidden.error).toBeNull();
+      const nextAfterHide = await getFeed(userAClient, {
+        p_limit: 20,
+        p_exclude: firstPage.map((row) => row.id),
+      });
+      expect(nextAfterHide.every((row) => row.source_id !== target.source_id)).toBe(true);
+    });
+
+    it("isolates hidden sources by user and restores exact feed results after show again", async () => {
+      const { userAClient, userBClient } = clients();
+      const before = await getFeed(userAClient, { p_limit: 30 });
+      const hidden = await userAClient.rpc("hide_source_of_item", {
+        p_item_id: itemIds.get("candidate-close"),
+      });
+      expect(hidden.error).toBeNull();
+      expect((await getFeed(userAClient)).some((row) => row.source_id === sourceIds[1])).toBe(
+        false,
+      );
+      expect((await getFeed(userBClient)).some((row) => row.source_id === sourceIds[1])).toBe(true);
+
+      const shownAgain = await userAClient
+        .from("hidden_sources")
+        .delete()
+        .eq("source_id", sourceIds[1]);
+      expect(shownAgain.error).toBeNull();
+      const after = await getFeed(userAClient, { p_limit: 30 });
+      expect(after.map(({ score: _score, ...row }) => row)).toEqual(
+        before.map(({ score: _score, ...row }) => row),
+      );
+      for (const [index, row] of after.entries()) {
+        expect(row.score).toBeCloseTo(requireDefined(before[index], "baseline feed row").score, 5);
+      }
+    });
+
+    it("keeps likes and dislikes from a hidden source as ranking signals", async () => {
+      const { userAClient } = clients();
+      await setFeedback(userAClient, "liked-fi", "like");
+      await setFeedback(userAClient, "disliked-fi", "not_interested");
+      const control = await getFeed(userAClient);
+      const controlPositive = control.find((row) => row.id === itemIds.get("candidate-close"));
+      const controlNegative = control.find(
+        (row) => row.id === itemIds.get("candidate-close-dislike"),
+      );
+      assert(controlPositive, "Positive candidate must exist");
+      assert(controlNegative, "Negative candidate must exist");
+
+      const hidden = await userAClient.rpc("hide_source_of_item", {
+        p_item_id: itemIds.get("liked-fi"),
+      });
+      expect(hidden.error).toBeNull();
+      const feed = await getFeed(userAClient);
+      const positive = feed.find((row) => row.id === itemIds.get("candidate-close"));
+      const negative = feed.find((row) => row.id === itemIds.get("candidate-close-dislike"));
+      assert(positive, "Positive candidate must remain eligible");
+      assert(negative, "Negative candidate must remain eligible");
+      expect(positive.score).toBe(controlPositive.score);
+      expect(negative.score).toBe(controlNegative.score);
+      expect(negative.score).toBeLessThan(positive.score);
+    });
+
+    it("returns source IDs even when source names are equal", async () => {
+      const { service, userAClient } = clients();
+      const duplicateName = `Duplicate feed source ${suffix}`;
+      const originalNames = await service
+        .from("sources")
+        .select("id,name")
+        .in("id", [sourceIds[1], sourceIds[2]]);
+      expect(originalNames.error).toBeNull();
+      const renamed = await service
+        .from("sources")
+        .update({ name: duplicateName })
+        .in("id", [sourceIds[1], sourceIds[2]]);
+      expect(renamed.error).toBeNull();
+      try {
+        const feed = await getFeed(userAClient);
+        const duplicateRows = feed.filter(
+          (row) => row.source_id === sourceIds[1] || row.source_id === sourceIds[2],
+        );
+        expect(feed.every((row) => typeof row.source_id === "string")).toBe(true);
+        expect(duplicateRows.every((row) => row.source_name === duplicateName)).toBe(true);
+        expect(new Set(duplicateRows.map((row) => row.source_id))).toEqual(
+          new Set([sourceIds[1], sourceIds[2]]),
+        );
+      } finally {
+        for (const source of originalNames.data ?? []) {
+          await service.from("sources").update({ name: source.name }).eq("id", source.id);
+        }
       }
     });
 

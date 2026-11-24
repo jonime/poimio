@@ -2,10 +2,11 @@ import { renderToReadableStream } from "react-dom/server";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import PreferencesPage from "./page";
 
-const { auth, createClient, from, preferenceOrder, usageGte } = vi.hoisted(() => ({
+const { auth, createClient, from, hiddenOrder, preferenceOrder, usageGte } = vi.hoisted(() => ({
   auth: { getClaims: vi.fn() },
   createClient: vi.fn(),
   from: vi.fn(),
+  hiddenOrder: vi.fn(),
   preferenceOrder: vi.fn(),
   usageGte: vi.fn(),
 }));
@@ -28,10 +29,12 @@ beforeEach(() => {
   auth.getClaims.mockResolvedValue(claims);
   from.mockImplementation((table: string) => {
     if (table === "feed_preferences") return { select: () => ({ order: preferenceOrder }) };
+    if (table === "hidden_sources") return { select: () => ({ order: hiddenOrder }) };
     return { select: () => ({ eq: () => ({ gte: usageGte }) }) };
   });
   preferenceOrder.mockResolvedValue({ data: [], error: null });
   usageGte.mockResolvedValue({ count: 3, error: null });
+  hiddenOrder.mockResolvedValue({ data: [], error: null });
 });
 
 async function html() {
@@ -46,18 +49,32 @@ describe("preferences page", () => {
       data: [{ id: "pref-1", label: "Finnish sports", direction: "less" }],
       error: null,
     });
+    hiddenOrder.mockResolvedValue({
+      data: [
+        {
+          source_id: "source-1",
+          created_at: "2026-11-20T12:00:00Z",
+          sources: { name: "Example source" },
+        },
+      ],
+      error: null,
+    });
 
     const body = await html();
 
     expect(auth.getClaims).toHaveBeenCalledExactlyOnceWith();
     expect(from).toHaveBeenCalledWith("feed_preferences");
     expect(from).toHaveBeenCalledWith("llm_usage");
+    expect(from).toHaveBeenCalledWith("hidden_sources");
     expect(body).toContain("Feed preferences");
     expect(body).toContain("Finnish sports");
     expect(body).toContain("less");
     expect(body).toContain("7 of 10 requests left.");
     expect(body).toContain("Tune feed");
     expect(body).toContain("0 / 300");
+    expect(body).toContain("Hidden sources");
+    expect(body).toContain("Example source");
+    expect(body).toContain("Show again");
   });
 
   it("shows the empty state and the cap message", async () => {

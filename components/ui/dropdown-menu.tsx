@@ -46,6 +46,19 @@ function DropdownMenuGroup({ ...props }: MenuPrimitive.Group.Props) {
   return <MenuPrimitive.Group data-slot="dropdown-menu-group" {...props} />;
 }
 
+function DropdownMenuItem({ className, ...props }: MenuPrimitive.Item.Props) {
+  return (
+    <MenuPrimitive.Item
+      data-slot="dropdown-menu-item"
+      className={cn(
+        "flex cursor-pointer items-center rounded-md px-2 py-1.5 text-sm outline-hidden data-highlighted:bg-accent data-highlighted:text-accent-foreground data-disabled:pointer-events-none data-disabled:opacity-50",
+        className,
+      )}
+      {...props}
+    />
+  );
+}
+
 function DropdownMenuLinkItem({ className, ...props }: MenuPrimitive.LinkItem.Props) {
   return (
     <MenuPrimitive.LinkItem
@@ -63,6 +76,7 @@ export {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuGroup,
+  DropdownMenuItem,
   DropdownMenuLinkItem,
   DropdownMenuTrigger,
 };

@@ -56,7 +56,7 @@ Articles from that blog become candidates for the personalized feed.
 Technical details are in [design.md](design.md).
 
 - **Semantic embeddings** (multilingual, Finnish + English) represent every article and video.
-- **Recommender:** each item is scored by its similarity to the closest item the user liked, minus a penalty for similarity to items marked _Not interested_, combined with recency, diversity, and exploration slots. Every recommendation can be explained. An optional reason on negative feedback (not this topic, not this source, already known) decides whether the topic, the source, or nothing is penalized.
+- **Recommender:** each item is scored by its similarity to the closest item the user liked, minus a penalty for similarity to items marked _Not interested_, combined with recency, diversity, and exploration slots. Every recommendation can be explained. The negative and visibility actions are intentionally separate: _Not interested_ means "not this topic", **Hide source** filters that source, and _Seen_ is neutral.
 - **Natural-language feed tuning:** an LLM turns a request such as "less crypto, more local AI models" into structured, editable preferences once per edit; their embeddings act as extra positive or negative signals in the existing scoring. No LLM call at ranking time.
 - **Same-story grouping:** embeddings find candidate pairs at ingestion; TypeSafe Jev classifies each pair as the same event, a follow-up, or a different story. The feed shows one card per story with links to every source.
 - **LLM tasks:** fill missing item descriptions from extracted article text, readable interest summary, relevance labels for evaluation, and (stretch goal) source discovery with web search. The LLM does not rank items.
@@ -90,7 +90,7 @@ Not included: exploration slots, interest summary, evaluation harness, cross-lin
 ### 4.2 Final application (due 13 Dec)
 
 - Per-user LLM usage limits, added with the first LLM-triggering user action.
-- Exploration slots and diversity re-ranking ([spec 007](specs/007-exploration-diversity.md)); reasons on negative feedback (own spec).
+- Exploration slots and diversity re-ranking ([spec 007](specs/007-exploration-diversity.md)); explicit source hiding ([spec 022](specs/022-hide-source.md)), separate from topic and neutral-item feedback.
 - Natural-language feed tuning and same-story grouping (see cut order in §9).
 - Evaluation harness and results ([design.md §4](design.md#4-evaluation)).
 - Optional (see cut order in §9): LLM interest summary; click tracking as a weak positive signal.
@@ -171,7 +171,7 @@ Specs are written just in time: the next spec is drafted when the current one re
 | [019](specs/019-bound-ingestion-work.md)            | Bound ingestion and embedding work                                                              | 3    | Done                             |
 | [020](specs/020-ranking-tuning.md)                  | Ranking tuning on validation with multi-interest personas; choose the production interest model | 3–6  | Done                             |
 | [021](specs/021-natural-language-tuning.md)         | Natural-language feed tuning with per-user LLM limits                                           | 5–6  | Done                             |
-| [022](specs/022-hide-source.md)                     | Hide a source (negative-feedback reasons: "not this source")                                    | 6    | Draft                            |
+| [022](specs/022-hide-source.md)                     | Hide a source; source visibility is separate from topic dislike and Seen                        | 6    | Done                             |
 
 **Planned, not yet drafted** (in order; see the cut order in §9)
 
@@ -252,7 +252,7 @@ The minimum acceptable result is: ingestion, personal feed with feedback, the re
 - Stack: Next.js on Vercel, Supabase Postgres + pgvector, supabase-js with SQL migrations (no ORM), Supabase Auth. Hourly ingestion runs on Vercel Schedules (spec 016); it ran on GitHub Actions until 7 Nov, and that workflow remains as a manual fallback. GitHub Actions also runs CI.
 - Source discovery is a two-stage stretch goal (catalog-based, then LLM web search), attempted only after gate 2; admin-approved sources join a shared pool.
 - Optional offline experiment: TypeSafe Jev for description quality, compared with rules and an LLM judge (spec 009); called with plain `fetch`, no SDK.
-- Additional AI features chosen for product value and measurability: natural-language feed tuning (LLM) and same-story grouping (embeddings + Jev), both not yet drafted. Negative-feedback reasons get their own spec, separate from exploration and diversity (spec 007). Jev as a relevance judge was dropped: the Qwen label set was already final when it would have been added, and Jev is evaluated in spec 009 instead.
+- Additional AI features chosen for product value and measurability: natural-language feed tuning (LLM) and same-story grouping (embeddings + Jev). Source hiding has a separate spec: _Not interested_ maps to a negative topic signal, **Hide source** maps to source visibility, and _Seen_ maps to no topic signal. Jev as a relevance judge was dropped: the Qwen label set was already final when it would have been added, and Jev is evaluated in spec 009 instead.
 - No spec after spec 020 may require bulk manual labeling. Evaluation reuses the existing label set; manual checks are limited to reviewing a few examples (about 10–20 items).
 - Cut order: web-search discovery, catalog discovery, Jev description experiment, LLM interest summary, click tracking, same-story grouping, natural-language feed tuning.
 

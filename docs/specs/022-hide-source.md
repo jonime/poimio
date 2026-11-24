@@ -1,6 +1,6 @@
 # 022 — Hide a source (negative-feedback reasons)
 
-**Status:** Approved  
+**Status:** Done
 **Milestone:** Final (week 6)  
 **Depends on:** 003 (feed UI and feedback), 021 (preferences page)  
 **Estimate:** 8 h
@@ -92,8 +92,8 @@ Each criterion belongs to one task.
 
 ## Tasks
 
-- [ ] 1. Migration: `hidden_sources`, RLS, `hide_source_of_item`, `get_feed` filter and `source_id` column, two-user and feed tests (criterion 1). About 4 h.
-- [ ] 2. Server actions, menu item wrapper, card menu with visibility mask and undo, Hidden sources section, docs (criterion 2). About 4 h.
+- [x] 1. Migration: `hidden_sources`, RLS, `hide_source_of_item`, `get_feed` filter and `source_id` column, two-user and feed tests (criterion 1). About 4 h.
+- [x] 2. Server actions, menu item wrapper, card menu with visibility mask and undo, Hidden sources section, docs (criterion 2). About 4 h.
 
 ## Decisions
 

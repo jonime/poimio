@@ -173,6 +173,7 @@ Specs are written just in time: the next spec is drafted when the current one re
 | [021](specs/021-natural-language-tuning.md)         | Natural-language feed tuning with per-user LLM limits                                           | 5–6  | Done                             |
 | [022](specs/022-hide-source.md)                     | Hide a source; source visibility is separate from topic dislike and Seen                        | 6    | Done                             |
 | [023](specs/023-description-style.md)               | AI-generated descriptions state the subject directly; blind old-vs-new comparison               | 6    | Done                             |
+| [024](specs/024-sources-page.md)                    | Sources page with on/off switches and one-time AI source descriptions (English)                 | 6    | Draft                            |
 
 **Planned, not yet drafted** (in order; see the cut order in §9)
 

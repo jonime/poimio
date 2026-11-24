@@ -34,6 +34,16 @@ export const descriptionJudgingConfig: JudgingCsvConfig = {
   },
 };
 
+export const descriptionStyleReviewConfig: JudgingCsvConfig = {
+  displayColumns: ["pair_id", "title", "language", "item_url", "description_a", "description_b"],
+  answerColumns: {
+    preference: ["A", "B", "tie"],
+    unsupported: ["A", "B", "both", "neither"],
+    wrong_language: ["A", "B", "both", "neither"],
+    later_sentence_narration: ["A", "B", "both", "neither"],
+  },
+};
+
 export function readConfiguredJudgingCsv(csv: string, config: JudgingCsvConfig) {
   const offset = csv.startsWith("\uFEFF") ? 1 : 0;
   const [header, ...records] = parseCsv(csv.slice(offset));

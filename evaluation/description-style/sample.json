@@ -1,0 +1,144 @@
+{
+  "schemaVersion": 1,
+  "seed": 23024,
+  "snapshotManifestHash": "6a8057e2a2278c945d167a21e3cff344a45bfecc5a5d259cb944ab400bd4b314",
+  "poolCounts": {
+    "overall": 242,
+    "byLanguage": {
+      "fi": 120,
+      "en": 122
+    },
+    "bySource": {
+      "fi": {
+        "df9dbee8-e31a-4bf7-a740-82b4a343c765": 10,
+        "83f240c0-9ed2-44f7-9dc9-a544ffa363a8": 106,
+        "0065c29b-9b21-44e3-8fbe-3ce103b60d09": 4
+      },
+      "en": {
+        "d20a6b47-1f03-4dc9-b256-d190dae759f1": 122
+      }
+    }
+  },
+  "items": [
+    {
+      "itemId": "564b0137-1c31-4562-b9db-94c022d07108",
+      "sourceId": "83f240c0-9ed2-44f7-9dc9-a544ffa363a8",
+      "language": "fi"
+    },
+    {
+      "itemId": "ad8dda01-6f00-4dae-ba99-a07d406ddcc9",
+      "sourceId": "df9dbee8-e31a-4bf7-a740-82b4a343c765",
+      "language": "fi"
+    },
+    {
+      "itemId": "d02238f8-98d1-4e0e-851f-92181d2cab7b",
+      "sourceId": "0065c29b-9b21-44e3-8fbe-3ce103b60d09",
+      "language": "fi"
+    },
+    {
+      "itemId": "615f5819-66ab-4c42-9d63-50b384436c70",
+      "sourceId": "83f240c0-9ed2-44f7-9dc9-a544ffa363a8",
+      "language": "fi"
+    },
+    {
+      "itemId": "bc407f5b-4395-48af-8620-c43cf715e246",
+      "sourceId": "df9dbee8-e31a-4bf7-a740-82b4a343c765",
+      "language": "fi"
+    },
+    {
+      "itemId": "fe76bb6a-337f-40e6-afca-6c3068dd5bce",
+      "sourceId": "0065c29b-9b21-44e3-8fbe-3ce103b60d09",
+      "language": "fi"
+    },
+    {
+      "itemId": "c4b35ed8-586d-40ab-af1a-7f4b5fbec4c7",
+      "sourceId": "83f240c0-9ed2-44f7-9dc9-a544ffa363a8",
+      "language": "fi"
+    },
+    {
+      "itemId": "068fe91b-b5ef-4f7e-8388-956fec90cb11",
+      "sourceId": "df9dbee8-e31a-4bf7-a740-82b4a343c765",
+      "language": "fi"
+    },
+    {
+      "itemId": "052630f8-c914-4e9b-b8ed-0306f0145de8",
+      "sourceId": "0065c29b-9b21-44e3-8fbe-3ce103b60d09",
+      "language": "fi"
+    },
+    {
+      "itemId": "0c1e8443-b784-4378-9276-a8b634307a16",
+      "sourceId": "83f240c0-9ed2-44f7-9dc9-a544ffa363a8",
+      "language": "fi"
+    },
+    {
+      "itemId": "dccf8edd-b7cb-4023-9fde-fa65cc3017ca",
+      "sourceId": "df9dbee8-e31a-4bf7-a740-82b4a343c765",
+      "language": "fi"
+    },
+    {
+      "itemId": "b3b6267e-eea1-4aa5-bb73-7b1bd35580f9",
+      "sourceId": "0065c29b-9b21-44e3-8fbe-3ce103b60d09",
+      "language": "fi"
+    },
+    {
+      "itemId": "f775f2ab-2e03-4d2f-97d7-10716d5bb9b9",
+      "sourceId": "d20a6b47-1f03-4dc9-b256-d190dae759f1",
+      "language": "en"
+    },
+    {
+      "itemId": "a99cadfb-699d-4e78-8478-dec5aac11143",
+      "sourceId": "d20a6b47-1f03-4dc9-b256-d190dae759f1",
+      "language": "en"
+    },
+    {
+      "itemId": "1f78a5f3-5b04-4eca-b53b-a0fb226d45cf",
+      "sourceId": "d20a6b47-1f03-4dc9-b256-d190dae759f1",
+      "language": "en"
+    },
+    {
+      "itemId": "1e2b507e-fe47-4058-8e6c-a4d05b01b871",
+      "sourceId": "d20a6b47-1f03-4dc9-b256-d190dae759f1",
+      "language": "en"
+    },
+    {
+      "itemId": "14a8956f-2dab-49e3-8f62-d576c0355ad7",
+      "sourceId": "d20a6b47-1f03-4dc9-b256-d190dae759f1",
+      "language": "en"
+    },
+    {
+      "itemId": "c151a7a9-41f9-4744-8bcb-a70ee6315705",
+      "sourceId": "d20a6b47-1f03-4dc9-b256-d190dae759f1",
+      "language": "en"
+    },
+    {
+      "itemId": "f40f550d-ef97-48f0-8385-7cec1e4cf031",
+      "sourceId": "d20a6b47-1f03-4dc9-b256-d190dae759f1",
+      "language": "en"
+    },
+    {
+      "itemId": "9392e7fb-fea5-4f29-b788-d0c24b6bf0c9",
+      "sourceId": "d20a6b47-1f03-4dc9-b256-d190dae759f1",
+      "language": "en"
+    },
+    {
+      "itemId": "16077050-e90c-448f-8530-f1d329a6a3c2",
+      "sourceId": "d20a6b47-1f03-4dc9-b256-d190dae759f1",
+      "language": "en"
+    },
+    {
+      "itemId": "2ae08bfd-436c-4ecc-a7e9-1488e9fc568d",
+      "sourceId": "d20a6b47-1f03-4dc9-b256-d190dae759f1",
+      "language": "en"
+    },
+    {
+      "itemId": "55ae5f62-2e7e-4adb-a078-8816e147b4e0",
+      "sourceId": "d20a6b47-1f03-4dc9-b256-d190dae759f1",
+      "language": "en"
+    },
+    {
+      "itemId": "840b9f2c-c9a1-49e7-a672-e7578c35b713",
+      "sourceId": "d20a6b47-1f03-4dc9-b256-d190dae759f1",
+      "language": "en"
+    }
+  ]
+}

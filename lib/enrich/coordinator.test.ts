@@ -2,12 +2,15 @@ import { describe, expect, it, vi } from "vitest";
 import type { EnrichmentDb, EnrichmentItem } from "../db.ts";
 import { requireDefined } from "../required.ts";
 import {
+  buildSummaryRequest,
+  CANDIDATE_SUMMARY_INSTRUCTIONS,
   DESCRIPTION_SUMMARY_MODEL,
   ENRICHMENT_RETRY_DELAYS_MS,
   MAX_ENRICHMENT_ATTEMPTS,
   MAX_SUMMARY_OUTPUT_TOKENS,
   MAX_SUMMARY_REQUESTS_PER_RUN,
   runEnrichment,
+  SUMMARY_INSTRUCTIONS,
   summarizeArticleText,
 } from "./coordinator.ts";
 import type { PageFetchResult } from "./page.ts";
@@ -281,5 +284,35 @@ describe("summarizeArticleText", () => {
     await expect(
       summarizeArticleText(articleText, "test-key", { fetch: mockFetch }),
     ).rejects.toThrow("summary service returned HTTP 500");
+  });
+
+  it("uses the approved candidate as the production instruction", () => {
+    expect(SUMMARY_INSTRUCTIONS).toBe(CANDIDATE_SUMMARY_INSTRUCTIONS);
+    expect(SUMMARY_INSTRUCTIONS).not.toContain("Write one concise, factual description");
+    expect(CANDIDATE_SUMMARY_INSTRUCTIONS).toContain(
+      "State the item's subject or main point directly",
+    );
+    expect(CANDIDATE_SUMMARY_INSTRUCTIONS).toContain("Prefer one concise sentence");
+    expect(CANDIDATE_SUMMARY_INSTRUCTIONS).toContain("Do not produce a full recap");
+    expect(CANDIDATE_SUMMARY_INSTRUCTIONS).toContain(
+      "Omit secondary names, dates, figures, examples",
+    );
+    expect(CANDIDATE_SUMMARY_INSTRUCTIONS).toContain("Avoid narrating the source format");
+    expect(CANDIDATE_SUMMARY_INSTRUCTIONS).toContain("Attribution takes precedence");
+    expect(CANDIDATE_SUMMARY_INSTRUCTIONS).toContain("personal account");
+  });
+
+  it("builds the approved production request with unchanged non-prompt settings", () => {
+    const active = buildSummaryRequest(articleText, SUMMARY_INSTRUCTIONS);
+    const candidate = buildSummaryRequest(articleText, CANDIDATE_SUMMARY_INSTRUCTIONS);
+    expect(active).toEqual(candidate);
+    expect(active.instructions).toBe(SUMMARY_INSTRUCTIONS);
+    expect(candidate).toMatchObject({
+      model: DESCRIPTION_SUMMARY_MODEL,
+      reasoning: { effort: "none" },
+      max_output_tokens: MAX_SUMMARY_OUTPUT_TOKENS,
+      tools: [],
+      store: false,
+    });
   });
 });

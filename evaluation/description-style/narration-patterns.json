@@ -1,0 +1,26 @@
+{
+  "schemaVersion": 1,
+  "normalization": ["trim", "collapseWhitespace"],
+  "patterns": [
+    {
+      "id": "en-format-opening",
+      "language": "en",
+      "pattern": "^(?:the|this|an?)\\s+(?:article|post|piece|text|story|video|essay)\\b"
+    },
+    {
+      "id": "en-unnamed-reporting-opening",
+      "language": "en",
+      "pattern": "^they\\s+(?:report|describe|discuss|explain)\\b"
+    },
+    {
+      "id": "fi-format-opening",
+      "language": "fi",
+      "pattern": "^(?:artikkeli|artikkelissa|artikkelilla|kirjoitus|kirjoituksessa|teksti|tekstissä|video|videossa|jutussa)(?=\\s|[.,:;!?]|$)"
+    },
+    {
+      "id": "fi-locative-format-opening",
+      "language": "fi",
+      "pattern": "^(?:jutussa|kirjoituksessa|tekstissä|videossa)(?=\\s|[.,:;!?]|$)"
+    }
+  ]
+}

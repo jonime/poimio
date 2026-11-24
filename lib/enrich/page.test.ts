@@ -1,7 +1,9 @@
 import type { LookupAddress } from "node:dns";
 import { describe, expect, it, vi } from "vitest";
 import {
+  extractArticleText,
   extractPageContent,
+  fetchArticleTextForEvaluation,
   fetchPageHtml,
   fetchPages,
   PAGE_FETCH_MAX_BYTES,
@@ -311,5 +313,64 @@ describe("extractPageContent", () => {
       description: null,
       articleText: null,
     });
+  });
+});
+
+describe("evaluation article extraction", () => {
+  const html = `
+    <html><head>
+      <meta property="og:description" content="Metadata that production would use">
+    </head><body>
+      <article><h1>Evaluation title</h1><p>Readable body with details for both prompts.</p></article>
+    </body></html>`;
+
+  it("always reads readable article text and ignores metadata", () => {
+    expect(extractArticleText(html, "https://example.com/story")).toContain(
+      "Readable body with details",
+    );
+  });
+
+  it("delegates to the SSRF-safe page fetch and returns its final URL", async () => {
+    const fetchPage = vi.fn(async () => ({
+      status: "ok" as const,
+      html,
+      finalUrl: "https://example.com/final-story",
+      contentType: "text/html",
+    }));
+
+    const result = await fetchArticleTextForEvaluation(
+      "https://example.com/story",
+      "Evaluation title",
+      "en",
+      { timeoutMs: 1234 },
+      fetchPage,
+    );
+
+    expect(fetchPage).toHaveBeenCalledWith("https://example.com/story", { timeoutMs: 1234 });
+    expect(result).toMatchObject({
+      status: "ok",
+      finalUrl: "https://example.com/final-story",
+      articleText: expect.stringContaining("Readable body with details"),
+    });
+  });
+
+  it.each([
+    ["<html><body></body></html>", "Empty"],
+    ["<article><h1>Only a title</h1></article>", "Only a title"],
+  ])("rejects empty or title-only text", async (candidateHtml, title) => {
+    const result = await fetchArticleTextForEvaluation(
+      "https://example.com/story",
+      title,
+      "en",
+      {},
+      async () => ({
+        status: "ok",
+        html: candidateHtml,
+        finalUrl: "https://example.com/story",
+        contentType: "text/html",
+      }),
+    );
+
+    expect(result).toEqual({ status: "error", error: "page has no readable article text" });
   });
 });

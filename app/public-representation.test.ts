@@ -5,6 +5,7 @@ import type { Route } from "next";
 import { NextRequest } from "next/server";
 import { describe, expect, it } from "vitest";
 import { preferredRepresentation } from "@/lib/public-representation";
+import nextConfig from "../next.config";
 import { otherRoutes, proxy, sessionRoutes } from "../proxy";
 
 // @ts-expect-error Unknown internal routes must not be accepted by typedRoutes.
@@ -101,6 +102,14 @@ describe("public HTTP representations", () => {
       new NextRequest("https://www.poimio.cc/missing", { method, headers }),
     );
     expect(response.headers.get("x-middleware-next")).toBe("1");
+  });
+
+  it("permanently redirects the retired hidden sources path", async () => {
+    expect(await nextConfig.redirects?.()).toContainEqual({
+      source: "/preferences/hidden-sources",
+      destination: "/preferences/sources",
+      permanent: true,
+    });
   });
 
   it("inventories the app routes, metadata routes, and public files", () => {

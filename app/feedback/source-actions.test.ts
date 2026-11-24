@@ -1,13 +1,14 @@
 import { revalidatePath } from "next/cache";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { hideSource, showSource } from "./actions";
+import { hideSource, setSourceVisible, showSource } from "./actions";
 
-const { auth, createClient, from, rpc, deleteQuery, eq, select } = vi.hoisted(() => ({
+const { auth, createClient, from, rpc, deleteQuery, insert, eq, select } = vi.hoisted(() => ({
   auth: { getClaims: vi.fn() },
   createClient: vi.fn(),
   from: vi.fn(),
   rpc: vi.fn(),
   deleteQuery: vi.fn(),
+  insert: vi.fn(),
   eq: vi.fn(),
   select: vi.fn(),
 }));
@@ -26,7 +27,7 @@ beforeEach(() => {
     data: [{ source_id: sourceId, source_name: "Example source" }],
     error: null,
   });
-  from.mockReturnValue({ delete: deleteQuery });
+  from.mockReturnValue({ delete: deleteQuery, insert });
   deleteQuery.mockReturnValue({ eq });
   eq.mockImplementationOnce(() => ({ eq }));
   eq.mockImplementationOnce(() => ({ select }));
@@ -49,7 +50,7 @@ describe("hideSource", () => {
     expect(rpc).not.toHaveBeenCalled();
   });
 
-  it("hides through the verified user's client and revalidates only Hidden sources", async () => {
+  it("hides through the verified user's client and revalidates only Sources", async () => {
     await expect(hideSource(itemId)).resolves.toEqual({
       ok: true,
       sourceId,
@@ -57,7 +58,7 @@ describe("hideSource", () => {
     });
     expect(rpc).toHaveBeenCalledExactlyOnceWith("hide_source_of_item", { p_item_id: itemId });
     expect(auth.getClaims).toHaveBeenCalledBefore(rpc);
-    expect(revalidatePath).toHaveBeenCalledExactlyOnceWith("/preferences/hidden-sources");
+    expect(revalidatePath).toHaveBeenCalledExactlyOnceWith("/preferences/sources");
   });
 
   it("returns a narrow error without revalidating on a database failure", async () => {
@@ -79,13 +80,13 @@ describe("showSource", () => {
     expect(from).not.toHaveBeenCalled();
   });
 
-  it("deletes only the verified user's row and revalidates Hidden sources", async () => {
+  it("deletes only the verified user's row and revalidates Sources", async () => {
     await expect(showSource(sourceId)).resolves.toEqual({ ok: true, sourceId });
     expect(from).toHaveBeenCalledExactlyOnceWith("hidden_sources");
     expect(eq).toHaveBeenNthCalledWith(1, "user_id", "user-a");
     expect(eq).toHaveBeenNthCalledWith(2, "source_id", sourceId);
     expect(auth.getClaims).toHaveBeenCalledBefore(from);
-    expect(revalidatePath).toHaveBeenCalledExactlyOnceWith("/preferences/hidden-sources");
+    expect(revalidatePath).toHaveBeenCalledExactlyOnceWith("/preferences/sources");
   });
 
   it("returns not_found without revalidating when the caller has no row", async () => {
@@ -99,4 +100,62 @@ describe("showSource", () => {
     await expect(showSource(sourceId)).resolves.toEqual({ ok: false, error: "save_failed" });
     expect(revalidatePath).not.toHaveBeenCalled();
   });
+});
+
+describe("setSourceVisible", () => {
+  it("validates the ID and boolean before accessing the database", async () => {
+    await expect(setSourceVisible("bad-id", true)).rejects.toThrow("Invalid source ID.");
+    await expect(setSourceVisible(sourceId, "false")).rejects.toThrow("Invalid source visibility.");
+    expect(createClient).not.toHaveBeenCalled();
+  });
+
+  it("rejects an unauthenticated call", async () => {
+    auth.getClaims.mockResolvedValueOnce({ data: null, error: null });
+    await expect(setSourceVisible(sourceId, false)).rejects.toThrow("Authentication required.");
+    expect(from).not.toHaveBeenCalled();
+  });
+
+  it.each([null, { code: "23505" }])(
+    "hides idempotently with a plain insert (%j)",
+    async (error) => {
+      insert.mockResolvedValueOnce({ error });
+      await expect(setSourceVisible(sourceId, false)).resolves.toEqual({
+        ok: true,
+        sourceId,
+        visible: false,
+      });
+      expect(auth.getClaims).toHaveBeenCalledBefore(from);
+      expect(from).toHaveBeenCalledExactlyOnceWith("hidden_sources");
+      expect(insert).toHaveBeenCalledExactlyOnceWith({ user_id: "user-a", source_id: sourceId });
+      expect(deleteQuery).not.toHaveBeenCalled();
+      expect(revalidatePath).toHaveBeenCalledExactlyOnceWith("/preferences/sources");
+    },
+  );
+
+  it("shows idempotently through an owner-scoped delete without requiring a row", async () => {
+    eq.mockReset().mockReturnValueOnce({ eq }).mockResolvedValueOnce({ error: null });
+    await expect(setSourceVisible(sourceId, true)).resolves.toEqual({
+      ok: true,
+      sourceId,
+      visible: true,
+    });
+    expect(eq).toHaveBeenNthCalledWith(1, "user_id", "user-a");
+    expect(eq).toHaveBeenNthCalledWith(2, "source_id", sourceId);
+    expect(insert).not.toHaveBeenCalled();
+    expect(revalidatePath).toHaveBeenCalledExactlyOnceWith("/preferences/sources");
+  });
+
+  it.each([true, false])(
+    "does not revalidate or expose details on failure (visible=%s)",
+    async (visible) => {
+      const result = { error: { code: "23503", message: "database detail" } };
+      insert.mockResolvedValueOnce(result);
+      eq.mockReset().mockReturnValueOnce({ eq }).mockResolvedValueOnce(result);
+      await expect(setSourceVisible(sourceId, visible)).resolves.toEqual({
+        ok: false,
+        error: "save_failed",
+      });
+      expect(revalidatePath).not.toHaveBeenCalled();
+    },
+  );
 });

@@ -60,6 +60,7 @@ Technical details are in [design.md](design.md).
 - **Natural-language feed tuning:** an LLM turns a request such as "less crypto, more local AI models" into structured, editable preferences once per edit; their embeddings act as extra positive or negative signals in the existing scoring. No LLM call at ranking time.
 - **Same-story grouping:** embeddings find candidate pairs at ingestion; TypeSafe Jev classifies each pair as the same event, a follow-up, or a different story. The feed shows one card per story with links to every source.
 - **LLM tasks:** fill missing item descriptions from extracted article text, readable interest summary, relevance labels for evaluation, and (stretch goal) source discovery with web search. The LLM does not rank items.
+- **Source descriptions:** a one-time `gpt-6-luna` run drafts short English descriptions of active sources from their metadata and recent titles. The reviewed text appears on the Sources settings page.
 - **Description quality (experiment):** TypeSafe Jev, a non-generative scoring model, flags poor item descriptions; compared offline with deterministic rules and `gpt-6-luna` as a judge ([spec 009](specs/009-description-quality-jev.md)).
 - **Evaluation:** replay test with simulated personas against average-vector, newest-first, and random baselines. Relevance labels from the local Qwen model are compared with Jev and with manual labels.
 
@@ -173,7 +174,7 @@ Specs are written just in time: the next spec is drafted when the current one re
 | [021](specs/021-natural-language-tuning.md)         | Natural-language feed tuning with per-user LLM limits                                           | 5–6  | Done                             |
 | [022](specs/022-hide-source.md)                     | Hide a source; source visibility is separate from topic dislike and Seen                        | 6    | Done                             |
 | [023](specs/023-description-style.md)               | AI-generated descriptions state the subject directly; blind old-vs-new comparison               | 6    | Done                             |
-| [024](specs/024-sources-page.md)                    | Sources page with on/off switches and one-time AI source descriptions (English)                 | 6    | Draft                            |
+| [024](specs/024-sources-page.md)                    | Sources page with on/off switches and one-time AI source descriptions (English)                 | 6    | Done                             |
 
 **Planned, not yet drafted** (in order; see the cut order in §9)
 

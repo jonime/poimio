@@ -162,6 +162,8 @@ describe.skipIf(!enabled || !anonKey || !serviceKey)("public guest metadata", ()
     ["sources", "feed_url"],
     ["sources", "last_error"],
     ["sources", "is_active"],
+    ["sources", "description"],
+    ["sources", "description_generated_at"],
     ["content_items", "*"],
     ["content_items", "embedding"],
     ["content_items", "embedding_model"],
@@ -174,6 +176,46 @@ describe.skipIf(!enabled || !anonKey || !serviceKey)("public guest metadata", ()
     const result = await anonymous.from(table).select(column).limit(1);
     expect(result.error?.code).toBe("42501");
   });
+
+  it("allows authenticated reads of both source description columns", async () => {
+    const { service } = ready();
+    assert(anonKey);
+    const client = createClient(url, anonKey, options);
+    const email = `guest-description-${activeId}@example.test`;
+    const password = `Guest-description-${randomUUID()}Aa1!`;
+    const creation = await service.auth.admin.createUser({ email, password, email_confirm: true });
+    expect(creation.error).toBeNull();
+    assert(creation.data.user);
+    const description = "Independent reporting on local issues.";
+    const generatedAt = new Date();
+    try {
+      const update = await service
+        .from("sources")
+        .update({ description, description_generated_at: generatedAt.toISOString() })
+        .eq("id", activeId);
+      expect(update.error).toBeNull();
+      expect((await client.auth.signInWithPassword({ email, password })).error).toBeNull();
+      const result = await client
+        .from("sources")
+        .select("description,description_generated_at")
+        .eq("id", activeId)
+        .single();
+      expect(result.error).toBeNull();
+      expect(result.data?.description).toBe(description);
+      expect(new Date(result.data?.description_generated_at)).toEqual(generatedAt);
+    } finally {
+      await service.auth.admin.deleteUser(creation.data.user.id);
+    }
+  });
+
+  it.each(["", "   ", "x".repeat(301)])(
+    "rejects invalid source descriptions (%j)",
+    async (description) => {
+      const { service } = ready();
+      const result = await service.from("sources").update({ description }).eq("id", activeId);
+      expect(result.error?.code).toBe("23514");
+    },
+  );
 
   it("denies writes to both tables and leaves data unchanged", async () => {
     const { anonymous, service } = ready();

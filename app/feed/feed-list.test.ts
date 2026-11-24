@@ -339,7 +339,7 @@ it("leaves the source visible on hide failure and masked on Undo failure", async
     await Promise.resolve();
   });
   expect(articleFor(item.id).closest("[hidden]")).not.toBeNull();
-  expect(vi.mocked(toast.add).mock.lastCall?.[0].description).toContain("Hidden sources");
+  expect(vi.mocked(toast.add).mock.lastCall?.[0].description).toBe("Show it again from Sources.");
 });
 
 it("sends one hide request while the source is pending and moves focus to a visible card", async () => {

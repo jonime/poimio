@@ -6,6 +6,15 @@ const nextConfig: NextConfig = {
   typedRoutes: true,
   // Keep the RSC header visible so Proxy can defer navigation requests to Next.js.
   skipProxyUrlNormalize: true,
+  async redirects() {
+    return [
+      {
+        source: "/preferences/hidden-sources",
+        destination: "/preferences/sources",
+        permanent: true,
+      },
+    ];
+  },
   async headers() {
     const supabaseUrl = URL.parse(process.env.NEXT_PUBLIC_SUPABASE_URL ?? "");
     const supabaseOrigin =

@@ -1,6 +1,7 @@
 # 024 — Sources page with switches and AI descriptions
 
-**Status:** Approved  
+**Status:** Done
+
 **Milestone:** Final (week 6)  
 **Depends on:** 022 (hidden sources), 005 (OpenAI request conventions)  
 **Estimate:** 6 h
@@ -87,8 +88,10 @@ Each criterion belongs to one task.
 
 ## Tasks
 
-- [ ] 1. `setSourceVisible`, Sources page with switches, redirect, old route removal, path and copy updates, tests (criterion 1).
-- [ ] 2. Description columns, `describe-sources.mts` with `--out` and `--apply`, review and apply, docs (criterion 2).
+- [x] 1. `setSourceVisible`, Sources page with switches, redirect, old route removal, path and copy updates, tests (criterion 1).
+- [x] 2. Description columns, `describe-sources.mts` with `--out` and `--apply`, review and apply, docs (criterion 2).
+
+The user approved applying the 17 reviewed descriptions to local Supabase only. The saved descriptions were verified against the review file.
 
 ## Decisions
 

@@ -80,8 +80,8 @@ it("links the user menu to tune feed and hidden sources", () => {
   expect(container.querySelector('a[href="/preferences/tune"]')?.textContent).toContain(
     "Tune feed",
   );
-  expect(container.querySelector('a[href="/preferences/hidden-sources"]')?.textContent).toContain(
-    "Hidden sources",
+  expect(container.querySelector('a[href="/preferences/sources"]')?.textContent).toContain(
+    "Sources",
   );
 });
 

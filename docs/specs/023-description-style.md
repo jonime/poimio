@@ -1,6 +1,6 @@
 # 023 — Better AI-generated description style
 
-**Status:** Approved  
+**Status:** Done  
 **Milestone:** Final (week 6)  
 **Depends on:** 005 (description enrichment)  
 **Estimate:** 5 h

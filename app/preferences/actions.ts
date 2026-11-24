@@ -20,7 +20,7 @@ function userClient(client: Awaited<ReturnType<typeof createClient>>): Preferenc
 
 function revalidatePreferences(): void {
   revalidatePath("/");
-  revalidatePath("/preferences");
+  revalidatePath("/preferences/tune");
 }
 
 export async function tunePreferences(text: unknown): Promise<TunePreferencesResult> {

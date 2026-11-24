@@ -5,7 +5,7 @@ import { Alert, AlertTitle } from "@/components/ui/alert";
 import { Skeleton } from "@/components/ui/skeleton";
 import { PREFERENCE_DAILY_LIMIT } from "@/lib/preference-tuning";
 import { createClient } from "@/lib/supabase/server";
-import { type PreferenceListItem, PreferencesForm } from "./preferences-form";
+import { type PreferenceListItem, PreferencesForm } from "../preferences-form";
 
 export const instant = true;
 
@@ -15,11 +15,11 @@ interface PreferenceRow {
   direction: string;
 }
 
-export default function PreferencesPage() {
+export default function TuneFeedPage() {
   return (
     <main className="mx-auto flex w-full max-w-2xl flex-col gap-4 px-4 py-6">
-      <h1 id="preferences-heading" className="text-2xl font-semibold tracking-tight">
-        Feed preferences
+      <h1 id="tune-feed-heading" className="text-2xl font-semibold tracking-tight">
+        Tune feed
       </h1>
       <Suspense
         fallback={
@@ -78,6 +78,5 @@ async function PreferencesContent() {
     usageResult.error || usageResult.count === null
       ? null
       : Math.max(0, PREFERENCE_DAILY_LIMIT - usageResult.count);
-
   return <PreferencesForm items={items} remaining={remaining} />;
 }

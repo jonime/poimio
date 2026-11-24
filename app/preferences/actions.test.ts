@@ -52,7 +52,7 @@ describe("preference actions", () => {
     };
     expect(tuneInput.userClient).toBe(userClient);
     expect(tuneInput.createServiceClient()).toBe(serviceClient);
-    expect(revalidatePath).toHaveBeenCalledWith("/preferences");
+    expect(revalidatePath).toHaveBeenCalledWith("/preferences/tune");
     createServiceRoleClient.mockClear();
 
     await flipPreference("11111111-1111-4111-8111-111111111111", "less");

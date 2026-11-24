@@ -1,8 +1,8 @@
 # 022 — Hide a source (negative-feedback reasons)
 
-**Status:** Approved  
+**Status:** Done
 **Milestone:** Final (week 6)  
-**Depends on:** 003 (feed UI and feedback), 021 (preferences page)  
+**Depends on:** 003 (feed UI and feedback), 021 (Tune feed page)
 **Estimate:** 8 h
 
 ## Goal
@@ -14,7 +14,7 @@ Let a signed-in user say "not this source" separately from "not this topic". _No
 - Actions, gestures, and what was left out: [design.md §7.1, §7.5](../design.md#7-user-interaction)
 - Feed function and signals: `public.get_feed` (migration `20261123000200_rank_with_feed_preferences.sql`), [design.md §2](../design.md#2-recommendation)
 - Feedback actions and the undo toast: `app/feedback/actions.ts`, `app/feed/feed-list.tsx`
-- Preferences page: `app/(app)/preferences` ([spec 021](021-natural-language-tuning.md))
+- Settings pages: `app/(app)/preferences/tune` and `app/(app)/preferences/hidden-sources` ([spec 021](021-natural-language-tuning.md))
 - Security rules: [AGENTS.md](../../AGENTS.md), [design.md §5.1](../design.md#51-data-access-and-security)
 
 ## In scope
@@ -22,7 +22,7 @@ Let a signed-in user say "not this source" separately from "not this topic". _No
 - A per-user `hidden_sources` table with RLS and two-user tests.
 - A **Hide source** action in each feed card's menu, with an undo toast.
 - `get_feed` excludes hidden sources' items from candidates and returns each item's `source_id`.
-- A "Hidden sources" section on the preferences page with **Show again**.
+- A **Hidden sources** page with **Show again**, reached from the header's user menu.
 
 ## Out of scope
 
@@ -56,7 +56,7 @@ Let a signed-in user say "not this source" separately from "not this topic". _No
 **Server actions**
 
 - `hideSource(itemId)` and `showSource(sourceId)` verify the user with `getClaims()`, validate the UUID at runtime, and write through the user's own client (pattern in `app/feedback/actions.ts`). They return a narrow result: the source ID and name, or an error code.
-- Neither action revalidates or refreshes the home feed, so the mounted list and its positions survive hide and undo. They revalidate `/preferences` only; the home feed reflects changes on its next load.
+- Neither action revalidates or refreshes the home feed, so the mounted list and its positions survive hide and undo. They revalidate `/preferences/hidden-sources` only; the home feed reflects changes on its next load.
 
 **UI**
 
@@ -64,8 +64,8 @@ Let a signed-in user say "not this source" separately from "not this topic". _No
 - The menu trigger sits above the card's stretched article link. Opening or using the menu neither opens the article nor starts a swipe; card swiping is suspended while the menu is open. Buttons and gestures for Like, Not interested, and Seen are unchanged.
 - **Hiding is a visibility mask, not removal.** Loaded items stay in the list in their original order and stay mounted, with their feedback state. Cards whose `source_id` is hidden are not shown. Masked items still count as loaded for pagination exclusions and deduplication, and items from later or late-arriving pages are masked the same way.
 - Hide flow: the menu item is disabled while a hide or undo for that source is pending. On success, the source's cards are masked and a toast shows "Hidden _source name_" with **Undo** (the existing 5-second toast, started after success). Keyboard focus moves to the next visible card or the feed heading. On error, nothing is masked and an error toast appears.
-- Undo awaits `showSource` and removes the mask only on success; on failure the source stays hidden and an error toast says it can be shown again from the preferences page.
-- The preferences page gets a **Hidden sources** section: source name, hidden date, and a **Show again** button per row with its own pending and error state; an empty state when nothing is hidden. Shown sources' items return on the next feed load.
+- Undo awaits `showSource` and removes the mask only on success; on failure the source stays hidden and an error toast says it can be shown again from **Hidden sources**.
+- The **Hidden sources** page lists source name, hidden date, and a **Show again** button per row with its own pending and error state; an empty state appears when nothing is hidden. Shown sources' items return on the next feed load.
 
 **Checks** (no labeling)
 
@@ -86,14 +86,14 @@ Each criterion belongs to one task.
    1. Unit tests: both actions reject unauthenticated calls and invalid IDs, write through the user's client, and do not revalidate the home feed.
    2. Feed list tests (existing React test setup): hiding masks only cards with that `source_id` (including a same-name source that stays visible) in interleaved order; masked cards keep their feedback state and position after Undo; masked IDs stay in pagination exclusions; a page requested before hiding and arriving after it is masked; hide failure masks nothing; undo failure keeps the mask; repeated activation while pending sends one request.
    3. The card menu works with keyboard (open, navigate, Escape) and touch on phone and desktop widths; using the menu or moving a finger on it neither opens the article nor records feedback; focus moves to a visible control after hiding.
-   4. The preferences page lists hidden sources with **Show again**, per-row pending and error states, and an empty state; changes persist after reload.
+   4. The **Hidden sources** page lists hidden sources with **Show again**, per-row pending and error states, and an empty state; changes persist after reload.
    5. design.md §2 (candidate filtering), §5.1 (security), §6 (table), and §7 (action; §7.5 no longer lists hiding a source as a later addition) are updated; plan.md states the mapping (_Not interested_ → topic, **Hide source** → source, _Seen_ → neutral). An AI log entry follows AGENTS.md (the agent asks the user to confirm the model first).
 3. **Every task:** `pnpm lint`, `pnpm typecheck`, and `pnpm test` pass; tasks touching the database also pass `pnpm test:integration` with 0 skipped.
 
 ## Tasks
 
-- [ ] 1. Migration: `hidden_sources`, RLS, `hide_source_of_item`, `get_feed` filter and `source_id` column, two-user and feed tests (criterion 1). About 4 h.
-- [ ] 2. Server actions, menu item wrapper, card menu with visibility mask and undo, Hidden sources section, docs (criterion 2). About 4 h.
+- [x] 1. Migration: `hidden_sources`, RLS, `hide_source_of_item`, `get_feed` filter and `source_id` column, two-user and feed tests (criterion 1). About 4 h.
+- [x] 2. Server actions, menu item wrapper, card menu with visibility mask and undo, Hidden sources page and user menu, docs (criterion 2). About 4 h.
 
 ## Decisions
 

@@ -3,6 +3,7 @@
 import {
   CheckIcon,
   CircleAlertIcon,
+  EllipsisVerticalIcon,
   InboxIcon,
   SparklesIcon,
   ThumbsDownIcon,
@@ -21,6 +22,13 @@ import { Alert, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { CardFooter } from "@/components/ui/card";
 import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuGroup,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import {
   Empty,
   EmptyDescription,
   EmptyHeader,
@@ -38,7 +46,7 @@ import {
   type FeedbackState,
 } from "../../lib/feedback-queue";
 import { beginSwipe, finishSwipe, moveSwipe, type SwipeGesture } from "../../lib/swipe-gesture";
-import { clearFeedback, setFeedback } from "../feedback/actions";
+import { clearFeedback, hideSource, setFeedback, showSource } from "../feedback/actions";
 import { loadMoreFeed } from "./actions";
 import { RefreshFeedButton } from "./refresh-feed-button";
 
@@ -46,13 +54,19 @@ const pageSize = 30;
 const maximumItems = 1000;
 
 function FeedCard({
+  hiddenBySource,
   item,
+  onHideSource,
   onUndo,
   renderedAt,
+  sourcePending,
 }: {
+  hiddenBySource: boolean;
   item: FeedItem;
+  onHideSource: (item: FeedItem) => Promise<boolean>;
   onUndo: (restore: () => void) => void;
   renderedAt: string;
+  sourcePending: boolean;
 }) {
   const [snapshot, setSnapshot] = useState<FeedbackQueueSnapshot>({
     confirmed: null,
@@ -61,8 +75,11 @@ function FeedCard({
     error: null,
   });
   const [gesture, setGesture] = useState<SwipeGesture | null>(null);
+  const [menuOpen, setMenuOpen] = useState(false);
   const queueRef = useRef<FeedbackMutationQueue | null>(null);
   const gestureRef = useRef<SwipeGesture | null>(null);
+  const menuTriggerRef = useRef<HTMLButtonElement | null>(null);
+  const suppressMenuFinalFocusRef = useRef(false);
   const suppressClick = useRef(false);
   if (queueRef.current === null) {
     queueRef.current = new FeedbackMutationQueue(
@@ -89,7 +106,15 @@ function FeedCard({
   }
 
   function onPointerDown(event: ReactPointerEvent<HTMLElement>) {
-    if (event.pointerType !== "touch" || !event.isPrimary) return;
+    const target = event.target;
+    if (
+      menuOpen ||
+      (target instanceof Element && target.closest('[data-slot="dropdown-menu-trigger"]')) ||
+      event.pointerType !== "touch" ||
+      !event.isPrimary
+    ) {
+      return;
+    }
     const nextGesture = beginSwipe(
       event.clientX,
       event.clientY,
@@ -156,7 +181,7 @@ function FeedCard({
   ] as const;
 
   return (
-    <div className="relative overflow-hidden rounded-xl" hidden={collapsed}>
+    <div className="relative overflow-hidden rounded-xl" hidden={collapsed || hiddenBySource}>
       {swipeDelta !== 0 && (
         <div
           className={cn(
@@ -212,6 +237,51 @@ function FeedCard({
                   </Button>
                 );
               })}
+              <DropdownMenu
+                open={menuOpen}
+                onOpenChange={(open) => {
+                  if (open) {
+                    gestureRef.current = null;
+                    suppressMenuFinalFocusRef.current = false;
+                    setGesture(null);
+                  }
+                  setMenuOpen(open);
+                }}
+              >
+                <DropdownMenuTrigger
+                  render={
+                    <Button
+                      ref={menuTriggerRef}
+                      className="ml-auto"
+                      variant="ghost"
+                      size="icon-sm"
+                      type="button"
+                      aria-label="More actions"
+                    />
+                  }
+                >
+                  <EllipsisVerticalIcon aria-hidden="true" />
+                </DropdownMenuTrigger>
+                <DropdownMenuContent
+                  align="end"
+                  finalFocus={() => !suppressMenuFinalFocusRef.current}
+                >
+                  <DropdownMenuGroup>
+                    <DropdownMenuItem
+                      disabled={sourcePending}
+                      onClick={() => {
+                        suppressMenuFinalFocusRef.current = true;
+                        void onHideSource(item).then((hidden) => {
+                          if (!hidden) menuTriggerRef.current?.focus();
+                        });
+                      }}
+                    >
+                      {sourcePending && <Spinner data-icon="inline-start" />}
+                      Hide {item.source_name}
+                    </DropdownMenuItem>
+                  </DropdownMenuGroup>
+                </DropdownMenuContent>
+              </DropdownMenu>
             </CardFooter>
           }
         >
@@ -242,9 +312,80 @@ export default function FeedList({
   const [loading, setLoading] = useState(false);
   const [requestMore, setRequestMore] = useState(false);
   const [error, setError] = useState(false);
+  const [hiddenSourceIds, setHiddenSourceIds] = useState<ReadonlySet<string>>(new Set());
+  const [pendingSourceIds, setPendingSourceIds] = useState<ReadonlySet<string>>(new Set());
   const sentinelRef = useRef<HTMLDivElement>(null);
   const requestInFlight = useRef(false);
+  const pendingSourceIdsRef = useRef(new Set<string>());
+  const focusAfterHideRef = useRef<string | null>(null);
   const undoToastId = useRef<string | null>(null);
+
+  function setSourcePending(sourceId: string, pending: boolean) {
+    const next = new Set(pendingSourceIdsRef.current);
+    if (pending) next.add(sourceId);
+    else next.delete(sourceId);
+    pendingSourceIdsRef.current = next;
+    setPendingSourceIds(next);
+  }
+
+  function showSourceError(title: string, description?: string) {
+    toast.add({ type: "error", title, description, timeout: 5000 });
+  }
+
+  async function undoHiddenSource(sourceId: string) {
+    if (pendingSourceIdsRef.current.has(sourceId)) return;
+    setSourcePending(sourceId, true);
+    try {
+      const result = await showSource(sourceId);
+      if (!result.ok) {
+        showSourceError("Could not show the source", "Show it again from Hidden sources.");
+        return;
+      }
+      setHiddenSourceIds((current) => {
+        const next = new Set(current);
+        next.delete(sourceId);
+        return next;
+      });
+    } catch {
+      showSourceError("Could not show the source", "Show it again from Hidden sources.");
+    } finally {
+      setSourcePending(sourceId, false);
+    }
+  }
+
+  async function hideItemSource(item: FeedItem): Promise<boolean> {
+    if (pendingSourceIdsRef.current.has(item.source_id)) return false;
+    setSourcePending(item.source_id, true);
+    try {
+      const result = await hideSource(item.id);
+      if (!result.ok) {
+        showSourceError("Could not hide this source");
+        return false;
+      }
+      const sourceId = result.sourceId;
+      const sourceName = result.sourceName ?? item.source_name;
+      setHiddenSourceIds((current) => new Set(current).add(sourceId));
+      focusAfterHideRef.current = item.id;
+      const toastId = toast.add({
+        type: "success",
+        title: `Hidden ${sourceName}`,
+        timeout: 5000,
+        actionProps: {
+          children: "Undo",
+          onClick: () => {
+            toast.close(toastId);
+            void undoHiddenSource(sourceId);
+          },
+        },
+      });
+      return true;
+    } catch {
+      showSourceError("Could not hide this source");
+      return false;
+    } finally {
+      setSourcePending(item.source_id, false);
+    }
+  }
 
   function showUndoToast(restore: () => void) {
     if (undoToastId.current) toast.close(undoToastId.current);
@@ -261,6 +402,23 @@ export default function FeedList({
     });
     undoToastId.current = id;
   }
+
+  useEffect(() => {
+    const hiddenItemId = focusAfterHideRef.current;
+    const hiddenItem = items.find((item) => item.id === hiddenItemId);
+    if (!hiddenItem || !hiddenSourceIds.has(hiddenItem.source_id)) return;
+    const currentIndex = items.indexOf(hiddenItem);
+    const articles = [...document.querySelectorAll<HTMLElement>("article[data-feed-item-id]")];
+    const nextVisibleControl = items.slice(currentIndex + 1).flatMap((item) => {
+      const article = articles.find(
+        (candidate) => candidate.dataset.feedItemId === item.id && !candidate.closest("[hidden]"),
+      );
+      const control = article?.querySelector<HTMLElement>("button:not([disabled]), a[href]");
+      return control ? [control] : [];
+    })[0];
+    (nextVisibleControl ?? document.getElementById("feed-heading"))?.focus();
+    focusAfterHideRef.current = null;
+  }, [hiddenSourceIds, items]);
 
   useEffect(() => {
     if (!hasMore || items.length >= maximumItems) return;
@@ -319,7 +477,15 @@ export default function FeedList({
       ) : (
         <div className="flex flex-col gap-4">
           {items.map((item) => (
-            <FeedCard item={item} renderedAt={renderedAt} key={item.id} onUndo={showUndoToast} />
+            <FeedCard
+              hiddenBySource={hiddenSourceIds.has(item.source_id)}
+              item={item}
+              key={item.id}
+              onHideSource={hideItemSource}
+              onUndo={showUndoToast}
+              renderedAt={renderedAt}
+              sourcePending={pendingSourceIds.has(item.source_id)}
+            />
           ))}
         </div>
       )}

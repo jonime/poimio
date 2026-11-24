@@ -1,6 +1,6 @@
 import { renderToReadableStream } from "react-dom/server";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import PreferencesPage from "./page";
+import TuneFeedPage from "./page";
 
 const { auth, createClient, from, preferenceOrder, usageGte } = vi.hoisted(() => ({
   auth: { getClaims: vi.fn() },
@@ -35,29 +35,30 @@ beforeEach(() => {
 });
 
 async function html() {
-  const stream = await renderToReadableStream(await PreferencesPage());
+  const stream = await renderToReadableStream(await TuneFeedPage());
   await stream.allReady;
   return new Response(stream).text();
 }
 
-describe("preferences page", () => {
-  it("loads the caller's preferences and remaining requests", async () => {
+describe("tune feed page", () => {
+  it("loads only the caller's preferences and remaining requests", async () => {
     preferenceOrder.mockResolvedValue({
       data: [{ id: "pref-1", label: "Finnish sports", direction: "less" }],
       error: null,
     });
-
     const body = await html();
 
     expect(auth.getClaims).toHaveBeenCalledExactlyOnceWith();
     expect(from).toHaveBeenCalledWith("feed_preferences");
     expect(from).toHaveBeenCalledWith("llm_usage");
-    expect(body).toContain("Feed preferences");
+    expect(from).not.toHaveBeenCalledWith("hidden_sources");
+    expect(body).toContain("Tune feed");
     expect(body).toContain("Finnish sports");
     expect(body).toContain("less");
     expect(body).toContain("7 of 10 requests left.");
     expect(body).toContain("Tune feed");
     expect(body).toContain("0 / 300");
+    expect(body).not.toContain("Hidden sources");
   });
 
   it("shows the empty state and the cap message", async () => {
@@ -83,7 +84,7 @@ describe("preferences page", () => {
   ])("redirects to login when the user is missing or unverified", async (result) => {
     auth.getClaims.mockResolvedValue(result);
     const errors: unknown[] = [];
-    const stream = await renderToReadableStream(await PreferencesPage(), {
+    const stream = await renderToReadableStream(await TuneFeedPage(), {
       onError: (error) => {
         errors.push(error);
       },

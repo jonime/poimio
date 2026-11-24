@@ -1,9 +1,7 @@
-import { LogOutIcon } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
-import { signOut } from "@/app/auth/actions";
 import { AppNav } from "@/components/app-nav";
-import { Button } from "@/components/ui/button";
+import { UserMenu } from "@/components/user-menu";
 
 export function AppHeader({
   displayName,
@@ -12,8 +10,6 @@ export function AppHeader({
   displayName?: string | null;
   guest?: boolean;
 }) {
-  const firstName = displayName?.trim().split(/\s+/)[0];
-
   return (
     <header className="sticky top-0 z-20 border-b bg-background/80 backdrop-blur">
       <div className="mx-auto flex h-14 w-full max-w-2xl items-center gap-2 px-3 sm:gap-4 sm:px-4">
@@ -27,22 +23,8 @@ export function AppHeader({
         </Link>
         <AppNav guest={guest} />
         {!guest && (
-          <div className="ml-auto flex min-w-0 items-center gap-2">
-            {firstName && (
-              <span className="hidden truncate text-sm text-muted-foreground md:inline">
-                {firstName}
-              </span>
-            )}
-            <form action={signOut}>
-              <Button variant="ghost" type="submit">
-                <LogOutIcon
-                  className="hidden sm:block"
-                  data-icon="inline-start"
-                  aria-hidden="true"
-                />
-                Sign out
-              </Button>
-            </form>
+          <div className="ml-auto flex min-w-0 items-center">
+            <UserMenu displayName={displayName} />
           </div>
         )}
       </div>

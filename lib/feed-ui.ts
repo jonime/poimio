@@ -8,6 +8,7 @@ export interface FeedItem {
   language: "fi" | "en";
   thumbnail_url: string | null;
   published_at: string;
+  source_id: string;
   source_name: string;
   score: number;
   reason: "similar" | "recent" | "exploring" | "preference";

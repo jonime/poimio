@@ -172,7 +172,7 @@ async function HomeContent({
       )}
       <section className="flex flex-col gap-4" aria-labelledby="feed-heading">
         <div className="flex items-center justify-between gap-4">
-          <h1 id="feed-heading" className="text-2xl font-semibold tracking-tight">
+          <h1 id="feed-heading" className="text-2xl font-semibold tracking-tight" tabIndex={-1}>
             Your feed
           </h1>
           <RefreshFeedButton />

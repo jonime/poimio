@@ -286,25 +286,27 @@ describe("summarizeArticleText", () => {
     ).rejects.toThrow("summary service returned HTTP 500");
   });
 
-  it("keeps the production instruction active and the candidate separate", () => {
-    expect(SUMMARY_INSTRUCTIONS).toContain("Write one concise, factual description");
-    expect(SUMMARY_INSTRUCTIONS).not.toContain("Avoid narrating the source format");
+  it("uses the approved candidate as the production instruction", () => {
+    expect(SUMMARY_INSTRUCTIONS).toBe(CANDIDATE_SUMMARY_INSTRUCTIONS);
+    expect(SUMMARY_INSTRUCTIONS).not.toContain("Write one concise, factual description");
     expect(CANDIDATE_SUMMARY_INSTRUCTIONS).toContain(
       "State the item's subject or main point directly",
+    );
+    expect(CANDIDATE_SUMMARY_INSTRUCTIONS).toContain("Prefer one concise sentence");
+    expect(CANDIDATE_SUMMARY_INSTRUCTIONS).toContain("Do not produce a full recap");
+    expect(CANDIDATE_SUMMARY_INSTRUCTIONS).toContain(
+      "Omit secondary names, dates, figures, examples",
     );
     expect(CANDIDATE_SUMMARY_INSTRUCTIONS).toContain("Avoid narrating the source format");
     expect(CANDIDATE_SUMMARY_INSTRUCTIONS).toContain("Attribution takes precedence");
     expect(CANDIDATE_SUMMARY_INSTRUCTIONS).toContain("personal account");
   });
 
-  it("builds identical active and candidate requests except for instructions", () => {
+  it("builds the approved production request with unchanged non-prompt settings", () => {
     const active = buildSummaryRequest(articleText, SUMMARY_INSTRUCTIONS);
     const candidate = buildSummaryRequest(articleText, CANDIDATE_SUMMARY_INSTRUCTIONS);
-    const { instructions: activeInstructions, ...activeRest } = active;
-    const { instructions: candidateInstructions, ...candidateRest } = candidate;
-
-    expect(activeInstructions).not.toBe(candidateInstructions);
-    expect(candidateRest).toEqual(activeRest);
+    expect(active).toEqual(candidate);
+    expect(active.instructions).toBe(SUMMARY_INSTRUCTIONS);
     expect(candidate).toMatchObject({
       model: DESCRIPTION_SUMMARY_MODEL,
       reasoning: { effort: "none" },

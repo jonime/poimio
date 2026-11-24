@@ -98,7 +98,7 @@ Each criterion belongs to one task.
 ## Tasks
 
 - [x] 1. Candidate instruction, extraction helper, `pnpm eval:description-style` with sample draw, narration diagnostic, blind review files, and metrics; unit tests (criterion 1).
-- [ ] 2. Commit sample and patterns, run, user review, activation decision, docs (criterion 2).
+- [x] 2. Commit sample and patterns, run, user review, activation decision, docs (criterion 2).
 
 ## Decisions
 

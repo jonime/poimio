@@ -2,7 +2,12 @@
 import { execFileSync } from "node:child_process";
 import { randomUUID } from "node:crypto";
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
-import { afterAll, beforeAll, describe, expect, it } from "vitest";
+import { afterAll, beforeAll, describe, expect, it, vi } from "vitest";
+import { setSourceVisible } from "../app/feedback/actions";
+import { createClient as createRequestClient } from "./supabase/server";
+
+vi.mock("./supabase/server", () => ({ createClient: vi.fn() }));
+vi.mock("next/cache", () => ({ revalidatePath: vi.fn() }));
 
 const enabled = process.env.SUPABASE_INTEGRATION === "1";
 const url = process.env.SUPABASE_URL ?? "http://127.0.0.1:55321";
@@ -233,6 +238,47 @@ describe.skipIf(!enabled || !anonKey || !serviceKey)("hidden sources", () => {
       .eq("user_id", userBId)
       .eq("source_id", sourceId);
     expect(stillPresent.data).toHaveLength(1);
+  });
+
+  it("sets visibility idempotently without changing another user's row", async () => {
+    const { userAClient: clientA, userBClient: clientB } = ready();
+    const sourceId = sourceIds[0];
+    expect(
+      (
+        await clientB
+          .from("hidden_sources")
+          .upsert({ source_id: sourceId }, { ignoreDuplicates: true })
+      ).error,
+    ).toBeNull();
+    vi.mocked(createRequestClient).mockResolvedValue(clientA);
+
+    for (const visible of [false, false, true, true]) {
+      await expect(setSourceVisible(sourceId, visible)).resolves.toEqual({
+        ok: true,
+        sourceId,
+        visible,
+      });
+      const own = await clientA
+        .from("hidden_sources")
+        .select("source_id")
+        .eq("source_id", sourceId);
+      expect(own.error).toBeNull();
+      expect(own.data).toEqual(visible ? [] : [{ source_id: sourceId }]);
+    }
+
+    await expect(setSourceVisible(randomUUID(), false)).resolves.toEqual({
+      ok: false,
+      error: "save_failed",
+    });
+    const own = await clientA.from("hidden_sources").select("source_id");
+    expect(own.error).toBeNull();
+    expect(own.data).toEqual([]);
+    const other = await clientB
+      .from("hidden_sources")
+      .select("source_id")
+      .eq("source_id", sourceId);
+    expect(other.error).toBeNull();
+    expect(other.data).toEqual([{ source_id: sourceId }]);
   });
 
   it("hides an old rated item idempotently from an inactive source for only the caller", async () => {

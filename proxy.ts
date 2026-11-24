@@ -13,7 +13,7 @@ export const sessionRoutes = new Set([
   "/auth/callback",
   "/liked",
   "/preferences/tune",
-  "/preferences/hidden-sources",
+  "/preferences/sources",
 ]);
 
 export const otherRoutes = new Set([

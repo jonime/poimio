@@ -2,8 +2,8 @@
 
 import {
   ChevronDownIcon,
-  EyeOffIcon,
   LogOutIcon,
+  RssIcon,
   SlidersHorizontalIcon,
   UserRoundIcon,
 } from "lucide-react";
@@ -40,9 +40,9 @@ export function UserMenu({ displayName }: { displayName: string | null | undefin
               <SlidersHorizontalIcon data-icon="inline-start" aria-hidden="true" />
               Tune feed
             </DropdownMenuLinkItem>
-            <DropdownMenuLinkItem render={<Link href="/preferences/hidden-sources" />} closeOnClick>
-              <EyeOffIcon data-icon="inline-start" aria-hidden="true" />
-              Hidden sources
+            <DropdownMenuLinkItem render={<Link href="/preferences/sources" />} closeOnClick>
+              <RssIcon data-icon="inline-start" aria-hidden="true" />
+              Sources
             </DropdownMenuLinkItem>
             <DropdownMenuItem onClick={() => signOutFormRef.current?.requestSubmit()}>
               <LogOutIcon data-icon="inline-start" aria-hidden="true" />

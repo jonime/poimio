@@ -1,6 +1,6 @@
-import { Buffer } from "node:buffer";
 import { EMBEDDING_MODEL_VERSION } from "./embeddings.ts";
 import { embedPreferenceDescriptions } from "./evaluation-preferences.ts";
+import { completedResponseText, isRecord, readLimitedJson } from "./openai-response.ts";
 
 export const PREFERENCE_MODEL = "gpt-6-luna";
 export const PREFERENCE_MODEL_TIMEOUT_MS = 20_000;
@@ -161,10 +161,6 @@ interface TuneInput {
   fetchImpl?: typeof fetch;
 }
 
-function isRecord(value: unknown): value is Record<string, unknown> {
-  return value !== null && typeof value === "object" && !Array.isArray(value);
-}
-
 function logPreferenceFailure(status: number | null): void {
   console.error("preference request failed", status);
 }
@@ -281,35 +277,11 @@ export function parsePreferenceModelPayload(payload: unknown): {
   status: "completed" | "rejected";
   preferences: ParsedPreference[];
 } {
-  if (!isRecord(payload) || payload.status !== "completed" || payload.error != null) {
-    return { status: "rejected", preferences: [] };
-  }
-  if (!Array.isArray(payload.output)) return { status: "rejected", preferences: [] };
-  const parts: string[] = [];
-  for (const output of payload.output) {
-    if (!isRecord(output)) return { status: "rejected", preferences: [] };
-    if (output.type === "reasoning") continue;
-    if (
-      output.type !== "message" ||
-      output.status !== "completed" ||
-      !Array.isArray(output.content)
-    ) {
-      return { status: "rejected", preferences: [] };
-    }
-    for (const content of output.content) {
-      if (
-        !isRecord(content) ||
-        content.type !== "output_text" ||
-        typeof content.text !== "string"
-      ) {
-        return { status: "rejected", preferences: [] };
-      }
-      parts.push(content.text);
-    }
-  }
+  const text = completedResponseText(payload);
+  if (text === null) return { status: "rejected", preferences: [] };
   let parsed: unknown;
   try {
-    parsed = JSON.parse(parts.join(""));
+    parsed = JSON.parse(text);
   } catch {
     return { status: "rejected", preferences: [] };
   }
@@ -328,34 +300,6 @@ export function parsePreferenceModelPayload(payload: unknown): {
       return preference === null ? [] : [preference];
     }),
   };
-}
-
-async function readLimitedJson(response: Response, maxBytes: number): Promise<unknown> {
-  const length = response.headers.get("content-length");
-  if (length !== null && Number(length) > maxBytes) {
-    await response.body?.cancel();
-    throw new Error("response too large");
-  }
-  if (!response.body) throw new Error("missing response body");
-  const reader = response.body.getReader();
-  const chunks: Uint8Array[] = [];
-  let bytes = 0;
-  try {
-    for (;;) {
-      const { done, value } = await reader.read();
-      if (done) break;
-      if (value === undefined) continue;
-      bytes += value.byteLength;
-      if (bytes > maxBytes) {
-        await reader.cancel();
-        throw new Error("response too large");
-      }
-      chunks.push(value);
-    }
-  } finally {
-    reader.releaseLock();
-  }
-  return JSON.parse(Buffer.concat(chunks).toString("utf8"));
 }
 
 export async function interpretPreferenceRequest(input: {

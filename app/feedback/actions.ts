@@ -91,7 +91,7 @@ export async function hideSource(itemId: unknown): Promise<SourceActionResult> {
   ) {
     return { ok: false, error: "save_failed" };
   }
-  revalidatePath("/preferences/hidden-sources");
+  revalidatePath("/preferences/sources");
   return { ok: true, sourceId: source.source_id, sourceName: source.source_name };
 }
 
@@ -106,6 +106,27 @@ export async function showSource(sourceId: unknown): Promise<SourceActionResult>
     .select("source_id");
   if (error) return { ok: false, error: "save_failed" };
   if (!Array.isArray(data) || data.length === 0) return { ok: false, error: "not_found" };
-  revalidatePath("/preferences/hidden-sources");
+  revalidatePath("/preferences/sources");
   return { ok: true, sourceId };
+}
+
+export async function setSourceVisible(
+  sourceId: unknown,
+  visible: unknown,
+): Promise<{ ok: true; sourceId: string; visible: boolean } | { ok: false; error: "save_failed" }> {
+  validateUuid(sourceId, "source");
+  if (typeof visible !== "boolean") throw new Error("Invalid source visibility.");
+
+  const { supabase, userId } = await getVerifiedUser();
+  const sources = supabase.from("hidden_sources");
+  if (visible) {
+    const { error } = await sources.delete().eq("user_id", userId).eq("source_id", sourceId);
+    if (error) return { ok: false, error: "save_failed" };
+  } else {
+    const { error } = await sources.insert({ user_id: userId, source_id: sourceId });
+    if (error && error.code !== "23505") return { ok: false, error: "save_failed" };
+  }
+
+  revalidatePath("/preferences/sources");
+  return { ok: true, sourceId, visible };
 }

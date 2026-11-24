@@ -58,7 +58,7 @@ describe("tune feed page", () => {
     expect(body).toContain("7 of 10 requests left.");
     expect(body).toContain("Tune feed");
     expect(body).toContain("0 / 300");
-    expect(body).not.toContain("Hidden sources");
+    expect(body).not.toContain("Sources");
   });
 
   it("shows the empty state and the cap message", async () => {

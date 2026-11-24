@@ -53,6 +53,10 @@ export interface ExtractedPageContent {
   articleText: string | null;
 }
 
+export type ArticleTextFetchResult =
+  | { status: "ok"; finalUrl: string; articleText: string }
+  | { status: "error"; error: string };
+
 export async function fetchPageHtml(
   value: string,
   options: PageFetchOptions = {},
@@ -138,6 +142,39 @@ function normalizedDescription(candidate: string | null): string | null {
   return truncateSummary(text, DEFAULT_SUMMARY_MAX_LENGTH);
 }
 
+export function extractArticleText(html: string, pageUrl: string): string | null {
+  const dom = new JSDOM(html, { url: pageUrl });
+  try {
+    const article = new Readability(dom.window.document).parse();
+    const articleText = article?.content
+      ? htmlToText(article.content).replace(/\s+/g, " ").trim()
+      : "";
+    return articleText ? articleText.slice(0, MAX_ARTICLE_TEXT_LENGTH) : null;
+  } finally {
+    dom.window.close();
+  }
+}
+
+export async function fetchArticleTextForEvaluation(
+  value: string,
+  title: string,
+  language: "fi" | "en",
+  options: PageFetchOptions = {},
+  fetchPage: (
+    url: string,
+    fetchOptions?: PageFetchOptions,
+  ) => Promise<PageFetchResult> = fetchPageHtml,
+): Promise<ArticleTextFetchResult> {
+  const page = await fetchPage(value, options);
+  if (page.status === "error") return page;
+  const articleText = extractArticleText(page.html, page.finalUrl);
+  const normalize = (text: string) => text.replace(/\s+/g, " ").trim().toLocaleLowerCase(language);
+  if (articleText === null || normalize(articleText) === normalize(title)) {
+    return { status: "error", error: "page has no readable article text" };
+  }
+  return { status: "ok", finalUrl: page.finalUrl, articleText };
+}
+
 export function extractPageContent(html: string, pageUrl: string): ExtractedPageContent {
   const dom = new JSDOM(html, { url: pageUrl });
   try {
@@ -151,16 +188,8 @@ export function extractPageContent(html: string, pageUrl: string): ExtractedPage
       const description = normalizedDescription(candidate);
       if (description !== null) return { description, articleText: null };
     }
-
-    const article = new Readability(document).parse();
-    const articleText = article?.content
-      ? htmlToText(article.content).replace(/\s+/g, " ").trim()
-      : "";
-    return {
-      description: null,
-      articleText: articleText ? articleText.slice(0, MAX_ARTICLE_TEXT_LENGTH) : null,
-    };
   } finally {
     dom.window.close();
   }
+  return { description: null, articleText: extractArticleText(html, pageUrl) };
 }

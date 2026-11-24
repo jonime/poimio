@@ -2,12 +2,15 @@ import { describe, expect, it, vi } from "vitest";
 import type { EnrichmentDb, EnrichmentItem } from "../db.ts";
 import { requireDefined } from "../required.ts";
 import {
+  buildSummaryRequest,
+  CANDIDATE_SUMMARY_INSTRUCTIONS,
   DESCRIPTION_SUMMARY_MODEL,
   ENRICHMENT_RETRY_DELAYS_MS,
   MAX_ENRICHMENT_ATTEMPTS,
   MAX_SUMMARY_OUTPUT_TOKENS,
   MAX_SUMMARY_REQUESTS_PER_RUN,
   runEnrichment,
+  SUMMARY_INSTRUCTIONS,
   summarizeArticleText,
 } from "./coordinator.ts";
 import type { PageFetchResult } from "./page.ts";
@@ -281,5 +284,33 @@ describe("summarizeArticleText", () => {
     await expect(
       summarizeArticleText(articleText, "test-key", { fetch: mockFetch }),
     ).rejects.toThrow("summary service returned HTTP 500");
+  });
+
+  it("keeps the production instruction active and the candidate separate", () => {
+    expect(SUMMARY_INSTRUCTIONS).toContain("Write one concise, factual description");
+    expect(SUMMARY_INSTRUCTIONS).not.toContain("Avoid narrating the source format");
+    expect(CANDIDATE_SUMMARY_INSTRUCTIONS).toContain(
+      "State the item's subject or main point directly",
+    );
+    expect(CANDIDATE_SUMMARY_INSTRUCTIONS).toContain("Avoid narrating the source format");
+    expect(CANDIDATE_SUMMARY_INSTRUCTIONS).toContain("Attribution takes precedence");
+    expect(CANDIDATE_SUMMARY_INSTRUCTIONS).toContain("personal account");
+  });
+
+  it("builds identical active and candidate requests except for instructions", () => {
+    const active = buildSummaryRequest(articleText, SUMMARY_INSTRUCTIONS);
+    const candidate = buildSummaryRequest(articleText, CANDIDATE_SUMMARY_INSTRUCTIONS);
+    const { instructions: activeInstructions, ...activeRest } = active;
+    const { instructions: candidateInstructions, ...candidateRest } = candidate;
+
+    expect(activeInstructions).not.toBe(candidateInstructions);
+    expect(candidateRest).toEqual(activeRest);
+    expect(candidate).toMatchObject({
+      model: DESCRIPTION_SUMMARY_MODEL,
+      reasoning: { effort: "none" },
+      max_output_tokens: MAX_SUMMARY_OUTPUT_TOKENS,
+      tools: [],
+      store: false,
+    });
   });
 });

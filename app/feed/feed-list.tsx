@@ -338,7 +338,7 @@ export default function FeedList({
     try {
       const result = await showSource(sourceId);
       if (!result.ok) {
-        showSourceError("Could not show the source", "Show it again from the preferences page.");
+        showSourceError("Could not show the source", "Show it again from Hidden sources.");
         return;
       }
       setHiddenSourceIds((current) => {
@@ -347,7 +347,7 @@ export default function FeedList({
         return next;
       });
     } catch {
-      showSourceError("Could not show the source", "Show it again from the preferences page.");
+      showSourceError("Could not show the source", "Show it again from Hidden sources.");
     } finally {
       setSourcePending(sourceId, false);
     }

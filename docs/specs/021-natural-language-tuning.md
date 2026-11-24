@@ -22,7 +22,7 @@ Let a signed-in user steer their feed in their own words, such as "more space ne
 - A per-user `feed_preferences` table and a per-user `llm_usage` table, with RLS and two-user tests.
 - A server action that turns a request into preferences with `gpt-6-luna`, embeds them, and saves them, within per-user limits.
 - Preferences as extra signals in the private scorer; `get_feed` passes the caller's preferences and explains matches.
-- A preferences page: request input, list of active preferences, flip direction, delete.
+- A Tune feed page: request input, list of active preferences, flip direction, delete.
 - Two small checks: LLM output on 12 example requests, and the ranking effect on the evaluation snapshot with existing labels.
 
 ## Out of scope
@@ -81,7 +81,7 @@ The request text is the user's own and only affects their own preferences; the m
 - Without preferences, every result is identical to today's, so the evaluation replay and the freeze are unaffected.
 - Migration safety as in spec 007: the private scorer and the public wrapper are dropped and recreated by exact signature in one transaction without `CASCADE`; both `with ordinality` alias lists (wrapper and `get_feed`) are updated; grants, `SECURITY INVOKER`, and empty search paths are restored exactly.
 
-**Preferences page** (`/preferences`, linked from the app navigation)
+**Tune feed page** (`/preferences/tune`, linked from the header's user menu)
 
 - The page verifies the user with `getClaims()` itself and redirects to login without a user; the layout is not the authorization gate.
 - A textarea (300-character limit with a counter) and a **Tune feed** button, with pending and error states. The remaining daily requests come from the server and update after every attempt, successful or not. At 20 preferences the form explains the cap.
@@ -139,7 +139,7 @@ Each criterion belongs to one task.
 - [x] 1. Migration: `feed_preferences`, `llm_usage`, `reserve_llm_call`, RLS, cap trigger, two-user tests (criterion 1).
 - [x] 2. Migration: preferences in the private scorer and wrapper, `because_preference_id`, `get_feed` changes, tests; `pnpm eval:preferences --rank` and check 1 before merging (criterion 2). Check 1: `evaluation/results/preferences-021-check1.json`. More improved 4/4; less lowered the B-exclusive share in 12/12. Parity replay: `evaluation/results/parity-021-after-scorer.json`.
 - [x] 3. Server actions: tune, flip, delete; LLM and embedding calls with limits; `pnpm eval:preferences --parse` and check 2 (criterion 3). Check 2: `evaluation/results/preferences-021-check2.json`. The user marked 12 of 12 outputs correct.
-- [x] 4. Preferences page and feed explanation; design.md, plan.md, and AI log (criterion 4). Check 1: `evaluation/results/preferences-021-check1.json` (more 4/4, less 12/12). Check 2: `evaluation/results/preferences-021-check2.json` (user marked 12 of 12 correct). Ranking table and review notes: design.md §2.6 and §2.5; AI log 2026-11-23.
+- [x] 4. Tune feed page and feed explanation; design.md, plan.md, and AI log (criterion 4). Check 1: `evaluation/results/preferences-021-check1.json` (more 4/4, less 12/12). Check 2: `evaluation/results/preferences-021-check2.json` (user marked 12 of 12 correct). Ranking table and review notes: design.md §2.6 and §2.5; AI log 2026-11-23.
 
 ## Decisions
 

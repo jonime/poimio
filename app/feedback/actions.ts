@@ -91,7 +91,7 @@ export async function hideSource(itemId: unknown): Promise<SourceActionResult> {
   ) {
     return { ok: false, error: "save_failed" };
   }
-  revalidatePath("/preferences");
+  revalidatePath("/preferences/hidden-sources");
   return { ok: true, sourceId: source.source_id, sourceName: source.source_name };
 }
 
@@ -106,6 +106,6 @@ export async function showSource(sourceId: unknown): Promise<SourceActionResult>
     .select("source_id");
   if (error) return { ok: false, error: "save_failed" };
   if (!Array.isArray(data) || data.length === 0) return { ok: false, error: "not_found" };
-  revalidatePath("/preferences");
+  revalidatePath("/preferences/hidden-sources");
   return { ok: true, sourceId };
 }

@@ -41,11 +41,6 @@ export function AppNav({ guest = false }: { guest?: boolean }) {
         <DropdownMenuTrigger render={<Button variant="ghost" />}>More</DropdownMenuTrigger>
         <DropdownMenuContent>
           <DropdownMenuGroup>
-            {!guest && (
-              <DropdownMenuLinkItem render={<Link href="/preferences" />} closeOnClick>
-                Preferences
-              </DropdownMenuLinkItem>
-            )}
             <DropdownMenuLinkItem render={<Link href="/about" />} closeOnClick>
               About
             </DropdownMenuLinkItem>

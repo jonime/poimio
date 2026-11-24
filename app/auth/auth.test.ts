@@ -88,12 +88,12 @@ describe("signed-in page", () => {
     expect(guest).toContain("Public preview cards");
     expect(signedOut).toContain("Public preview cards");
     for (const html of [guest, signedOut]) {
-      expect(html).not.toContain("Sign out");
+      expect(html).not.toContain('aria-label="User menu"');
       expect(html).not.toContain("Main navigation");
       expect(html).not.toContain("Your feed");
     }
     expect(signedIn).toContain("Your feed");
-    expect(signedIn).toContain("Sign out");
+    expect(signedIn).toContain('aria-label="User menu"');
     expect(signedIn).not.toContain("Public preview cards");
     expect(rpc).toHaveBeenCalledTimes(1);
     expect(GuestPreview).toHaveBeenCalledTimes(2);
@@ -106,12 +106,12 @@ describe("signed-in page", () => {
     expect(GuestPreview).not.toHaveBeenCalled();
   });
 
-  it("shows the first name, navigation, More menu, and sign-out in the shared header", () => {
+  it("shows the first name, navigation, More menu, and user menu in the shared header", () => {
     const html = renderToStaticMarkup(createElement(AppHeader, { displayName: "Joni Mertoniemi" }));
     expect(html).toContain(">Joni</span>");
     expect(html).not.toContain("Mertoniemi");
     expect(html).not.toContain("user-a@example.com");
-    expect(html).toContain("Sign out");
+    expect(html).toContain('aria-label="User menu"');
     expect(html).toContain("Liked");
     expect(html).toContain('aria-haspopup="menu"');
     expect(html).toContain(">More</button>");
@@ -121,7 +121,7 @@ describe("signed-in page", () => {
   it("omits the identity label when no display name is available", () => {
     const html = renderToStaticMarkup(createElement(AppHeader, {}));
     expect(html).not.toContain("@example.com");
-    expect(html).toContain("Sign out");
+    expect(html).toContain('aria-label="User menu"');
   });
 
   it("loads and renders the first feed page with a refresh control", async () => {
@@ -226,12 +226,12 @@ describe("signed-in page", () => {
     try {
       const decoder = new TextDecoder();
       let shell = "";
-      while (!shell.includes("Loading your feed...") || !shell.includes("Sign out")) {
+      while (!shell.includes("Loading your feed...") || !shell.includes("User menu")) {
         const chunk = await reader.read();
         if (chunk.done) break;
         shell += decoder.decode(chunk.value, { stream: true });
       }
-      expect(shell).toContain("Sign out");
+      expect(shell).toContain("User menu");
       expect(shell).toContain("Your feed");
       expect(shell).toContain("Refresh feed");
       expect(shell).toContain("Loading your feed...");
@@ -386,7 +386,7 @@ describe("privacy page", () => {
     expect(html).toContain(">Home</a>");
     expect(html).toContain(">More</button>");
     expect(html).not.toContain(">Liked</a>");
-    expect(html).not.toContain("Sign out");
+    expect(html).not.toContain('aria-label="User menu"');
     expect(html).not.toContain("Back to Poimio");
     expect(auth.getClaims).toHaveBeenCalledExactlyOnceWith();
     expect(rpc).not.toHaveBeenCalled();
@@ -395,7 +395,7 @@ describe("privacy page", () => {
   it("renders the app header with a verified session", async () => {
     const html = await renderPage(withAppLayout(createElement(PrivacyPage)));
     expect(html).toContain(">More</button>");
-    expect(html).toContain("Sign out");
+    expect(html).toContain('aria-label="User menu"');
     expect(html).not.toContain("Back to Poimio");
   });
 });

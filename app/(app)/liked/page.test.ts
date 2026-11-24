@@ -123,12 +123,12 @@ describe("liked page", () => {
     try {
       const decoder = new TextDecoder();
       let shell = "";
-      while (!shell.includes("Sign out") || !shell.includes("Loading liked items...")) {
+      while (!shell.includes("User menu") || !shell.includes("Loading liked items...")) {
         const chunk = await reader.read();
         if (chunk.done) break;
         shell += decoder.decode(chunk.value, { stream: true });
       }
-      expect(shell).toContain("Sign out");
+      expect(shell).toContain("User menu");
       expect(shell).toContain('aria-current="page"');
       expect(shell).toContain("Liked items");
       expect(shell).toContain("Loading liked items...");

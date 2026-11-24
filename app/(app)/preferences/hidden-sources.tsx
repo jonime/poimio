@@ -81,9 +81,9 @@ export function HiddenSources({
   return (
     <section className="flex flex-col gap-4" aria-labelledby="hidden-sources-heading">
       <div className="flex flex-col gap-1">
-        <h2 id="hidden-sources-heading" className="text-xl font-semibold tracking-tight">
+        <h1 id="hidden-sources-heading" className="text-2xl font-semibold tracking-tight">
           Hidden sources
-        </h2>
+        </h1>
         <p className="text-sm text-muted-foreground">
           Items from these sources stay out of your feed.
         </p>

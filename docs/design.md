@@ -482,7 +482,7 @@ The feed is a single column of compact cards, responsive for phone and desktop. 
 - Rated items (any feedback action) do not return in the feed. A hidden source's existing likes and dislikes remain valid topic signals.
 - _Seen_ is a button only, so swipe-left keeps its existing _Not interested_ meaning. **Hide source** is separate and available from the card's accessible action menu.
 - Hidden cards stay mounted in their original positions, preserve feedback state, and still count as loaded for pagination exclusions. Late-arriving pages use the same source-ID mask. The list does not re-fetch or re-rank after hiding or Undo; the next feed load applies the persistent database filter.
-- Hidden sources can be shown again on the preferences page. The source name, hidden date, and per-row **Show again** action are listed there.
+- Tune feed and Hidden sources are separate pages at `/preferences/tune` and `/preferences/hidden-sources`. Both are reached from the header's user menu. The Hidden sources page lists the source name, hidden date, and a per-row **Show again** action.
 
 The Liked page searches the titles, full summaries, and source names of items already loaded by the page. It trims the query and matches it as a case-insensitive substring in any one field, preserving accents, punctuation, and newest-liked-first order. The result count is relative to the loaded list, which can be smaller than the user's full liked history. The query stays active when the mounted list refreshes after Unlike and starts empty on a new mount.
 

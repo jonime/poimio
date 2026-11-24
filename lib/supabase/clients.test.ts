@@ -216,7 +216,8 @@ describe("session refresh proxy", () => {
     "/privacy",
     "/auth/callback",
     "/liked",
-    "/preferences",
+    "/preferences/tune",
+    "/preferences/hidden-sources",
   ])("refreshes sessions on application route %s", async (url) => {
     expect(unstable_doesMiddlewareMatch({ config, url })).toBe(true);
     const response = await proxy(

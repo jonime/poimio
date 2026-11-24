@@ -49,7 +49,7 @@ describe("hideSource", () => {
     expect(rpc).not.toHaveBeenCalled();
   });
 
-  it("hides through the verified user's client and revalidates only preferences", async () => {
+  it("hides through the verified user's client and revalidates only Hidden sources", async () => {
     await expect(hideSource(itemId)).resolves.toEqual({
       ok: true,
       sourceId,
@@ -57,7 +57,7 @@ describe("hideSource", () => {
     });
     expect(rpc).toHaveBeenCalledExactlyOnceWith("hide_source_of_item", { p_item_id: itemId });
     expect(auth.getClaims).toHaveBeenCalledBefore(rpc);
-    expect(revalidatePath).toHaveBeenCalledExactlyOnceWith("/preferences");
+    expect(revalidatePath).toHaveBeenCalledExactlyOnceWith("/preferences/hidden-sources");
   });
 
   it("returns a narrow error without revalidating on a database failure", async () => {
@@ -79,13 +79,13 @@ describe("showSource", () => {
     expect(from).not.toHaveBeenCalled();
   });
 
-  it("deletes only the verified user's row and revalidates preferences", async () => {
+  it("deletes only the verified user's row and revalidates Hidden sources", async () => {
     await expect(showSource(sourceId)).resolves.toEqual({ ok: true, sourceId });
     expect(from).toHaveBeenCalledExactlyOnceWith("hidden_sources");
     expect(eq).toHaveBeenNthCalledWith(1, "user_id", "user-a");
     expect(eq).toHaveBeenNthCalledWith(2, "source_id", sourceId);
     expect(auth.getClaims).toHaveBeenCalledBefore(from);
-    expect(revalidatePath).toHaveBeenCalledExactlyOnceWith("/preferences");
+    expect(revalidatePath).toHaveBeenCalledExactlyOnceWith("/preferences/hidden-sources");
   });
 
   it("returns not_found without revalidating when the caller has no row", async () => {

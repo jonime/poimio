@@ -1,0 +1,16 @@
+{
+	"mcpServers": {
+		"shadcn": {
+			"type": "stdio",
+			"command": "pnpm",
+			"args": [
+				"dlx",
+				"shadcn@latest",
+				"mcp"
+			],
+			"tools": [
+				"*"
+			]
+		}
+	}
+}

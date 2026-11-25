@@ -100,7 +100,7 @@ This configures OAuth for spec 002's Google login page and application callback 
 2. Configure **Branding** with the app name and support/developer email. In **Audience**, choose **External**. For local development, keep the publishing status **Testing** and add each permitted Google account under **Test users**; production uses a published app (see [Hosted Supabase Auth](#hosted-supabase-auth)).
 3. In **Data Access**, configure only `openid`, `userinfo.email`, and `userinfo.profile`; no additional Google API scopes are needed.
 4. In **Clients**, create an OAuth client of type **Web application**. Add `http://localhost:3001` and `http://127.0.0.1:3001` as **Authorized JavaScript origins**.
-5. Add `http://127.0.0.1:55321/auth/v1/callback` as an **Authorized redirect URI**. This repository uses Supabase API port **55321**, not the CLI default 54321. For hosted Supabase, also add the exact callback URL shown by that project's Google provider settings, usually `https://<project-ref>.supabase.co/auth/v1/callback`.
+5. Add `http://localhost:55321/auth/v1/callback` as an **Authorized redirect URI**. This repository uses Supabase API port **55321**, not the CLI default 54321. For hosted Supabase, also add the exact callback URL shown by that project's Google provider settings, usually `https://<project-ref>.supabase.co/auth/v1/callback`.
 6. Store the client ID and secret privately as described below. Never paste the secret into chat, tracked files, or a `NEXT_PUBLIC_` variable. Separate OAuth clients for local and hosted Supabase can be used to keep credentials separate.
 
 ### Local Supabase
@@ -113,6 +113,8 @@ SUPABASE_AUTH_EXTERNAL_GOOGLE_CLIENT_SECRET=your-client-secret
 ```
 
 Do not copy production Supabase credentials into this file or `.env.local`. Keep the app's local Supabase URL and keys in `.env.local`; the URL is `http://127.0.0.1:55321`. The variable names are also listed in [.env.example](.env.example). Email/password authentication stays enabled for local automated tests and the local-development sign-in form described below.
+
+If a browser outside WSL can reach Supabase only through `localhost`, use `http://localhost:55321` as `NEXT_PUBLIC_SUPABASE_URL` for the app and restart `pnpm dev` after changing it. Some local-only scripts and the integration-test guard require the `127.0.0.1` URL in `.env.local`; switch it back when running those commands.
 
 With Docker running, apply the auth configuration by starting (or restarting) the local stack:
 
@@ -130,7 +132,7 @@ There are two distinct callbacks:
 
 | Redirect                         | URL                                                                     |
 | -------------------------------- | ----------------------------------------------------------------------- |
-| Google to local Supabase Auth    | `http://127.0.0.1:55321/auth/v1/callback`                               |
+| Google to local Supabase Auth    | `http://localhost:55321/auth/v1/callback`                               |
 | Supabase Auth to the Next.js app | `http://localhost:3001/auth/callback` (or the matching `127.0.0.1` URL) |
 
 Google's authorized redirect URI must be the **Supabase** callback, not the Next.js `/auth/callback`. Leave **Skip nonce check** disabled for the web OAuth flow.

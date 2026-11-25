@@ -325,7 +325,7 @@ max_frequency = "5s"
 enabled = true
 client_id = "env(SUPABASE_AUTH_EXTERNAL_GOOGLE_CLIENT_ID)"
 secret = "env(SUPABASE_AUTH_EXTERNAL_GOOGLE_CLIENT_SECRET)"
-redirect_uri = "http://127.0.0.1:55321/auth/v1/callback"
+redirect_uri = "http://localhost:55321/auth/v1/callback"
 skip_nonce_check = false
 email_optional = false
 

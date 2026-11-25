@@ -175,12 +175,12 @@ Specs are written just in time: the next spec is drafted when the current one re
 | [022](specs/022-hide-source.md)                     | Hide a source; source visibility is separate from topic dislike and Seen                        | 6    | Done                             |
 | [023](specs/023-description-style.md)               | AI-generated descriptions state the subject directly; blind old-vs-new comparison               | 6    | Done                             |
 | [024](specs/024-sources-page.md)                    | Sources page with on/off switches and one-time AI source descriptions (English)                 | 6    | Done                             |
+| [025](specs/025-same-story.md)                      | Same-story handling: covered-story filter and per-page grouping (embeddings only)               | 6    | Draft                            |
 
 **Planned, not yet drafted** (in order; see the cut order in §9)
 
 | Spec      | Content                                                                    | Week |
 | --------- | -------------------------------------------------------------------------- | ---- |
-| next free | Same-story grouping with embeddings and Jev                                | 6    |
 | next free | Optional: LLM interest summary and click tracking                          | 6    |
 | next free | Source discovery: (a) catalog-based, (b) LLM web search; only after gate 2 | 6–7  |
 
@@ -252,7 +252,7 @@ The minimum acceptable result is: ingestion, personal feed with feedback, the re
 - Stack: Next.js on Vercel, Supabase Postgres + pgvector, supabase-js with SQL migrations (no ORM), Supabase Auth. Hourly ingestion runs on Vercel Schedules (spec 016); it ran on GitHub Actions until 7 Nov, and that workflow remains as a manual fallback. GitHub Actions also runs CI.
 - Source discovery is a two-stage stretch goal (catalog-based, then LLM web search), attempted only after gate 2; admin-approved sources join a shared pool.
 - Optional offline experiment: TypeSafe Jev for description quality, compared with rules and an LLM judge (spec 009); called with plain `fetch`, no SDK.
-- Additional AI features chosen for product value and measurability: natural-language feed tuning (LLM) and same-story grouping (embeddings + Jev). Source hiding has a separate spec: _Not interested_ maps to a negative topic signal, **Hide source** maps to source visibility, and _Seen_ maps to no topic signal. Jev as a relevance judge was dropped: the Qwen label set was already final when it would have been added, and Jev is evaluated in spec 009 instead.
+- Additional AI features chosen for product value and measurability: natural-language feed tuning (LLM) and same-story grouping (embeddings only; Jev was dropped from grouping after spec 009 found it added nothing over simpler rules, see spec 025). Source hiding has a separate spec: _Not interested_ maps to a negative topic signal, **Hide source** maps to source visibility, and _Seen_ maps to no topic signal. Jev as a relevance judge was dropped: the Qwen label set was already final when it would have been added, and Jev is evaluated in spec 009 instead.
 - No spec after spec 020 may require bulk manual labeling. Evaluation reuses the existing label set; manual checks are limited to reviewing a few examples (about 10–20 items).
 - Cut order: web-search discovery, catalog discovery, Jev description experiment, LLM interest summary, click tracking, same-story grouping, natural-language feed tuning.
 

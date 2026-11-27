@@ -1,0 +1,119 @@
+{
+  "provenance": {
+    "snapshotHash": "6a8057e2a2278c945d167a21e3cff344a45bfecc5a5d259cb944ab400bd4b314",
+    "labelsHash": "bad99fa3aa1383492643dfd25d118239e6d0fbbb46770b9f51ea49d8f58db641",
+    "model": "gpt-6-luna"
+  },
+  "cases": [
+    {
+      "id": "ai-software",
+      "personas": [
+        "ai-software"
+      ],
+      "summary": "Follows software engineering and open-source tools, AI systems and infrastructure, cybersecurity incidents and vulnerabilities, and technology-company business news. Also interested in programming languages, developer workflows, hardware, and data centers; tends to avoid general politics, sports, and entertainment news.",
+      "topics": [
+        "Software engineering",
+        "Open-source tools",
+        "AI and machine learning",
+        "Cybersecurity",
+        "Developer tools",
+        "Programming languages",
+        "Tech industry and finance",
+        "Hardware and data centers"
+      ],
+      "correct": null
+    },
+    {
+      "id": "cars-engineering",
+      "personas": [
+        "cars-engineering"
+      ],
+      "summary": "The user is strongly interested in cars and automotive technology, especially EVs, autonomous driving, racing, vehicle design, and privacy. They also follow aviation incidents and engineering, space exploration, robotics, energy infrastructure, and technical hardware topics. They tend to avoid politics, elections, economics, and general sports news.",
+      "topics": [
+        "Cars and automotive tech",
+        "Electric vehicles",
+        "Autonomous driving",
+        "Motorsports and racing",
+        "Aviation and flight safety",
+        "Space exploration",
+        "Robotics and engineering",
+        "Energy and power infrastructure"
+      ],
+      "correct": null
+    },
+    {
+      "id": "science-space",
+      "personas": [
+        "science-space"
+      ],
+      "summary": "The user is strongly interested in space and astronomy, NASA missions, spacecraft, and emerging space technology, alongside neuroscience, cognition, genetics, and medical research. They also enjoy physics, AI and computing, environmental science, and discoveries across biology and paleontology; they tend to avoid political, economic, and sports news.",
+      "topics": [
+        "Space exploration and NASA",
+        "Astronomy and skywatching",
+        "Neuroscience and cognition",
+        "Medical and genetics research",
+        "AI and computing",
+        "Physics and engineering",
+        "Environment and ecology",
+        "Biology and paleontology"
+      ],
+      "correct": null
+    },
+    {
+      "id": "finnish-sports",
+      "personas": [
+        "finnish-sports"
+      ],
+      "summary": "Strong interest in Finnish and international sports, especially ice hockey, rallying and Formula 1, football, basketball, athletics, and cross-country skiing. Follows Finnish athletes, teams, competitions, and sports news, including debates about Russia’s participation in international events. Avoids general politics, economics, and unrelated world news.",
+      "topics": [
+        "Finnish sports",
+        "Ice hockey",
+        "Rallying",
+        "Formula 1",
+        "Football",
+        "Basketball",
+        "Athletics",
+        "Cross-country skiing"
+      ],
+      "correct": null
+    },
+    {
+      "id": "ai-software-finnish-sports",
+      "personas": [
+        "ai-software",
+        "finnish-sports"
+      ],
+      "summary": "The user follows cybersecurity and software development, especially AI tools, open-source projects, infrastructure, and privacy. They also enjoy Finnish and international sports, particularly motorsports, hockey, football, basketball, and athletics, along with business and technology-industry news. They show less interest in general political and macroeconomic coverage.",
+      "topics": [
+        "Cybersecurity and hacking",
+        "AI tools and development",
+        "Open-source software",
+        "Technology business",
+        "Motorsports and rally",
+        "Hockey",
+        "Finnish and international sports",
+        "Avoids general politics and macroeconomy"
+      ],
+      "correct": null
+    },
+    {
+      "id": "cars-engineering-science-space",
+      "personas": [
+        "cars-engineering",
+        "science-space"
+      ],
+      "summary": "Interested in space exploration and astronomy, aviation incidents, cars and motorsport, and emerging technology such as AI, robotics, and energy infrastructure. Also follows scientific research and health, including neuroscience, cancer, and environmental conservation. Avoids much of the political, economic, and election news shown.",
+      "topics": [
+        "Space and astronomy",
+        "Aviation and crash investigations",
+        "Cars and automotive technology",
+        "Motorsport",
+        "AI and robotics",
+        "Science and health research",
+        "Energy and infrastructure",
+        "Environmental conservation"
+      ],
+      "correct": null
+    }
+  ]
+}

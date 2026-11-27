@@ -795,9 +795,12 @@ describe.skipIf(!enabled || anonKey == null || serviceKey == null)(
       await setFeedback(userAClient, "liked-fi", "like");
 
       const feed = await getFeed(userAClient);
-      expect(
-        feed.findIndex((row) => row.id === itemIds.get("candidate-cross-related")),
-      ).toBeLessThan(feed.findIndex((row) => row.id === itemIds.get("candidate-same-unrelated")));
+      const related = feed.find((row) => row.id === itemIds.get("candidate-cross-related"));
+      const unrelated = feed.find((row) => row.id === itemIds.get("candidate-same-unrelated"));
+      assert(related, "Cross-language candidate must exist");
+      assert(unrelated, "Unrelated candidate must exist");
+      expect(related.score).toBeCloseTo(1);
+      expect(related.score).toBeGreaterThan(unrelated.score);
     });
 
     it("matches get_feed order when the service role ranks explicit likes and dislikes", async () => {

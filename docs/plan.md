@@ -175,13 +175,13 @@ Specs are written just in time: the next spec is drafted when the current one re
 | [022](specs/022-hide-source.md)                     | Hide a source; source visibility is separate from topic dislike and Seen                        | 6    | Done                             |
 | [023](specs/023-description-style.md)               | AI-generated descriptions state the subject directly; blind old-vs-new comparison               | 6    | Done                             |
 | [024](specs/024-sources-page.md)                    | Sources page with on/off switches and one-time AI source descriptions (English)                 | 6    | Done                             |
-| [025](specs/025-same-story.md)                      | Same-story handling: covered-story filter and per-page grouping (embeddings only)               | 6    | Draft                            |
+| [025](specs/025-same-story.md)                      | Same-story handling: covered-story filter and per-page grouping (embeddings only)               | 6    | Done                             |
+| [026](specs/026-interest-summary-clicks.md)         | Interest summary on demand; clicks as a weak signal (0.3, untuned); History page                | 6    | Draft                            |
 
 **Planned, not yet drafted** (in order; see the cut order in §9)
 
 | Spec      | Content                                                                    | Week |
 | --------- | -------------------------------------------------------------------------- | ---- |
-| next free | Optional: LLM interest summary and click tracking                          | 6    |
 | next free | Source discovery: (a) catalog-based, (b) LLM web search; only after gate 2 | 6–7  |
 
 ## 8. Risks

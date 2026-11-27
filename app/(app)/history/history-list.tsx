@@ -50,7 +50,7 @@ function HistoryCard({
         item={item}
         renderedAt={renderedAt}
         footer={
-          <CardFooter className="gap-1" role="group" aria-label="Rate this item">
+          <CardFooter className="relative z-10 gap-1" role="group" aria-label="Rate this item">
             {feedbackActions.map(({ kind, label, icon: Icon }) => {
               const pressed = feedbackKind === kind;
               return (

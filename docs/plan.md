@@ -179,12 +179,12 @@ Specs are written just in time: the next spec is drafted when the current one re
 | [026](specs/026-interest-summary-clicks.md)         | Clicks as a weak signal (0.3, untuned) and History; interest summary cut after failed quality gate | 6    | Click release done                |
 | [027](specs/027-source-discovery.md)                | Source discovery: catalog scan and LLM web search; admin page approval                          | 6–7  | Catalog release done; web search deferred |
 | [028](specs/028-trending-stories.md)                | Trending stories from 3+ publishers (embeddings only)                                           | 6    | Cut: too few qualifying stories in data check |
+| [029](specs/029-usage-metrics.md)                   | Usage metrics: feedback and served logs, admin aggregates, JSON export                          | 6    | Draft                            |
 
 **Planned, not yet drafted** (in order)
 
 | Spec      | Content                                                                      | Week |
 | --------- | ---------------------------------------------------------------------------- | ---- |
-| next free | Usage metrics for the report: aggregate admin page                           | 6    |
 | next free | Account deletion and data export (self-service)                              | 6    |
 | next free | Polish: keyboard shortcuts, installable app (PWA), guest cache (008 task 6)  | 6–7  |
 

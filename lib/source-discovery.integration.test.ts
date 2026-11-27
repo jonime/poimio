@@ -1,7 +1,10 @@
+import { execFileSync } from "node:child_process";
 import { createClient } from "@supabase/supabase-js";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
+import { parseSupabaseQueryResult } from "../test/supabase-query-result.ts";
 import { createIngestDb } from "./db.ts";
-import { scanInactiveCatalog } from "./source-discovery-scan.ts";
+import { readPages, scanInactiveCatalog } from "./source-discovery-scan.ts";
+import { isLocalSupabaseProjectUrl } from "./supabase/local-project.ts";
 
 const enabled = process.env.SUPABASE_INTEGRATION === "1";
 const url = process.env.SUPABASE_URL ?? "http://127.0.0.1:55321";
@@ -154,6 +157,49 @@ describe.skipIf(!enabled || anonKey == null || serviceKey == null)(
       }
     });
 
+    it("enforces the admin and decision function security contracts", () => {
+      if (!isLocalSupabaseProjectUrl(url)) {
+        throw new Error("The function security test requires the local Supabase project.");
+      }
+      const query = `
+        select
+          (select not prosecdef and provolatile = 's' and proconfig = array['search_path=""']
+            from pg_proc where oid = 'public.is_admin()'::regprocedure) as admin_attributes,
+          has_function_privilege('authenticated', 'public.is_admin()', 'EXECUTE') as admin_authenticated,
+          not has_function_privilege('anon', 'public.is_admin()', 'EXECUTE') as admin_anon_denied,
+          (select not prosecdef and provolatile = 'v' and proconfig = array['search_path=""']
+            from pg_proc where oid = 'public.decide_source_candidate(uuid,text)'::regprocedure) as decision_attributes,
+          has_function_privilege('service_role', 'public.decide_source_candidate(uuid,text)', 'EXECUTE') as decision_service,
+          not has_function_privilege('authenticated', 'public.decide_source_candidate(uuid,text)', 'EXECUTE') as decision_authenticated_denied,
+          not has_function_privilege('anon', 'public.decide_source_candidate(uuid,text)', 'EXECUTE') as decision_anon_denied,
+          (select bool_and(not exists (
+            select 1 from aclexplode(coalesce(proacl, acldefault('f', proowner))) acl
+            where acl.grantee = 0 and acl.privilege_type = 'EXECUTE'
+          )) from pg_proc where oid in (
+            'public.is_admin()'::regprocedure,
+            'public.decide_source_candidate(uuid,text)'::regprocedure
+          )) as public_execute_denied
+      `;
+      const output = execFileSync(
+        "supabase",
+        ["db", "query", "--local", "--output-format", "json", query],
+        { encoding: "utf8" },
+      );
+      const result = parseSupabaseQueryResult(output);
+      expect(result.rows).toEqual([
+        {
+          admin_attributes: true,
+          admin_authenticated: true,
+          admin_anon_denied: true,
+          decision_attributes: true,
+          decision_service: true,
+          decision_authenticated_denied: true,
+          decision_anon_denied: true,
+          public_execute_denied: true,
+        },
+      ]);
+    });
+
     it("limits admins membership to each user's own row", async () => {
       const { userA: clientA, userB: clientB, adminB: clientAdminB } = ready();
       const [a, b, adminBMembership] = await Promise.all([
@@ -234,29 +280,34 @@ describe.skipIf(!enabled || anonKey == null || serviceKey == null)(
         "42501",
       ]);
 
-      const writeResults = await Promise.all([
-        admin.from("admins").insert({ user_id: userBId }),
-        admin.from("admins").update({ user_id: userBId }).eq("user_id", userAId),
-        admin.from("admins").delete().eq("user_id", userAId),
-        admin.from("source_candidates").insert({
-          origin: "catalog",
-          source_id: fixtureSourceId,
-          name: "Forbidden",
-          feed_url: `https://forbidden-${testId}.example/feed`,
-          kind: "rss",
-          language: "en",
-        }),
-        admin.from("source_candidates").update({ status: "failed" }).eq("id", fixtureCandidateId),
-        admin.from("source_candidates").delete().eq("id", fixtureCandidateId),
-        admin
-          .from("source_discovery_runs")
-          .insert({ kind: "catalog", lease_expires_at: new Date().toISOString() }),
-        admin.from("source_discovery_runs").update({ status: "completed" }).eq("id", run.id),
-        admin.from("source_discovery_runs").delete().eq("id", run.id),
-      ]);
-      expect(writeResults.map((result) => result.error?.code)).toEqual(
-        new Array(writeResults.length).fill("42501"),
-      );
+      for (const client of [admin, anon]) {
+        const writeResults = await Promise.all([
+          client.from("admins").insert({ user_id: userBId }),
+          client.from("admins").update({ user_id: userBId }).eq("user_id", userAId),
+          client.from("admins").delete().eq("user_id", userAId),
+          client.from("source_candidates").insert({
+            origin: "catalog",
+            source_id: fixtureSourceId,
+            name: "Forbidden",
+            feed_url: `https://forbidden-${testId}.example/feed`,
+            kind: "rss",
+            language: "en",
+          }),
+          client
+            .from("source_candidates")
+            .update({ status: "failed" })
+            .eq("id", fixtureCandidateId),
+          client.from("source_candidates").delete().eq("id", fixtureCandidateId),
+          client
+            .from("source_discovery_runs")
+            .insert({ kind: "catalog", lease_expires_at: new Date().toISOString() }),
+          client.from("source_discovery_runs").update({ status: "completed" }).eq("id", run.id),
+          client.from("source_discovery_runs").delete().eq("id", run.id),
+        ]);
+        expect(writeResults.map((result) => result.error?.code)).toEqual(
+          new Array(writeResults.length).fill("42501"),
+        );
+      }
       await db.from("source_discovery_runs").delete().eq("id", run.id);
 
       const { error: anonDecisionError } = await anon.rpc("decide_source_candidate", {
@@ -275,6 +326,64 @@ describe.skipIf(!enabled || anonKey == null || serviceKey == null)(
       expect(adminCheckError).toBeNull();
       expect(adminCheck).toBe(true);
       expect(anonCheckError?.code).toBe("42501");
+    });
+
+    it("reads beyond the local PostgREST 1,000-row limit", async () => {
+      if (!isLocalSupabaseProjectUrl(url)) {
+        throw new Error("The pagination test requires the local Supabase project.");
+      }
+      const { service: db } = ready();
+      const source = await addInactiveSource("pagination");
+      const expectedUrls = Array.from(
+        { length: 1_001 },
+        (_, index) =>
+          `https://discovery-pagination-${testId}.example/${String(index).padStart(4, "0")}`,
+      );
+      const items = expectedUrls.map((itemUrl) => ({
+        source_id: source.id,
+        type: "article",
+        url: itemUrl,
+        title: "Pagination fixture",
+        language: "en",
+        published_at: new Date().toISOString(),
+      }));
+
+      let cleanupError: string | null = null;
+      try {
+        for (let offset = 0; offset < items.length; offset += 500) {
+          const { error } = await db
+            .from("content_items")
+            .insert(items.slice(offset, offset + 500));
+          if (error) throw new Error(`creating pagination fixtures failed: ${error.message}`);
+        }
+
+        const firstPage = await db
+          .from("content_items")
+          .select("url")
+          .eq("source_id", source.id)
+          .order("url");
+        expect(firstPage.error).toBeNull();
+        expect(firstPage.data).toHaveLength(1_000);
+
+        const rows = await readPages(
+          (from, to) =>
+            db
+              .from("content_items")
+              .select("url")
+              .eq("source_id", source.id)
+              .order("url")
+              .range(from, to),
+          "loading pagination fixtures",
+        );
+        expect(rows.map((row) => row.url)).toEqual(expectedUrls);
+      } finally {
+        const { error } = await db.from("content_items").delete().eq("source_id", source.id);
+        if (error) {
+          cleanupError = error.message;
+          console.error(`cleaning pagination fixtures failed: ${error.message}`);
+        }
+      }
+      expect(cleanupError).toBeNull();
     });
 
     it("rejects, activates, and safely reports stale catalog decisions", async () => {
@@ -352,6 +461,74 @@ describe.skipIf(!enabled || anonKey == null || serviceKey == null)(
       expect(same.error).toBeNull();
       expect(opposite.error).toBeNull();
       expect([same.data, opposite.data].sort()).toEqual(["already_decided", "unchanged"]);
+    });
+
+    it("rolls back source activation when approving the candidate fails", async () => {
+      if (!isLocalSupabaseProjectUrl(url)) {
+        throw new Error("The rollback test requires the local Supabase project.");
+      }
+      const { service: db } = ready();
+      const { candidateId, sourceId } = await addCatalogCandidate("rollback");
+
+      const query = `
+        do $test$
+        begin
+          begin
+            execute $sql$
+              create function pg_temp.fail_candidate_approval() returns trigger
+              language plpgsql as $trigger$
+              begin
+                if not exists (
+                  select 1 from public.sources where id = new.source_id and is_active
+                ) then
+                  raise exception 'Source was not activated before candidate update';
+                end if;
+                raise exception 'Forced candidate update failure' using errcode = 'P0123';
+              end;
+              $trigger$
+            $sql$;
+            execute $sql$
+              create trigger test_fail_candidate_approval
+                before update on public.source_candidates
+                for each row
+                when (new.id = '${candidateId}'::uuid and new.status = 'approved')
+                execute function pg_temp.fail_candidate_approval()
+            $sql$;
+            set local role service_role;
+            begin
+              perform public.decide_source_candidate('${candidateId}'::uuid, 'approve');
+              raise exception 'Candidate approval unexpectedly succeeded';
+            exception when sqlstate 'P0123' then
+              null;
+            end;
+            if not exists (
+              select 1 from public.sources where id = '${sourceId}'::uuid and not is_active
+            ) or not exists (
+              select 1 from public.source_candidates
+              where id = '${candidateId}'::uuid and status = 'pending' and decided_at is null
+            ) then
+              raise exception 'Failed approval did not roll back both rows';
+            end if;
+            reset role;
+            raise exception 'Remove temporary trigger' using errcode = 'P0124';
+          exception when sqlstate 'P0124' then
+            null;
+          end;
+        end;
+        $test$;
+      `;
+      execFileSync("supabase", ["db", "query", "--local", "--output-format", "json", query], {
+        stdio: "inherit",
+      });
+
+      const [source, candidate] = await Promise.all([
+        db.from("sources").select("is_active").eq("id", sourceId).single(),
+        db.from("source_candidates").select("status,decided_at").eq("id", candidateId).single(),
+      ]);
+      expect(source.error).toBeNull();
+      expect(candidate.error).toBeNull();
+      expect(source.data).toEqual({ is_active: false });
+      expect(candidate.data).toEqual({ status: "pending", decided_at: null });
     });
 
     it("serializes concurrent opposing decisions into one terminal state", async () => {

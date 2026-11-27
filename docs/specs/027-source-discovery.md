@@ -1,6 +1,6 @@
 # 027 — Source discovery
 
-**Status:** Approved  
+**Status:** Catalog release done; stage (b) deferred<br>
 **Milestone:** Final (weeks 6–7, stretch goal)  
 **Depends on:** gate 2 (passed); 019 (ingestion bounds); 024 (Sources page); 025 (story threshold); 021 (`llm_usage`, `reserve_llm_call`); for stage (b) only: [spec 001 task 15](001-ingestion.md) verified after deployment (the SSRF-safe transport is already in `lib/public-http.ts`)  
 **Estimate:** 22 h (release A, stage a with admin page: about 13 h; stage b: about 8 h; docs: 1 h)
@@ -23,7 +23,7 @@ Find good new sources for the shared pool. Stage (a) scores the inactive catalog
 ## In scope
 
 - **Release A (tasks 1–3):** `admins` and `is_admin()`; `source_candidates` and `source_discovery_runs`; a transactional decision function; a **Scan catalog** button; the admin-only page `/admin/sources` with approve and reject; the stage (a) privacy text.
-- **Stage (b) (task 4):** web-only candidate fields, the `source_discovery` usage kind, admin-typed topics, a **Search the web** button, autodiscovery through the SSRF-safe transport, web approval, and the stage (b) privacy text.
+- **Stage (b) (task 4, deferred):** web-only candidate fields, the `source_discovery` usage kind, admin-typed topics, a **Search the web** button, autodiscovery through the SSRF-safe transport, web approval, and the stage (b) privacy text. Retained for a later release, not part of the current catalog release.
 - Docs (task 5).
 
 ## Out of scope
@@ -126,12 +126,12 @@ Requires spec 001 task 15 to be verified after deployment (scheduled-run check, 
 
 ## Acceptance criteria
 
-Each criterion belongs to one task. Tasks 1–3 are release A and ship together; task 4 (stage b) ships separately and is cut first.
+Each criterion belongs to one task. Tasks 1–3 are release A and ship together; task 4 (stage b) is deferred to a separate release.
 
 1. **Task 1 — schema**
    1. `supabase db reset` applies the migration. `is_admin()` and `decide_source_candidate` have the attributes and grants above.
    2. Two-user and role tests: a user reads only their own `admins` row; `authenticated` and `anon` cannot insert, update, or delete `admins`, `source_candidates`, or `source_discovery_runs`; a non-admin and `anon` read no candidates or runs; an admin reads all of them; `authenticated` cannot execute `decide_source_candidate`.
-   3. Decision tests: reject; approve for catalog activates the source; a stale catalog URL returns `stale`; a web feed URL conflict returns `already_known` and leaves the candidate pending; a repeated decision returns `unchanged`; an opposite decision returns `already_decided`; concurrent approve and reject leave exactly one decision; a failure rolls back both rows.
+   3. Decision tests: reject; approve for catalog activates the source; a stale catalog URL returns `stale`; a repeated decision returns `unchanged`; an opposite decision returns `already_decided`; concurrent approve and reject leave exactly one decision; a failure rolls back both rows.
 2. **Task 2 — validation, scoring, and catalog scan**
    1. Unit tests: validation codes; undated, fallback-dated, and future-dated entries not counted as recent; the 200-entry cap before deduplication; the Shorts exclusion; feed URL normalization keeps the query; article and video windows; self-matches excluded; the nearest-rank percentile with ties; the relevance levels; the admin fallback with fewer than 3 users (basis `admin`, admin's likes only, other users' likes unused) and the switch to `all_users` at 3; `not_scored` when the admin has fewer than 5 likes, an empty reference pool, a missing language mean, and fewer than 3 scored items; duplicate share; rounding; the sort order.
    2. Integration tests on local Supabase with fixture feeds: a scan stores pending and failed candidates; no `content_items` rows are written; a rescan follows the status transitions; stored rows contain no user IDs or per-user values; a concurrent scan returns `scan_running`; an expired lease is replaced; a deadline produces a `partial` run, leaving unprocessed candidates unchanged; reads past 1,000 rows are complete.
@@ -140,9 +140,9 @@ Each criterion belongs to one task. Tasks 1–3 are release A and ship together;
    1. Component and action tests: a non-admin, `anon`, a claims error, and an `is_admin()` error all get `notFound()` or `not_found`, with no service-role use and no external request; the menu link shows only with the server-derived flag; button states including `scan_running`; decision results are shown; the table order and sections; external strings rendered as text.
    2. Integration test: an approved catalog source is returned by the ingestion source query and listed on the Sources page; a rejected one is not.
    3. The privacy page includes the stage (a) text.
-4. **Task 4 — web search (stage b)** (only after spec 001 task 15 is verified)
+4. **Task 4 — web search (stage b, deferred)** (only after spec 001 task 15 is verified)
    1. Migration: `llm_reason`, the `source_discovery` usage kind (5 per 24 hours, with the existing concurrency and expiry behavior), and web approval in `decide_source_candidate`.
-   2. Unit tests: typed topics are trimmed, length-checked, and limited to 1–3 on the server; the lease and limit are taken before any fetch; the exact outbound request body; the web-search parser accepts the fixture and rejects unexpected records, incomplete output, and invalid JSON; homepage, autodiscovery link, feed, and redirects all go through `fetchPublicUrl`, including blocked feed-link destinations and feed redirects to private addresses; relative autodiscovery links are resolved against the final URL; language extraction and fallback; run-level failures; repeated searches follow the status transitions; topic labels are not stored or logged.
+   2. Tests: a web feed URL conflict returns `already_known` and leaves the candidate pending; typed topics are trimmed, length-checked, and limited to 1–3 on the server; the lease and limit are taken before any fetch; the exact outbound request body; the web-search parser accepts the fixture and rejects unexpected records, incomplete output, and invalid JSON; homepage, autodiscovery link, feed, and redirects all go through `fetchPublicUrl`, including blocked feed-link destinations and feed redirects to private addresses; relative autodiscovery links are resolved against the final URL; language extraction and fallback; run-level failures; repeated searches follow the status transitions; topic labels are not stored or logged.
    3. A live smoke check and one manual run with 2 topics: the AI log records the proposals, how many passed validation, the failure codes, and the time and token use.
    4. The privacy page includes the stage (b) text.
 5. **Task 5 — docs**
@@ -151,14 +151,15 @@ Each criterion belongs to one task. Tasks 1–3 are release A and ship together;
 
 ## Tasks
 
-- [ ] 1. `admins`, `is_admin()`, `source_candidates`, `source_discovery_runs`, `decide_source_candidate` (catalog), RLS and decision tests (criterion 1).
-- [ ] 2. Shared ingestion filtering, validation and scoring, **Scan catalog** with lease, batches, and deadline; local and Vercel scan (criterion 2).
+- [x] 1. `admins`, `is_admin()`, `source_candidates`, `source_discovery_runs`, `decide_source_candidate` (catalog), RLS and decision tests (criterion 1).
+- [x] 2. Shared ingestion filtering, validation and scoring, **Scan catalog** with lease, batches, and deadline; local and Vercel scan (criterion 2).
 - [x] 3. `/admin/sources` page, menu flag, proxy refresh, stage (a) privacy text (criterion 3). Release A ships here.
-- [ ] 4. Stage (b): quota, typed topics, web search, parser, autodiscovery, web approval, privacy text (criterion 4). Cut first if time runs short.
-- [ ] 5. Docs (criterion 5).
+- [ ] 4. **Deferred:** stage (b), including quota, typed topics, web search, parser, autodiscovery, web approval, and privacy text (criterion 4).
+- [x] 5. Catalog release docs (criterion 5); stage (b) privacy text remains in deferred task 4.
 
 ## Decisions
 
+- Stage (b) is deferred, not permanently cut. Retain its design and acceptance criteria for a later release.
 - Stage (b) needs spec 001 task 15 verified, because URLs from an LLM must go through the SSRF-safe transport. The transport is already implemented; only the post-deployment check and dismissing alert #2 remain. Stage (a) uses known catalog URLs and does not wait.
 - Admins are rows in an `admins` table managed with SQL, checked with `is_admin()` through the user's client. Privileged writes use the service role only after that check, so shared tables keep no write policies.
 - Approve and reject run in one database transaction that reports success only after the source is activated or inserted.

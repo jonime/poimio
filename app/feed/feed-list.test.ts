@@ -105,6 +105,7 @@ const item: FeedItem = {
   reason: "recent",
   because_item_id: null,
   because_title: null,
+  duplicate_of: null,
 };
 let dom: JSDOM;
 let container: HTMLElement;
@@ -481,4 +482,205 @@ it("does not start swiping from the menu trigger or an open menu", async () => {
     pointer(menuItem, "pointerup", 0);
   });
   expect(setFeedback).not.toHaveBeenCalled();
+});
+
+it("renders one card per group with safe member links above the stretched link", async () => {
+  const rep: FeedItem = {
+    ...item,
+    id: "rep-1",
+    title: "Main story",
+    source_id: "source-a",
+    source_name: "Yle",
+  };
+  const member1: FeedItem = {
+    ...item,
+    id: "mem-1",
+    url: "https://example.com/mem-1",
+    title: "HS coverage",
+    source_id: "source-b",
+    source_name: "HS",
+    duplicate_of: "rep-1",
+  };
+  const memberUnsafe: FeedItem = {
+    ...item,
+    id: "mem-unsafe",
+    url: "javascript:alert(1)",
+    title: "Unsafe URL",
+    source_id: "source-c",
+    source_name: "Unsafe",
+    duplicate_of: "rep-1",
+  };
+  await renderItems([rep, member1, memberUnsafe]);
+
+  const articles = [...container.querySelectorAll<HTMLElement>("article[data-feed-item-id]")];
+  expect(articles.map((el) => el.dataset.feedItemId)).toEqual(["rep-1"]);
+
+  const article = requireDefined(articles[0], "representative article");
+  expect(article.textContent).toContain("Also covered by:");
+
+  const memberLink = article.querySelector<HTMLAnchorElement>('a[aria-label="HS: HS coverage"]');
+  assert(memberLink, "Member link must exist with source: title accessible name");
+  expect(memberLink.getAttribute("href")).toBe("https://example.com/mem-1");
+  expect(memberLink.closest(".relative.z-10")).not.toBeNull();
+  expect(memberLink.tabIndex).toBeGreaterThanOrEqual(0);
+
+  expect(article.querySelector('a[aria-label="Unsafe: Unsafe URL"]')).toBeNull();
+  expect(article.textContent).toContain("Unsafe");
+
+  // Activating member link on desktop or touch records no feedback
+  await act(async () => {
+    memberLink.dispatchEvent(
+      new PointerEvent("pointerdown", {
+        bubbles: true,
+        pointerType: "touch",
+        isPrimary: true,
+        clientX: 50,
+        clientY: 50,
+        pointerId: 1,
+      }),
+    );
+    memberLink.dispatchEvent(
+      new PointerEvent("pointerup", {
+        bubbles: true,
+        pointerType: "touch",
+        isPrimary: true,
+        clientX: 50,
+        clientY: 50,
+        pointerId: 1,
+      }),
+    );
+    memberLink.click();
+  });
+  expect(setFeedback).not.toHaveBeenCalled();
+
+  // Feedback button acts on representative only
+  const likeButton = article.querySelector<HTMLButtonElement>('button[aria-label="Like"]');
+  assert(likeButton, "Like button must exist");
+  await act(async () => likeButton.click());
+  expect(setFeedback).toHaveBeenCalledExactlyOnceWith("rep-1", "like", "button");
+});
+
+it("paginates when a 30-row page renders fewer cards due to grouping and excludes all row IDs", async () => {
+  const pageItems: FeedItem[] = Array.from({ length: 30 }, (_, index) => ({
+    ...item,
+    id: `row-${index}`,
+    title: `Row ${index}`,
+    source_id: `source-${index % 3}`,
+    source_name: `Source ${index % 3}`,
+    duplicate_of: index > 0 && index <= 10 ? "row-0" : null,
+  }));
+  vi.mocked(loadMoreFeed).mockResolvedValue([]);
+  await renderItems(pageItems);
+
+  const articles = [...container.querySelectorAll<HTMLElement>("article[data-feed-item-id]")];
+  expect(articles).toHaveLength(20);
+
+  const loadMore = [...container.querySelectorAll<HTMLButtonElement>("button")].find(
+    (button) => button.textContent === "Load more",
+  );
+  assert(loadMore, "Load more button must exist even with 20 cards");
+  await act(async () => loadMore.click());
+  expect(loadMoreFeed).toHaveBeenCalledExactlyOnceWith(pageItems.map((entry) => entry.id));
+});
+
+it("masks groups when representative source is hidden, omits hidden-source members, and restores on Undo including late pages", async () => {
+  const rep: FeedItem = {
+    ...item,
+    id: "rep-a",
+    title: "Rep A",
+    source_id: "source-a",
+    source_name: "Source A",
+  };
+  const memberB: FeedItem = {
+    ...item,
+    id: "mem-b",
+    url: "https://example.com/mem-b",
+    title: "Member B",
+    source_id: "source-b",
+    source_name: "Source B",
+    duplicate_of: "rep-a",
+  };
+  const standaloneB: FeedItem = {
+    ...item,
+    id: "stand-b",
+    title: "Standalone B",
+    source_id: "source-b",
+    source_name: "Source B",
+  };
+  const initialPage = [
+    rep,
+    memberB,
+    standaloneB,
+    ...Array.from({ length: 27 }, (_, index) => ({
+      ...item,
+      id: `pad-${index}`,
+      title: `Pad ${index}`,
+      source_id: `source-pad-${index}`,
+      source_name: `Pad ${index}`,
+    })),
+  ];
+  const lateMemberA: FeedItem = {
+    ...item,
+    id: "late-mem-a",
+    url: "https://example.com/late-mem-a",
+    title: "Late Member A",
+    source_id: "source-a",
+    source_name: "Source A",
+    duplicate_of: "stand-b",
+  };
+  let resolvePage: ((items: FeedItem[]) => void) | undefined;
+  vi.mocked(loadMoreFeed).mockReturnValue(
+    new Promise((resolve) => {
+      resolvePage = resolve;
+    }),
+  );
+  vi.mocked(hideSource).mockResolvedValue({
+    ok: true,
+    sourceId: "source-a",
+    sourceName: "Source A",
+  });
+  vi.mocked(showSource).mockResolvedValue({ ok: true, sourceId: "source-a" });
+
+  await renderItems(initialPage);
+
+  // Like rep-a first to verify feedback state is preserved across hide + Undo
+  const repLike = articleFor("rep-a").querySelector<HTMLButtonElement>('button[aria-label="Like"]');
+  assert(repLike, "Like button on rep-a must exist");
+  await act(async () => repLike.click());
+  expect(repLike.getAttribute("aria-pressed")).toBe("true");
+
+  // Start loading late page, then hide source-a before it arrives
+  const loadMore = [...container.querySelectorAll<HTMLButtonElement>("button")].find(
+    (button) => button.textContent === "Load more",
+  );
+  assert(loadMore, "Load more must exist");
+  await act(async () => loadMore.click());
+  await chooseHideItem(0);
+
+  expect(articleFor("rep-a").closest("[hidden]")).not.toBeNull();
+  expect(articleFor("stand-b").closest("[hidden]")).toBeNull();
+
+  // Late page arrives with a member from hidden source-a: omitted from stand-b's "Also covered by"
+  await act(async () => {
+    resolvePage?.([lateMemberA]);
+    await Promise.resolve();
+  });
+  expect(articleFor("stand-b").querySelector('a[aria-label="Source A: Late Member A"]')).toBeNull();
+
+  // Undo restores rep-a with its members, feedback state, and lateMemberA on stand-b
+  const lastToastCall = vi.mocked(toast.add).mock.calls.at(-1)?.[0] as
+    | { actionProps?: { onClick?: () => void } }
+    | undefined;
+  await act(async () => {
+    lastToastCall?.actionProps?.onClick?.();
+    await Promise.resolve();
+  });
+  expect(articleFor("rep-a").closest("[hidden]")).toBeNull();
+  expect(
+    articleFor("rep-a").querySelector('button[aria-label="Like"]')?.getAttribute("aria-pressed"),
+  ).toBe("true");
+  expect(articleFor("rep-a").querySelector('a[aria-label="Source B: Member B"]')).not.toBeNull();
+  expect(
+    articleFor("stand-b").querySelector('a[aria-label="Source A: Late Member A"]'),
+  ).not.toBeNull();
 });

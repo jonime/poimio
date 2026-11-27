@@ -42,6 +42,7 @@ evaluation/description-quality/.judge-cache.lock
 evaluation/description-style/runs/
 evaluation/description-style/review.csv
 evaluation/description-style/key.json
+evaluation/story-groups/review.csv
 .vercel
 
 # Source descriptions pending human review

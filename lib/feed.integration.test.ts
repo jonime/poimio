@@ -6,6 +6,12 @@ import { createIngestDb } from "./db.ts";
 import { EMBEDDING_DIMENSIONS } from "./embeddings.ts";
 import { rankingDefaults } from "./ranking-parameters.ts";
 import { requireDefined } from "./required.ts";
+import {
+  ACTIVE_STORY_EMBEDDING_MODEL,
+  assignStoryGroups,
+  meanKey,
+  STORY_GROUP_GOLDEN_CASES,
+} from "./story-groups.ts";
 
 const enabled = process.env.SUPABASE_INTEGRATION === "1";
 const url = process.env.SUPABASE_URL ?? "http://127.0.0.1:55321";
@@ -31,6 +37,7 @@ interface ItemDefinition {
 
 interface FeedRow {
   id: string;
+  language: "fi" | "en";
   source_name: string;
   score: number;
   reason: string;
@@ -38,6 +45,7 @@ interface FeedRow {
   because_title: string | null;
   because_preference_id: string | null;
   source_id: string;
+  duplicate_of: string | null;
 }
 
 interface LanguageMeanRow {
@@ -82,19 +90,24 @@ function cosine(left: number[], right: number[]): number {
 
 const itemDefinitions: ItemDefinition[] = [
   { key: "liked-fi", source: 0, language: "fi", center: axisVector(0) },
-  { key: "candidate-close", source: 1, language: "fi", center: axisVector(0) },
+  {
+    key: "candidate-close",
+    source: 1,
+    language: "fi",
+    center: addVectors(axisVector(0, 0.7), axisVector(3, Math.sqrt(1 - 0.7 * 0.7))),
+  },
   {
     key: "candidate-unrelated",
     source: 2,
     language: "fi",
-    center: axisVector(1),
+    center: axisVector(2),
   },
   { key: "disliked-fi", source: 0, language: "fi", center: axisVector(1) },
   {
     key: "candidate-close-dislike",
     source: 1,
     language: "fi",
-    center: axisVector(1),
+    center: addVectors(axisVector(1, 0.6), axisVector(9, 0.8)),
   },
   {
     key: "candidate-neutral",
@@ -106,28 +119,43 @@ const itemDefinitions: ItemDefinition[] = [
     key: "candidate-cross-related",
     source: 0,
     language: "en",
-    center: axisVector(0),
+    center: addVectors(axisVector(0, 0.7), axisVector(3, Math.sqrt(1 - 0.7 * 0.7))),
   },
   {
     key: "candidate-same-unrelated",
     source: 1,
     language: "fi",
-    center: axisVector(1),
+    center: axisVector(2),
   },
-  { key: "cold-a1", source: 0, language: "fi", center: axisVector(0) },
+  {
+    key: "cold-a1",
+    source: 0,
+    language: "fi",
+    center: addVectors(axisVector(0, 0.7), axisVector(3, Math.sqrt(1 - 0.7 * 0.7))),
+  },
   { key: "cold-b1", source: 1, language: "fi", center: axisVector(2) },
-  { key: "cold-c1", source: 2, language: "en", center: axisVector(0) },
+  {
+    key: "cold-c1",
+    source: 2,
+    language: "en",
+    center: addVectors(axisVector(0, 0.7), axisVector(3, Math.sqrt(1 - 0.7 * 0.7))),
+  },
   { key: "cold-a2", source: 0, language: "fi", center: axisVector(2) },
   { key: "cold-b2", source: 1, language: "en", center: axisVector(2) },
-  { key: "cold-c2", source: 2, language: "fi", center: axisVector(0) },
+  {
+    key: "cold-c2",
+    source: 2,
+    language: "fi",
+    center: addVectors(axisVector(0, 0.7), axisVector(3, Math.sqrt(1 - 0.7 * 0.7))),
+  },
   {
     key: "cold-negative-match",
     source: 2,
     language: "fi",
-    center: axisVector(1),
+    center: addVectors(axisVector(1, 0.6), axisVector(9, 0.8)),
   },
-  { key: "foreign-like", source: 0, language: "fi", center: axisVector(1) },
-  { key: "foreign-match", source: 1, language: "fi", center: axisVector(1) },
+  { key: "foreign-like", source: 0, language: "fi", center: axisVector(16) },
+  { key: "foreign-match", source: 1, language: "fi", center: axisVector(16) },
   { key: "zero-centered", source: 2, language: "fi", center: axisVector(0, 0) },
   { key: "page-old-like", source: 0, language: "fi", center: axisVector(7) },
   { key: "page-like", source: 0, language: "fi", center: axisVector(6) },
@@ -145,7 +173,7 @@ const itemDefinitions: ItemDefinition[] = [
     center: axisVector(1),
     embedding: null,
   },
-  { key: "no-mean-signal", source: 0, language: "en", center: axisVector(1) },
+  { key: "no-mean-signal", source: 0, language: "en", center: axisVector(17) },
   {
     key: "other-model-signal",
     source: 1,
@@ -873,15 +901,15 @@ describe.skipIf(!enabled || anonKey == null || serviceKey == null)(
         p_method: "average_vector",
         p_params: recency,
       });
-      const disliked = await rankItems(["candidate-close-dislike"], ["liked-fi"], ["disliked-fi"], {
+      const disliked = await rankItems(["rank-cold-1"], ["liked-fi"], ["rank-cold-dislike"], {
         p_as_of: asOf,
         p_method: "nearest_liked",
         p_params: recency,
       });
       const adjustedDislike = await rankItems(
-        ["candidate-close-dislike"],
+        ["rank-cold-1"],
         ["liked-fi"],
-        ["disliked-fi"],
+        ["rank-cold-dislike"],
         { p_as_of: asOf, p_method: "nearest_liked", p_params: { ...recency, lambda: 0.25 } },
       );
 
@@ -1458,11 +1486,12 @@ describe.skipIf(!enabled || anonKey == null || serviceKey == null)(
 
     it("personalizes from a more preference and penalizes a less preference", async () => {
       if (!userAId) throw new Error("Fixture user is missing.");
+      const closeCenter = addVectors(axisVector(0, 0.7), axisVector(3, Math.sqrt(1 - 0.7 * 0.7)));
       const moreId = await insertPreference({
         userId: userAId,
         label: "Axis zero",
         direction: "more",
-        fi: axisVector(0),
+        fi: closeCenter,
         en: addVectors(meanVectors.en, axisVector(30)),
       });
       const personalized = await rankItems(["candidate-close", "candidate-neutral"], [], [], {
@@ -1484,7 +1513,7 @@ describe.skipIf(!enabled || anonKey == null || serviceKey == null)(
         userId: userAId,
         label: "Axis zero less",
         direction: "less",
-        fi: axisVector(0),
+        fi: closeCenter,
         en: addVectors(meanVectors.en, axisVector(31)),
       });
       const penalized = await rankItems(
@@ -1822,6 +1851,524 @@ describe.skipIf(!enabled || anonKey == null || serviceKey == null)(
       expect(feedA.every((row) => row.because_title !== "B topic")).toBe(true);
       expect(feedB.every((row) => row.because_title !== "A topic")).toBe(true);
       expect(feedA.every((row) => row.reason !== "exploring")).toBe(true);
+    });
+
+    describe("same-story filter and grouping", () => {
+      it("filters near-duplicates of like, not_interested, and seen references including cold-start seen-only and hidden-source references", async () => {
+        const { service, userAClient, userBClient } = clients();
+        if (!userAId || !userBId) throw new Error("Fixture users are missing.");
+        const baseTime = Date.now();
+        const axisLike = axisVector(40);
+        const axisDislike = axisVector(41);
+        const axisSeen = axisVector(42);
+        const axisHidden = axisVector(43);
+        const axisOld = axisVector(44);
+        const axisCross = axisVector(45);
+
+        const near = (axis: number, sim: number) =>
+          addVectors(axisVector(axis, sim), axisVector(50, Math.sqrt(Math.max(0, 1 - sim * sim))));
+
+        const rowsToInsert: Array<{
+          key: string;
+          source: number;
+          language: "fi" | "en";
+          center: number[];
+          ageDays: number;
+          model?: string;
+        }> = [
+          { key: "ref-like", source: 0, language: "fi" as const, center: axisLike, ageDays: 0 },
+          {
+            key: "cand-like-dup",
+            source: 1,
+            language: "fi" as const,
+            center: near(40, 0.75),
+            ageDays: 0,
+          },
+          {
+            key: "cand-like-ctrl",
+            source: 1,
+            language: "fi" as const,
+            center: near(40, 0.7),
+            ageDays: 0,
+          },
+          {
+            key: "ref-dislike",
+            source: 0,
+            language: "fi" as const,
+            center: axisDislike,
+            ageDays: 0,
+          },
+          {
+            key: "cand-dislike-dup",
+            source: 1,
+            language: "fi" as const,
+            center: near(41, 0.8),
+            ageDays: 0,
+          },
+          { key: "ref-seen", source: 0, language: "fi" as const, center: axisSeen, ageDays: 0 },
+          {
+            key: "cand-seen-dup",
+            source: 1,
+            language: "fi" as const,
+            center: near(42, 0.76),
+            ageDays: 0,
+          },
+          {
+            key: "cand-seen-ctrl",
+            source: 1,
+            language: "fi" as const,
+            center: near(42, 0.65),
+            ageDays: 0,
+          },
+          { key: "ref-hidden", source: 2, language: "fi" as const, center: axisHidden, ageDays: 0 },
+          {
+            key: "cand-hidden-dup",
+            source: 1,
+            language: "fi" as const,
+            center: near(43, 0.8),
+            ageDays: 0,
+          },
+          { key: "ref-old", source: 0, language: "fi" as const, center: axisOld, ageDays: 31 },
+          { key: "cand-old-dup", source: 1, language: "fi" as const, center: axisOld, ageDays: 0 },
+          { key: "ref-cross", source: 0, language: "fi" as const, center: axisCross, ageDays: 0 },
+          {
+            key: "cand-cross-mid",
+            source: 1,
+            language: "en" as const,
+            center: near(45, 0.6),
+            ageDays: 0,
+          },
+          {
+            key: "ref-wrong-model",
+            source: 0,
+            language: "fi" as const,
+            center: axisVector(46),
+            ageDays: 0,
+            model: otherModel,
+          },
+          {
+            key: "cand-wrong-model-ctrl",
+            source: 1,
+            language: "fi" as const,
+            center: axisVector(46),
+            ageDays: 0,
+          },
+          {
+            key: "ref-zero",
+            source: 0,
+            language: "fi" as const,
+            center: axisVector(0, 0),
+            ageDays: 0,
+          },
+        ];
+
+        const inserted = await service
+          .from("content_items")
+          .insert(
+            rowsToInsert.map((item) => ({
+              source_id: sourceIds[item.source],
+              type: "article",
+              url: `https://feed-integration.example/${suffix}/story-filter-${item.key}`,
+              title: `Story filter ${item.key}`,
+              summary: "Story filter summary",
+              summary_origin: "feed",
+              enrichment_status: "completed",
+              language: item.language,
+              published_at: new Date(baseTime - item.ageDays * 24 * 60 * 60 * 1000).toISOString(),
+              embedding: pgVector(addVectors(item.center, meanVectors[item.language])),
+              embedding_model: item.model ?? activeModel,
+            })),
+          )
+          .select("id,title");
+        if (inserted.error || !inserted.data) {
+          throw new Error(`Inserting story filter fixtures failed: ${inserted.error?.message}`);
+        }
+        const idByKey = new Map(
+          inserted.data.map((row) => [row.title.replace("Story filter ", ""), row.id]),
+        );
+        const insertedIds = inserted.data.map((row) => row.id);
+
+        try {
+          const { error: hideError } = await userAClient.from("hidden_sources").insert({
+            source_id: requireDefined(sourceIds[2], "source 2"),
+          });
+          if (hideError) throw new Error(`Hiding source failed: ${hideError.message}`);
+          const { error: fbError } = await service.from("feedback").insert([
+            { user_id: userAId, item_id: idByKey.get("ref-like"), kind: "like", via: "button" },
+            {
+              user_id: userAId,
+              item_id: idByKey.get("ref-dislike"),
+              kind: "not_interested",
+              via: "button",
+            },
+            { user_id: userAId, item_id: idByKey.get("ref-seen"), kind: "seen", via: "button" },
+            { user_id: userAId, item_id: idByKey.get("ref-hidden"), kind: "like", via: "button" },
+            { user_id: userAId, item_id: idByKey.get("ref-old"), kind: "like", via: "button" },
+            { user_id: userAId, item_id: idByKey.get("ref-cross"), kind: "like", via: "button" },
+            {
+              user_id: userAId,
+              item_id: idByKey.get("ref-wrong-model"),
+              kind: "like",
+              via: "button",
+            },
+            { user_id: userAId, item_id: idByKey.get("ref-zero"), kind: "like", via: "button" },
+          ]);
+          if (fbError) throw new Error(`Inserting feedback failed: ${fbError.message}`);
+
+          const feedA = await getFeed(userAClient, { p_limit: 100 });
+          const feedAIds = new Set(feedA.map((row) => row.id));
+          expect(feedAIds.has(requireDefined(idByKey.get("cand-like-dup"), "cand-like-dup"))).toBe(
+            false,
+          );
+          expect(
+            feedAIds.has(requireDefined(idByKey.get("cand-like-ctrl"), "cand-like-ctrl")),
+          ).toBe(true);
+          expect(
+            feedAIds.has(requireDefined(idByKey.get("cand-dislike-dup"), "cand-dislike-dup")),
+          ).toBe(false);
+          expect(feedAIds.has(requireDefined(idByKey.get("cand-seen-dup"), "cand-seen-dup"))).toBe(
+            false,
+          );
+          expect(
+            feedAIds.has(requireDefined(idByKey.get("cand-seen-ctrl"), "cand-seen-ctrl")),
+          ).toBe(true);
+          expect(
+            feedAIds.has(requireDefined(idByKey.get("cand-hidden-dup"), "cand-hidden-dup")),
+          ).toBe(false);
+          expect(feedAIds.has(requireDefined(idByKey.get("cand-old-dup"), "cand-old-dup"))).toBe(
+            true,
+          );
+          expect(
+            feedAIds.has(requireDefined(idByKey.get("cand-cross-mid"), "cand-cross-mid")),
+          ).toBe(true);
+          expect(
+            feedAIds.has(
+              requireDefined(idByKey.get("cand-wrong-model-ctrl"), "cand-wrong-model-ctrl"),
+            ),
+          ).toBe(true);
+
+          // User B has no feedback: none of User A's ratings filter User B.
+          // Then User B records only a 'seen' item (cold-start seen-only filter).
+          const feedBBefore = await getFeed(userBClient, { p_limit: 100 });
+          expect(feedBBefore.some((row) => row.id === idByKey.get("cand-like-dup"))).toBe(true);
+          const { error: fbBError } = await service.from("feedback").insert({
+            user_id: userBId,
+            item_id: idByKey.get("ref-seen"),
+            kind: "seen",
+            via: "button",
+          });
+          if (fbBError) throw new Error(`Inserting User B feedback failed: ${fbBError.message}`);
+          const feedBColdSeen = await getFeed(userBClient, { p_limit: 100 });
+          expect(feedBColdSeen.some((row) => row.id === idByKey.get("cand-seen-dup"))).toBe(false);
+          expect(feedBColdSeen.some((row) => row.id === idByKey.get("cand-seen-ctrl"))).toBe(true);
+        } finally {
+          await service
+            .from("hidden_sources")
+            .delete()
+            .eq("user_id", userAId)
+            .eq("source_id", requireDefined(sourceIds[2], "source 2"));
+          await service.from("content_items").delete().in("id", insertedIds);
+        }
+      });
+
+      it("stops referencing after the 300th rated item", async () => {
+        const { service, userAClient } = clients();
+        if (!userAId) throw new Error("Fixture user is missing.");
+        const baseTime = Date.now();
+        const refItems = Array.from({ length: 301 }, (_, index) => ({
+          source_id: sourceIds[0],
+          type: "article",
+          url: `https://feed-integration.example/${suffix}/ref301-${index}`,
+          title: `Ref301 ${index}`,
+          summary: "Ref301 summary",
+          summary_origin: "feed",
+          enrichment_status: "completed",
+          language: "fi",
+          published_at: new Date(baseTime - 1000).toISOString(),
+          embedding: pgVector(axisVector(index === 0 ? 47 : 48)),
+          embedding_model: activeModel,
+        }));
+        const candItem = {
+          source_id: sourceIds[1],
+          type: "article",
+          url: `https://feed-integration.example/${suffix}/cand301`,
+          title: "Cand301",
+          summary: "Cand301 summary",
+          summary_origin: "feed",
+          enrichment_status: "completed",
+          language: "fi",
+          published_at: new Date(baseTime).toISOString(),
+          embedding: pgVector(axisVector(47)),
+          embedding_model: activeModel,
+        };
+        const inserted = await service
+          .from("content_items")
+          .insert([...refItems, candItem])
+          .select("id,title");
+        if (inserted.error || !inserted.data) {
+          throw new Error(`Inserting 301 refs failed: ${inserted.error?.message}`);
+        }
+        const insertedIds = inserted.data.map((row) => row.id);
+        const candId = requireDefined(
+          inserted.data.find((row) => row.title === "Cand301")?.id,
+          "Cand301",
+        );
+        const refRows = inserted.data
+          .filter((row) => row.title.startsWith("Ref301 "))
+          .sort((a, b) => Number(a.title.slice(7)) - Number(b.title.slice(7)));
+
+        try {
+          // Index 0 is the oldest updated_at (301st reference), so it falls outside LIMIT 300.
+          await service.from("feedback").insert(
+            refRows.map((row, index) => ({
+              user_id: userAId,
+              item_id: row.id,
+              kind: "seen",
+              updated_at: new Date(baseTime - (301 - index) * 1000).toISOString(),
+            })),
+          );
+          const feed = await getFeed(userAClient, { p_limit: 100 });
+          expect(feed.some((row) => row.id === candId)).toBe(true);
+        } finally {
+          for (let offset = 0; offset < insertedIds.length; offset += 100) {
+            const { error: delError } = await service
+              .from("content_items")
+              .delete()
+              .in("id", insertedIds.slice(offset, offset + 100));
+            if (delError) console.error(`Cleaning up 301 refs failed: ${delError.message}`);
+          }
+        }
+      });
+
+      it("groups same-language and cross-language duplicates with a 5-row cap and excludes exploration", async () => {
+        const { service, userAClient } = clients();
+        if (!userAId) throw new Error("Fixture user is missing.");
+        const baseTime = Date.now();
+        const storyAxis = axisVector(49);
+        const crossVec = addVectors(
+          addVectors(axisVector(49, 0.55), axisVector(51, Math.sqrt(1 - 0.55 * 0.55))),
+          meanVectors.en,
+        );
+        const rows = [
+          {
+            title: "Group Rep",
+            source: 0,
+            language: "fi" as const,
+            embedding: storyAxis,
+            offsetMs: 0,
+          },
+          {
+            title: "Group M1",
+            source: 1,
+            language: "fi" as const,
+            embedding: storyAxis,
+            offsetMs: 1000,
+          },
+          {
+            title: "Group M2",
+            source: 2,
+            language: "fi" as const,
+            embedding: storyAxis,
+            offsetMs: 2000,
+          },
+          {
+            title: "Group M3 EN",
+            source: 0,
+            language: "en" as const,
+            embedding: crossVec,
+            offsetMs: 3000,
+          },
+          {
+            title: "Group M4",
+            source: 1,
+            language: "fi" as const,
+            embedding: storyAxis,
+            offsetMs: 4000,
+          },
+          {
+            title: "Group M5",
+            source: 2,
+            language: "fi" as const,
+            embedding: storyAxis,
+            offsetMs: 5000,
+          },
+          {
+            title: "Group Overflow",
+            source: 0,
+            language: "fi" as const,
+            embedding: storyAxis,
+            offsetMs: 6000,
+          },
+        ];
+        const inserted = await service
+          .from("content_items")
+          .insert(
+            rows.map((row) => ({
+              source_id: sourceIds[row.source],
+              type: "article",
+              url: `https://feed-integration.example/${suffix}/group-${row.title.replace(/\s+/g, "-")}`,
+              title: row.title,
+              summary: "Group test summary",
+              summary_origin: "feed",
+              enrichment_status: "completed",
+              language: row.language,
+              published_at: new Date(baseTime - row.offsetMs).toISOString(),
+              embedding: pgVector(row.embedding),
+              embedding_model: activeModel,
+            })),
+          )
+          .select("id,title");
+        if (inserted.error || !inserted.data) {
+          throw new Error(`Inserting group fixtures failed: ${inserted.error?.message}`);
+        }
+        const insertedIds = inserted.data.map((row) => row.id);
+        const idByTitle = new Map(inserted.data.map((row) => [row.title, row.id]));
+
+        try {
+          // Parity without matches on existing fixtures
+          const feed = await getFeed(userAClient, { p_limit: 100 });
+          const repId = requireDefined(idByTitle.get("Group Rep"), "Group Rep");
+          const groupRows = feed.filter(
+            (row) => idByTitle.has(row.id) === false && insertedIds.includes(row.id),
+          );
+          const byId = new Map(groupRows.map((row) => [row.id, row]));
+
+          expect(byId.get(repId)?.duplicate_of).toBeNull();
+          expect(
+            byId.get(requireDefined(idByTitle.get("Group M1"), "Group M1"))?.duplicate_of,
+          ).toBe(repId);
+          expect(
+            byId.get(requireDefined(idByTitle.get("Group M2"), "Group M2"))?.duplicate_of,
+          ).toBe(repId);
+          expect(
+            byId.get(requireDefined(idByTitle.get("Group M3 EN"), "Group M3 EN"))?.duplicate_of,
+          ).toBeNull();
+          expect(
+            byId.get(requireDefined(idByTitle.get("Group M4"), "Group M4"))?.duplicate_of,
+          ).toBe(repId);
+          expect(
+            byId.get(requireDefined(idByTitle.get("Group M5"), "Group M5"))?.duplicate_of,
+          ).toBe(repId);
+          expect(
+            byId.get(requireDefined(idByTitle.get("Group Overflow"), "Group Overflow"))
+              ?.duplicate_of,
+          ).toBeNull();
+        } finally {
+          await service.from("content_items").delete().in("id", insertedIds);
+        }
+      });
+
+      it("matches the offline grouping walk on golden cases and keeps parity without matches", async () => {
+        const { service, userAClient } = clients();
+        if (!userAId) throw new Error("Fixture user is missing.");
+
+        // Parity without matches: orthogonal items return duplicate_of = null and match rank_items
+        const baseTime = Date.now() + 60_000;
+        const parityInputs = [
+          { title: "Parity A", axis: 52, offsetMs: 0 },
+          { title: "Parity B", axis: 53, offsetMs: 1000 },
+          { title: "Parity C", axis: 54, offsetMs: 2000 },
+        ];
+        const parityInserted = await service
+          .from("content_items")
+          .insert(
+            parityInputs.map((item, index) => ({
+              source_id: sourceIds[index % sourceIds.length],
+              type: "article",
+              url: `https://feed-integration.example/${suffix}/parity-${index}`,
+              title: item.title,
+              summary: "Parity summary",
+              summary_origin: "feed",
+              enrichment_status: "completed",
+              language: "fi",
+              published_at: new Date(baseTime - item.offsetMs).toISOString(),
+              embedding: pgVector(axisVector(item.axis)),
+              embedding_model: activeModel,
+            })),
+          )
+          .select("id,title");
+        if (parityInserted.error || !parityInserted.data) {
+          throw new Error(`Inserting parity fixtures failed: ${parityInserted.error?.message}`);
+        }
+        const parityIds = parityInserted.data.map((row) => row.id);
+        try {
+          const allOtherIds = [...itemIds.values()];
+          const parityFeed = await getFeed(userAClient, {
+            p_limit: 100,
+            p_exclude: allOtherIds,
+          });
+          const parityRows = parityFeed.filter((row) => parityIds.includes(row.id));
+          expect(parityRows).toHaveLength(3);
+          expect(parityRows.every((row) => row.duplicate_of === null)).toBe(true);
+        } finally {
+          await service.from("content_items").delete().in("id", parityIds);
+        }
+
+        // Golden case 0 (crossLingualThreshold = 0.50)
+        const golden = requireDefined(STORY_GROUP_GOLDEN_CASES[0], "golden case 0");
+        const inserted = await service
+          .from("content_items")
+          .insert(
+            golden.rows.map((row, index) => ({
+              source_id: sourceIds[index % sourceIds.length],
+              type: "article",
+              url: `https://feed-integration.example/${suffix}/golden-${index}`,
+              title: `Golden ${index}`,
+              summary: row.enrichmentStatus === "completed" ? (row.summary ?? "") : null,
+              summary_origin: row.enrichmentStatus === "completed" ? "feed" : null,
+              enrichment_status: row.enrichmentStatus ?? "completed",
+              language: row.language,
+              published_at: new Date(baseTime - index * 1000).toISOString(),
+              embedding: row.embedding
+                ? pgVector(addVectors(row.embedding, meanVectors[row.language as "fi" | "en"]))
+                : null,
+              embedding_model:
+                row.enrichmentStatus === "completed" ? (row.embeddingModel ?? activeModel) : null,
+            })),
+          )
+          .select("id,title,language,embedding_model,enrichment_status,summary");
+        if (inserted.error || !inserted.data) {
+          throw new Error(`Inserting golden fixtures failed: ${inserted.error?.message}`);
+        }
+        const insertedIds = inserted.data.map((row) => row.id);
+        const byIndex = new Map(
+          inserted.data.map((row) => [Number(row.title.replace("Golden ", "")), row]),
+        );
+
+        try {
+          const feed = await getFeed(userAClient, { p_limit: 100 });
+          const goldenFeed = feed.filter((row) => insertedIds.includes(row.id));
+          const means = new Map([
+            [meanKey(ACTIVE_STORY_EMBEDDING_MODEL, "fi"), [...meanVectors.fi]],
+            [meanKey(ACTIVE_STORY_EMBEDDING_MODEL, "en"), [...meanVectors.en]],
+          ]);
+          const offlineInput = goldenFeed.map((row) => {
+            const idx = [...byIndex.entries()].find(([, v]) => v.id === row.id)?.[0];
+            const srcRow = golden.rows[requireDefined(idx, "golden index")];
+            return {
+              id: row.id,
+              language: row.language,
+              embeddingModel: srcRow?.embeddingModel ?? activeModel,
+              embedding: srcRow?.embedding
+                ? addVectors(srcRow.embedding, meanVectors[row.language as "fi" | "en"])
+                : null,
+              enrichmentStatus: srcRow?.enrichmentStatus ?? "completed",
+              summary: srcRow?.summary ?? "",
+              exploration: row.reason === "exploring",
+            };
+          });
+          const offline = assignStoryGroups({
+            rows: offlineInput,
+            means,
+            crossLingualThreshold: null,
+          });
+          expect(goldenFeed.map((row) => ({ id: row.id, duplicateOf: row.duplicate_of }))).toEqual(
+            offline.map(({ id, duplicateOf }) => ({ id, duplicateOf })),
+          );
+        } finally {
+          await service.from("content_items").delete().in("id", insertedIds);
+        }
+      });
     });
   },
 );

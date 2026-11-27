@@ -1,6 +1,6 @@
 # 026 — Interest summary and click tracking
 
-**Status:** Click release complete; failed optional interest summary cut; AI-log entry pending
+**Status:** Done (click release complete; failed optional interest summary cut)
 **Milestone:** Final (week 6)  
 **Depends on:** 021 (`llm_usage`, `reserve_llm_call`, Tune feed page, scorer signals), 025 (current `get_feed`, member links)  
 **Estimate:** 18 h
@@ -154,7 +154,7 @@ Each criterion belongs to one task. Tasks 1–4 (clicks, History, and their priv
 - [x] 3. `get_history` and the History page with Load more (criterion 3).
 - [x] 4. Record clicks from feed and member links; "which you opened" explanation; browser check; click privacy text (criterion 4). Tasks 1–4 ship together.
 - [x] 5. Cut the interest-summary backend and usage kind after the check failed; remove the shipped table in a forward migration.
-- [ ] 6. Keep Tune feed focused on preferences, remove summary privacy text, and document the cut decision plus the required AI-log entry.
+- [x] 6. Keep Tune feed focused on preferences, remove summary privacy text, and document the cut decision plus the required AI-log entry.
 
 ## Decisions
 

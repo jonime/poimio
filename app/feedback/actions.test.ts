@@ -1,6 +1,6 @@
 import { revalidatePath } from "next/cache";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { clearFeedback, setFeedback } from "./actions";
+import { clearFeedback, recordClick, setFeedback } from "./actions";
 
 vi.mock("next/cache", () => ({ revalidatePath: vi.fn() }));
 
@@ -150,5 +150,45 @@ describe("clearFeedback", () => {
     }));
     await expect(clearFeedback(validItemId)).rejects.toThrow("Could not clear feedback.");
     expect(revalidatePath).not.toHaveBeenCalled();
+  });
+});
+
+describe("recordClick", () => {
+  it("rejects malformed IDs without creating a client or calling the RPC", async () => {
+    await expect(recordClick("not-a-uuid")).resolves.toEqual({
+      ok: false,
+      error: "save_failed",
+    });
+    expect(createClient).not.toHaveBeenCalled();
+    expect(rpc).not.toHaveBeenCalled();
+  });
+
+  it.each([
+    { data: null, error: null },
+    { data: { claims: {} }, error: null },
+    { ...verifiedClaims, error: new Error("Invalid signature") },
+  ])("does not write for a missing or unverified session", async (result) => {
+    auth.getClaims.mockResolvedValueOnce(result);
+    await expect(recordClick(validItemId)).resolves.toEqual({
+      ok: false,
+      error: "save_failed",
+    });
+    expect(rpc).not.toHaveBeenCalled();
+  });
+
+  it("records the click through the authenticated RPC", async () => {
+    await expect(recordClick(validItemId)).resolves.toEqual({ ok: true });
+    expect(rpc).toHaveBeenCalledExactlyOnceWith("record_click", {
+      p_item_id: validItemId,
+    });
+    expect(auth.getClaims).toHaveBeenCalledBefore(rpc);
+  });
+
+  it("returns a generic failure without exposing database details", async () => {
+    rpc.mockResolvedValueOnce({ error: new Error("internal database detail") });
+    await expect(recordClick(validItemId)).resolves.toEqual({
+      ok: false,
+      error: "save_failed",
+    });
   });
 });

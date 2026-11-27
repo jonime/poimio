@@ -13,6 +13,7 @@ const feedbackVias = new Set<FeedbackVia>(["button", "swipe"]);
 type SourceActionResult =
   | { ok: true; sourceId: string; sourceName?: string }
   | { ok: false; error: "not_found" | "save_failed" };
+type RecordClickResult = { ok: true } | { ok: false; error: "save_failed" };
 
 function validateUuid(value: unknown, label: string): asserts value is string {
   if (typeof value !== "string" || !uuidPattern.test(value)) {
@@ -75,6 +76,22 @@ export async function clearFeedback(itemId: string): Promise<void> {
     .eq("item_id", itemId);
   if (error) throw new Error("Could not clear feedback.");
   revalidatePath("/liked");
+}
+
+export async function recordClick(itemId: unknown): Promise<RecordClickResult> {
+  if (typeof itemId !== "string" || !uuidPattern.test(itemId)) {
+    return { ok: false, error: "save_failed" };
+  }
+
+  const supabase = await createClient();
+  const { data, error: claimsError } = await supabase.auth.getClaims();
+  const userId = data?.claims?.sub;
+  if (claimsError || typeof userId !== "string" || userId.length === 0) {
+    return { ok: false, error: "save_failed" };
+  }
+
+  const { error } = await supabase.rpc("record_click", { p_item_id: itemId });
+  return error ? { ok: false, error: "save_failed" } : { ok: true };
 }
 
 export async function hideSource(itemId: unknown): Promise<SourceActionResult> {

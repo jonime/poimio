@@ -1,10 +1,18 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { deletePreference, flipPreference, tunePreferences } from "./actions.ts";
+import {
+  clearInterestSummary,
+  deletePreference,
+  flipPreference,
+  summarizeInterests,
+  tunePreferences,
+} from "./actions.ts";
 
 const {
   tunePreferencesForUser,
   flipPreferenceForUser,
   deletePreferenceForUser,
+  summarizeInterestsForUser,
+  clearInterestSummaryForUser,
   createClient,
   createServiceRoleClient,
   revalidatePath,
@@ -14,6 +22,8 @@ const {
   tunePreferencesForUser: vi.fn(),
   flipPreferenceForUser: vi.fn(),
   deletePreferenceForUser: vi.fn(),
+  summarizeInterestsForUser: vi.fn(),
+  clearInterestSummaryForUser: vi.fn(),
   createClient: vi.fn(),
   createServiceRoleClient: vi.fn(),
   revalidatePath: vi.fn(),
@@ -25,6 +35,10 @@ vi.mock("../../lib/preference-tuning.ts", () => ({
   tunePreferencesForUser,
   flipPreferenceForUser,
   deletePreferenceForUser,
+}));
+vi.mock("../../lib/interest-summary.ts", () => ({
+  summarizeInterestsForUser,
+  clearInterestSummaryForUser,
 }));
 vi.mock("../../lib/supabase/server.ts", () => ({ createClient }));
 vi.mock("../../lib/supabase/service-role.ts", () => ({ createServiceRoleClient }));
@@ -41,6 +55,15 @@ beforeEach(() => {
     error: "not_found",
     message: "not found",
   });
+  summarizeInterestsForUser.mockResolvedValue({
+    ok: true,
+    remaining: 9,
+    summary: "Technology interests.",
+    topics: ["Technology"],
+    likeCount: 3,
+    generatedAt: "2026-11-27T00:00:00.000Z",
+  });
+  clearInterestSummaryForUser.mockResolvedValue({ ok: true });
 });
 
 describe("preference actions", () => {
@@ -67,6 +90,22 @@ describe("preference actions", () => {
       userClient,
       preferenceId: "11111111-1111-4111-8111-111111111111",
     });
+    expect(createServiceRoleClient).not.toHaveBeenCalled();
+  });
+
+  it("uses the verified user client for summary actions and the service role only to save", async () => {
+    await summarizeInterests();
+    const summaryInput = summarizeInterestsForUser.mock.calls[0]?.[0] as {
+      userClient: unknown;
+      createServiceClient: () => unknown;
+    };
+    expect(summaryInput.userClient).toBe(userClient);
+    expect(summaryInput.createServiceClient()).toBe(serviceClient);
+    expect(revalidatePath).toHaveBeenCalledWith("/preferences/tune");
+
+    createServiceRoleClient.mockClear();
+    await clearInterestSummary();
+    expect(clearInterestSummaryForUser).toHaveBeenCalledWith({ userClient });
     expect(createServiceRoleClient).not.toHaveBeenCalled();
   });
 });

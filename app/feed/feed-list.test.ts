@@ -6,7 +6,13 @@ import { afterEach, beforeEach, expect, it, vi } from "vitest";
 import { toast } from "@/components/ui/toast";
 import type { FeedItem } from "@/lib/feed-ui";
 import { requireDefined } from "@/lib/required";
-import { clearFeedback, hideSource, setFeedback, showSource } from "../feedback/actions";
+import {
+  clearFeedback,
+  hideSource,
+  recordClick,
+  setFeedback,
+  showSource,
+} from "../feedback/actions";
 import { loadMoreFeed } from "./actions";
 import FeedList from "./feed-list";
 
@@ -15,6 +21,7 @@ vi.mock("../feedback/actions", () => ({
   clearFeedback: vi.fn(),
   hideSource: vi.fn(),
   showSource: vi.fn(),
+  recordClick: vi.fn(),
 }));
 vi.mock("./actions", () => ({ loadMoreFeed: vi.fn() }));
 vi.mock("@/components/ui/dropdown-menu", async () => {
@@ -182,6 +189,7 @@ beforeEach(async () => {
   });
   vi.mocked(showSource).mockResolvedValue({ ok: true, sourceId: "source-a" });
   vi.mocked(loadMoreFeed).mockResolvedValue([]);
+  vi.mocked(recordClick).mockResolvedValue({ ok: true });
   dom = new JSDOM("<!doctype html><html><body></body></html>", { url: "http://localhost:3001/" });
   const view = dom.window as unknown as Window & typeof globalThis;
   class TestPointerEvent extends view.MouseEvent {
@@ -527,7 +535,7 @@ it("renders one card per group with safe member links above the stretched link",
   expect(article.querySelector('a[aria-label="Unsafe: Unsafe URL"]')).toBeNull();
   expect(article.textContent).toContain("Unsafe");
 
-  // Activating member link on desktop or touch records no feedback
+  // Activating member link on desktop or touch records a member click, never feedback.
   await act(async () => {
     memberLink.dispatchEvent(
       new PointerEvent("pointerdown", {
@@ -552,12 +560,101 @@ it("renders one card per group with safe member links above the stretched link",
     memberLink.click();
   });
   expect(setFeedback).not.toHaveBeenCalled();
+  expect(recordClick).toHaveBeenCalledExactlyOnceWith("mem-1");
 
   // Feedback button acts on representative only
   const likeButton = article.querySelector<HTMLButtonElement>('button[aria-label="Like"]');
   assert(likeButton, "Like button must exist");
   await act(async () => likeButton.click());
   expect(setFeedback).toHaveBeenCalledExactlyOnceWith("rep-1", "like", "button");
+});
+
+it("records title and member activations by item ID without preventing navigation", async () => {
+  const representative = { ...item, id: "record-rep" };
+  const member = {
+    ...item,
+    id: "record-member",
+    duplicate_of: representative.id,
+    source_name: "Member",
+    title: "Member title",
+    url: "https://example.com/member",
+  };
+  await renderItems([representative, member]);
+  const links = [
+    ...container.querySelectorAll<HTMLAnchorElement>("article a[href]"),
+  ] as HTMLAnchorElement[];
+  const titleLink = links.find((link) => link.textContent === representative.title);
+  const memberLink = links.find(
+    (link) => link.getAttribute("aria-label") === "Member: Member title",
+  );
+  assert(titleLink && memberLink);
+
+  for (const [link, itemId] of [
+    [titleLink, representative.id],
+    [memberLink, member.id],
+  ] as const) {
+    const click = dom.window.document.createEvent("MouseEvent");
+    click.initEvent("click", true, true);
+    Object.defineProperty(click, "button", { value: 0 });
+    await act(async () => link.dispatchEvent(click));
+    expect(click.defaultPrevented).toBe(false);
+    expect(recordClick).toHaveBeenCalledWith(itemId);
+  }
+
+  const middle = dom.window.document.createEvent("MouseEvent");
+  middle.initEvent("auxclick", true, true);
+  Object.defineProperty(middle, "button", { value: 1 });
+  await act(async () => titleLink.dispatchEvent(middle));
+  expect(middle.defaultPrevented).toBe(false);
+  expect(recordClick).toHaveBeenCalledWith(representative.id);
+
+  vi.mocked(recordClick).mockClear();
+  await act(async () => {
+    titleLink.dispatchEvent(
+      (() => {
+        const event = dom.window.document.createEvent("MouseEvent");
+        event.initEvent("contextmenu", true, true);
+        Object.defineProperty(event, "button", { value: 2 });
+        return event;
+      })(),
+    );
+    titleLink.dispatchEvent(
+      (() => {
+        const event = dom.window.document.createEvent("MouseEvent");
+        event.initEvent("auxclick", true, true);
+        Object.defineProperty(event, "button", { value: 2 });
+        return event;
+      })(),
+    );
+  });
+  expect(recordClick).not.toHaveBeenCalled();
+});
+
+it("does not record a link click suppressed after a swipe", async () => {
+  const article = requireDefined(container.querySelector("article"), "rendered article");
+  vi.spyOn(article, "getBoundingClientRect").mockReturnValue({ width: 300 } as DOMRect);
+  Object.defineProperty(article, "setPointerCapture", { value: vi.fn() });
+  const gesture = (name: string, x: number) => {
+    const event = dom.window.document.createEvent("Event");
+    event.initEvent(name, true, true);
+    Object.defineProperties(event, {
+      pointerType: { value: "touch" },
+      isPrimary: { value: true },
+      pointerId: { value: 1 },
+      clientX: { value: x },
+      clientY: { value: 100 },
+    });
+    article.dispatchEvent(event);
+  };
+  const link = requireDefined(article.querySelector<HTMLAnchorElement>("a"), "title link");
+  await act(async () => {
+    gesture("pointerdown", 200);
+    gesture("pointermove", 400);
+    gesture("pointerup", 400);
+    link.click();
+  });
+  expect(recordClick).not.toHaveBeenCalled();
+  expect(article.closest("[hidden]")).toBeNull();
 });
 
 it("paginates when a 30-row page renders fewer cards due to grouping and excludes all row IDs", async () => {

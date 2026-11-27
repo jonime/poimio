@@ -1,7 +1,9 @@
 import assert from "node:assert/strict";
+import { execFileSync } from "node:child_process";
 import { randomUUID } from "node:crypto";
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
+import { parseSupabaseQueryResult } from "../test/supabase-query-result.ts";
 import { createIngestDb } from "./db.ts";
 import { EMBEDDING_DIMENSIONS } from "./embeddings.ts";
 import { rankingDefaults } from "./ranking-parameters.ts";
@@ -339,6 +341,7 @@ describe.skipIf(!enabled || anonKey == null || serviceKey == null)(
         p_limit?: number;
         p_more_preference_ids?: string[];
         p_less_preference_ids?: string[];
+        p_click_ids?: string[];
       } = {},
     ) {
       const { service } = clients();
@@ -353,6 +356,7 @@ describe.skipIf(!enabled || anonKey == null || serviceKey == null)(
         p_limit: parameters.p_limit ?? 100,
         p_more_preference_ids: parameters.p_more_preference_ids,
         p_less_preference_ids: parameters.p_less_preference_ids,
+        p_click_ids: parameters.p_click_ids,
       });
       if (error) throw new Error(`Ranking items failed: ${error.message}`);
       return (data ?? []) as {
@@ -561,6 +565,13 @@ describe.skipIf(!enabled || anonKey == null || serviceKey == null)(
         if (hiddenError) {
           throw new Error(`Clearing hidden test sources failed: ${hiddenError.message}`);
         }
+        const { error: clickError } = await service
+          .from("item_clicks")
+          .delete()
+          .in("user_id", [userAId, userBId]);
+        if (clickError) {
+          throw new Error(`Clearing test clicks failed: ${clickError.message}`);
+        }
       }
     });
 
@@ -590,6 +601,77 @@ describe.skipIf(!enabled || anonKey == null || serviceKey == null)(
           false,
         );
       }
+    });
+
+    it("uses clicks as opened explanations and filters same-story references in either language", async () => {
+      const { userAClient } = clients();
+      await setFeedback(userAClient, "page-old-like", "like");
+      const clicked = await userAClient.rpc("record_click", {
+        p_item_id: itemIds.get("candidate-close"),
+      });
+      expect(clicked.error).toBeNull();
+
+      const feed = await getFeed(userAClient);
+      const returnedIds = new Set(feed.map((row) => row.id));
+      for (const key of ["candidate-close", "candidate-cross-related", "cold-a1", "cold-c2"]) {
+        expect(returnedIds.has(requireDefined(itemIds.get(key), `fixture item ${key}`))).toBe(
+          false,
+        );
+      }
+      const opened = feed.find((row) => row.id === itemIds.get("liked-fi"));
+      expect(opened?.reason).toBe("opened");
+      expect(opened?.because_item_id).toBe(itemIds.get("candidate-close"));
+    });
+
+    it("suppresses click signals while feedback exists, then restores them after undo", async () => {
+      const { service, userAClient } = clients();
+      if (!userAId) throw new Error("Fixture user A is missing.");
+      await setFeedback(userAClient, "page-old-like", "like");
+      expect(
+        (
+          await userAClient.rpc("record_click", {
+            p_item_id: itemIds.get("candidate-close"),
+          })
+        ).error,
+      ).toBeNull();
+
+      await setFeedback(userAClient, "candidate-close", "seen");
+      const seenFeed = await getFeed(userAClient);
+      expect(seenFeed.find((row) => row.id === itemIds.get("liked-fi"))?.reason).not.toBe("opened");
+      expect(
+        seenFeed.some((row) => row.id === itemIds.get("candidate-close")),
+        "opened items remain excluded after Seen",
+      ).toBe(false);
+
+      const undo = await service
+        .from("feedback")
+        .delete()
+        .eq("user_id", userAId)
+        .eq("item_id", itemIds.get("candidate-close"))
+        .eq("kind", "seen");
+      expect(undo.error).toBeNull();
+      const restored = await getFeed(userAClient);
+      expect(restored.find((row) => row.id === itemIds.get("liked-fi"))?.reason).toBe("opened");
+      expect(restored.some((row) => row.id === itemIds.get("candidate-close"))).toBe(false);
+    });
+
+    it("does not apply another user's click to the caller's feed", async () => {
+      const { userAClient, userBClient } = clients();
+      const control = await getFeed(userAClient);
+      expect(
+        (
+          await userBClient.rpc("record_click", {
+            p_item_id: itemIds.get("foreign-like"),
+          })
+        ).error,
+      ).toBeNull();
+      const afterOtherClick = await getFeed(userAClient);
+      expect(afterOtherClick.map(({ score: _score, ...row }) => row)).toEqual(
+        control.map(({ score: _score, ...row }) => row),
+      );
+      afterOtherClick.forEach((row, index) => {
+        expect(row.score).toBeCloseTo(control[index]?.score ?? Number.NaN, 5);
+      });
     });
 
     it("filters hidden sources in personalized, cold-start, and preference-only feeds", async () => {
@@ -1029,6 +1111,109 @@ describe.skipIf(!enabled || anonKey == null || serviceKey == null)(
         expect(await rank("top_m_mean", { top_m: 10 })).toEqual(all);
       });
 
+      it("weights positive click similarities in every personalized interest model", async () => {
+        const candidate = ["rank-cand-b"];
+        const clickIds = [
+          requireDefined(itemIds.get("rank-like-2"), "fixture click item rank-like-2"),
+        ];
+        const weightedAverage = 0.3 / Math.sqrt(1.09);
+
+        for (const centered of [true, false]) {
+          const params = { centered, recency_weight: 0 };
+          const nearest = await rankItems(candidate, ["rank-like-1"], [], {
+            p_as_of: publishedAt,
+            p_method: "nearest_liked",
+            p_params: params,
+            p_click_ids: clickIds,
+          });
+          const topM = await rankItems(candidate, ["rank-like-1"], [], {
+            p_as_of: publishedAt,
+            p_method: "top_m_mean",
+            p_params: { ...params, top_m: 3 },
+            p_click_ids: clickIds,
+          });
+          const average = await rankItems(candidate, ["rank-like-1"], [], {
+            p_as_of: publishedAt,
+            p_method: "average_vector",
+            p_params: params,
+            p_click_ids: clickIds,
+          });
+          const blend = await rankItems(candidate, ["rank-like-1"], [], {
+            p_as_of: publishedAt,
+            p_method: "blend",
+            p_params: { ...params, blend_alpha: 0.5 },
+            p_click_ids: clickIds,
+          });
+
+          expect(nearest[0]?.score).toBeCloseTo(0.3, 6);
+          expect(topM[0]?.score).toBeCloseTo(0.15, 6);
+          expect(average[0]?.score).toBeCloseTo(weightedAverage, 6);
+          expect(blend[0]?.score).toBeCloseTo(0.5 * 0.3 + 0.5 * weightedAverage, 6);
+          for (const row of [nearest[0], topM[0], average[0], blend[0]]) {
+            expect(row?.because_item_id).toBe(clickIds[0]);
+          }
+        }
+      });
+
+      it("ignores negative clicks and all clicks for cold-start and unpersonalized methods", async () => {
+        const negativeClick = [
+          requireDefined(itemIds.get("mmr-negative"), "fixture negative click"),
+        ];
+        const candidates = ["mmr-a", "mmr-b"];
+        const withoutClick = await rankItems(candidates, ["rank-like-1"], [], {
+          p_as_of: publishedAt,
+          p_method: "nearest_liked",
+          p_params: { recency_weight: 0 },
+        });
+        const negative = await rankItems(candidates, ["rank-like-1"], [], {
+          p_as_of: publishedAt,
+          p_method: "nearest_liked",
+          p_params: { recency_weight: 0 },
+          p_click_ids: negativeClick,
+        });
+        const cold = await rankItems(candidates, [], [], {
+          p_as_of: publishedAt,
+          p_method: "nearest_liked",
+          p_click_ids: negativeClick,
+        });
+        const coldControl = await rankItems(candidates, [], [], {
+          p_as_of: publishedAt,
+          p_method: "nearest_liked",
+        });
+
+        expect(negative).toEqual(withoutClick);
+        expect(cold).toEqual(coldControl);
+        for (const method of ["newest_first", "random"]) {
+          expect(
+            await rankItems(candidates, ["rank-like-1"], [], {
+              p_as_of: publishedAt,
+              p_method: method,
+              p_seed: 7,
+              p_click_ids: negativeClick,
+            }),
+          ).toEqual(
+            await rankItems(candidates, ["rank-like-1"], [], {
+              p_as_of: publishedAt,
+              p_method: method,
+              p_seed: 7,
+            }),
+          );
+        }
+      });
+
+      it("rejects a click that is also explicit feedback", async () => {
+        const { service } = clients();
+        const itemId = requireDefined(itemIds.get("rank-like-1"), "fixture liked item");
+        const result = await service.rpc("rank_items", {
+          p_candidate_ids: [itemIds.get("rank-cand-a")],
+          p_liked_ids: [itemId],
+          p_disliked_ids: [],
+          p_as_of: publishedAt,
+          p_click_ids: [itemId],
+        });
+        expect(result.error?.code).toBe("22023");
+      });
+
       it("ranks both interests above an item between them only for nearest_liked", async () => {
         const nearest = await rank("nearest_liked");
         const average = await rank("average_vector");
@@ -1359,6 +1544,113 @@ describe.skipIf(!enabled || anonKey == null || serviceKey == null)(
           because_preference_id: null,
         },
       ]);
+    });
+
+    it("restores ranking grants, invoker security, search paths, and feed stability", () => {
+      const privateSignature =
+        "ranking_private.rank_items(uuid[],uuid[],uuid[],timestamptz,text,jsonb,integer,integer,uuid[],uuid[],uuid[])";
+      const publicSignature =
+        "public.rank_items(uuid[],uuid[],uuid[],timestamptz,text,jsonb,integer,integer,uuid[],uuid[],uuid[])";
+      const output = parseSupabaseQueryResult(
+        execFileSync(
+          "supabase",
+          [
+            "db",
+            "query",
+            "--local",
+            "--output-format",
+            "json",
+            `select
+              not (select prosecdef from pg_proc where oid = '${privateSignature}'::regprocedure)
+                and (select proconfig = array['search_path=""'] from pg_proc where oid = '${privateSignature}'::regprocedure)
+                as private_safe,
+              has_function_privilege('authenticated', '${privateSignature}', 'EXECUTE')
+                and has_function_privilege('service_role', '${privateSignature}', 'EXECUTE')
+                as private_grants,
+              not (select prosecdef from pg_proc where oid = '${publicSignature}'::regprocedure)
+                and (select proconfig = array['search_path=""'] from pg_proc where oid = '${publicSignature}'::regprocedure)
+                as public_safe,
+              not has_function_privilege('anon', '${publicSignature}', 'EXECUTE')
+                and not has_function_privilege('authenticated', '${publicSignature}', 'EXECUTE')
+                and has_function_privilege('service_role', '${publicSignature}', 'EXECUTE')
+                as public_grants,
+              not (select prosecdef from pg_proc where oid = 'public.get_feed(integer,uuid[])'::regprocedure)
+                and (select proconfig = array['search_path=""'] from pg_proc where oid = 'public.get_feed(integer,uuid[])'::regprocedure)
+                and (select provolatile = 's' from pg_proc where oid = 'public.get_feed(integer,uuid[])'::regprocedure)
+                as feed_safe_and_stable,
+              has_function_privilege('authenticated', 'public.get_feed(integer,uuid[])', 'EXECUTE')
+                and not has_function_privilege('anon', 'public.get_feed(integer,uuid[])', 'EXECUTE')
+                as feed_grants`,
+          ],
+          { encoding: "utf8" },
+        ),
+      );
+      expect(output.rows[0]).toEqual({
+        private_safe: true,
+        private_grants: true,
+        public_safe: true,
+        public_grants: true,
+        feed_safe_and_stable: true,
+        feed_grants: true,
+      });
+    });
+
+    it("keeps 10 warm feed calls under 500 ms median with 200 click signals", async () => {
+      const { service, userAClient } = clients();
+      if (!userAId) throw new Error("Fixture user A is missing.");
+      const now = Date.now();
+      const inserted = await service
+        .from("content_items")
+        .insert(
+          Array.from({ length: 200 }, (_, index) => ({
+            source_id: sourceIds[index % sourceIds.length],
+            type: "article",
+            url: `https://feed-integration.example/${suffix}/latency-click-${index}`,
+            title: `Latency click ${index}`,
+            summary: "Latency click summary",
+            summary_origin: "feed",
+            enrichment_status: "completed",
+            language: "fi",
+            published_at: new Date(now - index * 1000).toISOString(),
+            embedding: pgVector(axisVector(100 + index)),
+            embedding_model: activeModel,
+          })),
+        )
+        .select("id");
+      if (inserted.error || !inserted.data) {
+        throw new Error(
+          `Creating latency fixtures failed: ${inserted.error?.message ?? "missing"}`,
+        );
+      }
+      const latencyIds = inserted.data.map((row) => row.id as string);
+
+      try {
+        const clicks = await service.from("item_clicks").insert(
+          latencyIds.map((itemId, index) => ({
+            user_id: userAId,
+            item_id: itemId,
+            clicked_at: new Date(now - index).toISOString(),
+          })),
+        );
+        if (clicks.error)
+          throw new Error(`Creating latency clicks failed: ${clicks.error.message}`);
+        await setFeedback(userAClient, "liked-fi", "like");
+        await getFeed(userAClient);
+
+        const timings: number[] = [];
+        for (let call = 0; call < 10; call += 1) {
+          const started = performance.now();
+          await getFeed(userAClient);
+          timings.push(performance.now() - started);
+        }
+        const sorted = timings.toSorted((left, right) => left - right);
+        const median =
+          ((sorted[4] ?? Number.POSITIVE_INFINITY) + (sorted[5] ?? Number.POSITIVE_INFINITY)) / 2;
+        console.info(`get_feed 200-click median: ${median.toFixed(1)} ms`);
+        expect(median).toBeLessThan(500);
+      } finally {
+        await service.from("content_items").delete().in("id", latencyIds);
+      }
     });
 
     it("rejects anonymous calls and clamps limits to 1 through 100", async () => {

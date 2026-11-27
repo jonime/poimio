@@ -2,6 +2,14 @@
 
 import { revalidatePath } from "next/cache";
 import type {
+  InterestSummaryServiceClient,
+  InterestSummaryUserClient,
+} from "../../lib/interest-summary.ts";
+import {
+  clearInterestSummaryForUser,
+  summarizeInterestsForUser,
+} from "../../lib/interest-summary.ts";
+import type {
   PreferenceServiceClient,
   PreferenceUserClient,
   TunePreferencesResult,
@@ -21,6 +29,30 @@ function userClient(client: Awaited<ReturnType<typeof createClient>>): Preferenc
 function revalidatePreferences(): void {
   revalidatePath("/");
   revalidatePath("/preferences/tune");
+}
+
+function interestSummaryUserClient(
+  client: Awaited<ReturnType<typeof createClient>>,
+): InterestSummaryUserClient {
+  return client as unknown as InterestSummaryUserClient;
+}
+
+export async function summarizeInterests() {
+  const result = await summarizeInterestsForUser({
+    userClient: interestSummaryUserClient(await createClient()),
+    createServiceClient: () => createServiceRoleClient() as unknown as InterestSummaryServiceClient,
+    apiKey: process.env.OPENAI_API_KEY ?? "",
+  });
+  if (result.ok) revalidatePreferences();
+  return result;
+}
+
+export async function clearInterestSummary() {
+  const result = await clearInterestSummaryForUser({
+    userClient: interestSummaryUserClient(await createClient()),
+  });
+  if (result.ok) revalidatePreferences();
+  return result;
 }
 
 export async function tunePreferences(text: unknown): Promise<TunePreferencesResult> {

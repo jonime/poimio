@@ -46,7 +46,13 @@ import {
   type FeedbackState,
 } from "../../lib/feedback-queue";
 import { beginSwipe, finishSwipe, moveSwipe, type SwipeGesture } from "../../lib/swipe-gesture";
-import { clearFeedback, hideSource, setFeedback, showSource } from "../feedback/actions";
+import {
+  clearFeedback,
+  hideSource,
+  recordClick,
+  setFeedback,
+  showSource,
+} from "../feedback/actions";
 import { loadMoreFeed } from "./actions";
 import { RefreshFeedButton } from "./refresh-feed-button";
 
@@ -181,6 +187,9 @@ function FeedCard({
     { kind: "not_interested", label: "Not interested", icon: ThumbsDownIcon },
     { kind: "seen", label: "Seen", icon: CheckIcon },
   ] as const;
+  function onOpenItem(itemId: string) {
+    void recordClick(itemId).catch(() => undefined);
+  }
 
   return (
     <div className="relative overflow-hidden rounded-xl" hidden={collapsed || hiddenBySource}>
@@ -220,6 +229,7 @@ function FeedCard({
         <ContentCard
           item={item}
           renderedAt={renderedAt}
+          onOpenItem={onOpenItem}
           footer={
             <CardFooter className="relative z-10 gap-1" role="group" aria-label="Rate this item">
               {feedbackActions.map(({ kind, label, icon: Icon }) => {
@@ -306,6 +316,12 @@ function FeedCard({
                         target="_blank"
                         rel="noopener noreferrer"
                         aria-label={`${member.source_name}: ${member.title}`}
+                        onClick={(event) => {
+                          if (event.button === 0) onOpenItem(member.id);
+                        }}
+                        onAuxClick={(event) => {
+                          if (event.button === 1) onOpenItem(member.id);
+                        }}
                       >
                         {member.source_name}
                       </a>

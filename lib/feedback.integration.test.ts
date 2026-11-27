@@ -4,6 +4,7 @@ import { execFileSync } from "node:child_process";
 import { randomUUID } from "node:crypto";
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
+import { parseSupabaseQueryResult } from "../test/supabase-query-result.ts";
 
 const enabled = process.env.SUPABASE_INTEGRATION === "1";
 const url = process.env.SUPABASE_URL ?? "http://127.0.0.1:55321";
@@ -16,100 +17,6 @@ const options = {
     persistSession: false,
   },
 };
-
-const feedbackSchemaColumns = [
-  "rls_enabled",
-  "four_owner_policies",
-  "required_columns_not_null",
-  "timestamp_defaults",
-  "user_defaults_to_auth_uid",
-  "authenticated_select",
-  "authenticated_insert",
-  "authenticated_delete",
-  "kind_update",
-  "via_update",
-  "no_table_update",
-  "user_id_immutable",
-  "item_id_immutable",
-  "authenticated_rpc",
-  "anonymous_rpc_denied",
-  "rpc_is_invoker",
-] as const;
-
-function parseSupabaseQueryResult(output: string): { rows: unknown[] } {
-  let searchFrom = 0;
-  const observedObjectKeys: string[] = [];
-  for (;;) {
-    const start = output.indexOf("{", searchFrom);
-    if (start === -1) {
-      const observed = observedObjectKeys.join("; ") || "none";
-      throw new Error(`Supabase CLI returned no query rows object (object keys: ${observed}).`);
-    }
-
-    let depth = 0;
-    let inString = false;
-    let escaped = false;
-    let end = -1;
-    for (let index = start; index < output.length; index += 1) {
-      const character = output.charAt(index);
-      if (inString) {
-        if (escaped) escaped = false;
-        else if (character === "\\") escaped = true;
-        else if (character === '"') inString = false;
-        continue;
-      }
-
-      if (character === '"') inString = true;
-      else if (character === "{") depth += 1;
-      else if (character === "}") {
-        depth -= 1;
-        if (depth === 0) {
-          end = index;
-          break;
-        }
-      }
-    }
-
-    if (end === -1) {
-      throw new Error("Supabase CLI returned an incomplete JSON object.");
-    }
-
-    try {
-      const candidate: unknown = JSON.parse(output.slice(start, end + 1));
-      if (typeof candidate === "object" && candidate !== null && "rows" in candidate) {
-        const rows = candidate.rows;
-        if (Array.isArray(rows)) return { rows };
-      }
-      if (typeof candidate === "object" && candidate !== null) {
-        const keys = Object.keys(candidate);
-        observedObjectKeys.push(keys.slice(0, 16).join(","));
-        if (feedbackSchemaColumns.every((column) => column in candidate)) {
-          return { rows: [candidate] };
-        }
-      }
-      searchFrom = end + 1;
-    } catch {
-      searchFrom = start + 1;
-    }
-  }
-}
-
-describe("parseSupabaseQueryResult", () => {
-  it("finds query rows after other JSON output and trailing text", () => {
-    expect(
-      parseSupabaseQueryResult(
-        'Connecting to local database...\n{"boundary":"id"}\n{"rows":[{"value":"brace } inside"}]}\n{"other":true}',
-      ),
-    ).toEqual({ rows: [{ value: "brace } inside" }] });
-  });
-
-  it("accepts a direct feedback schema row from the CLI", () => {
-    const row = Object.fromEntries(feedbackSchemaColumns.map((column) => [column, true]));
-    expect(parseSupabaseQueryResult(`Connecting...\n${JSON.stringify([row])}`)).toEqual({
-      rows: [row],
-    });
-  });
-});
 
 describe.skipIf(!enabled || anonKey == null || serviceKey == null)(
   "feedback schema and row-level security against local Supabase",

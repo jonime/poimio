@@ -2,13 +2,16 @@ import { renderToReadableStream } from "react-dom/server";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import TuneFeedPage from "./page";
 
-const { auth, createClient, from, preferenceOrder, usageGte } = vi.hoisted(() => ({
-  auth: { getClaims: vi.fn() },
-  createClient: vi.fn(),
-  from: vi.fn(),
-  preferenceOrder: vi.fn(),
-  usageGte: vi.fn(),
-}));
+const { auth, createClient, from, preferenceOrder, usageGte, summaryMaybeSingle, likeCountEq } =
+  vi.hoisted(() => ({
+    auth: { getClaims: vi.fn() },
+    createClient: vi.fn(),
+    from: vi.fn(),
+    preferenceOrder: vi.fn(),
+    usageGte: vi.fn(),
+    summaryMaybeSingle: vi.fn(),
+    likeCountEq: vi.fn(),
+  }));
 
 vi.mock("@/lib/supabase/server", () => ({ createClient }));
 vi.mock("next/navigation", () => ({
@@ -28,10 +31,16 @@ beforeEach(() => {
   auth.getClaims.mockResolvedValue(claims);
   from.mockImplementation((table: string) => {
     if (table === "feed_preferences") return { select: () => ({ order: preferenceOrder }) };
+    if (table === "interest_summaries") {
+      return { select: () => ({ maybeSingle: summaryMaybeSingle }) };
+    }
+    if (table === "feedback") return { select: () => ({ eq: likeCountEq }) };
     return { select: () => ({ eq: () => ({ gte: usageGte }) }) };
   });
   preferenceOrder.mockResolvedValue({ data: [], error: null });
   usageGte.mockResolvedValue({ count: 3, error: null });
+  summaryMaybeSingle.mockResolvedValue({ data: null, error: null });
+  likeCountEq.mockResolvedValue({ count: 0, error: null });
 });
 
 async function html() {

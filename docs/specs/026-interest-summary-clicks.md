@@ -149,10 +149,10 @@ Each criterion belongs to one task. Tasks 1–4 (clicks, History, and their priv
 
 ## Tasks
 
-- [ ] 1. `item_clicks`, `record_click`, `recordClick` action, two-user tests (criterion 1).
-- [ ] 2. Scorer and `get_feed` with click signals, one snapshot, opened-item exclusion and story references, parity, latency (criterion 2).
-- [ ] 3. `get_history` and the History page with Load more (criterion 3).
-- [ ] 4. Record clicks from feed and member links; "which you opened" explanation; browser check; click privacy text (criterion 4). Tasks 1–4 ship together.
+- [x] 1. `item_clicks`, `record_click`, `recordClick` action, two-user tests (criterion 1).
+- [x] 2. Scorer and `get_feed` with click signals, one snapshot, opened-item exclusion and story references, parity, latency (criterion 2).
+- [x] 3. `get_history` and the History page with Load more (criterion 3).
+- [x] 4. Record clicks from feed and member links; "which you opened" explanation; browser check; click privacy text (criterion 4). Tasks 1–4 ship together.
 - [ ] 5. `interest_summaries`, `interest_summary` usage kind, `summarizeInterests`, `clearInterestSummary`, check (criterion 5).
 - [ ] 6. Tune page summary section, summary privacy text, docs (criterion 6).
 

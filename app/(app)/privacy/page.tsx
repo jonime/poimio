@@ -17,7 +17,7 @@ export default function PrivacyPage() {
       title="Privacy Policy"
       subtitle={
         <p className="text-sm text-muted-foreground">
-          Last updated: <time dateTime="2026-11-07">7 November 2026</time>
+          Last updated: <time dateTime="2026-11-27">27 November 2026</time>
         </p>
       }
     >
@@ -45,6 +45,8 @@ export default function PrivacyPage() {
             timestamps and whether you used a button or swipe. This information is associated with
             your account.
           </li>
+          <li>Feed items you open, with the time of the first open.</li>
+          <li>Your interest summary, if you choose to create one.</li>
           <li>
             Technical information needed to deliver and secure the service, such as IP addresses,
             browser information, and request or authentication logs processed by our hosting
@@ -62,8 +64,11 @@ export default function PrivacyPage() {
         <p>
           We use account information to sign you in and keep your feedback separate from other
           users. We use feedback to personalise your feed, hide rated items, and show your liked
-          items. Recommendations are automated, but do not make decisions with legal or similarly
-          significant effects. Your feedback is not shared with other users.
+          items. Opened items are used as a weak signal for similar items, are not shown in the feed
+          again, and are listed in History. Your interest summary is display-only and is shown only
+          to you; the Clear button deletes it. Recommendations are automated, but do not make
+          decisions with legal or similarly significant effects. Your feedback is not shared with
+          other users.
         </p>
         <p>
           Our legal basis for account and recommendation processing is providing the service you
@@ -91,8 +96,11 @@ export default function PrivacyPage() {
         </p>
         <p>
           OpenAI processes public feed titles and descriptions to create numerical representations
-          used for recommendations. Poimio does not send your Google account information or personal
-          feedback to OpenAI. Recommendation comparisons run in the database.
+          used for recommendations. When you request an interest summary, Poimio sends the titles of
+          your recent liked and not-interested items and your preference labels to OpenAI. Tune feed
+          requests send the request text you enter. Poimio does not send source names, account
+          information, click history, or seen-item history to OpenAI. Recommendation comparisons run
+          in the database.
         </p>
         <p>
           Thumbnails may load directly from external publishers or image hosts, which receive your
@@ -121,12 +129,13 @@ export default function PrivacyPage() {
       <section aria-labelledby="retention">
         <h2 id="retention">Retention and deletion</h2>
         <p>
-          We keep your account and feedback until you request deletion. To request deletion, email{" "}
-          {privacyEmail}, preferably from the address associated with your account. We may need to
-          verify your identity before acting. Account deletion also removes the associated feedback
-          from the active database. Provider logs and backup copies may remain for their applicable
-          retention periods or where legally required; deletion is not a promise of immediate
-          removal from all backups. Public feed content is not deleted with your account.
+          We keep your account, feedback, item opens, and interest summary until you request
+          deletion. To request deletion, email {privacyEmail}, preferably from the address
+          associated with your account. We may need to verify your identity before acting. Account
+          deletion also removes the associated feedback from the active database. Provider logs and
+          backup copies may remain for their applicable retention periods or where legally required;
+          deletion is not a promise of immediate removal from all backups. Public feed content is
+          not deleted with your account.
         </p>
       </section>
 

@@ -43,6 +43,7 @@ evaluation/description-style/runs/
 evaluation/description-style/review.csv
 evaluation/description-style/key.json
 evaluation/story-groups/review.csv
+evaluation/interest-summary/review.json
 .vercel
 
 # Source descriptions pending human review

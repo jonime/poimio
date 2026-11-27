@@ -60,14 +60,14 @@ $$
 \text{interest}(c) = \max_{p \in P} w_p \cdot \text{sim}(c, p) \;-\; \lambda \cdot \max_{n \in N} \text{sim}(c, n)
 $$
 
-- $P$ = positive interactions. Likes have weight 1.0; clicks have a lower weight (e.g. 0.3) because they are a weak signal.
+- $P$ = positive interactions. Likes and `more` preferences have weight 1.0; opens have weight 0.3 because they are a weak signal.
 - $N$ = items marked _Not interested_. $\lambda$ controls the strength of the penalty.
 - Skipped or ignored items are not used as negative feedback.
 - Items marked _Seen_ are hidden from the feed but are neutral: they are neither positive nor negative signals ([§7](#7-user-interaction)).
 - Signal precedence per item: explicit feedback overrides clicks. If an item is liked or marked _Not interested_, only that signal counts (the latest explicit action wins). Clicks count only for items without explicit feedback.
-- Click tracking is optional (see the cut order in [plan.md §9](plan.md#9-decision-gates-and-cut-order)); the recommender works with explicit feedback alone.
+- Click weight 0.3 is an untuned product assumption, not an evaluation result. The frozen replay has no click behavior and is not rerun.
 
-Prototype implementation (spec 003): only explicit likes and _Not interested_ feedback are scoring signals. Each set contains at most the 200 most recently updated eligible items of the caller; likes have weight 1 and the dislike penalty is $\lambda = 0.5$. Similarity uses language-centered embeddings of `text-embedding-3-small@512` only. An eligible item has an embedding and a matching `(embedding_model, language)` mean row. Zero-length centered vectors have similarity 0. Newly embedded items use the existing frozen mean immediately; recomputing the means is not required for each ingestion run.
+The implementation uses explicit likes, `more` preferences, and the 200 most recent eligible opens without explicit feedback as positive signals. Each explicit-feedback set contains at most the 200 most recently updated eligible items of the caller; likes and preferences have weight 1, clicks have weight 0.3, and the dislike penalty is $\lambda = 0.5$. Similarity uses language-centered embeddings of `text-embedding-3-small@512` only. An eligible item has an embedding and a matching `(embedding_model, language)` mean row. Zero-length centered vectors have similarity 0. A nonpositive click similarity contributes nothing. Newly embedded items use the existing frozen mean immediately; recomputing the means is not required for each ingestion run.
 
 Saved preferences (spec 021) join those same signal sets. A `more` preference is one positive signal and a `less` preference is one negative signal, with the same $\lambda$ and no extra weight. A preference with both language vectors still counts once: its similarity is the better of the two centered vectors. `less` is a soft penalty, not a filter, so a strongly matching item can still appear. Whether a one-sentence description embeds close enough to articles to steer the feed was a hypothesis; check 1 tested that effect ([§2.6](#26-natural-language-preferences)).
 
@@ -79,7 +79,7 @@ Why this approach:
 
 #### Tuned default (spec 020)
 
-The production default is now `blend` with $\alpha = 0.5$: the interest score is $\alpha \cdot \text{nearest-liked} + (1 - \alpha) \cdot \text{average-vector similarity}$, with language-centered vectors, $\lambda = 0.5$, and recency weight $\beta = 0$. `nearest_liked`, `average_vector`, and `top_m_mean` remain available in the private scorer. The private scorer, the public `rank_items` wrapper, and `get_feed` all use this default (migration `20261120000000`). `because_item_id` is still the most similar like. This is where the data contradicts gate 1: nearest-liked alone was the gate-1 choice, but on the multi-interest personas it covers both interests better than the average vector and ranks worse than either blend or average vector, so a blend beats both.
+The production default is now `blend` with $\alpha = 0.5$: the interest score is $\alpha \cdot \text{nearest-liked} + (1 - \alpha) \cdot \text{average-vector similarity}$, with language-centered vectors, $\lambda = 0.5$, and recency weight $\beta = 0$. `nearest_liked`, `average_vector`, and `top_m_mean` remain available in the private scorer. The private scorer, the public `rank_items` wrapper, and `get_feed` all use this default (migration `20261120000000`). `because_item_id` is the highest-value positive signal, with ties preferring likes, then preferences, then clicks, then the smaller ID. This is where the data contradicts gate 1: nearest-liked alone was the gate-1 choice, but on the multi-interest personas it covers both interests better than the average vector and ranks worse than either blend or average vector, so a blend beats both.
 
 Method: validation window only, 4 single personas and their 6 pairs as composites, 10 seeds, $k \in \{3, 5, 10, 20\}$, equal persona weights. The objective is mean precision at $k$. Selection used the committed rule in `evaluation/tuning-rule.json` (hash `083b2217…`): balanced coverage within 0.05 of the best configuration, cross-lingual precision constraints, then the simplest configuration within 0.01 of the best objective (fewer parameters; `blend` after simpler methods). Raw results: `evaluation/results/tuning-2026-11-19t07-44-10.395z.json`.
 
@@ -120,9 +120,9 @@ Limitations: the validation window was used for selection, so these numbers are 
 
 ### 2.2 Final ranking and exploration
 
-- The final score is interest plus $\beta \cdot 0.5^{\text{age}/h}$. The prototype used $\beta = 0.1$; the tuned default is $\beta = 0$ ([§2.1](#21-interest-scoring-nearest-liked-item)), so the age term is a no-op unless a caller passes a weight. The half-life $h$ is 24 hours for articles and 7 days for videos. Candidate windows are 7 days for articles and 30 days for videos; all rated items are excluded.
-- `get_feed` runs as `SECURITY INVOKER`, reads identity from `auth.uid()`, and is executable by authenticated users only. Pages contain 30 items; later pages exclude already shown IDs instead of using offsets. The limit is clamped to 1-100 and exclusions to 1,000 IDs.
-- Before ranking, `get_feed` removes items from the caller's `hidden_sources` set and drops eligible candidates whose centered similarity to any of the caller's latest 300 eligible rated items (published within 30 days, any feedback kind including `seen`) is at least $0.74$ regardless of language (covered-story filter, [spec 025](specs/025-same-story.md)). Likes and dislikes from hidden sources still contribute as topic signals and story-filter references.
+- The final score is interest plus $\beta \cdot 0.5^{\text{age}/h}$. The prototype used $\beta = 0.1$; the tuned default is $\beta = 0$ ([§2.1](#21-interest-scoring-nearest-liked-item)), so the age term is a no-op unless a caller passes a weight. The half-life $h$ is 24 hours for articles and 7 days for videos. Candidate windows are 7 days for articles and 30 days for videos; all rated and opened items are excluded.
+- `get_feed` is `STABLE` and runs as `SECURITY INVOKER`, reads identity from `auth.uid()`, and is executable by authenticated users only. One snapshot covers candidates, references, signals, and explanations. Pages contain 30 items; later pages exclude already shown IDs instead of using offsets. The limit is clamped to 1-100 and exclusions to 1,000 IDs.
+- Before ranking, `get_feed` removes items from the caller's `hidden_sources` set and drops eligible candidates whose centered similarity to any of the caller's latest 300 eligible rated or opened items (published within 30 days) is at least $0.74$ regardless of language (covered-story filter, [spec 025](specs/025-same-story.md)). Rated and opened rows are merged by item ID and use the later event time before ordering. Likes and dislikes from hidden sources still contribute as topic signals and story-filter references. With 200 click signals, the local warm median across 10 calls was 277.7 ms.
 - After ranking, `get_feed` walks the returned page in rank order and marks near-duplicates (`duplicate_of`) against earlier non-exploration, eligible representatives (same language $\ge 0.74$; Finnish–English $\ge T_{xl}$, capped at 5 rows per group including the representative). Exploration slots never lead or join a group, and `limit` still counts rows. Each row returns `source_id` so the client can match sources independently of non-unique source names.
 - These defaults are kept together in the SQL function and were tuned in spec 020. Cards already displayed do not reorder; refreshing reloads the ranking, and subsequent pages use the latest feedback.
 - The spec 007 validation search fixed the spec 020 winner and compared MMR strengths $\mu \in \{0, 0.1, 0.2, 0.3, 0.5\}$:
@@ -145,7 +145,7 @@ Limitations: the validation window was used for selection, so these numbers are 
 
 ### 2.3 Cold start
 
-With no eligible positive signals, the feed round-robins sources, newest first within each source. Candidates with similarity at least $\theta = 0.4$ to any eligible _Not interested_ item or `less` preference follow all other candidates, with source round-robin within each group. Explanations say "Recent from source". Personalization starts after the first eligible like or `more` preference. The closest positive signal is the explanation; a tie prefers a like over a preference. MMR and exploration still require eligible likes, so a preference-only feed has no exploration slots.
+With no eligible positive signals, the feed round-robins sources, newest first within each source. Candidates with similarity at least $\theta = 0.4$ to any eligible _Not interested_ item or `less` preference follow all other candidates, with source round-robin within each group. Explanations say "Recent from source". Personalization starts after the first eligible like or `more` preference; clicks alone do not start it. The closest positive signal is the explanation; a tie prefers a like over a preference over a click. MMR and exploration still require eligible likes, so a preference-only or click-only feed has no exploration slots.
 
 ### 2.4 Baselines (evaluation only)
 
@@ -157,7 +157,7 @@ With no eligible positive signals, the feed round-robins sources, newest first w
 
 OpenAI API with `gpt-6-luna` (chosen in week 1). The LLM is **not** used to rank individual items (cost, latency, reproducibility). It is used for:
 
-1. **Interest summary** (optional): periodically turns likes/dislikes into a readable profile shown to the user.
+1. **Interest summary:** on demand, `gpt-6-luna` turns up to 50 recent liked titles, 20 recent _Not interested_ titles, and active preference labels into one to three English sentences and at most eight short topic labels. It requires three positive signals, is display-only, and never runs on page load or changes ranking. A previous summary is retained on failure. Responses are not stored, calls reserve before fetch, and each user has 10 summary requests per rolling 24 hours separately from preference requests.
 2. **Evaluation judge:** labels items as relevant/not relevant for simulated personas. The primary labeler is Qwen 3.8 27B, with `gpt-6-luna` as fallback (§4.2). The final snapshot was labeled via OpenRouter with approval after local MTPLX proved too slow.
 3. **Source discovery** (stretch, stage b): finds candidate sites with the built-in web search tool and assesses source quality.
 4. **Description enrichment:** `gpt-6-luna` via the Responses API creates a concise, factual description only when feed and page metadata descriptions are unavailable. The request has no tools or URL access; extracted article text is untrusted content, not instructions. The output must state the subject or main point directly in the item's language, usually in one sentence, without source narration or an unnecessary recap. Attribution, uncertainty, negation, and the scope of personal experience take precedence over concision. The output uses only facts in the text and fits the existing 1,000-character summary limit. Prompt constraints and representative tests live with the enrichment implementation.
@@ -429,7 +429,7 @@ The email allowlist table was removed by a forward migration. `public.is_allowed
 
 ### 6.6 Later tables
 
-Click events, interest summaries, and discovery candidates are defined in their specs. Feed preferences and LLM usage are in §6.7 and §6.8.
+Click events and interest summaries are described in §6.10 and §6.11. Discovery candidates remain a later feature. Feed preferences and LLM usage are in §6.7 and §6.8.
 
 ### 6.7 `feed_preferences` (per-user)
 
@@ -455,12 +455,12 @@ RLS is owner-only `select`, `update`, and `delete`. Authenticated users can upda
 | ------------ | ---------------------- | -------------------------------------------- |
 | `id`         | `uuid` PK              | `gen_random_uuid()`                          |
 | `user_id`    | `uuid` not null        | Default `auth.uid()`; cascade on user delete |
-| `kind`       | `text` not null        | Only `preferences`                           |
+| `kind`       | `text` not null        | `preferences` or `interest_summary`          |
 | `created_at` | `timestamptz` not null | Default `now()`; the user cannot set it      |
 
 RLS is owner-only `select` and `insert`. There is no update or delete policy. Authenticated users can insert only `kind`; `user_id` and `created_at` come from column defaults. A direct insert uses up the caller's own quota and cannot be backdated or deleted by the user.
 
-`reserve_llm_call(p_kind text)` is volatile, `SECURITY INVOKER`, and has an empty search path. It reads the user from `auth.uid()`, rejects an unknown kind, locks the user for the transaction, and inserts a row only when that user has fewer than 10 `preferences` rows in the last 24 hours. It inserts only `kind`. Execute is granted to `authenticated` and revoked from `PUBLIC` and `anon`. The preference action calls it before any OpenAI request. A failed call still counts.
+`reserve_llm_call(p_kind text)` is volatile, `SECURITY INVOKER`, and has an empty search path. It reads the user from `auth.uid()`, rejects an unknown kind, locks the user for the transaction, and inserts a row only when that user has fewer than 10 rows of that kind in the last 24 hours. Preference and interest-summary quotas are separate. It inserts only `kind`. Execute is granted to `authenticated` and revoked from `PUBLIC` and `anon`. Both actions call it before any OpenAI request. A failed call still counts.
 
 ### 6.9 `hidden_sources` (per-user)
 
@@ -471,6 +471,14 @@ RLS is owner-only `select` and `insert`. There is no update or delete policy. Au
 | `created_at` | `timestamptz` not null   | Default `now()`                                 |
 
 RLS is owner-only `select`, `insert`, and `delete`; there is no update policy. Anonymous users have no access. `hide_source_of_item(p_item_id uuid)` is `SECURITY INVOKER` with an empty search path and reads the caller from `auth.uid()`. It accepts any readable item, inserts the source idempotently, and returns the source ID and name for UI feedback. Showing a source again is a direct owner-only delete.
+
+### 6.10 `item_clicks` (per-user)
+
+One idempotent row per user and opened feed item. `record_click(p_item_id uuid)` reads `auth.uid()`, requires a readable item, and inserts only the item ID; repeated opens preserve the first `clicked_at`. RLS and column grants permit owner-only `select` and insert of `item_id`; there is no update or delete policy. Anonymous access is denied. Account deletion cascades these rows.
+
+### 6.11 `interest_summaries` (per-user)
+
+One display-only row per user with `summary` (1–400 characters), at most eight topic labels, `like_count`, and `generated_at`. Authenticated users can select and delete only their own row; direct insert and update are denied. The server action verifies claims and writes with the service role, while **Clear** deletes through the user's client and RLS.
 
 ## 7. User interaction
 
@@ -484,6 +492,7 @@ The feed is a single column of compact cards, responsive for phone and desktop. 
 | _Not interested_ | Button    | Swipe left    | Negative topic    | Card collapses immediately; similar content ranks lower                      |
 | _Seen_           | Button    | —             | Neutral item      | Card collapses immediately; for items already read or watched elsewhere      |
 | **Hide source**  | Card menu | —             | Source visibility | Every loaded card from that source is masked; future candidates are filtered |
+| **Open item**    | Title/member link | Primary, Enter, middle-click | Read at publisher | Keeps the card in the current list; later feed loads exclude it and History lists it |
 
 - Pressing an active Like, Not interested, or Seen button again undoes the action; choosing another action replaces it.
 - Every action that hides content shows a short **Undo** toast. Hiding a source records no item feedback, so Undo restores visibility rather than changing a rating.
@@ -491,10 +500,12 @@ The feed is a single column of compact cards, responsive for phone and desktop. 
 - Rated items (any feedback action) do not return in the feed. A hidden source's existing likes and dislikes remain valid topic signals.
 - _Seen_ is a button only, so swipe-left keeps its existing _Not interested_ meaning. **Hide source** is separate and available from the card's accessible action menu.
 - Hidden cards stay mounted in their original positions, preserve feedback state, and still count as loaded for pagination exclusions. Late-arriving pages use the same source-ID mask. The list does not re-fetch or re-rank after hiding or Undo; the next feed load applies the persistent database filter.
-- Same-story groups render as one card per representative with an "Also covered by: _source_ · _source_" line for members in the same page. Member links sit above the stretched card link, accept only HTTP(S) URLs, open without recording feedback, and omit members from hidden sources; hiding or Undo on a representative masks or restores the entire group.
+- Same-story groups render as one card per representative with an "Also covered by: _source_ · _source_" line for members in the same page. Member links sit above the stretched card link, accept only HTTP(S) URLs, open in a new tab, and record the member's ID. Context-menu opens and swipes do not record clicks; members from hidden sources are omitted. Hiding or Undo on a representative masks or restores the entire group.
 - Tune feed and Sources are separate pages at `/preferences/tune` and `/preferences/sources`. Both are reached from the header's user menu. Sources lists the active sources by name with language badges, a Videos badge for YouTube, and an English description when available. Turning off a switch hides the source for the signed-in user. Changes apply on the next feed load or refresh.
 
 The Liked page searches the titles, full summaries, and source names of items already loaded by the page. It trims the query and matches it as a case-insensitive substring in any one field, preserving accents, punctuation, and newest-liked-first order. The result count is relative to the loaded list, which can be smaller than the user's full liked history. The query stays active when the mounted list refreshes after Unlike and starts empty on a new mount.
+
+History is in the signed-in main navigation after Liked. It shows opened and _Seen_ items newest by latest event time, with both badges when applicable, and 20-row keyset pagination through **Load more**. Cards keep their feedback controls and mounted order; subsequent fresh loads reflect current membership.
 
 ### 7.2 Gesture safeguards
 
@@ -513,8 +524,10 @@ The ranking does not reorder while the user is interacting. New feedback and sav
 
 - Personalized items: "Similar to _X_, which you liked".
 - Preference matches: "Matches your preference: _label_".
+- Opened matches: "Similar to _X_, which you opened".
 - Exploration slots: "Exploring: something new".
 - Cold start: "Recent from _source_".
+- Reason precedence: exploring, preference, opened, similar, recent.
 
 ### 7.5 Not included
 

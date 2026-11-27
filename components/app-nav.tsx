@@ -1,5 +1,6 @@
 "use client";
 
+import type { Route } from "next";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Button } from "@/components/ui/button";
@@ -14,6 +15,7 @@ import {
 const navItems = [
   { href: "/", label: "Feed" },
   { href: "/liked", label: "Liked" },
+  { href: "/history", label: "History" },
 ] as const;
 
 const guestNavItems = [{ href: "/", label: "Home" }] as const;
@@ -31,7 +33,7 @@ export function AppNav({ guest = false }: { guest?: boolean }) {
             key={item.href}
             variant={current ? "default" : "ghost"}
             nativeButton={false}
-            render={<Link href={item.href} aria-current={current ? "page" : undefined} />}
+            render={<Link href={item.href as Route} aria-current={current ? "page" : undefined} />}
           >
             {item.label}
           </Button>

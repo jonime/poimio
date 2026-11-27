@@ -1,10 +1,23 @@
 import Image from "next/image";
 import type { ReactNode } from "react";
+import { TrackedItemLink } from "@/components/tracked-item-link";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { formatRelativeTime, safeHttpUrl } from "@/lib/feed-ui";
-import type { GuestFeedItem } from "@/lib/guest-feed";
 import { cn } from "@/lib/utils";
+
+interface ContentCardItem {
+  id: string;
+  url: string;
+  title: string;
+  summary: string | null;
+  summary_origin: "feed" | "page_metadata" | "ai_generated" | null;
+  type: "article" | "video";
+  language: "fi" | "en";
+  thumbnail_url: string | null;
+  published_at: string;
+  source_name: string;
+}
 
 /** Static card presentation shared by the server preview and interactive feed. */
 export function ContentCard({
@@ -12,11 +25,13 @@ export function ContentCard({
   renderedAt,
   children,
   footer,
+  onOpenItem,
 }: {
-  item: GuestFeedItem;
+  item: ContentCardItem;
   renderedAt: string;
   children?: ReactNode;
   footer?: ReactNode;
+  onOpenItem?: (itemId: string) => void;
 }) {
   const itemUrl = safeHttpUrl(item.url);
   const thumbnailUrl = safeHttpUrl(item.thumbnail_url);
@@ -50,7 +65,18 @@ export function ContentCard({
         </CardDescription>
         <CardTitle className="text-lg">
           <h2 className="break-words">
-            {itemUrl ? (
+            {itemUrl && onOpenItem ? (
+              <TrackedItemLink
+                itemId={item.id}
+                onOpenItem={onOpenItem}
+                className="underline-offset-4 outline-none group-hover/card:underline after:absolute after:inset-0 after:content-['']"
+                href={itemUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                {item.title}
+              </TrackedItemLink>
+            ) : itemUrl ? (
               <a
                 className="underline-offset-4 outline-none group-hover/card:underline after:absolute after:inset-0 after:content-['']"
                 href={itemUrl}

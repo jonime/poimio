@@ -11,11 +11,31 @@ export interface FeedItem {
   source_id: string;
   source_name: string;
   score: number;
-  reason: "similar" | "recent" | "exploring" | "preference";
+  reason: "similar" | "recent" | "exploring" | "preference" | "opened";
   because_item_id: string | null;
   because_title: string | null;
   duplicate_of: string | null;
 }
+
+export interface HistoryFeedItem {
+  id: string;
+  url: string;
+  title: string;
+  summary: string | null;
+  summary_origin: "feed" | "page_metadata" | "ai_generated" | null;
+  type: "article" | "video";
+  language: "fi" | "en";
+  thumbnail_url: string | null;
+  published_at: string;
+  source_id: string;
+  source_name: string;
+  event_at: string;
+  opened: boolean;
+  seen: boolean;
+  feedback_kind: FeedbackKind | null;
+}
+
+export type FeedbackKind = "like" | "not_interested" | "seen";
 
 export interface LikedFeedItem {
   id: string;
@@ -45,6 +65,9 @@ export function explanationForFeedItem(item: FeedItem): string {
   if (item.reason === "exploring") return "Exploring: something new";
   if (item.reason === "preference" && item.because_title) {
     return `Matches your preference: ${item.because_title}`;
+  }
+  if (item.reason === "opened" && item.because_title) {
+    return `Similar to ${item.because_title}, which you opened`;
   }
   if (item.reason === "similar" && item.because_title) {
     return `Similar to ${item.because_title}, which you liked`;

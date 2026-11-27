@@ -378,7 +378,9 @@ describe("privacy page", () => {
     expect(html).toContain("Privacy Policy");
     expect(html).toContain("Joni Mertoniemi");
     expect(html).toContain('href="mailto:privacy@poimio.cc"');
-    expect(html).toContain("We keep your account and feedback until you request deletion.");
+    expect(html).toContain(
+      "We keep your account, feedback, item opens, and interest summary until you request deletion.",
+    );
     expect(html).toContain("OpenAI");
     expect(html).toContain("Supabase");
     expect(html).toContain("Vercel");

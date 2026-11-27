@@ -12,6 +12,7 @@ export const sessionRoutes = new Set([
   "/privacy",
   "/auth/callback",
   "/liked",
+  "/history",
   "/preferences/tune",
   "/preferences/sources",
 ]);
@@ -99,7 +100,7 @@ export async function proxy(request: NextRequest) {
   if (process.env.VERCEL === "1" && isHome) {
     console.info("home_proxy_auth_ms", Math.round(performance.now() - authStart));
   }
-  if (pathname === "/liked" && (error || !data?.claims?.sub)) {
+  if ((pathname === "/liked" || pathname === "/history") && (error || !data?.claims?.sub)) {
     const redirectResponse = NextResponse.redirect(new URL("/", request.url));
     for (const cookie of response.cookies.getAll()) {
       redirectResponse.cookies.set(cookie);

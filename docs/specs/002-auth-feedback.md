@@ -21,6 +21,7 @@ Let users sign in with Google and store their per-item feedback (_Like_, _Not in
 - `@supabase/ssr` setup: server and browser clients, session refresh on every request, auth callback route, sign-out.
 - Login page with a "Sign in with Google" button; app routes redirect to it when there is no session. Local development also offers email/password sign-in against loopback Supabase only.
 - Supabase Auth Google provider for local development (`supabase/config.toml`, secrets via `env(...)`) and documented manual steps for the cloud project and Google Cloud OAuth client.
+- Local browser and Google OAuth callbacks use `localhost` for WSL compatibility; local-only scripts and integration tests also accept that URL without weakening their local-project checks.
 - Migration: `feedback` table with RLS, grants, `updated_at` trigger, and `set_feedback` RPC function.
 - Server-side feedback actions: set (insert or replace, via the RPC) and clear (undo), using the signed-in user's session.
 - Minimal signed-in page showing the user's email and a sign-out button (placeholder until spec 003).

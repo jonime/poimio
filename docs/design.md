@@ -158,7 +158,7 @@ With no eligible positive signals, the feed round-robins sources, newest first w
 OpenAI API with `gpt-6-luna` (chosen in week 1). The LLM is **not** used to rank individual items (cost, latency, reproducibility). It is used for:
 
 1. **Evaluation judge:** labels items as relevant/not relevant for simulated personas. The primary labeler is Qwen 3.8 27B, with `gpt-6-luna` as fallback (§4.2). The final snapshot was labeled via OpenRouter with approval after local MTPLX proved too slow.
-2. **Source discovery** (stretch, stage b): finds candidate sites with the built-in web search tool and assesses source quality.
+2. **Source discovery** (stretch, stage b; not yet enabled): after spec 001 task 15 is verified after deployment, `gpt-6-luna` may search the web using only topics typed by an administrator. No user feedback or account data is sent.
 3. **Description enrichment:** `gpt-6-luna` via the Responses API creates a concise, factual description only when feed and page metadata descriptions are unavailable. The request has no tools or URL access; extracted article text is untrusted content, not instructions. The output must state the subject or main point directly in the item's language, usually in one sentence, without source narration or an unnecessary recap. Attribution, uncertainty, negation, and the scope of personal experience take precedence over concision. The output uses only facts in the text and fits the existing 1,000-character summary limit. Prompt constraints and representative tests live with the enrichment implementation.
 
    Spec 023 compared the current and candidate instructions on the frozen 24-item sample with blind human review. Run 1 was rejected for revision after 3 wins, 9 losses, and 12 ties (62.5% wins plus ties), despite no observed unsupported or wrong-language output. The one allowed revision produced 14 wins, 2 losses, and 8 ties (91.7%), removed the five observed English opening-narration cases, and again produced no observed unsupported or wrong-language output. The Finnish opening-narration comparison was 0 versus 0, so the strict “fewer than current” rule reported a local miss despite no regression; the user approved activation based on the overall pass and 8-to-2 Finnish preference result. Six revised English outputs were still flagged for later-sentence narration, and zero errors is a small-sample observation rather than proof of perfect accuracy. Results are recorded in `evaluation/description-style/summaries/`; generated review text and extracted article text remain gitignored.
@@ -211,24 +211,15 @@ The B-exclusive share fell in all 12 cases. The A-exclusive share rose in all 12
 
 ## 3. Source discovery (stretch goal)
 
-Two independent stages, both attempted only after gate 2 ([plan.md §9](plan.md#9-decision-gates-and-cut-order)). Both feed the same validation and approval steps.
+Discovery proposes additions to the shared source pool; it never adds a source to ingestion without administrator approval. Release A implements stage (a). Stage (b) remains gated on spec 001 task 15's post-deployment scheduled-run check and handling code-scanning alert #2. The core recommender works without either stage.
 
-**Stage (a) — catalog-based (no LLM, ~5 h):** inactive sources from the catalog ([feeds.md](feeds.md)) are fetched, their recent items embedded and scored against each user's liked items. Sources that match well are proposed to the admin.
+**Stage (a) — catalog scan:** an administrator can scan inactive sources from [feeds.md](feeds.md). Fetching reuses the bounded feed transport and ingestion's 200-entry cap, URL filtering, and YouTube Shorts exclusion. A candidate needs at least three distinct eligible entries with feed-provided publication dates in the last 30 days; fetch-time fallback dates and future dates do not count. Candidate items are embedded in memory, never inserted into `content_items`, and scored against active-source items. Articles use a 7-day window and videos a 30-day window; volume is the eligible 30-day count divided by 30.
 
-**Stage (b) — LLM web search (~6–8 h):** the LLM, using web search and the user's saved preferences and feedback, suggests candidate sites. The LLM only _suggests_; deterministic code verifies.
+Each user with at least five eligible likes is scored against that user's active-source reference pool, excluding items they rated or opened. A nearest-rank 75th-percentile threshold is computed per user and media type. With at least three scoreable users, the stored relevance is derived from the coarse distribution of user match shares. With fewer than three, only the scanning administrator's likes determine relevance. Results are rounded to 0.05; no user IDs, per-user shares, or matched-user counts are stored or shown. If the admin has fewer than five eligible likes or there are too few scored candidate items, relevance is not scored. Duplicate share estimates exact URL overlap and same-window centered similarity of at least 0.74.
 
-Validation and approval (both stages):
+Scans are manually triggered from `/admin/sources`. One database lease covers both discovery buttons, expires after 330 seconds, and is combined with batches of eight sources, a 240-second work deadline, and a 300-second route limit. A scan that reaches its deadline is marked partial; individual feed failures do not stop the rest. Candidates are admin-readable, while writes use the service role only after the page or action verifies `getClaims()` and `is_admin()` through the user's client. Approving a catalog candidate activates its existing source row transactionally; rejecting it leaves the source inactive. Approved sources join the normal ingestion pool and the Sources page.
 
-1. Fetch each site and detect RSS/Atom feeds (autodiscovery). Feed URLs proposed by the LLM are never trusted without fetching.
-2. Parse the feed: is it active, with recent posts?
-3. Embed recent items and score them against the user's interests; in stage (b) the LLM also assesses source quality.
-4. An admin approves a source before it is ingested. Approved sources join the shared source pool; each user's recommender decides whether its items are relevant to them.
-
-Optional extra candidate source: outbound links from liked articles, fed into the same validation pipeline.
-
-Safeguards: discovery runs manually or weekly with a cap on searches per run; fetching is restricted to http/https, blocks private/internal addresses (SSRF), and enforces timeouts and response size limits.
-
-The core recommender must work without this feature.
+**Stage (b) — web search (not implemented):** only after the spec 001 task 15 gate passes, an administrator may submit one to three short topics. The built-in web search suggests site names and homepages; deterministic code finds and fetches RSS/Atom links, validates feed language and recency, then applies the same scoring and approval flow. Only those administrator-entered topics are sent to OpenAI; no user feedback or account data is sent. The LLM's feed URLs are never trusted, and each homepage, autodiscovery result, feed URL, and redirect must pass the SSRF-safe public HTTP transport. Requests are bounded by per-admin quota and time/output limits.
 
 ## 4. Evaluation
 
@@ -428,7 +419,7 @@ The email allowlist table was removed by a forward migration. `public.is_allowed
 
 ### 6.6 Later tables
 
-Click events are described in §6.10. Discovery candidates remain a later feature. Feed preferences and LLM usage are in §6.7 and §6.8.
+Click events are described in §6.10. Source discovery tables are described in §§6.11–6.13. Feed preferences and LLM usage are in §6.7 and §6.8.
 
 ### 6.7 `feed_preferences` (per-user)
 
@@ -459,7 +450,7 @@ RLS is owner-only `select`, `update`, and `delete`. Authenticated users can upda
 
 RLS is owner-only `select` and `insert`. There is no update or delete policy. Authenticated users can insert only `kind`; `user_id` and `created_at` come from column defaults. A direct insert uses up the caller's own quota and cannot be backdated or deleted by the user.
 
-`reserve_llm_call(p_kind text)` is volatile, `SECURITY INVOKER`, and has an empty search path. It reads the user from `auth.uid()`, rejects an unknown kind, locks the user for the transaction, and inserts a row only when that user has fewer than 10 preference rows in the last 24 hours. It inserts only `kind`. Execute is granted to `authenticated` and revoked from `PUBLIC` and `anon`. The preference action calls it before any OpenAI request. A failed call still counts.
+`reserve_llm_call(p_kind text)` is volatile, `SECURITY INVOKER`, and has an empty search path. It reads the user from `auth.uid()`, rejects an unknown kind, locks the user for the transaction, and inserts a row only when that user has fewer than 10 preference rows in the last 24 hours. It inserts only `kind`. Execute is granted to `authenticated` and revoked from `PUBLIC` and `anon`. The preference action calls it before any OpenAI request. A failed call still counts. The only implemented kind is `preferences`; stage (b), when enabled after its deployment gate, will add `source_discovery` with a separate limit of five calls per administrator per rolling 24 hours.
 
 ### 6.9 `hidden_sources` (per-user)
 
@@ -474,6 +465,20 @@ RLS is owner-only `select`, `insert`, and `delete`; there is no update policy. A
 ### 6.10 `item_clicks` (per-user)
 
 One idempotent row per user and opened feed item. `record_click(p_item_id uuid)` reads `auth.uid()`, requires a readable item, and inserts only the item ID; repeated opens preserve the first `clicked_at`. RLS and column grants permit owner-only `select` and insert of `item_id`; there is no update or delete policy. Anonymous access is denied. Account deletion cascades these rows.
+
+### 6.11 `admins` (membership)
+
+`user_id` is the primary key and a cascading foreign key to `auth.users`; `created_at` defaults to `now()`. RLS permits an authenticated user to select only their own membership row. Authenticated users cannot write, and anonymous users have no access. The service role manages rows; there is no admin-management UI. `is_admin()` is stable, `SECURITY INVOKER`, and uses an empty search path; it compares `auth.uid()` with the caller-visible membership row and is executable only by `authenticated`.
+
+### 6.12 `source_candidates` (shared)
+
+The shared candidate table contains `id`, `origin` (`catalog` or future `web_search`), nullable `source_id` for catalog sources, `name`, normalized unique `feed_url`, nullable `site_url`, `kind`, `language`, `status`, `failure`, `item_count`, `items_per_day`, `relevance`, `relevance_basis`, `mean_match_share`, `duplicate_share`, up to five `sample_titles`, `scanned_at`, and `decided_at`. A future stage-(b) migration adds `llm_reason`. Catalog scans refresh only pending and failed candidates; approved and rejected candidates are terminal. Only administrators can select rows; the service role writes after a verified admin check. No candidate stores user IDs or per-user scores.
+
+`decide_source_candidate(candidate_id, decision)` runs as `SECURITY INVOKER` with an empty search path and is executable only by the service role. It locks and decides a candidate transactionally. Rejecting changes only candidate state; approving a catalog candidate also activates the matching source row. Stale source URLs and repeated or conflicting decisions return explicit statuses without partial changes. Web-source insertion is reserved for the gated stage-(b) migration.
+
+### 6.13 `source_discovery_runs` (shared)
+
+Each run stores its `id`, `kind`, `started_at`, `lease_expires_at`, nullable `finished_at`, `status`, and a bounded JSON array of run-level failures. Administrators can select runs; only the service role can write them. `start_source_discovery_run(kind)` serializes scans with an advisory transaction lock, marks expired leases failed, and creates a 330-second lease only when no live run exists. Catalog work has a 240-second application deadline and is marked partial if unprocessed batches remain.
 
 ## 7. User interaction
 

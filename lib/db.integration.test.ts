@@ -106,6 +106,7 @@ describe.skipIf(!enabled || serviceKey == null)("IngestDb against a real databas
       categories: ["Test"],
       thumbnailUrl: null,
       publishedAt: new Date("2026-10-28T08:00:00.000Z"),
+      feedPublishedAt: new Date("2026-10-28T08:00:00.000Z"),
     };
   }
 

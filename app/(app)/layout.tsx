@@ -1,6 +1,7 @@
 import { type ReactNode, Suspense } from "react";
 import { AppHeader } from "@/components/app-header";
 import { displayNameFromClaims } from "@/lib/app-access";
+import { isSourceDiscoveryAdmin } from "@/lib/source-discovery-access";
 import { createClient } from "@/lib/supabase/server";
 import { GuestHeader } from "./guest-header";
 
@@ -27,5 +28,6 @@ async function SessionHeader() {
     );
   }
 
-  return <AppHeader displayName={displayNameFromClaims(claims) ?? null} />;
+  const isAdmin = await isSourceDiscoveryAdmin(supabase);
+  return <AppHeader displayName={displayNameFromClaims(claims) ?? null} isAdmin={isAdmin} />;
 }

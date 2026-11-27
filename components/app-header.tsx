@@ -6,9 +6,11 @@ import { UserMenu } from "@/components/user-menu";
 export function AppHeader({
   displayName,
   guest = false,
+  isAdmin = false,
 }: {
   displayName?: string | null;
   guest?: boolean;
+  isAdmin?: boolean;
 }) {
   return (
     <header className="sticky top-0 z-20 border-b bg-background/80 backdrop-blur">
@@ -24,7 +26,7 @@ export function AppHeader({
         <AppNav guest={guest} />
         {!guest && (
           <div className="ml-auto flex min-w-0 items-center">
-            <UserMenu displayName={displayName} />
+            <UserMenu displayName={displayName} isAdmin={isAdmin} />
           </div>
         )}
       </div>

@@ -15,6 +15,7 @@ export const sessionRoutes = new Set([
   "/history",
   "/preferences/tune",
   "/preferences/sources",
+  "/admin/sources",
 ]);
 
 export const otherRoutes = new Set([

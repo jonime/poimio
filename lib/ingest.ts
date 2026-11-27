@@ -24,7 +24,7 @@ import {
   publisherAllowsArticle,
 } from "./thumbnails/publisher.ts";
 
-const MAX_FEED_ENTRIES = 200;
+export const MAX_FEED_ENTRIES = 200;
 
 export interface SourceIngestionSummary {
   name: string;
@@ -51,6 +51,13 @@ export interface IngestionOptions {
   now?: () => Date;
 }
 
+export class FeedEntryLimitError extends Error {
+  constructor(count: number) {
+    super(`Feed has ${count} eligible entries (limit ${MAX_FEED_ENTRIES})`);
+    this.name = "FeedEntryLimitError";
+  }
+}
+
 function describeError(error: unknown): string {
   return error instanceof Error ? error.message : String(error);
 }
@@ -63,13 +70,22 @@ function fetchInput(source: Source) {
   };
 }
 
-function isYouTubeShort(url: string): boolean {
+export function isYouTubeShort(url: string): boolean {
   const parsed = URL.parse(url);
   if (!parsed) return false;
   return (
     (parsed.hostname === "youtube.com" || parsed.hostname.endsWith(".youtube.com")) &&
     parsed.pathname.startsWith("/shorts/")
   );
+}
+
+/** Apply the shared ingestion eligibility rules before the per-source item cap. */
+export function filterIngestionItems(items: ParsedItem[]): ParsedItem[] {
+  const eligible = items.filter((item) => hasUsableUrl(item.url) && !isYouTubeShort(item.url));
+  if (eligible.length > MAX_FEED_ENTRIES) {
+    throw new FeedEntryLimitError(eligible.length);
+  }
+  return eligible;
 }
 
 /** Fetch, parse, persist, and embed the currently active feed catalog. */
@@ -128,10 +144,7 @@ export async function runIngestion(
     let items: ParsedItem[];
     try {
       const parsed = await parseFeed(result.body, options.now ? { fetchTime: options.now() } : {});
-      items = parsed.items.filter((item) => hasUsableUrl(item.url) && !isYouTubeShort(item.url));
-      if (items.length > MAX_FEED_ENTRIES) {
-        throw new Error(`Feed has ${items.length} eligible entries (limit ${MAX_FEED_ENTRIES})`);
-      }
+      items = filterIngestionItems(parsed.items);
     } catch (error) {
       const message = describeError(error);
       summary.errors.push(message);

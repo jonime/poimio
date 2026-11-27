@@ -83,6 +83,16 @@ it("links the user menu to tune feed and hidden sources", () => {
   expect(container.querySelector('a[href="/preferences/sources"]')?.textContent).toContain(
     "Sources",
   );
+  expect(container.querySelector('a[href="/admin/sources"]')).toBeNull();
+});
+
+it("shows source discovery only when the server-derived admin flag is true", async () => {
+  await act(async () =>
+    root?.render(createElement(UserMenu, { displayName: "Joni Mertoniemi", isAdmin: true })),
+  );
+  expect(container.querySelector('a[href="/admin/sources"]')?.textContent).toContain(
+    "Source discovery",
+  );
 });
 
 it("submits the hidden sign-out form from the Log out item", async () => {

@@ -153,7 +153,7 @@ Each criterion belongs to one task. Tasks 1–3 are release A and ship together;
 
 - [ ] 1. `admins`, `is_admin()`, `source_candidates`, `source_discovery_runs`, `decide_source_candidate` (catalog), RLS and decision tests (criterion 1).
 - [ ] 2. Shared ingestion filtering, validation and scoring, **Scan catalog** with lease, batches, and deadline; local and Vercel scan (criterion 2).
-- [ ] 3. `/admin/sources` page, menu flag, proxy refresh, stage (a) privacy text (criterion 3). Release A ships here.
+- [x] 3. `/admin/sources` page, menu flag, proxy refresh, stage (a) privacy text (criterion 3). Release A ships here.
 - [ ] 4. Stage (b): quota, typed topics, web search, parser, autodiscovery, web approval, privacy text (criterion 4). Cut first if time runs short.
 - [ ] 5. Docs (criterion 5).
 

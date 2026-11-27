@@ -1,4 +1,5 @@
 import { createHash } from "node:crypto";
+import { isLocalSupabaseProjectUrl } from "./supabase/local-project.ts";
 
 export const EVALUATION_SNAPSHOT_SCHEMA_VERSION = 1;
 export const MINIMUM_SNAPSHOT_SPAN_MS = 14 * 24 * 60 * 60 * 1000;
@@ -172,8 +173,8 @@ export function requireProductionUrl(value: string): URL {
 
 export function requireLocalSupabaseUrl(value: string): URL {
   const url = new URL(value);
-  if (url.protocol !== "http:" || url.hostname !== "127.0.0.1" || url.port !== "55321") {
-    throw new Error("Evaluation import is restricted to local Supabase at http://127.0.0.1:55321");
+  if (!isLocalSupabaseProjectUrl(url.origin)) {
+    throw new Error("Evaluation import is restricted to local Supabase on port 55321");
   }
   return url;
 }

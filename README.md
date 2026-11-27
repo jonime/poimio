@@ -78,6 +78,18 @@ and all other CSV content are preserved. The CSV must contain `persona_id`,
 
 ## Database integration tests
 
+Local Supabase requires a Docker-compatible container runtime. Docker works as
+usual. For rootless Podman on Linux, enable its Docker-compatible socket and
+point the Supabase CLI to it before starting the stack:
+
+```sh
+systemctl --user enable --now podman.socket
+export DOCKER_HOST="unix://${XDG_RUNTIME_DIR}/podman/podman.sock"
+```
+
+Keep `DOCKER_HOST` set in the shell when running Supabase commands and integration
+tests. Other Podman installations may use a different socket address.
+
 Start the local Supabase stack and apply migrations before running the database-backed tests:
 
 ```sh
@@ -112,11 +124,9 @@ SUPABASE_AUTH_EXTERNAL_GOOGLE_CLIENT_ID=your-web-client-id.apps.googleuserconten
 SUPABASE_AUTH_EXTERNAL_GOOGLE_CLIENT_SECRET=your-client-secret
 ```
 
-Do not copy production Supabase credentials into this file or `.env.local`. Keep the app's local Supabase URL and keys in `.env.local`; the URL is `http://127.0.0.1:55321`. The variable names are also listed in [.env.example](.env.example). Email/password authentication stays enabled for local automated tests and the local-development sign-in form described below.
+Do not copy production Supabase credentials into this file or `.env.local`. Keep the app's local Supabase URL and keys in `.env.local`; set `NEXT_PUBLIC_SUPABASE_URL=http://localhost:55321` so browser access works through WSL's localhost forwarding. Restart `pnpm dev` after changing it. Local-only scripts and integration tests also accept this URL; no switching is needed. The variable names are listed in [.env.example](.env.example). Email/password authentication stays enabled for local automated tests and the local-development sign-in form described below.
 
-If a browser outside WSL can reach Supabase only through `localhost`, use `http://localhost:55321` as `NEXT_PUBLIC_SUPABASE_URL` for the app and restart `pnpm dev` after changing it. Some local-only scripts and the integration-test guard require the `127.0.0.1` URL in `.env.local`; switch it back when running those commands.
-
-With Docker running, apply the auth configuration by starting (or restarting) the local stack:
+With Docker or Podman configured as above, apply the auth configuration by starting (or restarting) the local stack:
 
 ```sh
 supabase stop
@@ -154,8 +164,8 @@ References: [Supabase Google Auth](https://supabase.com/docs/guides/auth/social-
 
 For integrated browsers that cannot complete Google OAuth, use a local Supabase account instead:
 
-1. Start local Supabase and confirm `.env.local` uses `NEXT_PUBLIC_SUPABASE_URL=http://127.0.0.1:55321` with the matching local anon key. Do not use hosted credentials.
-2. Open local Supabase Studio at `http://127.0.0.1:55323`. Under **Authentication > Users**, choose **Add user > Create new user**, enter a development-only email and password, and enable **Auto Confirm User**. Do not reuse a real account's password.
+1. Start local Supabase and confirm `.env.local` uses `NEXT_PUBLIC_SUPABASE_URL=http://localhost:55321` with the matching local anon key. Do not use hosted credentials.
+2. Open local Supabase Studio at `http://localhost:55323`. Under **Authentication > Users**, choose **Add user > Create new user**, enter a development-only email and password, and enable **Auto Confirm User**. Do not reuse a real account's password.
 3. Run `pnpm dev` and open `http://localhost:3001/login`. Enter those credentials under **Local sign-in**. No email delivery or Google OAuth is required; the normal Supabase cookie session and RLS still apply.
 
 The form and its server action are enabled only when `NODE_ENV=development` and the configured Supabase URL uses HTTP/HTTPS with an exact loopback hostname (`localhost`, `127.0.0.1`, or `[::1]`). Production builds and development against hosted Supabase keep Google-only sign-in. There is no signup UI or auth bypass, and no new environment variables are required. Resetting the local database removes this account, so recreate it in Studio after a reset.

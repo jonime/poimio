@@ -112,49 +112,47 @@ describe.skipIf(!enabled || !anonKey || !serviceKey)("public guest metadata", ()
   });
 
   it("enforces exact article/video time boundaries using the database clock", () => {
-    // One transaction freezes now(); rollback restores the disposable fixtures.
-    const output = execFileSync(
-      "docker",
-      [
-        "exec",
-        "-i",
-        "supabase_db_ai-feed",
-        "psql",
-        "-U",
-        "postgres",
-        "-d",
-        "postgres",
-        "-v",
-        "ON_ERROR_STOP=1",
-        "-At",
-      ],
-      {
-        encoding: "utf8",
-        input: `
-      begin;
-      update public.content_items set published_at = now() - interval '7 days' where id = '${articleId}';
-      update public.content_items set published_at = now() - interval '30 days' where id = '${videoId}';
-      set local role anon;
-      select count(*) = 2 from public.content_items where id in ('${articleId}', '${videoId}');
-      reset role;
-      update public.content_items set published_at = published_at - interval '1 microsecond'
-        where id in ('${articleId}', '${videoId}');
-      set local role anon;
-      select count(*) = 0 from public.content_items where id in ('${articleId}', '${videoId}');
-      reset role;
-      update public.content_items set published_at = now() where id = '${articleId}';
-      set local role anon;
-      select count(*) = 1 from public.content_items where id = '${articleId}';
-      reset role;
-      update public.content_items set published_at = now() + interval '1 microsecond' where id = '${articleId}';
-      set local role anon;
-      select count(*) = 0 from public.content_items where id = '${articleId}';
-      rollback;
-    `,
-      },
-    );
-    expect(output.split("\n").filter((line) => line === "t")).toHaveLength(4);
-    expect(output.split("\n")).not.toContain("f");
+    // The subtransaction rolls back fixture changes while keeping now() fixed.
+    const query = `
+      do $$
+      declare visible_count integer;
+      begin
+        begin
+          update public.content_items set published_at = now() - interval '7 days' where id = '${articleId}';
+          update public.content_items set published_at = now() - interval '30 days' where id = '${videoId}';
+          set local role anon;
+          select count(*) into visible_count from public.content_items where id in ('${articleId}', '${videoId}');
+          reset role;
+          if visible_count <> 2 then raise exception 'Items at the cutoff must be visible'; end if;
+
+          update public.content_items set published_at = published_at - interval '1 microsecond'
+            where id in ('${articleId}', '${videoId}');
+          set local role anon;
+          select count(*) into visible_count from public.content_items where id in ('${articleId}', '${videoId}');
+          reset role;
+          if visible_count <> 0 then raise exception 'Items past the cutoff must be hidden'; end if;
+
+          update public.content_items set published_at = now() where id = '${articleId}';
+          set local role anon;
+          select count(*) into visible_count from public.content_items where id = '${articleId}';
+          reset role;
+          if visible_count <> 1 then raise exception 'Items published now must be visible'; end if;
+
+          update public.content_items set published_at = now() + interval '1 microsecond' where id = '${articleId}';
+          set local role anon;
+          select count(*) into visible_count from public.content_items where id = '${articleId}';
+          reset role;
+          if visible_count <> 0 then raise exception 'Future items must be hidden'; end if;
+
+          raise exception using errcode = 'P0002';
+        exception when sqlstate 'P0002' then
+          null;
+        end;
+      end $$;
+    `;
+    execFileSync("supabase", ["db", "query", "--local", "--output-format", "json", query], {
+      encoding: "utf8",
+    });
   });
 
   it.each([

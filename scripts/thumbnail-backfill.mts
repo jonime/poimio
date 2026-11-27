@@ -1,6 +1,7 @@
 import { readFileSync } from "node:fs";
 import { parseArgs, parseEnv } from "node:util";
 import { createIngestDb } from "../lib/db.ts";
+import { isLocalSupabaseProjectUrl } from "../lib/supabase/local-project.ts";
 import { parseThumbnailCursor, runThumbnailBackfill } from "../lib/thumbnails/backfill.ts";
 
 async function main() {
@@ -21,8 +22,8 @@ async function main() {
         "The .env.production.local Supabase URL must target a hosted Supabase project.",
       );
     }
-  } else if (env.NEXT_PUBLIC_SUPABASE_URL !== "http://127.0.0.1:55321") {
-    throw new Error("The .env.local Supabase URL must target http://127.0.0.1:55321.");
+  } else if (!isLocalSupabaseProjectUrl(env.NEXT_PUBLIC_SUPABASE_URL ?? "")) {
+    throw new Error("The .env.local Supabase URL must target local Supabase on port 55321.");
   }
   console.log(production ? "Target: hosted Supabase" : "Target: local Supabase");
 

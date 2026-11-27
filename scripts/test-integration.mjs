@@ -3,6 +3,8 @@ import { spawnSync } from "node:child_process";
 import { existsSync, mkdtempSync, readFileSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
+import { parseEnv } from "node:util";
+import { isLocalSupabaseProjectUrl } from "../lib/supabase/local-project.ts";
 
 const localApiUrl = "http://127.0.0.1:55321";
 
@@ -38,11 +40,10 @@ assert.ok(localStatus.SERVICE_ROLE_KEY, "Local Supabase service-role key is unav
 
 if (existsSync(".env.local")) {
   const envFile = readFileSync(".env.local", "utf8");
-  const appUrl = envFile.match(/^NEXT_PUBLIC_SUPABASE_URL=(.*)$/m)?.[1]?.trim();
+  const appUrl = parseEnv(envFile).NEXT_PUBLIC_SUPABASE_URL;
   if (appUrl) {
-    assert.equal(
-      appUrl,
-      localApiUrl,
+    assert.ok(
+      isLocalSupabaseProjectUrl(appUrl),
       "The .env.local Supabase URL is not the local project; refusing to run integration tests.",
     );
   }

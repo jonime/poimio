@@ -7,6 +7,7 @@ import {
   parseBackfillArgs,
   runEnrichmentBackfill,
 } from "../lib/enrich/backfill.ts";
+import { isLocalSupabaseProjectUrl } from "../lib/supabase/local-project.ts";
 
 function loadSelectedEnvironment(environment: "local" | "production"): void {
   const filePath = environment === "production" ? ".env.production.local" : ".env.local";
@@ -28,10 +29,7 @@ function loadSelectedEnvironment(environment: "local" | "production"): void {
   } catch {
     throw new Error("The selected environment has no valid Supabase URL.");
   }
-  if (
-    environment === "local" &&
-    (projectUrl.hostname !== "127.0.0.1" || projectUrl.port !== "55321")
-  ) {
+  if (environment === "local" && !isLocalSupabaseProjectUrl(projectUrl.origin)) {
     throw new Error(
       "The default environment must target local Supabase; use --env production explicitly for hosted credentials.",
     );

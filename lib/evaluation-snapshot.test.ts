@@ -165,6 +165,10 @@ describe("evaluation snapshot", () => {
     expect(() => requireProductionUrl("http://127.0.0.1:55321")).toThrow(/production URL/u);
     expect(() => requireLocalSupabaseUrl("https://example.supabase.co")).toThrow(/local Supabase/u);
     expect(requireLocalSupabaseUrl("http://127.0.0.1:55321").port).toBe("55321");
+    expect(requireLocalSupabaseUrl("http://localhost:55321").hostname).toBe("localhost");
+    expect(() => requireLocalSupabaseUrl("http://localhost.evil.example:55321")).toThrow(
+      /local Supabase/u,
+    );
   });
 
   it("allows a short range only for a marked provisional snapshot", () => {

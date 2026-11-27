@@ -1,6 +1,6 @@
 # 025 — Same-story handling
 
-**Status:** Approved  
+**Status:** Done  
 **Milestone:** Final (week 6)  
 **Depends on:** 006 (near-duplicate threshold, cross-lingual pairs, frozen snapshot), 022 (hidden sources and card masking)  
 **Estimate:** 9 h

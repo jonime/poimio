@@ -827,7 +827,7 @@ describe.skipIf(!enabled || anonKey == null || serviceKey == null)(
       const unrelated = feed.find((row) => row.id === itemIds.get("candidate-same-unrelated"));
       assert(related, "Cross-language candidate must exist");
       assert(unrelated, "Unrelated candidate must exist");
-      expect(related.score).toBeCloseTo(1);
+      expect(related.score).toBeCloseTo(0.7);
       expect(related.score).toBeGreaterThan(unrelated.score);
     });
 

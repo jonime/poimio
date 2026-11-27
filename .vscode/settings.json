@@ -1,5 +1,4 @@
 {
-  "chat.permissions.default": "autoApprove",
   "editor.codeActionsOnSave": {
     "source.organizeImports.biome": "explicit"
   },

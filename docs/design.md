@@ -34,7 +34,7 @@ Notes:
 - Feed windows are small (e.g. Yle Latest shows only the 20 newest items, all within a few hours), so ingestion runs **hourly** to avoid missing items.
 - The same Yle article can appear in several Yle feeds; it is stored once (unique normalized URL).
 - Volume is uneven (Yle publishes far more than the others), so the cold-start feed and exploration slots balance by source.
-- URLs are normalized by removing tracking parameters (e.g. `?origin=rss`, `?at_medium=RSS&at_campaign=rss`) and deduplicated on the normalized URL. The same story from several sources (e.g. Verge + TechCrunch + Hacker News) is handled by diversity re-ranking, not deduplication.
+- URLs are normalized by removing tracking parameters (e.g. `?origin=rss`, `?at_medium=RSS&at_campaign=rss`) and deduplicated on the normalized URL. The same story from several sources (e.g. Verge + TechCrunch + Hacker News) is handled by embedding-based same-story filtering and per-page grouping in `get_feed` ([§2.2](#22-final-ranking-and-exploration), [spec 025](specs/025-same-story.md)), not ingestion-time deduplication.
 - Feed category tags (Yle, Verge, TechCrunch) are stored for diversity measurement and evaluation, not used for ranking.
 - Only title, short description, thumbnail, and link are shown; Yle and BBC RSS terms of use are reviewed in week 1.
 
@@ -122,7 +122,8 @@ Limitations: the validation window was used for selection, so these numbers are 
 
 - The final score is interest plus $\beta \cdot 0.5^{\text{age}/h}$. The prototype used $\beta = 0.1$; the tuned default is $\beta = 0$ ([§2.1](#21-interest-scoring-nearest-liked-item)), so the age term is a no-op unless a caller passes a weight. The half-life $h$ is 24 hours for articles and 7 days for videos. Candidate windows are 7 days for articles and 30 days for videos; all rated items are excluded.
 - `get_feed` runs as `SECURITY INVOKER`, reads identity from `auth.uid()`, and is executable by authenticated users only. Pages contain 30 items; later pages exclude already shown IDs instead of using offsets. The limit is clamped to 1-100 and exclusions to 1,000 IDs.
-- Before ranking, `get_feed` removes items from the caller's `hidden_sources` set. The filter changes only candidate selection: likes and dislikes from hidden sources still contribute as topic signals, and the remaining candidates fill personalized, cold-start, and exploration slots to the requested limit. Each row returns `source_id` so the client can match sources independently of non-unique source names.
+- Before ranking, `get_feed` removes items from the caller's `hidden_sources` set and drops eligible candidates whose centered similarity to any of the caller's latest 300 eligible rated items (published within 30 days, any feedback kind including `seen`) is at least $0.74$ regardless of language (covered-story filter, [spec 025](specs/025-same-story.md)). Likes and dislikes from hidden sources still contribute as topic signals and story-filter references.
+- After ranking, `get_feed` walks the returned page in rank order and marks near-duplicates (`duplicate_of`) against earlier non-exploration, eligible representatives (same language $\ge 0.74$; Finnish–English $\ge T_{xl}$, capped at 5 rows per group including the representative). Exploration slots never lead or join a group, and `limit` still counts rows. Each row returns `source_id` so the client can match sources independently of non-unique source names.
 - These defaults are kept together in the SQL function and were tuned in spec 020. Cards already displayed do not reorder; refreshing reloads the ranking, and subsequent pages use the latest feedback.
 - The spec 007 validation search fixed the spec 020 winner and compared MMR strengths $\mu \in \{0, 0.1, 0.2, 0.3, 0.5\}$:
 
@@ -292,7 +293,7 @@ Headline precision@10 at $k = 10$ for the four single personas, next to the firs
 | Science and space    |                       0.87 |                  0.94 |            0.94 |
 | Finnish sports       |                       0.68 |                  0.79 |            0.90 |
 
-The test objective (0.8297) is close to the same-treatment validation objective (0.8213). `average_vector` still scores higher on the objective and lower on coverage. These are held-out estimates against LLM proxy labels, not real-user relevance. Persona results remain correlated.
+The test objective (0.8297) is close to the same-treatment validation objective (0.8213). `average_vector` still scores higher on the objective and lower on coverage. These are held-out estimates against LLM proxy labels, not real-user relevance. Persona results remain correlated. Note: these frozen results measure the unchanged `ranking_private.rank_items` scorer, not the production `get_feed` covered-story filter or per-page grouping ([spec 025](specs/025-same-story.md)).
 
 ## 5. Technology stack
 
@@ -490,6 +491,7 @@ The feed is a single column of compact cards, responsive for phone and desktop. 
 - Rated items (any feedback action) do not return in the feed. A hidden source's existing likes and dislikes remain valid topic signals.
 - _Seen_ is a button only, so swipe-left keeps its existing _Not interested_ meaning. **Hide source** is separate and available from the card's accessible action menu.
 - Hidden cards stay mounted in their original positions, preserve feedback state, and still count as loaded for pagination exclusions. Late-arriving pages use the same source-ID mask. The list does not re-fetch or re-rank after hiding or Undo; the next feed load applies the persistent database filter.
+- Same-story groups render as one card per representative with an "Also covered by: _source_ · _source_" line for members in the same page. Member links sit above the stretched card link, accept only HTTP(S) URLs, open without recording feedback, and omit members from hidden sources; hiding or Undo on a representative masks or restores the entire group.
 - Tune feed and Sources are separate pages at `/preferences/tune` and `/preferences/sources`. Both are reached from the header's user menu. Sources lists the active sources by name with language badges, a Videos badge for YouTube, and an English description when available. Turning off a switch hides the source for the signed-in user. Changes apply on the next feed load or refresh.
 
 The Liked page searches the titles, full summaries, and source names of items already loaded by the page. It trims the query and matches it as a case-insensitive substring in any one field, preserving accents, punctuation, and newest-liked-first order. The result count is relative to the loaded list, which can be smaller than the user's full liked history. The query stays active when the mounted list refreshes after Unlike and starts empty on a new mount.

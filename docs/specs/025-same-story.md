@@ -1,6 +1,6 @@
 # 025 — Same-story handling
 
-**Status:** Approved  
+**Status:** Done  
 **Milestone:** Final (week 6)  
 **Depends on:** 006 (near-duplicate threshold, cross-lingual pairs, frozen snapshot), 022 (hidden sources and card masking)  
 **Estimate:** 9 h
@@ -95,9 +95,9 @@ Each criterion belongs to one task.
 
 ## Tasks
 
-- [ ] 1. Grouping walk and review selection as tested functions, `pnpm eval:story-groups`, review, $T_{xl}$ decision (criterion 1).
-- [ ] 2. Migration: covered-story filter, `duplicate_of` grouping, fixture updates, tests, latency check (criterion 2).
-- [ ] 3. Grouped cards in the feed, docs (criterion 3).
+- [x] 1. Grouping walk and review selection as tested functions, `pnpm eval:story-groups`, review, $T_{xl}$ decision (criterion 1).
+- [x] 2. Migration: covered-story filter, `duplicate_of` grouping, fixture updates, tests, latency check (criterion 2).
+- [x] 3. Grouped cards in the feed, docs (criterion 3).
 
 ## Decisions
 

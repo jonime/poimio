@@ -1,0 +1,144 @@
+{
+  "snapshotManifestHash": "c6cc8570e80350e34494db0434a6df892c65ec6f43c869f823f755d36c434c67",
+  "crosslingualScoreHash": "297e063f2797c5366de686c14c380a8d8a82f0f91bb2068f91b8e04e1bf8780a",
+  "sameLanguageThreshold": 0.74,
+  "validationItemCount": 887,
+  "standInPageCount": 32,
+  "confirmedExcludedCount": 28,
+  "availableEdgeCounts": {
+    "fiEnAt50": 6,
+    "fiEnAt55": 4,
+    "fiAt74": 1,
+    "enAt74": 7
+  },
+  "txlDecision": {
+    "chosenThreshold": null,
+    "steps": [
+      {
+        "threshold": 0.5,
+        "availableCount": 6,
+        "reviewedCount": 0,
+        "sameStoryCount": 0,
+        "status": "insufficient_pairs"
+      }
+    ]
+  },
+  "sameLanguageCheck": {
+    "finnishAvailable": 1,
+    "englishAvailable": 7,
+    "reviewedCount": 0,
+    "sameStoryCount": 0,
+    "passed": false,
+    "status": "insufficient_pairs"
+  },
+  "reviewedPairs": [
+    {
+      "bucket": "fi-en@0.50",
+      "kind": "fi-en",
+      "itemAId": "564b0137-1c31-4562-b9db-94c022d07108",
+      "itemBId": "7131b799-1a14-4824-a1da-a2a49da66432",
+      "similarity": 0.5171558605666037,
+      "threshold": 0.5,
+      "sameStory": null
+    },
+    {
+      "bucket": "fi-en@0.50",
+      "kind": "fi-en",
+      "itemAId": "8aaaf3b8-0617-468d-b172-50e6eb2b6032",
+      "itemBId": "c8148291-037d-49e9-8a33-53564c5ffe77",
+      "similarity": 0.5490364526613548,
+      "threshold": 0.5,
+      "sameStory": null
+    },
+    {
+      "bucket": "fi-en@0.50",
+      "kind": "fi-en",
+      "itemAId": "4fda6fa5-173f-4ef0-b992-6e78ec54f0c0",
+      "itemBId": "7937a8fb-f132-40b2-9bec-43e32259001c",
+      "similarity": 0.5848870903108311,
+      "threshold": 0.5,
+      "sameStory": null
+    },
+    {
+      "bucket": "fi-en@0.50",
+      "kind": "fi-en",
+      "itemAId": "a3abef2c-7088-4601-ae1f-8bcfbf1e44b1",
+      "itemBId": "e1570bcf-01be-427a-80bf-c256ad9ee005",
+      "similarity": 0.621058155606655,
+      "threshold": 0.5,
+      "sameStory": null
+    },
+    {
+      "bucket": "fi-en@0.50",
+      "kind": "fi-en",
+      "itemAId": "026759bc-68ee-4116-8d63-6d85e2458719",
+      "itemBId": "ed686404-1183-4d25-a4cc-564a7c1764ca",
+      "similarity": 0.6640857898469692,
+      "threshold": 0.5,
+      "sameStory": null
+    },
+    {
+      "bucket": "fi-en@0.50",
+      "kind": "fi-en",
+      "itemAId": "8b9533c9-7699-40d0-9f27-4aca518f5066",
+      "itemBId": "d58d414c-56d2-470a-9e26-b2ae599e734b",
+      "similarity": 0.7017551285361032,
+      "threshold": 0.5,
+      "sameStory": null
+    },
+    {
+      "bucket": "fi@0.74",
+      "kind": "fi",
+      "itemAId": "198f6b1e-f48a-4dec-9e78-e96740c6aa06",
+      "itemBId": "fe623cfd-d3c2-4136-b019-bf45aa8751a9",
+      "similarity": 0.7572914322168142,
+      "threshold": 0.74,
+      "sameStory": null
+    },
+    {
+      "bucket": "en@0.74",
+      "kind": "en",
+      "itemAId": "18c1c98f-6a4c-44b0-a04b-e85b402cc745",
+      "itemBId": "917f3404-5be5-4dcc-a4e4-30b98d37f00d",
+      "similarity": 0.742822847034755,
+      "threshold": 0.74,
+      "sameStory": null
+    },
+    {
+      "bucket": "en@0.74",
+      "kind": "en",
+      "itemAId": "38b9bc8a-68b9-4ec9-81ff-1c4a20890151",
+      "itemBId": "e6bf0e79-0545-48de-854e-b228bf720b9b",
+      "similarity": 0.7460406636014167,
+      "threshold": 0.74,
+      "sameStory": null
+    },
+    {
+      "bucket": "en@0.74",
+      "kind": "en",
+      "itemAId": "a5b8894d-2f5f-4045-bd11-a1feca240497",
+      "itemBId": "ec966c91-65ef-4235-bd1c-36189d808b08",
+      "similarity": 0.7462742867121261,
+      "threshold": 0.74,
+      "sameStory": null
+    },
+    {
+      "bucket": "en@0.74",
+      "kind": "en",
+      "itemAId": "ed686404-1183-4d25-a4cc-564a7c1764ca",
+      "itemBId": "fa710712-ea05-4918-80b0-7ebebd46d781",
+      "similarity": 0.7608013304773529,
+      "threshold": 0.74,
+      "sameStory": null
+    },
+    {
+      "bucket": "en@0.74",
+      "kind": "en",
+      "itemAId": "ed686404-1183-4d25-a4cc-564a7c1764ca",
+      "itemBId": "fae23117-80c0-4610-9e37-5efda9dd5001",
+      "similarity": 0.7678988409297995,
+      "threshold": 0.74,
+      "sameStory": null
+    }
+  ]
+}

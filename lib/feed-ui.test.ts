@@ -22,6 +22,7 @@ const item: FeedItem = {
   reason: "similar",
   because_item_id: "liked-1",
   because_title: "A liked article",
+  duplicate_of: null,
 };
 
 describe("feed UI helpers", () => {

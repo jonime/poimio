@@ -38,7 +38,7 @@ import {
 import { Spinner } from "@/components/ui/spinner";
 import { toast } from "@/components/ui/toast";
 import { cn } from "@/lib/utils";
-import { explanationForFeedItem, type FeedItem } from "../../lib/feed-ui";
+import { explanationForFeedItem, type FeedItem, safeHttpUrl } from "../../lib/feed-ui";
 import {
   type FeedbackKind,
   FeedbackMutationQueue,
@@ -56,6 +56,7 @@ const maximumItems = 1000;
 function FeedCard({
   hiddenBySource,
   item,
+  members,
   onHideSource,
   onUndo,
   renderedAt,
@@ -63,6 +64,7 @@ function FeedCard({
 }: {
   hiddenBySource: boolean;
   item: FeedItem;
+  members: FeedItem[];
   onHideSource: (item: FeedItem) => Promise<boolean>;
   onUndo: (restore: () => void) => void;
   renderedAt: string;
@@ -289,6 +291,32 @@ function FeedCard({
             <SparklesIcon className="size-3.5 shrink-0" aria-hidden="true" />
             {explanationForFeedItem(item)}
           </p>
+          {members.length > 0 && (
+            <p className="relative z-10 flex flex-wrap items-center gap-x-1.5 gap-y-0.5 text-xs text-muted-foreground">
+              <span>Also covered by:</span>
+              {members.map((member, index) => {
+                const memberUrl = safeHttpUrl(member.url);
+                return (
+                  <span key={member.id} className="inline-flex items-center gap-1.5">
+                    {index > 0 && <span aria-hidden="true">·</span>}
+                    {memberUrl ? (
+                      <a
+                        className="rounded-xs underline underline-offset-4 outline-none hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring"
+                        href={memberUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        aria-label={`${member.source_name}: ${member.title}`}
+                      >
+                        {member.source_name}
+                      </a>
+                    ) : (
+                      <span>{member.source_name}</span>
+                    )}
+                  </span>
+                );
+              })}
+            </p>
+          )}
           {snapshot.error && (
             <p className="text-sm text-destructive" role="alert">
               {snapshot.error}
@@ -461,6 +489,18 @@ export default function FeedList({
 
   const atMaximum = items.length >= maximumItems;
   const caughtUp = !hasMore && !atMaximum;
+  const itemIds = new Set(items.map((item) => item.id));
+  const membersByRep = new Map<string, FeedItem[]>();
+  const representatives: FeedItem[] = [];
+  for (const item of items) {
+    if (item.duplicate_of && itemIds.has(item.duplicate_of)) {
+      const group = membersByRep.get(item.duplicate_of);
+      if (group) group.push(item);
+      else membersByRep.set(item.duplicate_of, [item]);
+    } else {
+      representatives.push(item);
+    }
+  }
 
   return (
     <>
@@ -476,17 +516,23 @@ export default function FeedList({
         </Empty>
       ) : (
         <div className="flex flex-col gap-4">
-          {items.map((item) => (
-            <FeedCard
-              hiddenBySource={hiddenSourceIds.has(item.source_id)}
-              item={item}
-              key={item.id}
-              onHideSource={hideItemSource}
-              onUndo={showUndoToast}
-              renderedAt={renderedAt}
-              sourcePending={pendingSourceIds.has(item.source_id)}
-            />
-          ))}
+          {representatives.map((item) => {
+            const visibleMembers = (membersByRep.get(item.id) ?? []).filter(
+              (member) => !hiddenSourceIds.has(member.source_id),
+            );
+            return (
+              <FeedCard
+                key={item.id}
+                hiddenBySource={hiddenSourceIds.has(item.source_id)}
+                item={item}
+                members={visibleMembers}
+                onHideSource={hideItemSource}
+                onUndo={showUndoToast}
+                renderedAt={renderedAt}
+                sourcePending={pendingSourceIds.has(item.source_id)}
+              />
+            );
+          })}
         </div>
       )}
       {error && (

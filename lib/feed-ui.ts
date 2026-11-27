@@ -14,6 +14,7 @@ export interface FeedItem {
   reason: "similar" | "recent" | "exploring" | "preference";
   because_item_id: string | null;
   because_title: string | null;
+  duplicate_of: string | null;
 }
 
 export interface LikedFeedItem {

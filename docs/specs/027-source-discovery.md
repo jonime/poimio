@@ -1,6 +1,6 @@
 # 027 — Source discovery
 
-**Status:** Draft  
+**Status:** Approved  
 **Milestone:** Final (weeks 6–7, stretch goal)  
 **Depends on:** gate 2 (passed); 019 (ingestion bounds); 024 (Sources page); 025 (story threshold); 021 (`llm_usage`, `reserve_llm_call`); for stage (b) only: [spec 001 task 15](001-ingestion.md) verified after deployment (the SSRF-safe transport is already in `lib/public-http.ts`)  
 **Estimate:** 22 h (release A, stage a with admin page: about 13 h; stage b: about 8 h; docs: 1 h)

@@ -1,0 +1,38 @@
+{
+  "model": "qwen/qwen3.8-27b",
+  "provider": "OpenRouter",
+  "completedCases": 5,
+  "totalCases": 6,
+  "correct": 2,
+  "target": 5,
+  "targetMet": false,
+  "decision": "cut",
+  "note": "The final case timed out, but the target was already impossible: at most 3 of 6 could pass.",
+  "cases": [
+    {
+      "id": "ai-software",
+      "correct": true,
+      "rationale": "Covered the supported software, AI, cybersecurity, technology-business, hardware, and data-center interests."
+    },
+    {
+      "id": "cars-engineering",
+      "correct": false,
+      "rationale": "Omitted supported defense/transportation-safety themes from the liked inputs."
+    },
+    {
+      "id": "science-space",
+      "correct": true,
+      "rationale": "Covered the supported space, science, health, engineering, and environment interests."
+    },
+    {
+      "id": "finnish-sports",
+      "correct": false,
+      "rationale": "Invented international sports as a broad interest not supported by the Finnish-focused inputs."
+    },
+    {
+      "id": "ai-software-finnish-sports",
+      "correct": false,
+      "rationale": "Invented international sports as a broad interest rather than limiting the claim to the supplied Finnish-sports evidence."
+    }
+  ]
+}

@@ -59,7 +59,7 @@ Technical details are in [design.md](design.md).
 - **Recommender:** each item is scored by its similarity to the closest item the user liked, minus a penalty for similarity to items marked _Not interested_, combined with recency, diversity, and exploration slots. Every recommendation can be explained. The negative and visibility actions are intentionally separate: _Not interested_ means "not this topic", **Hide source** filters that source, and _Seen_ is neutral.
 - **Natural-language feed tuning:** an LLM turns a request such as "less crypto, more local AI models" into structured, editable preferences once per edit; their embeddings act as extra positive or negative signals in the existing scoring. No LLM call at ranking time.
 - **Same-story grouping:** embeddings only (no LLM or Jev); `get_feed` filters near-duplicates of recently rated items before ranking and groups near-duplicate rows within each page (`duplicate_of`). The feed shows one card per story with "Also covered by" links to the other sources.
-- **LLM tasks:** fill missing item descriptions from extracted article text, readable interest summary, relevance labels for evaluation, and (stretch goal) source discovery with web search. The LLM does not rank items.
+- **LLM tasks:** fill missing item descriptions from extracted article text, relevance labels for evaluation, and (stretch goal) source discovery with web search. The LLM does not rank items.
 - **Source descriptions:** a one-time `gpt-6-luna` run drafts short English descriptions of active sources from their metadata and recent titles. The reviewed text appears on the Sources settings page.
 - **Description quality (experiment):** TypeSafe Jev, a non-generative scoring model, flags poor item descriptions; compared offline with deterministic rules and `gpt-6-luna` as a judge ([spec 009](specs/009-description-quality-jev.md)).
 - **Evaluation:** replay test with simulated personas against average-vector, newest-first, and random baselines. Relevance labels from the local Qwen model are compared with Jev and with manual labels.
@@ -94,7 +94,7 @@ Not included: exploration slots, interest summary, evaluation harness, cross-lin
 - Exploration slots and diversity re-ranking ([spec 007](specs/007-exploration-diversity.md)); explicit source hiding ([spec 022](specs/022-hide-source.md)), separate from topic and neutral-item feedback.
 - Natural-language feed tuning and same-story grouping (see cut order in §9).
 - Evaluation harness and results ([design.md §4](design.md#4-evaluation)).
-- Optional (see cut order in §9): LLM interest summary; click tracking as a weak positive signal.
+- Optional (see cut order in §9): click tracking as a weak positive signal. The LLM interest summary was attempted and cut after failing its quality gate.
 - Optional experiment ([spec 009](specs/009-description-quality-jev.md)): description quality with TypeSafe Jev against rules and an LLM judge. Offline with no production changes, so it does not wait for gate 2.
 - Stretch goals, only after gate 2 passes ([design.md §3](design.md#3-source-discovery-stretch-goal)): (a) catalog-based source discovery; (b) LLM web-search discovery.
 - Documentation and final demonstration.
@@ -132,7 +132,7 @@ About 19 hours per week over 7 weeks. Most code is written by AI agents, so impl
 | Week | Dates          | Focus                                                                                                                                                                                                                                                                                                                                                                                          | AI tool support               | Hours   |
 | ---- | -------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------- | ------- |
 | 5    | 23 – 29 Nov    | Evaluation harness with protocol safeguards (time-based splits, identical histories, near-duplicate handling, repeated runs); LLM labels and manual agreement check; first validation results; Jev experiment test run and report; **freeze parameters, test-window run, and gate 2** (moved from weeks 6–7, since the ranking was settled by specs 020 and 007); natural-language feed tuning | Metric code, labeling scripts | 19      |
-| 6    | 30 Nov – 6 Dec | Exploration slots and diversity; negative-feedback reasons; same-story grouping; optional LLM interest summary and click tracking; source discovery if gate 2 passed                                                                                                                                                                                                                           | Debugging, algorithm review   | 19      |
+| 6    | 30 Nov – 6 Dec | Exploration slots and diversity; negative-feedback reasons; same-story grouping; click tracking; source discovery if gate 2 passed                                                                                                                                                                                                                                                           | Debugging, algorithm review   | 19      |
 | 7    | 7 – 12 Dec     | Documentation and final demonstration; **submit final version (13 Dec)**; stretch goals only if gate 2 passed earlier                                                                                                                                                                                                                                                                          | Documentation drafts, tests   | 16      |
 | —    |                | Buffer                                                                                                                                                                                                                                                                                                                                                                                         |                               | 12      |
 |      |                | **Total**                                                                                                                                                                                                                                                                                                                                                                                      |                               | **135** |
@@ -176,7 +176,7 @@ Specs are written just in time: the next spec is drafted when the current one re
 | [023](specs/023-description-style.md)               | AI-generated descriptions state the subject directly; blind old-vs-new comparison               | 6    | Done                             |
 | [024](specs/024-sources-page.md)                    | Sources page with on/off switches and one-time AI source descriptions (English)                 | 6    | Done                             |
 | [025](specs/025-same-story.md)                      | Same-story handling: covered-story filter and per-page grouping (embeddings only)               | 6    | Done                             |
-| [026](specs/026-interest-summary-clicks.md)         | Interest summary on demand; clicks as a weak signal (0.3, untuned); History page                | 6    | Implemented; review pending       |
+| [026](specs/026-interest-summary-clicks.md)         | Clicks as a weak signal (0.3, untuned) and History; interest summary cut after failed quality gate | 6    | Click release done                |
 
 **Planned, not yet drafted** (in order; see the cut order in §9)
 
@@ -228,7 +228,7 @@ If gate 2 has not passed by the end of week 6, week 7 goes to the final evaluati
 1. LLM web-search discovery
 2. Catalog-based discovery
 3. Jev description-quality experiment
-4. LLM interest summary
+4. LLM interest summary — cut after its 5-of-6 quality gate failed
 5. Click tracking
 6. Same-story grouping
 7. Natural-language feed tuning
@@ -248,7 +248,7 @@ The minimum acceptable result is: ingestion, personal feed with feedback, the re
 - Finnish and English supported from the start.
 - Recommender: embedding-based interest scoring (tuned `blend` of nearest-liked and average vector, spec 020) with negative penalty, recency, diversity, and exploration slots.
 - Average-vector, newest-first, and random as evaluation baselines.
-- OpenAI for embeddings and LLM; LLM used for missing-description summaries, natural-language preferences, interest summary, evaluation labels, and (stretch) web-search source discovery — not for ranking.
+- OpenAI for embeddings and LLM; LLM used for missing-description summaries, natural-language preferences, evaluation labels, and (stretch) web-search source discovery — not for ranking.
 - Stack: Next.js on Vercel, Supabase Postgres + pgvector, supabase-js with SQL migrations (no ORM), Supabase Auth. Hourly ingestion runs on Vercel Schedules (spec 016); it ran on GitHub Actions until 7 Nov, and that workflow remains as a manual fallback. GitHub Actions also runs CI.
 - Source discovery is a two-stage stretch goal (catalog-based, then LLM web search), attempted only after gate 2; admin-approved sources join a shared pool.
 - Optional offline experiment: TypeSafe Jev for description quality, compared with rules and an LLM judge (spec 009); called with plain `fetch`, no SDK.

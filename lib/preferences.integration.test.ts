@@ -106,6 +106,7 @@ describe.skipIf(!enabled)("feed preferences and LLM usage", () => {
       select
         (select relrowsecurity from pg_class where oid = 'public.feed_preferences'::regclass) as preferences_rls,
         (select relrowsecurity from pg_class where oid = 'public.llm_usage'::regclass) as usage_rls,
+        to_regclass('public.interest_summaries') is null as interest_summary_removed,
         (select count(*) = 3 from pg_policies where schemaname = 'public' and tablename = 'feed_preferences') as preference_policies,
         (select count(*) = 2 from pg_policies where schemaname = 'public' and tablename = 'llm_usage') as usage_policies,
         (select column_default = 'auth.uid()' from information_schema.columns where table_schema = 'public' and table_name = 'feed_preferences' and column_name = 'user_id') as preference_user_default,
@@ -139,6 +140,7 @@ describe.skipIf(!enabled)("feed preferences and LLM usage", () => {
     expect(row).toEqual({
       preferences_rls: true,
       usage_rls: true,
+      interest_summary_removed: true,
       preference_policies: true,
       usage_policies: true,
       preference_user_default: true,

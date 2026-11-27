@@ -29,7 +29,6 @@
     "eval:replay": "node --env-file=.env.local scripts/evaluation-replay.mts",
     "eval:tune": "node --env-file=.env.local scripts/evaluation-tune.mts",
     "eval:preferences": "node --env-file=.env.local scripts/evaluation-preferences.mts",
-    "eval:interest-summary": "node --experimental-strip-types --env-file-if-exists=.env.local scripts/interest-summary-check.mts",
     "eval:story-groups": "node scripts/evaluation-story-groups.mts",
     "eval:freeze": "node scripts/freeze-evaluation.mts",
     "lint": "biome check .",

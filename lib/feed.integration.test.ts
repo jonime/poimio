@@ -3,6 +3,7 @@ import { execFileSync } from "node:child_process";
 import { randomUUID } from "node:crypto";
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
+import { parseSupabaseQueryResult } from "../test/supabase-query-result.ts";
 import { createIngestDb } from "./db.ts";
 import { EMBEDDING_DIMENSIONS } from "./embeddings.ts";
 import { rankingDefaults } from "./ranking-parameters.ts";
@@ -1550,7 +1551,7 @@ describe.skipIf(!enabled || anonKey == null || serviceKey == null)(
         "ranking_private.rank_items(uuid[],uuid[],uuid[],timestamptz,text,jsonb,integer,integer,uuid[],uuid[],uuid[])";
       const publicSignature =
         "public.rank_items(uuid[],uuid[],uuid[],timestamptz,text,jsonb,integer,integer,uuid[],uuid[],uuid[])";
-      const output = JSON.parse(
+      const output = parseSupabaseQueryResult(
         execFileSync(
           "supabase",
           [
@@ -1583,9 +1584,7 @@ describe.skipIf(!enabled || anonKey == null || serviceKey == null)(
           ],
           { encoding: "utf8" },
         ),
-      ) as {
-        rows: Record<string, boolean>[];
-      };
+      );
       expect(output.rows[0]).toEqual({
         private_safe: true,
         private_grants: true,

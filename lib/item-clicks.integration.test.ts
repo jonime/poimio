@@ -3,6 +3,7 @@ import { execFileSync } from "node:child_process";
 import { randomUUID } from "node:crypto";
 import { createClient } from "@supabase/supabase-js";
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
+import { parseSupabaseQueryResult } from "../test/supabase-query-result.ts";
 
 const enabled = process.env.SUPABASE_INTEGRATION === "1";
 const url = process.env.SUPABASE_URL ?? "http://127.0.0.1:55321";
@@ -121,7 +122,7 @@ describe.skipIf(!enabled || anonKey == null || serviceKey == null)("item clicks"
   });
 
   it("enables RLS and grants only owner select and item insert", () => {
-    const row = JSON.parse(
+    const result = parseSupabaseQueryResult(
       execFileSync(
         "supabase",
         [
@@ -143,8 +144,8 @@ describe.skipIf(!enabled || anonKey == null || serviceKey == null)("item clicks"
         ],
         { encoding: "utf8" },
       ),
-    ) as { rows: Record<string, boolean>[] };
-    expect(row.rows[0]).toEqual({
+    );
+    expect(result.rows[0]).toEqual({
       rls: true,
       can_select: true,
       can_insert_item: true,

@@ -1,6 +1,6 @@
 # 026 — Interest summary and click tracking
 
-**Status:** Approved  
+**Status:** Click release complete; failed optional interest summary cut; AI-log entry pending
 **Milestone:** Final (week 6)  
 **Depends on:** 021 (`llm_usage`, `reserve_llm_call`, Tune feed page, scorer signals), 025 (current `get_feed`, member links)  
 **Estimate:** 18 h
@@ -9,7 +9,7 @@
 
 Two optional features from [plan.md §4.2](../plan.md):
 
-1. **Interest summary:** on request, an LLM turns the user's likes, dislikes, and preferences into a short readable profile on the Tune feed page. It is display only and does not affect ranking.
+1. **Interest summary:** cut after its quality gate. The generated summaries did not meet the required 5-of-6 independent review threshold; the backend and UI are removed in a forward migration.
 2. **Click tracking:** opening an item from the feed is recorded and used as a weak positive signal (weight 0.3, [design.md §2.1](../design.md#21-interest-scoring-nearest-liked-item)). Opened items leave the feed like _Seen_ items, and a History page lists opened and _Seen_ items so the user can find them again.
 
 ## Context
@@ -153,8 +153,8 @@ Each criterion belongs to one task. Tasks 1–4 (clicks, History, and their priv
 - [x] 2. Scorer and `get_feed` with click signals, one snapshot, opened-item exclusion and story references, parity, latency (criterion 2).
 - [x] 3. `get_history` and the History page with Load more (criterion 3).
 - [x] 4. Record clicks from feed and member links; "which you opened" explanation; browser check; click privacy text (criterion 4). Tasks 1–4 ship together.
-- [ ] 5. `interest_summaries`, `interest_summary` usage kind, `summarizeInterests`, `clearInterestSummary`, check (criterion 5).
-- [ ] 6. Tune page summary section, summary privacy text, docs (criterion 6).
+- [x] 5. Cut the interest-summary backend and usage kind after the check failed; remove the shipped table in a forward migration.
+- [ ] 6. Keep Tune feed focused on preferences, remove summary privacy text, and document the cut decision plus the required AI-log entry.
 
 ## Decisions
 
@@ -169,6 +169,7 @@ Each criterion belongs to one task. Tasks 1–4 (clicks, History, and their priv
 - Opened items are covered-story references, consistent with treating them like _Seen_: another version of a story the user has read is not shown again. Spec 025's threshold is applied regardless of language, so a misclick hides that item and its near-duplicates in either language.
 - History shows both opened and _Seen_ items because both mean "already consumed", and the user may want either back. It is a separate page in the main navigation, paginated 20 at a time with **Load more**, which keeps the first load small. It is a live list; pagination promises no gaps or repeats only for unchanged data.
 - Clicks, History, and their privacy text ship together, so no click is collected without the user being able to see it and read about it. The interest summary is independent and can be cut.
+- The summary quality check failed under independent Qwen review: five cases completed with two passes and three failures, making the 5-of-6 gate impossible even if the final case passed. The optional feature is therefore cut without a tuning loop. The partial result is retained in `evaluation/interest-summary/judge-failure.json`.
 - Clicks cannot be deleted by the user; account deletion removes them.
 
 ## Open questions

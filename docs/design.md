@@ -157,16 +157,15 @@ With no eligible positive signals, the feed round-robins sources, newest first w
 
 OpenAI API with `gpt-6-luna` (chosen in week 1). The LLM is **not** used to rank individual items (cost, latency, reproducibility). It is used for:
 
-1. **Interest summary:** on demand, `gpt-6-luna` turns up to 50 recent liked titles, 20 recent _Not interested_ titles, and active preference labels into one to three English sentences and at most eight short topic labels. It requires three positive signals, is display-only, and never runs on page load or changes ranking. A previous summary is retained on failure. Responses are not stored, calls reserve before fetch, and each user has 10 summary requests per rolling 24 hours separately from preference requests.
-2. **Evaluation judge:** labels items as relevant/not relevant for simulated personas. The primary labeler is Qwen 3.8 27B, with `gpt-6-luna` as fallback (§4.2). The final snapshot was labeled via OpenRouter with approval after local MTPLX proved too slow.
-3. **Source discovery** (stretch, stage b): finds candidate sites with the built-in web search tool and assesses source quality.
-4. **Description enrichment:** `gpt-6-luna` via the Responses API creates a concise, factual description only when feed and page metadata descriptions are unavailable. The request has no tools or URL access; extracted article text is untrusted content, not instructions. The output must state the subject or main point directly in the item's language, usually in one sentence, without source narration or an unnecessary recap. Attribution, uncertainty, negation, and the scope of personal experience take precedence over concision. The output uses only facts in the text and fits the existing 1,000-character summary limit. Prompt constraints and representative tests live with the enrichment implementation.
+1. **Evaluation judge:** labels items as relevant/not relevant for simulated personas. The primary labeler is Qwen 3.8 27B, with `gpt-6-luna` as fallback (§4.2). The final snapshot was labeled via OpenRouter with approval after local MTPLX proved too slow.
+2. **Source discovery** (stretch, stage b): finds candidate sites with the built-in web search tool and assesses source quality.
+3. **Description enrichment:** `gpt-6-luna` via the Responses API creates a concise, factual description only when feed and page metadata descriptions are unavailable. The request has no tools or URL access; extracted article text is untrusted content, not instructions. The output must state the subject or main point directly in the item's language, usually in one sentence, without source narration or an unnecessary recap. Attribution, uncertainty, negation, and the scope of personal experience take precedence over concision. The output uses only facts in the text and fits the existing 1,000-character summary limit. Prompt constraints and representative tests live with the enrichment implementation.
 
    Spec 023 compared the current and candidate instructions on the frozen 24-item sample with blind human review. Run 1 was rejected for revision after 3 wins, 9 losses, and 12 ties (62.5% wins plus ties), despite no observed unsupported or wrong-language output. The one allowed revision produced 14 wins, 2 losses, and 8 ties (91.7%), removed the five observed English opening-narration cases, and again produced no observed unsupported or wrong-language output. The Finnish opening-narration comparison was 0 versus 0, so the strict “fewer than current” rule reported a local miss despite no regression; the user approved activation based on the overall pass and 8-to-2 Finnish preference result. Six revised English outputs were still flagged for later-sentence narration, and zero errors is a small-sample observation rather than proof of perfect accuracy. Results are recorded in `evaluation/description-style/summaries/`; generated review text and extracted article text remain gitignored.
 
-5. **Natural-language feed tuning** (spec 021): one `gpt-6-luna` call turns a request of at most 300 characters into at most five preferences. The instruction is fixed; the user's text is untrusted and is not stored or logged. Each saved preference has a short label, a direction (`more` or `less`), and one positive sentence in Finnish and one in English. Those sentences are embedded once with `text-embedding-3-small` at 512 dimensions. Ranking uses the vectors and does not call the LLM. Each user may make 10 preference requests per rolling 24 hours. The count is reserved before the call, and a failed call still counts. At most 20 active preferences are stored.
+4. **Natural-language feed tuning** (spec 021): one `gpt-6-luna` call turns a request of at most 300 characters into at most five preferences. The instruction is fixed; the user's text is untrusted and is not stored or logged. Each saved preference has a short label, a direction (`more` or `less`), and one positive sentence in Finnish and one in English. Those sentences are embedded once with `text-embedding-3-small` at 512 dimensions. Ranking uses the vectors and does not call the LLM. Each user may make 10 preference requests per rolling 24 hours. The count is reserved before the call, and a failed call still counts. At most 20 active preferences are stored.
 
-6. **Source descriptions** (spec 024): generate short English descriptions with `pnpm sources:describe --out source-descriptions-review.json --all`. For each active source, `gpt-6-luna` gets the name, site host (feed host as fallback), language, kind, and up to 20 recent titles as untrusted data. Each request uses no tools, stores no response, and has a 120-token output cap, a 15-second timeout, and a 64 KB response limit. Sources without items are skipped. Review and edit the gitignored file, then save the exact text with `pnpm sources:describe --apply source-descriptions-review.json`. Apply matches by feed URL and makes no model calls. The default target is local. For an approved production run, use `node --env-file=.env.production.local scripts/describe-sources.mts --apply source-descriptions-review.json --production`. Generation runs manually and independently of ingestion.
+5. **Source descriptions** (spec 024): generate short English descriptions with `pnpm sources:describe --out source-descriptions-review.json --all`. For each active source, `gpt-6-luna` gets the name, site host (feed host as fallback), language, kind, and up to 20 recent titles as untrusted data. Each request uses no tools, stores no response, and has a 120-token output cap, a 15-second timeout, and a 64 KB response limit. Sources without items are skipped. Review and edit the gitignored file, then save the exact text with `pnpm sources:describe --apply source-descriptions-review.json`. Apply matches by feed URL and makes no model calls. The default target is local. For an approved production run, use `node --env-file=.env.production.local scripts/describe-sources.mts --apply source-descriptions-review.json --production`. Generation runs manually and independently of ingestion.
 
 Description generation is bounded to 20 API requests per ingestion run, including retries, at most 24,000 extracted characters per item and 200 output tokens per request. At an estimated 6,000 input tokens per request, the full request budget is about $0.014 at the model's current standard rates ($0.10/M input tokens and $0.50/M output tokens); this is an estimate, not a hard dollar cap. A failed item gets at most three attempts total, with retries due after 1 hour and 6 hours; exhausted items require an explicit backfill retry. Readable article text is extracted with the approved `@mozilla/readability` and `jsdom` dependencies. No full page or article text is retained.
 
@@ -216,7 +215,7 @@ Two independent stages, both attempted only after gate 2 ([plan.md §9](plan.md#
 
 **Stage (a) — catalog-based (no LLM, ~5 h):** inactive sources from the catalog ([feeds.md](feeds.md)) are fetched, their recent items embedded and scored against each user's liked items. Sources that match well are proposed to the admin.
 
-**Stage (b) — LLM web search (~6–8 h):** the LLM, using web search and the interest summary, suggests candidate sites. The LLM only _suggests_; deterministic code verifies.
+**Stage (b) — LLM web search (~6–8 h):** the LLM, using web search and the user's saved preferences and feedback, suggests candidate sites. The LLM only _suggests_; deterministic code verifies.
 
 Validation and approval (both stages):
 
@@ -429,7 +428,7 @@ The email allowlist table was removed by a forward migration. `public.is_allowed
 
 ### 6.6 Later tables
 
-Click events and interest summaries are described in §6.10 and §6.11. Discovery candidates remain a later feature. Feed preferences and LLM usage are in §6.7 and §6.8.
+Click events are described in §6.10. Discovery candidates remain a later feature. Feed preferences and LLM usage are in §6.7 and §6.8.
 
 ### 6.7 `feed_preferences` (per-user)
 
@@ -455,12 +454,12 @@ RLS is owner-only `select`, `update`, and `delete`. Authenticated users can upda
 | ------------ | ---------------------- | -------------------------------------------- |
 | `id`         | `uuid` PK              | `gen_random_uuid()`                          |
 | `user_id`    | `uuid` not null        | Default `auth.uid()`; cascade on user delete |
-| `kind`       | `text` not null        | `preferences` or `interest_summary`          |
+| `kind`       | `text` not null        | Only `preferences`                           |
 | `created_at` | `timestamptz` not null | Default `now()`; the user cannot set it      |
 
 RLS is owner-only `select` and `insert`. There is no update or delete policy. Authenticated users can insert only `kind`; `user_id` and `created_at` come from column defaults. A direct insert uses up the caller's own quota and cannot be backdated or deleted by the user.
 
-`reserve_llm_call(p_kind text)` is volatile, `SECURITY INVOKER`, and has an empty search path. It reads the user from `auth.uid()`, rejects an unknown kind, locks the user for the transaction, and inserts a row only when that user has fewer than 10 rows of that kind in the last 24 hours. Preference and interest-summary quotas are separate. It inserts only `kind`. Execute is granted to `authenticated` and revoked from `PUBLIC` and `anon`. Both actions call it before any OpenAI request. A failed call still counts.
+`reserve_llm_call(p_kind text)` is volatile, `SECURITY INVOKER`, and has an empty search path. It reads the user from `auth.uid()`, rejects an unknown kind, locks the user for the transaction, and inserts a row only when that user has fewer than 10 preference rows in the last 24 hours. It inserts only `kind`. Execute is granted to `authenticated` and revoked from `PUBLIC` and `anon`. The preference action calls it before any OpenAI request. A failed call still counts.
 
 ### 6.9 `hidden_sources` (per-user)
 
@@ -475,10 +474,6 @@ RLS is owner-only `select`, `insert`, and `delete`; there is no update policy. A
 ### 6.10 `item_clicks` (per-user)
 
 One idempotent row per user and opened feed item. `record_click(p_item_id uuid)` reads `auth.uid()`, requires a readable item, and inserts only the item ID; repeated opens preserve the first `clicked_at`. RLS and column grants permit owner-only `select` and insert of `item_id`; there is no update or delete policy. Anonymous access is denied. Account deletion cascades these rows.
-
-### 6.11 `interest_summaries` (per-user)
-
-One display-only row per user with `summary` (1–400 characters), at most eight topic labels, `like_count`, and `generated_at`. Authenticated users can select and delete only their own row; direct insert and update are denied. The server action verifies claims and writes with the service role, while **Clear** deletes through the user's client and RLS.
 
 ## 7. User interaction
 

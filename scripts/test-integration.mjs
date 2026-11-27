@@ -64,7 +64,6 @@ try {
       "lib/feedback.integration.test.ts",
       "lib/item-clicks.integration.test.ts",
       "lib/preferences.integration.test.ts",
-      "lib/interest-summary.integration.test.ts",
       "lib/hidden-sources.integration.test.ts",
       "lib/feed.integration.test.ts",
       "lib/guest-feed.integration.test.ts",

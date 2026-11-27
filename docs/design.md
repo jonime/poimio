@@ -470,6 +470,14 @@ One idempotent row per user and opened feed item. `record_click(p_item_id uuid)`
 
 `user_id` is the primary key and a cascading foreign key to `auth.users`; `created_at` defaults to `now()`. RLS permits an authenticated user to select only their own membership row. Authenticated users cannot write, and anonymous users have no access. The service role manages rows; there is no admin-management UI. `is_admin()` is stable, `SECURITY INVOKER`, and uses an empty search path; it compares `auth.uid()` with the caller-visible membership row and is executable only by `authenticated`.
 
+To grant admin access, use the Supabase SQL editor for the intended project and replace the placeholder with the verified account's UUID from Supabase Auth:
+
+```sql
+insert into public.admins (user_id)
+values ('ACCOUNT_UUID'::uuid)
+on conflict (user_id) do nothing;
+```
+
 ### 6.12 `source_candidates` (shared)
 
 The shared candidate table contains `id`, `origin` (`catalog` or future `web_search`), nullable `source_id` for catalog sources, `name`, normalized unique `feed_url`, nullable `site_url`, `kind`, `language`, `status`, `failure`, `item_count`, `items_per_day`, `relevance`, `relevance_basis`, `mean_match_share`, `duplicate_share`, up to five `sample_titles`, `scanned_at`, and `decided_at`. A future stage-(b) migration adds `llm_reason`. Catalog scans refresh only pending and failed candidates; approved and rejected candidates are terminal. Only administrators can select rows; the service role writes after a verified admin check. No candidate stores user IDs or per-user scores.

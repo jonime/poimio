@@ -20,7 +20,13 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 
-export function UserMenu({ displayName }: { displayName: string | null | undefined }) {
+export function UserMenu({
+  displayName,
+  isAdmin = false,
+}: {
+  displayName: string | null | undefined;
+  isAdmin?: boolean;
+}) {
   const firstName = displayName?.trim().split(/\s+/)[0];
   const signOutFormRef = useRef<HTMLFormElement | null>(null);
 
@@ -44,6 +50,11 @@ export function UserMenu({ displayName }: { displayName: string | null | undefin
               <RssIcon data-icon="inline-start" aria-hidden="true" />
               Sources
             </DropdownMenuLinkItem>
+            {isAdmin && (
+              <DropdownMenuLinkItem render={<Link href="/admin/sources" />} closeOnClick>
+                Source discovery
+              </DropdownMenuLinkItem>
+            )}
             <DropdownMenuItem onClick={() => signOutFormRef.current?.requestSubmit()}>
               <LogOutIcon data-icon="inline-start" aria-hidden="true" />
               Log out

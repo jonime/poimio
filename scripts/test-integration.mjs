@@ -65,6 +65,7 @@ try {
       "lib/item-clicks.integration.test.ts",
       "lib/preferences.integration.test.ts",
       "lib/hidden-sources.integration.test.ts",
+      "lib/source-discovery.integration.test.ts",
       "lib/feed.integration.test.ts",
       "lib/guest-feed.integration.test.ts",
       "lib/thumbnails/backfill.integration.test.ts",

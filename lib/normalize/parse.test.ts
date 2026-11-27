@@ -161,5 +161,20 @@ describe("parseFeed (future dates)", () => {
     const fetchTime = new Date("2026-11-17T12:00:00.000Z");
     const feed = await parseFeed(xml, { fetchTime });
     expect(feed.items[0]?.publishedAt.toISOString()).toBe(fetchTime.toISOString());
+    expect(feed.items[0]?.feedPublishedAt?.toISOString()).toBe("2040-01-01T00:00:00.000Z");
   });
+});
+
+it("reports when a publication date came from the feed instead of the fetch-time fallback", async () => {
+  const feed = await parseFeed(
+    `<rss version="2.0"><channel><title>T</title>
+      <item><title>Dated</title><link>https://example.com/dated</link><pubDate>Mon, 02 Nov 2026 00:00:00 GMT</pubDate></item>
+      <item><title>Undated</title><link>https://example.com/undated</link></item>
+    </channel></rss>`,
+    { fetchTime: new Date("2026-11-17T12:00:00.000Z") },
+  );
+  expect(feed.items.map((item) => item.feedPublishedAt?.toISOString() ?? null)).toEqual([
+    "2026-11-02T00:00:00.000Z",
+    null,
+  ]);
 });

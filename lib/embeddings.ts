@@ -57,6 +57,7 @@ async function requestEmbeddings(
   items: UnembeddedItem[],
   apiKey: string,
   fetchImpl: typeof fetch,
+  signal?: AbortSignal,
 ): Promise<number[][]> {
   const response = await fetchImpl(OPENAI_EMBEDDINGS_URL, {
     method: "POST",
@@ -69,6 +70,7 @@ async function requestEmbeddings(
       dimensions: EMBEDDING_DIMENSIONS,
       input: items.map(embeddingInput),
     }),
+    ...(signal === undefined ? {} : { signal }),
   });
 
   const payload = (await response.json()) as EmbeddingResponse;
@@ -97,6 +99,54 @@ async function requestEmbeddings(
     ordered[result.index] = result.embedding;
   }
   return ordered;
+}
+
+export interface InMemoryEmbeddingInput {
+  title: string;
+  summary: string;
+}
+
+export interface InMemoryEmbeddingOptions {
+  fetch?: typeof fetch;
+  timeoutMs?: number;
+}
+
+/** Embed a single bounded batch without reading from or writing to the database. */
+export async function embedItemsInMemory(
+  items: InMemoryEmbeddingInput[],
+  apiKey: string,
+  options: InMemoryEmbeddingOptions = {},
+): Promise<number[][]> {
+  if (items.length > EMBEDDING_BATCH_SIZE) {
+    throw new Error(`An in-memory embedding batch cannot exceed ${EMBEDDING_BATCH_SIZE} items`);
+  }
+  if (items.length === 0) return [];
+  if (items.some((item) => item.summary.trim() === "")) {
+    throw new Error("In-memory embedding items require a nonblank summary");
+  }
+
+  const timeoutMs = options.timeoutMs ?? 20_000;
+  if (!Number.isInteger(timeoutMs) || timeoutMs <= 0) {
+    throw new Error("Embedding timeout must be a positive integer");
+  }
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), timeoutMs);
+  const requestItems = items.map((item, index) => ({
+    id: `discovery-${index}`,
+    title: item.title,
+    summary: item.summary,
+    summaryOrigin: "feed" as const,
+  }));
+  try {
+    return await requestEmbeddings(requestItems, apiKey, options.fetch ?? fetch, controller.signal);
+  } catch (error) {
+    if (controller.signal.aborted) {
+      throw new Error(`Embedding request timed out after ${timeoutMs} ms`);
+    }
+    throw error;
+  } finally {
+    clearTimeout(timer);
+  }
 }
 
 /** Embed a bounded set of pending items; failed API batches remain retryable. */

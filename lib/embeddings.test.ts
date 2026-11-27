@@ -6,6 +6,7 @@ import {
   EMBEDDING_DIMENSIONS,
   EMBEDDING_MODEL,
   EMBEDDING_MODEL_VERSION,
+  embedItemsInMemory,
   embedPendingItems,
 } from "./embeddings";
 
@@ -53,6 +54,61 @@ function pendingItems(count: number): UnembeddedItem[] {
     summaryOrigin: "feed",
   }));
 }
+
+describe("embedItemsInMemory", () => {
+  it("uses the ingestion embedding input and model without a database write", async () => {
+    let requestBody: Record<string, unknown> | null = null;
+    const result = await embedItemsInMemory(
+      [{ title: "Title", summary: " Summary " }],
+      "test-key",
+      {
+        fetch: async (_input, init) => {
+          requestBody = JSON.parse(String(init?.body)) as Record<string, unknown>;
+          return Response.json({ data: vectors(1) });
+        },
+      },
+    );
+    expect(requestBody).toEqual({
+      model: EMBEDDING_MODEL,
+      dimensions: EMBEDDING_DIMENSIONS,
+      input: ["Title\n\nSummary"],
+    });
+    expect(result).toHaveLength(1);
+    expect(result[0]).toHaveLength(EMBEDDING_DIMENSIONS);
+  });
+
+  it("rejects oversized or blank-summary batches before making a request", async () => {
+    const fetch = vi.fn<typeof globalThis.fetch>();
+    await expect(
+      embedItemsInMemory(
+        Array.from({ length: EMBEDDING_BATCH_SIZE + 1 }, () => ({
+          title: "Title",
+          summary: "Summary",
+        })),
+        "test-key",
+        { fetch },
+      ),
+    ).rejects.toThrow("cannot exceed 100 items");
+    await expect(
+      embedItemsInMemory([{ title: "Title", summary: "  " }], "test-key", { fetch }),
+    ).rejects.toThrow("require a nonblank summary");
+    expect(fetch).not.toHaveBeenCalled();
+  });
+
+  it("enforces the request deadline", async () => {
+    await expect(
+      embedItemsInMemory([{ title: "Title", summary: "Summary" }], "test-key", {
+        timeoutMs: 1,
+        fetch: async (_input, init) =>
+          new Promise((_resolve, reject) => {
+            init?.signal?.addEventListener("abort", () => reject(new Error("aborted")), {
+              once: true,
+            });
+          }),
+      }),
+    ).rejects.toThrow("Embedding request timed out after 1 ms");
+  });
+});
 
 describe("embedPendingItems", () => {
   it("sends ordered text in batches of at most 100 with the required model and dimensions", async () => {

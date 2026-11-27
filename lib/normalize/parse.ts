@@ -48,6 +48,8 @@ export interface ParsedItem {
   /** Feed-declared image width, when available. */
   thumbnailWidth?: number;
   publishedAt: Date;
+  /** The parseable publication date from the feed, before fetch-time fallback or clamping. */
+  feedPublishedAt: Date | null;
 }
 
 /** The result of parsing one feed document. */
@@ -104,13 +106,7 @@ function isYouTubeVideoUrl(url: string): boolean {
  * first, then the raw date string, then the fetch-time fallback.
  * Dates after the fetch time are clamped to it.
  */
-function resolvePublishedAt(item: Record<string, unknown>, fetchTime: Date): Date {
-  const date = resolveRawPublishedAt(item, fetchTime);
-  // Future dates would keep an item maximally recent indefinitely.
-  return date.getTime() > fetchTime.getTime() ? fetchTime : date;
-}
-
-function resolveRawPublishedAt(item: Record<string, unknown>, fetchTime: Date): Date {
+function parseFeedPublishedAt(item: Record<string, unknown>): Date | null {
   const iso = item.isoDate;
   if (typeof iso === "string") {
     const parsed = new Date(iso);
@@ -121,7 +117,14 @@ function resolveRawPublishedAt(item: Record<string, unknown>, fetchTime: Date): 
     const parsed = new Date(String(raw));
     if (!Number.isNaN(parsed.getTime())) return parsed;
   }
-  return fetchTime;
+  return null;
+}
+
+function resolvePublishedAt(feedPublishedAt: Date | null, fetchTime: Date): Date {
+  if (feedPublishedAt === null || feedPublishedAt.getTime() > fetchTime.getTime()) {
+    return fetchTime;
+  }
+  return feedPublishedAt;
 }
 
 /**
@@ -195,6 +198,7 @@ export async function parseFeed(xml: string, options: ParseOptions = {}): Promis
 
     const titleRaw = typeof item.title === "string" ? item.title : "";
     const title = decodeEntities(titleRaw).replace(/\s+/g, " ").trim();
+    const feedPublishedAt = parseFeedPublishedAt(item as unknown as Record<string, unknown>);
 
     // RSS categories come from the parser (correct at the XML level); Atom
     // categories are missing from the parser output, so we extract them
@@ -214,7 +218,8 @@ export async function parseFeed(xml: string, options: ParseOptions = {}): Promis
       categories,
       thumbnailUrl: type === "video" ? extractThumbnailUrl(block) : (thumbnail?.url ?? null),
       ...(thumbnail?.width == null ? {} : { thumbnailWidth: thumbnail.width }),
-      publishedAt: resolvePublishedAt(item as unknown as Record<string, unknown>, fetchTime),
+      publishedAt: resolvePublishedAt(feedPublishedAt, fetchTime),
+      feedPublishedAt,
     };
   });
 

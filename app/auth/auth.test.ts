@@ -48,7 +48,9 @@ beforeEach(() => {
   auth.getClaims.mockResolvedValue(verifiedClaims);
   auth.signOut.mockResolvedValue({ error: null });
   auth.signInWithPassword.mockResolvedValue({ error: null });
-  rpc.mockResolvedValue({ data: [], error: null });
+  rpc.mockImplementation((name: string) =>
+    Promise.resolve(name === "is_admin" ? { data: true, error: null } : { data: [], error: null }),
+  );
   auth.exchangeCodeForSession.mockResolvedValue({ error: null });
 });
 
@@ -95,7 +97,7 @@ describe("signed-in page", () => {
     expect(signedIn).toContain("Your feed");
     expect(signedIn).toContain('aria-label="User menu"');
     expect(signedIn).not.toContain("Public preview cards");
-    expect(rpc).toHaveBeenCalledTimes(1);
+    expect(rpc.mock.calls.filter(([name]) => name === "is_admin")).toHaveLength(1);
     expect(GuestPreview).toHaveBeenCalledTimes(2);
   });
 
@@ -220,7 +222,9 @@ describe("signed-in page", () => {
 
   it("streams the verified header and feed controls while recommendations load", async () => {
     const feed = Promise.withResolvers<{ data: []; error: null }>();
-    rpc.mockReturnValueOnce(feed.promise);
+    rpc.mockImplementation((name: string) =>
+      name === "is_admin" ? Promise.resolve({ data: true, error: null }) : feed.promise,
+    );
     const stream = await renderToReadableStream(withAppLayout(homePage()));
     const reader = stream.getReader();
     try {

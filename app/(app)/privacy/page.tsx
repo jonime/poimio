@@ -17,7 +17,7 @@ export default function PrivacyPage() {
       title="Privacy Policy"
       subtitle={
         <p className="text-sm text-muted-foreground">
-          Last updated: <time dateTime="2026-11-27">27 November 2026</time>
+          Last updated: <time dateTime="2026-11-28">28 November 2026</time>
         </p>
       }
     >
@@ -110,6 +110,17 @@ export default function PrivacyPage() {
           <a href="https://supabase.com/privacy">Supabase</a>,{" "}
           <a href="https://vercel.com/legal/privacy-policy">Vercel</a>, and{" "}
           <a href="https://openai.com/policies/privacy-policy/">OpenAI</a>.
+        </p>
+      </section>
+
+      <section aria-labelledby="source-discovery">
+        <h2 id="source-discovery">Source discovery</h2>
+        <p>
+          Your likes may be used, together with other users&apos; likes, to score candidate sources
+          for the shared pool. Other users&apos; likes are used only when at least three users can
+          be scored; before that, only the scanning administrator&apos;s own likes are used. Only
+          coarse aggregate scores are stored, and those scores are visible to administrators.
+          Candidates contain no personal data and are kept until deleted.
         </p>
       </section>
 

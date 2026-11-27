@@ -11,6 +11,7 @@ import {
 import type { ParsedItem } from "./normalize/parse";
 
 function item(overrides: Partial<ParsedItem> = {}): ParsedItem {
+  const fallbackPublishedAt = new Date("2026-10-28T08:00:00.000Z");
   return {
     url: "https://yle.fi/a/1",
     title: "Test item",
@@ -18,8 +19,10 @@ function item(overrides: Partial<ParsedItem> = {}): ParsedItem {
     type: "article",
     categories: ["Uutiset"],
     thumbnailUrl: null,
-    publishedAt: new Date("2026-10-28T08:00:00.000Z"),
     ...overrides,
+    publishedAt: overrides.publishedAt ?? fallbackPublishedAt,
+    feedPublishedAt:
+      overrides.feedPublishedAt === undefined ? fallbackPublishedAt : overrides.feedPublishedAt,
   };
 }
 

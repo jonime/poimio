@@ -177,7 +177,7 @@ Specs are written just in time: the next spec is drafted when the current one re
 | [024](specs/024-sources-page.md)                    | Sources page with on/off switches and one-time AI source descriptions (English)                 | 6    | Done                             |
 | [025](specs/025-same-story.md)                      | Same-story handling: covered-story filter and per-page grouping (embeddings only)               | 6    | Done                             |
 | [026](specs/026-interest-summary-clicks.md)         | Clicks as a weak signal (0.3, untuned) and History; interest summary cut after failed quality gate | 6    | Click release done                |
-| [027](specs/027-source-discovery.md)                | Source discovery: catalog scan and LLM web search; admin page approval                          | 6–7  | Draft                             |
+| [027](specs/027-source-discovery.md)                | Source discovery: catalog scan and LLM web search; admin page approval                          | 6–7  | In progress — release A; local/deployment scan checks pending |
 
 **Planned, not yet drafted:** none; all planned features have specs.
 

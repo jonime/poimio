@@ -162,8 +162,13 @@ describe.skipIf(!enabled || !anonKey || !serviceKey)("hidden sources", () => {
     const { service: serviceClient } = ready();
     await serviceClient.auth.admin.deleteUser(userAId);
     await serviceClient.auth.admin.deleteUser(userBId);
+    if (itemId) {
+      const { error } = await serviceClient.from("content_items").delete().eq("id", itemId);
+      if (error) throw new Error(`deleting hidden-source fixture item failed: ${error.message}`);
+    }
     if (sourceIds.length > 0) {
-      await serviceClient.from("sources").delete().in("id", sourceIds);
+      const { error } = await serviceClient.from("sources").delete().in("id", sourceIds);
+      if (error) throw new Error(`deleting hidden-source fixtures failed: ${error.message}`);
     }
   });
 
